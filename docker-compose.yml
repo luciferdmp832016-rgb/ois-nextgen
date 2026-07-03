@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ois-nextgen-postgres
+    environment:
+      POSTGRES_DB: ois_nextgen
+      POSTGRES_USER: ois_nextgen
+      POSTGRES_PASSWORD: ois_nextgen_local
+    ports:
+      - "5432:5432"
+    volumes:
+      - ois_nextgen_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ois_nextgen -d ois_nextgen"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  ois_nextgen_pgdata:

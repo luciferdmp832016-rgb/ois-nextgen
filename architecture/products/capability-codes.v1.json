@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "capabilityCodes": [
+    "platform:overview:read",
+    "organization:read",
+    "workspace:read",
+    "project:read",
+    "product:catalog:read",
+    "product:installation:read",
+    "product:installation:manage",
+    "module:catalog:read",
+    "identity:read",
+    "access:read",
+    "audit:read",
+    "pits:runtime:access"
+  ]
+}

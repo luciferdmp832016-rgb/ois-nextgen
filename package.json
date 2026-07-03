@@ -1,0 +1,44 @@
+{
+  "name": "ois-nextgen",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter @ois/core-api --filter @ois/ois-console --filter @ois/pits-shell dev",
+    "dev:api": "pnpm --filter @ois/core-api dev",
+    "dev:console": "pnpm --filter @ois/ois-console dev",
+    "dev:pits": "pnpm --filter @ois/pits-shell dev",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "lint": "node scripts/architecture-guard.mjs",
+    "typecheck": "tsc -p tsconfig.check.json --noEmit",
+    "test": "vitest run",
+    "e2e": "playwright test"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@fastify/swagger": "^9.5.1",
+    "@fastify/swagger-ui": "^5.2.3",
+    "@prisma/client": "^6.10.1",
+    "fastify": "^5.3.3",
+    "next": "^15.3.4",
+    "pino": "^9.7.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.1",
+    "@types/node": "^22.13.14",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "prisma": "^6.10.1",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

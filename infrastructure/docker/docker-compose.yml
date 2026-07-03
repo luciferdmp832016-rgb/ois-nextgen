@@ -1,0 +1,8 @@
+services:
+  postgres:
+    extends:
+      file: ../../docker-compose.yml
+      service: postgres
+
+volumes:
+  ois_nextgen_pgdata:

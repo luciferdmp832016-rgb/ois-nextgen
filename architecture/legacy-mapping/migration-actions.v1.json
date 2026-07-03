@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "actions": [
+    "REFERENCE_ONLY",
+    "MAP_IDENTITY",
+    "TRANSFORM_LATER",
+    "LOAD_SYNTHETIC",
+    "BLOCKED_BY_PHASE2",
+    "BLOCKED_BY_PHASE3"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "scopes": [
+    "PLATFORM",
+    "INDUSTRY",
+    "ORGANIZATION",
+    "WORKSPACE",
+    "PROJECT",
+    "PRODUCT_INSTALLATION"
+  ]
+}

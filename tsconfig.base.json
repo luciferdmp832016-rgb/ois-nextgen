@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@ois/architecture-contracts": ["packages/architecture-contracts/src/index.ts"],
+      "@ois/tenant-context": ["packages/tenant-context/src/index.ts"],
+      "@ois/identity-access": ["packages/identity-access/src/index.ts"],
+      "@ois/product-registry": ["packages/product-registry/src/index.ts"],
+      "@ois/product-contracts": ["packages/product-contracts/src/index.ts"],
+      "@ois/config-compiler": ["packages/config-compiler/src/index.ts"],
+      "@ois/audit": ["packages/audit/src/index.ts"],
+      "@ois/observability": ["packages/observability/src/index.ts"],
+      "@ois/test-fixtures": ["packages/test-fixtures/src/index.ts"],
+      "@ois/organization-domain": ["domains/organization/src/index.ts"]
+    }
+  }
+}

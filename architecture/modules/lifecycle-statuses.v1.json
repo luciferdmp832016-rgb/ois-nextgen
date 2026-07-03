@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "lifecycleStatuses": [
+    "DRAFT",
+    "ACTIVE",
+    "SUSPENDED",
+    "DEPRECATED",
+    "ARCHIVED",
+    "PLANNED",
+    "BLOCKED_BY_PHASE2",
+    "BLOCKED_BY_PHASE3"
+  ]
+}

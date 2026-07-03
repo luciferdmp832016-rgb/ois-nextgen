@@ -1,0 +1,381 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum LifecycleStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+  DEPRECATED
+  ARCHIVED
+  PLANNED
+  BLOCKED_BY_PHASE2
+  BLOCKED_BY_PHASE3
+}
+
+enum ScopeKind {
+  PLATFORM
+  INDUSTRY
+  ORGANIZATION
+  WORKSPACE
+  PROJECT
+  PRODUCT_INSTALLATION
+}
+
+enum ProductCode {
+  OIS
+  PITS
+  CS_AGENT
+  KEIHB
+  ICR
+}
+
+enum IdentityRealmCode {
+  OIS_ORGANIZATION_USER
+  PITS_PROJECT_USER
+  CSAGENT_RESIDENT
+  EXTERNAL_PARTNER
+  SYSTEM_SERVICE
+}
+
+enum ModuleType {
+  PLATFORM_KERNEL
+  CONTROL_PLANE_VIEW
+  PRODUCT_RUNTIME_VIEW
+  DOMAIN_SERVICE
+  REPOSITORY
+  WORKER
+}
+
+model Industry {
+  id            String          @id
+  code          String          @unique
+  name          String
+  lifecycle     LifecycleStatus @default(ACTIVE)
+  version       Int             @default(1)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  organizations Organization[]
+}
+
+model Organization {
+  id             String          @id
+  code           String          @unique
+  name           String
+  industryId     String
+  lifecycle      LifecycleStatus @default(ACTIVE)
+  version        Int             @default(1)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  industry       Industry        @relation(fields: [industryId], references: [id], onDelete: Restrict)
+  workspaces     Workspace[]
+  memberships    WorkspaceMembership[]
+  installations  ProductInstallation[]
+  roles          RoleDefinition[]
+  config         EffectiveConfigurationSnapshot[]
+  featureFlags   FeatureFlag[]
+  auditRecords   AuditRecord[]
+  legacyMappings LegacyIdentityMap[]
+
+  @@index([industryId])
+}
+
+model Workspace {
+  id             String          @id
+  code           String
+  name           String
+  organizationId String
+  lifecycle      LifecycleStatus @default(ACTIVE)
+  version        Int             @default(1)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  projects       Project[]
+  memberships    WorkspaceMembership[]
+  installations  ProductInstallation[]
+  config         EffectiveConfigurationSnapshot[]
+  featureFlags   FeatureFlag[]
+  auditRecords   AuditRecord[]
+  legacyMappings LegacyIdentityMap[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+}
+
+model Project {
+  id             String          @id
+  code           String
+  name           String
+  workspaceId    String
+  lifecycle      LifecycleStatus @default(ACTIVE)
+  version        Int             @default(1)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  installations  ProductInstallation[]
+  config         EffectiveConfigurationSnapshot[]
+  featureFlags   FeatureFlag[]
+  auditRecords   AuditRecord[]
+  legacyMappings LegacyIdentityMap[]
+
+  @@unique([workspaceId, code])
+  @@index([workspaceId])
+}
+
+model UserAccount {
+  id              String            @id
+  email           String            @unique
+  displayName     String
+  realmCode       IdentityRealmCode
+  lifecycle       LifecycleStatus   @default(ACTIVE)
+  demoOnly        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  memberships     WorkspaceMembership[]
+  auditRecords    AuditRecord[]
+}
+
+model WorkspaceMembership {
+  id             String          @id
+  organizationId String
+  workspaceId    String
+  userId         String
+  roleCode       String
+  lifecycle      LifecycleStatus @default(ACTIVE)
+  version        Int             @default(1)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  user           UserAccount     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([workspaceId, userId, roleCode])
+  @@index([organizationId, workspaceId])
+  @@index([userId])
+}
+
+model ProductDefinition {
+  id             String          @id
+  code           ProductCode     @unique
+  name           String
+  lifecycle      LifecycleStatus @default(ACTIVE)
+  version        Int             @default(1)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  installations  ProductInstallation[]
+  modules        ModuleDefinition[]
+  roles          RoleDefinition[]
+  permissions    PermissionDefinition[]
+}
+
+model ProductInstallation {
+  id             String          @id
+  productCode    ProductCode
+  productId      String
+  organizationId String
+  workspaceId    String
+  projectId      String
+  lifecycle      LifecycleStatus @default(ACTIVE)
+  configuration  Json            @default("{}")
+  version        Int             @default(1)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  product        ProductDefinition @relation(fields: [productId], references: [id], onDelete: Restrict)
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  workspace      Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  project        Project           @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  grants         ProductCapabilityGrant[]
+  config         EffectiveConfigurationSnapshot[]
+  featureFlags   FeatureFlag[]
+  auditRecords   AuditRecord[]
+
+  @@unique([projectId, productCode])
+  @@index([organizationId, workspaceId, projectId])
+  @@index([productId])
+}
+
+model ProductCapabilityGrant {
+  id                    String          @id
+  productInstallationId String
+  capabilityCode        String
+  enabled               Boolean         @default(true)
+  lifecycle             LifecycleStatus @default(ACTIVE)
+  version               Int             @default(1)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  productInstallation   ProductInstallation @relation(fields: [productInstallationId], references: [id], onDelete: Cascade)
+
+  @@unique([productInstallationId, capabilityCode])
+  @@index([capabilityCode])
+}
+
+model ModuleDefinition {
+  id          String            @id
+  code        String            @unique
+  productId   String
+  productCode ProductCode
+  layerCode   String
+  scope       ScopeKind
+  realmCode   IdentityRealmCode
+  moduleType  ModuleType
+  lifecycle   LifecycleStatus   @default(ACTIVE)
+  version     Int               @default(1)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  product     ProductDefinition @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([productCode, layerCode, scope])
+}
+
+model IdentityRealm {
+  id          String            @id
+  code        IdentityRealmCode @unique
+  name        String
+  lifecycle   LifecycleStatus   @default(ACTIVE)
+  version     Int               @default(1)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model RoleDefinition {
+  id             String            @id
+  code           String
+  name           String
+  realmCode      IdentityRealmCode
+  scope          ScopeKind
+  productId      String?
+  organizationId String
+  lifecycle      LifecycleStatus   @default(ACTIVE)
+  version        Int               @default(1)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  product        ProductDefinition? @relation(fields: [productId], references: [id], onDelete: Restrict)
+  permissions    RolePermission[]
+
+  @@unique([organizationId, realmCode, code])
+  @@index([productId])
+}
+
+model PermissionDefinition {
+  id          String            @id
+  code        String            @unique
+  name        String
+  productId   String?
+  layerCode   String
+  scope       ScopeKind
+  lifecycle   LifecycleStatus   @default(ACTIVE)
+  version     Int               @default(1)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  product     ProductDefinition? @relation(fields: [productId], references: [id], onDelete: Restrict)
+  roles       RolePermission[]
+
+  @@index([productId, scope])
+}
+
+model RolePermission {
+  id           String               @id
+  roleId       String
+  permissionId String
+  lifecycle    LifecycleStatus      @default(ACTIVE)
+  createdAt    DateTime             @default(now())
+  role         RoleDefinition       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   PermissionDefinition @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model EffectiveConfigurationSnapshot {
+  id                    String          @id
+  key                   String
+  value                 Json
+  valueHash             String
+  scope                 ScopeKind
+  isCurrent             Boolean         @default(true)
+  organizationId        String
+  workspaceId           String?
+  projectId             String?
+  productInstallationId String?
+  version               Int             @default(1)
+  createdAt             DateTime        @default(now())
+  organization          Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  workspace             Workspace?      @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  project               Project?        @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  productInstallation   ProductInstallation? @relation(fields: [productInstallationId], references: [id], onDelete: Restrict)
+
+  @@unique([key, organizationId, workspaceId, projectId, productInstallationId, version])
+  @@index([organizationId, workspaceId, projectId, productInstallationId, isCurrent])
+}
+
+model FeatureFlag {
+  id                    String          @id
+  code                  String
+  enabled               Boolean         @default(false)
+  scope                 ScopeKind
+  organizationId        String
+  workspaceId           String?
+  projectId             String?
+  productInstallationId String?
+  lifecycle             LifecycleStatus @default(ACTIVE)
+  version               Int             @default(1)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  organization          Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  workspace             Workspace?      @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  project               Project?        @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  productInstallation   ProductInstallation? @relation(fields: [productInstallationId], references: [id], onDelete: Restrict)
+
+  @@unique([code, organizationId, workspaceId, projectId, productInstallationId])
+  @@index([organizationId, workspaceId, projectId])
+}
+
+model AuditRecord {
+  id                    String          @id
+  organizationId        String
+  workspaceId           String?
+  projectId             String?
+  productInstallationId String?
+  actorId               String?
+  action                String
+  targetType            String
+  targetId              String
+  sensitive             Boolean         @default(false)
+  metadata              Json            @default("{}")
+  createdAt             DateTime        @default(now())
+  organization          Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  workspace             Workspace?      @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  project               Project?        @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  productInstallation   ProductInstallation? @relation(fields: [productInstallationId], references: [id], onDelete: Restrict)
+  actor                 UserAccount?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([workspaceId, projectId])
+  @@index([action, targetType])
+}
+
+model LegacyIdentityMap {
+  id                String       @id
+  legacySystem      String
+  legacyEntityType  String
+  legacyEntityId    String
+  nextgenEntityType String
+  nextgenEntityId   String
+  organizationId    String
+  workspaceId       String?
+  projectId         String?
+  mappedAt          DateTime     @default(now())
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  workspace         Workspace?   @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  project           Project?     @relation(fields: [projectId], references: [id], onDelete: Restrict)
+
+  @@unique([legacySystem, legacyEntityType, legacyEntityId])
+  @@index([nextgenEntityType, nextgenEntityId])
+  @@index([organizationId, workspaceId, projectId])
+}

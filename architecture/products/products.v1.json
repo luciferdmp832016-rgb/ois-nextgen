@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "products": [
+    { "code": "OIS", "name": "OIS", "plane": "OIS_CONTROL_PLANE", "lifecycle": "ACTIVE" },
+    { "code": "PITS", "name": "PITS", "plane": "PRODUCT_EXPERIENCE_PLANE", "lifecycle": "ACTIVE" },
+    { "code": "CS_AGENT", "name": "csAgent", "plane": "PRODUCT_EXPERIENCE_PLANE", "lifecycle": "PLANNED" },
+    { "code": "KEIHB", "name": "KEIHB", "plane": "PRODUCT_EXPERIENCE_PLANE", "lifecycle": "PLANNED" },
+    { "code": "ICR", "name": "ICR", "plane": "PRODUCT_EXPERIENCE_PLANE", "lifecycle": "PLANNED" }
+  ]
+}

@@ -1,0 +1,150 @@
+:root {
+  color-scheme: light;
+  --ink: #202124;
+  --muted: #65737e;
+  --line: #d7dde2;
+  --bg: #f6f4ef;
+  --panel: #ffffff;
+  --teal: #0f766e;
+  --blue: #1d4ed8;
+  --rose: #be123c;
+  --gold: #a16207;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.runtime {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.top {
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+  padding: 16px 22px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.brand {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.demo {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--rose);
+}
+
+.content {
+  padding: 24px;
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.project-switcher {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 16px 0 22px;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 9px 12px;
+  color: var(--teal);
+  font-weight: 700;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.tile {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+  min-height: 132px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.bottom {
+  background: #ffffff;
+  border-top: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.bottom a {
+  padding: 13px 8px;
+  text-align: center;
+  color: var(--blue);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.login form {
+  width: min(420px, 100%);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 24px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0;
+}
+
+input {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 11px 12px;
+  font: inherit;
+}
+
+.button {
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: var(--teal);
+  color: white;
+  padding: 11px 12px;
+  font: inherit;
+  cursor: pointer;
+}

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "realms": [
+    "OIS_ORGANIZATION_USER",
+    "PITS_PROJECT_USER",
+    "CSAGENT_RESIDENT",
+    "EXTERNAL_PARTNER",
+    "SYSTEM_SERVICE"
+  ]
+}

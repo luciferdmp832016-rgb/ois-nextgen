@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "moduleTypes": [
+    "PLATFORM_KERNEL",
+    "CONTROL_PLANE_VIEW",
+    "PRODUCT_RUNTIME_VIEW",
+    "DOMAIN_SERVICE",
+    "REPOSITORY",
+    "WORKER"
+  ]
+}
