@@ -17,6 +17,19 @@ export class TenantScopeError extends Error {
   }
 }
 
+export class IdentityRealmError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "IdentityRealmError";
+  }
+}
+
+export function assertIdentityRealm(context: TenantContext, expectedRealm: IdentityRealmCode): void {
+  if (context.realm !== expectedRealm) {
+    throw new IdentityRealmError(`Identity realm ${context.realm} rejected; expected ${expectedRealm}`);
+  }
+}
+
 export function assertWorkspaceScope(context: TenantContext, workspaceId: string): void {
   if (context.workspaceId && context.workspaceId !== workspaceId) {
     throw new TenantScopeError(`Workspace scope rejected for ${workspaceId}`);

@@ -18,17 +18,59 @@ export function buildCoreApi() {
       info: {
         title: "OIS NextGen Core API",
         version: "0.1.0"
+      },
+      paths: {
+        "/health": {
+          get: {
+            tags: ["runtime"],
+            responses: {
+              "200": {
+                description: "Core API health response",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["status", "service", "stage"],
+                      properties: {
+                        status: { type: "string" },
+                        service: { type: "string" },
+                        stage: { type: "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   });
 
-  app.register(swaggerUi, { routePrefix: "/docs" });
-
-  app.get("/health", async () => ({
-    status: "ok",
-    service: "core-api",
-    stage: "bootstrap-stage-a"
-  }));
+  app.get(
+    "/health",
+    {
+      schema: {
+        tags: ["runtime"],
+        response: {
+          200: {
+            type: "object",
+            required: ["status", "service", "stage"],
+            properties: {
+              status: { type: "string" },
+              service: { type: "string" },
+              stage: { type: "string" }
+            }
+          }
+        }
+      }
+    },
+    async () => ({
+      status: "ok",
+      service: "core-api",
+      stage: "bootstrap-stage-a"
+    })
+  );
 
   app.post("/auth/demo-login", async (request, reply) => {
     const parsed = demoLoginSchema.safeParse(request.body);
@@ -124,6 +166,8 @@ export function buildCoreApi() {
   app.addHook("onClose", async () => {
     await prisma.$disconnect();
   });
+
+  app.register(swaggerUi, { routePrefix: "/docs" });
 
   return app;
 }

@@ -1,0 +1,671 @@
+{
+  "generatedAt": "2026-07-04T07:42:05.119Z",
+  "source": "handoff/phase3-pass3-batch-b/tests/NEXTGEN_REQUIRED_REGRESSION_SUITE.json",
+  "summary": {
+    "totalLayers": 23,
+    "totalExistingScenarios": 70,
+    "totalRequiredMinimumTests": 135,
+    "frozenMinimum": 81,
+    "blueprintGroups": 18,
+    "blueprintTestCases": 81,
+    "unverifiedCriticalApis": 10,
+    "openGaps": 18
+  },
+  "layers": [
+    {
+      "layerId": "REGR-L01",
+      "domain": "TENANT_ISOLATION",
+      "priority": "P1",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "READY",
+      "minimumTestCount": 9,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-001",
+        "SC-002",
+        "SC-003",
+        "SC-004",
+        "SC-005",
+        "SC-006",
+        "SC-007",
+        "SC-069",
+        "SC-070"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for TENANT_ISOLATION entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Workspace boundary enforcement",
+        "Project-level data scoping"
+      ]
+    },
+    {
+      "layerId": "REGR-L02",
+      "domain": "IDENTITY_PERMISSION",
+      "priority": "P1",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "READY",
+      "minimumTestCount": 9,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-008",
+        "SC-009",
+        "SC-010",
+        "SC-011",
+        "SC-012",
+        "SC-013",
+        "SC-014",
+        "SC-015",
+        "SC-016"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for IDENTITY_PERMISSION entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Login/logout, session management",
+        "Role-based access matrix enforcement"
+      ]
+    },
+    {
+      "layerId": "REGR-L03",
+      "domain": "WORKSPACE_MANAGEMENT",
+      "priority": "P2",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "READY",
+      "minimumTestCount": 7,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-001",
+        "SC-002",
+        "SC-003",
+        "SC-004",
+        "SC-005",
+        "SC-006",
+        "SC-007"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for WORKSPACE_MANAGEMENT entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core WORKSPACE_MANAGEMENT business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L04",
+      "domain": "PROJECT_MANAGEMENT",
+      "priority": "P2",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "READY",
+      "minimumTestCount": 7,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-001",
+        "SC-002",
+        "SC-003",
+        "SC-004",
+        "SC-005",
+        "SC-006",
+        "SC-007"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for PROJECT_MANAGEMENT entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core PROJECT_MANAGEMENT business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L05",
+      "domain": "FIELD_REPORT",
+      "priority": "P1",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "READY",
+      "minimumTestCount": 17,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-017",
+        "SC-018",
+        "SC-019",
+        "SC-020",
+        "SC-021",
+        "SC-022",
+        "SC-023",
+        "SC-024",
+        "SC-025",
+        "SC-041"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for FIELD_REPORT entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Draft → Submitted → Approved → Converted lifecycle",
+        "Rejection and re-submission flow"
+      ]
+    },
+    {
+      "layerId": "REGR-L06",
+      "domain": "CASE_MANAGEMENT",
+      "priority": "P1",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "READY",
+      "minimumTestCount": 15,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-026",
+        "SC-027",
+        "SC-028",
+        "SC-029",
+        "SC-030",
+        "SC-031",
+        "SC-032",
+        "SC-041",
+        "SC-042",
+        "SC-043"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for CASE_MANAGEMENT entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Case status state machine transitions",
+        "Case-Task relationship integrity"
+      ]
+    },
+    {
+      "layerId": "REGR-L07",
+      "domain": "TASK_MANAGEMENT",
+      "priority": "P1",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "READY",
+      "minimumTestCount": 16,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-033",
+        "SC-034",
+        "SC-035",
+        "SC-036",
+        "SC-037",
+        "SC-038",
+        "SC-039",
+        "SC-040",
+        "SC-041",
+        "SC-042"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for TASK_MANAGEMENT entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Task assignment, acceptance, resolution",
+        "Sibling task completion triggers case update"
+      ]
+    },
+    {
+      "layerId": "REGR-L08",
+      "domain": "SLA_MANAGEMENT",
+      "priority": "P2",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "NEEDS_SCENARIOS",
+      "minimumTestCount": 3,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-065",
+        "SC-066"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for SLA_MANAGEMENT entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core SLA_MANAGEMENT business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L09",
+      "domain": "DISPATCH",
+      "priority": "P2",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "NEEDS_SCENARIOS",
+      "minimumTestCount": 3,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-065",
+        "SC-066"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for DISPATCH entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core DISPATCH business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L10",
+      "domain": "INSPECTION",
+      "priority": "P3",
+      "coverageStatus": "GAP",
+      "automationReadiness": "NEEDS_SCENARIOS",
+      "minimumTestCount": 3,
+      "implementationStage": null,
+      "existingScenarioIds": [],
+      "requiredRegressionTests": [
+        "CRUD operations for INSPECTION entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core INSPECTION business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L11",
+      "domain": "AUTOPILOT",
+      "priority": "P2",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "READY",
+      "minimumTestCount": 5,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-049",
+        "SC-050",
+        "SC-051",
+        "SC-052",
+        "SC-053"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for AUTOPILOT entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Rule creation, activation, deactivation",
+        "Snapshot generation and validation"
+      ]
+    },
+    {
+      "layerId": "REGR-L12",
+      "domain": "KNOWLEDGE",
+      "priority": "P2",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "READY",
+      "minimumTestCount": 4,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-054",
+        "SC-055",
+        "SC-056",
+        "SC-057"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for KNOWLEDGE entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core KNOWLEDGE business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L13",
+      "domain": "WISDOM",
+      "priority": "P3",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "READY",
+      "minimumTestCount": 4,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-058",
+        "SC-059",
+        "SC-060",
+        "SC-061"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for WISDOM entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core WISDOM business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L14",
+      "domain": "INTELLIGENCE",
+      "priority": "P3",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "READY",
+      "minimumTestCount": 4,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-058",
+        "SC-059",
+        "SC-060",
+        "SC-061"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for INTELLIGENCE entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core INTELLIGENCE business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L15",
+      "domain": "LEARNING",
+      "priority": "P3",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "READY",
+      "minimumTestCount": 4,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-058",
+        "SC-059",
+        "SC-060",
+        "SC-061"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for LEARNING entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core LEARNING business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L16",
+      "domain": "ENTITY_MANAGEMENT",
+      "priority": "P2",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "READY",
+      "minimumTestCount": 4,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-054",
+        "SC-055",
+        "SC-056",
+        "SC-057"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for ENTITY_MANAGEMENT entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core ENTITY_MANAGEMENT business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L17",
+      "domain": "PRODUCT_INSTALLATION",
+      "priority": "P2",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "READY",
+      "minimumTestCount": 3,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-062",
+        "SC-063",
+        "SC-064"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for PRODUCT_INSTALLATION entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core PRODUCT_INSTALLATION business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L18",
+      "domain": "TRANSCRIPT_MANAGEMENT",
+      "priority": "P3",
+      "coverageStatus": "GAP",
+      "automationReadiness": "NEEDS_SCENARIOS",
+      "minimumTestCount": 3,
+      "implementationStage": null,
+      "existingScenarioIds": [],
+      "requiredRegressionTests": [
+        "CRUD operations for TRANSCRIPT_MANAGEMENT entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core TRANSCRIPT_MANAGEMENT business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L19",
+      "domain": "NOTIFICATION",
+      "priority": "P3",
+      "coverageStatus": "GAP",
+      "automationReadiness": "NEEDS_SCENARIOS",
+      "minimumTestCount": 3,
+      "implementationStage": null,
+      "existingScenarioIds": [],
+      "requiredRegressionTests": [
+        "CRUD operations for NOTIFICATION entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core NOTIFICATION business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L20",
+      "domain": "AUDIT",
+      "priority": "P2",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "NEEDS_SCENARIOS",
+      "minimumTestCount": 3,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-067"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for AUDIT entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core AUDIT business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L21",
+      "domain": "CONFIG_MANAGEMENT",
+      "priority": "P3",
+      "coverageStatus": "COVERED",
+      "automationReadiness": "NEEDS_SCENARIOS",
+      "minimumTestCount": 3,
+      "implementationStage": null,
+      "existingScenarioIds": [
+        "SC-068"
+      ],
+      "requiredRegressionTests": [
+        "CRUD operations for CONFIG_MANAGEMENT entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core CONFIG_MANAGEMENT business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L22",
+      "domain": "LLM_GATEWAY",
+      "priority": "P3",
+      "coverageStatus": "GAP",
+      "automationReadiness": "NEEDS_SCENARIOS",
+      "minimumTestCount": 3,
+      "implementationStage": null,
+      "existingScenarioIds": [],
+      "requiredRegressionTests": [
+        "CRUD operations for LLM_GATEWAY entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core LLM_GATEWAY business logic verification"
+      ]
+    },
+    {
+      "layerId": "REGR-L23",
+      "domain": "ANALYTICS",
+      "priority": "P3",
+      "coverageStatus": "GAP",
+      "automationReadiness": "NEEDS_SCENARIOS",
+      "minimumTestCount": 3,
+      "implementationStage": null,
+      "existingScenarioIds": [],
+      "requiredRegressionTests": [
+        "CRUD operations for ANALYTICS entities",
+        "Permission checks — unauthorized access denied",
+        "Tenant isolation — cross-tenant data invisible",
+        "Core ANALYTICS business logic verification"
+      ]
+    }
+  ],
+  "unverifiedCriticalApis": [
+    {
+      "method": "PUT",
+      "path": "app/api/pits/projects/[projectId]/field-reports/[reportId]/route.ts",
+      "label": "Field Report Update",
+      "expectedFile": "app/api/pits/projects/[projectId]/field-reports/[reportId]/route.ts",
+      "reason": "Route file not found or PUT handler not detected",
+      "riskAssessment": "MEDIUM",
+      "codexAction": "MUST_VERIFY_BEFORE_PORTING",
+      "suggestedVerification": [
+        "Locate actual route file in source tree",
+        "Verify handler exists with correct HTTP method",
+        "Extract auth, permissions, DB operations, audit events",
+        "Document concurrency and idempotency behavior"
+      ],
+      "riskRationale": "Write operation with unknown scope"
+    },
+    {
+      "method": "POST",
+      "path": "app/api/pits/projects/[projectId]/tasks/[taskId]/action/route.ts",
+      "label": "Task Action (assign/accept/resolve/close/reopen)",
+      "expectedFile": "app/api/pits/projects/[projectId]/tasks/[taskId]/action/route.ts",
+      "reason": "Route file not found or POST handler not detected",
+      "riskAssessment": "HIGH",
+      "codexAction": "MUST_VERIFY_BEFORE_PORTING",
+      "suggestedVerification": [
+        "Locate actual route file in source tree",
+        "Verify handler exists with correct HTTP method",
+        "Extract auth, permissions, DB operations, audit events",
+        "Document concurrency and idempotency behavior"
+      ],
+      "riskRationale": "Core operational data mutation"
+    },
+    {
+      "method": "PUT",
+      "path": "app/api/pits/projects/[projectId]/tasks/[taskId]/route.ts",
+      "label": "Task Update/Reassign",
+      "expectedFile": "app/api/pits/projects/[projectId]/tasks/[taskId]/route.ts",
+      "reason": "Route file not found or PUT handler not detected",
+      "riskAssessment": "HIGH",
+      "codexAction": "MUST_VERIFY_BEFORE_PORTING",
+      "suggestedVerification": [
+        "Locate actual route file in source tree",
+        "Verify handler exists with correct HTTP method",
+        "Extract auth, permissions, DB operations, audit events",
+        "Document concurrency and idempotency behavior"
+      ],
+      "riskRationale": "Core operational data mutation"
+    },
+    {
+      "method": "POST",
+      "path": "app/api/pits/projects/[projectId]/autopilot/rules/route.ts",
+      "label": "AutoPilot Rule Create",
+      "expectedFile": "app/api/pits/projects/[projectId]/autopilot/rules/route.ts",
+      "reason": "Route file not found or POST handler not detected",
+      "riskAssessment": "HIGH",
+      "codexAction": "MUST_VERIFY_BEFORE_PORTING",
+      "suggestedVerification": [
+        "Locate actual route file in source tree",
+        "Verify handler exists with correct HTTP method",
+        "Extract auth, permissions, DB operations, audit events",
+        "Document concurrency and idempotency behavior"
+      ],
+      "riskRationale": "AutoPilot operations can trigger automated actions on operational data"
+    },
+    {
+      "method": "POST",
+      "path": "app/api/pits/projects/[projectId]/autopilot/snapshot/route.ts",
+      "label": "AutoPilot Snapshot",
+      "expectedFile": "app/api/pits/projects/[projectId]/autopilot/snapshot/route.ts",
+      "reason": "Route file not found or POST handler not detected",
+      "riskAssessment": "HIGH",
+      "codexAction": "MUST_VERIFY_BEFORE_PORTING",
+      "suggestedVerification": [
+        "Locate actual route file in source tree",
+        "Verify handler exists with correct HTTP method",
+        "Extract auth, permissions, DB operations, audit events",
+        "Document concurrency and idempotency behavior"
+      ],
+      "riskRationale": "AutoPilot operations can trigger automated actions on operational data"
+    },
+    {
+      "method": "POST",
+      "path": "app/api/pits/projects/[projectId]/force/field-reports/route.ts",
+      "label": "Force Create Field Report",
+      "expectedFile": "app/api/pits/projects/[projectId]/force/field-reports/route.ts",
+      "reason": "Route file not found or POST handler not detected",
+      "riskAssessment": "HIGH",
+      "codexAction": "MUST_VERIFY_BEFORE_PORTING",
+      "suggestedVerification": [
+        "Locate actual route file in source tree",
+        "Verify handler exists with correct HTTP method",
+        "Extract auth, permissions, DB operations, audit events",
+        "Document concurrency and idempotency behavior"
+      ],
+      "riskRationale": "Force operations are SA-only administrative actions with direct data mutation"
+    },
+    {
+      "method": "POST",
+      "path": "app/api/pits/projects/[projectId]/force/edit/route.ts",
+      "label": "Force Edit",
+      "expectedFile": "app/api/pits/projects/[projectId]/force/edit/route.ts",
+      "reason": "Route file not found or POST handler not detected",
+      "riskAssessment": "HIGH",
+      "codexAction": "MUST_VERIFY_BEFORE_PORTING",
+      "suggestedVerification": [
+        "Locate actual route file in source tree",
+        "Verify handler exists with correct HTTP method",
+        "Extract auth, permissions, DB operations, audit events",
+        "Document concurrency and idempotency behavior"
+      ],
+      "riskRationale": "Force operations are SA-only administrative actions with direct data mutation"
+    },
+    {
+      "method": "POST",
+      "path": "app/api/workspaces/[id]/knowledge-layers/bundles/import-zip/route.ts",
+      "label": "Knowledge Bundle Import",
+      "expectedFile": "app/api/workspaces/[id]/knowledge-layers/bundles/import-zip/route.ts",
+      "reason": "Route file not found or POST handler not detected",
+      "riskAssessment": "MEDIUM",
+      "codexAction": "MUST_VERIFY_BEFORE_PORTING",
+      "suggestedVerification": [
+        "Locate actual route file in source tree",
+        "Verify handler exists with correct HTTP method",
+        "Extract auth, permissions, DB operations, audit events",
+        "Document concurrency and idempotency behavior"
+      ],
+      "riskRationale": "Intelligence operations affect knowledge base and analytical outputs"
+    },
+    {
+      "method": "POST",
+      "path": "app/api/pits/projects/[projectId]/entity-correction/route.ts",
+      "label": "Entity Correction",
+      "expectedFile": "app/api/pits/projects/[projectId]/entity-correction/route.ts",
+      "reason": "Route file not found or POST handler not detected",
+      "riskAssessment": "HIGH",
+      "codexAction": "MUST_VERIFY_BEFORE_PORTING",
+      "suggestedVerification": [
+        "Locate actual route file in source tree",
+        "Verify handler exists with correct HTTP method",
+        "Extract auth, permissions, DB operations, audit events",
+        "Document concurrency and idempotency behavior"
+      ],
+      "riskRationale": "Core operational data mutation"
+    },
+    {
+      "method": "POST",
+      "path": "app/api/workspaces/[id]/operational-intelligence/route.ts",
+      "label": "Operational Intelligence Create",
+      "expectedFile": "app/api/workspaces/[id]/operational-intelligence/route.ts",
+      "reason": "Route file not found or POST handler not detected",
+      "riskAssessment": "MEDIUM",
+      "codexAction": "MUST_VERIFY_BEFORE_PORTING",
+      "suggestedVerification": [
+        "Locate actual route file in source tree",
+        "Verify handler exists with correct HTTP method",
+        "Extract auth, permissions, DB operations, audit events",
+        "Document concurrency and idempotency behavior"
+      ],
+      "riskRationale": "Intelligence operations affect knowledge base and analytical outputs"
+    }
+  ],
+  "deferredCapabilities": [
+    "CSAGENT_RESIDENT_ISOLATION",
+    "ANALYTICS_DASHBOARD",
+    "GAP-008 Unified LLM Gateway"
+  ]
+}

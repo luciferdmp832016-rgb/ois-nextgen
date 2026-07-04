@@ -1,0 +1,378 @@
+{
+  "generatedAt": "2026-07-04T07:42:05.119Z",
+  "jsonValidation": {
+    "totalJsonFiles": 168,
+    "valid": 168,
+    "invalid": []
+  },
+  "archiveValidation": [
+    {
+      "archive": "OIS_NEXTGEN_HANDOFF_V1_COMPLETE_INDEX.tar.gz",
+      "path": "archives/OIS_NEXTGEN_HANDOFF_V1_COMPLETE_INDEX.tar.gz",
+      "actualSha256": "878a9c133815120bb68fd850526acf2b75a264e7af5849b5aa5fc1d281c92039",
+      "expectedSha256": null,
+      "checksumStatus": "NO_EXPECTED_HASH",
+      "actualSizeBytes": 33104,
+      "expectedSizeBytes": null,
+      "sizeStatus": "NO_EXPECTED_SIZE"
+    },
+    {
+      "archive": "OIS_NEXTGEN_HANDOFF_V1_PHASE1.tar.gz",
+      "path": "archives/OIS_NEXTGEN_HANDOFF_V1_PHASE1.tar.gz",
+      "actualSha256": "ea3aa90611d66ecf36a33c4c02c419fd4cf714fd0d802da3ac3a2a5a4285e269",
+      "expectedSha256": "ea3aa90611d66ecf36a33c4c02c419fd4cf714fd0d802da3ac3a2a5a4285e269",
+      "checksumStatus": "MATCH",
+      "actualSizeBytes": 42286774,
+      "expectedSizeBytes": 42286774,
+      "sizeStatus": "MATCH"
+    },
+    {
+      "archive": "OIS_NEXTGEN_HANDOFF_V1_PHASE2.tar.gz",
+      "path": "archives/OIS_NEXTGEN_HANDOFF_V1_PHASE2.tar.gz",
+      "actualSha256": "c66af303883741502a497155d71a76395892b1ba3c361e87d0e7f4a1d0208522",
+      "expectedSha256": "c66af303883741502a497155d71a76395892b1ba3c361e87d0e7f4a1d0208522",
+      "checksumStatus": "MATCH",
+      "actualSizeBytes": 283130,
+      "expectedSizeBytes": 283130,
+      "sizeStatus": "MATCH"
+    },
+    {
+      "archive": "OIS_NEXTGEN_HANDOFF_V1_PHASE2C_VERIFIED.tar.gz",
+      "path": "archives/OIS_NEXTGEN_HANDOFF_V1_PHASE2C_VERIFIED.tar.gz",
+      "actualSha256": "6c8299482e1475cc0c8585d2115abe3efc120480f1fe32bb34caa0af77a8fb5e",
+      "expectedSha256": "6c8299482e1475cc0c8585d2115abe3efc120480f1fe32bb34caa0af77a8fb5e",
+      "checksumStatus": "MATCH",
+      "actualSizeBytes": 39082,
+      "expectedSizeBytes": 39082,
+      "sizeStatus": "MATCH"
+    },
+    {
+      "archive": "OIS_NEXTGEN_HANDOFF_V1_PHASE3_PASS1.tar.gz",
+      "path": "archives/OIS_NEXTGEN_HANDOFF_V1_PHASE3_PASS1.tar.gz",
+      "actualSha256": "b324340c90732d80d8f3287b9401451e604cd90da4804332693ac025ca64f9d9",
+      "expectedSha256": "b324340c90732d80d8f3287b9401451e604cd90da4804332693ac025ca64f9d9",
+      "checksumStatus": "MATCH",
+      "actualSizeBytes": 38771,
+      "expectedSizeBytes": 38771,
+      "sizeStatus": "MATCH"
+    },
+    {
+      "archive": "OIS_NEXTGEN_HANDOFF_V1_PHASE3_PASS2_STARTER_DATA.tar.gz",
+      "path": "archives/OIS_NEXTGEN_HANDOFF_V1_PHASE3_PASS2_STARTER_DATA.tar.gz",
+      "actualSha256": "cd0a1048a2f69974c3ea1b4d4c9d1fab8a4cdf4c599ce35005fb6e1a57be295d",
+      "expectedSha256": "cd0a1048a2f69974c3ea1b4d4c9d1fab8a4cdf4c599ce35005fb6e1a57be295d",
+      "checksumStatus": "MATCH",
+      "actualSizeBytes": 72557,
+      "expectedSizeBytes": 72557,
+      "sizeStatus": "MATCH"
+    },
+    {
+      "archive": "OIS_NEXTGEN_HANDOFF_V1_PHASE3_PASS3_BATCH_A.tar.gz",
+      "path": "archives/OIS_NEXTGEN_HANDOFF_V1_PHASE3_PASS3_BATCH_A.tar.gz",
+      "actualSha256": "365cabb385e31a1056ed3cda1f66aee33dc1d32ebd9e57c1d9623e312d3a10e1",
+      "expectedSha256": "365cabb385e31a1056ed3cda1f66aee33dc1d32ebd9e57c1d9623e312d3a10e1",
+      "checksumStatus": "MATCH",
+      "actualSizeBytes": 35965,
+      "expectedSizeBytes": 35965,
+      "sizeStatus": "MATCH"
+    },
+    {
+      "archive": "OIS_NEXTGEN_HANDOFF_V1_PHASE3_PASS3_BATCH_B.tar.gz",
+      "path": "archives/OIS_NEXTGEN_HANDOFF_V1_PHASE3_PASS3_BATCH_B.tar.gz",
+      "actualSha256": "75dfd03cefe6084b94586f67505345bde685890b077d3949ddc6d1bd55cab486",
+      "expectedSha256": "75dfd03cefe6084b94586f67505345bde685890b077d3949ddc6d1bd55cab486",
+      "checksumStatus": "MATCH",
+      "actualSizeBytes": 37964,
+      "expectedSizeBytes": 37964,
+      "sizeStatus": "MATCH"
+    },
+    {
+      "archive": "OIS_NEXTGEN_HANDOFF_V1_PHASE3_PASS3_BATCH_C.tar.gz",
+      "path": "archives/OIS_NEXTGEN_HANDOFF_V1_PHASE3_PASS3_BATCH_C.tar.gz",
+      "actualSha256": "15011fe7394d4522aed68e8b12239df4cc1024a8b8ae61f4ab5c1b803bd32d14",
+      "expectedSha256": null,
+      "checksumStatus": "NO_EXPECTED_HASH",
+      "actualSizeBytes": 47530,
+      "expectedSizeBytes": null,
+      "sizeStatus": "NO_EXPECTED_SIZE"
+    },
+    {
+      "archive": "ois_phase1_OIS_NEXTGEN_HANDOFF_V1_codex-reference.zip",
+      "path": "archives/ois_phase1_OIS_NEXTGEN_HANDOFF_V1_codex-reference.zip",
+      "actualSha256": "d817a19ff9b9644f43a324d43d1ee70ba0b6aaa282580cf55ec762ad7c608d00",
+      "expectedSha256": null,
+      "checksumStatus": "NO_EXPECTED_HASH",
+      "actualSizeBytes": 90777,
+      "expectedSizeBytes": null,
+      "sizeStatus": "NO_EXPECTED_SIZE"
+    },
+    {
+      "archive": "ois_phase1_OIS_NEXTGEN_HANDOFF_V1_final-readiness.zip",
+      "path": "archives/ois_phase1_OIS_NEXTGEN_HANDOFF_V1_final-readiness.zip",
+      "actualSha256": "66b6bdae97331c374d55a0f34da21af03679616e09fa3d48096f08b7805a4304",
+      "expectedSha256": null,
+      "checksumStatus": "NO_EXPECTED_HASH",
+      "actualSizeBytes": 132978,
+      "expectedSizeBytes": null,
+      "sizeStatus": "NO_EXPECTED_SIZE"
+    },
+    {
+      "archive": "ois_phase1_OIS_NEXTGEN_HANDOFF_V1_final-validation.zip",
+      "path": "archives/ois_phase1_OIS_NEXTGEN_HANDOFF_V1_final-validation.zip",
+      "actualSha256": "7a898be3566de02fad85c3d773b3214cada008030a66a88ec2ab17861a964889",
+      "expectedSha256": null,
+      "checksumStatus": "NO_EXPECTED_HASH",
+      "actualSizeBytes": 20733,
+      "expectedSizeBytes": null,
+      "sizeStatus": "NO_EXPECTED_SIZE"
+    },
+    {
+      "archive": "ois_phase1_OIS_NEXTGEN_HANDOFF_V1_manifests.zip",
+      "path": "archives/ois_phase1_OIS_NEXTGEN_HANDOFF_V1_manifests.zip",
+      "actualSha256": "1e28d9ebc36a1268c8d7d3aa1430b5c01c7c367ea05ece01c7fa29bd8964c661",
+      "expectedSha256": null,
+      "checksumStatus": "NO_EXPECTED_HASH",
+      "actualSizeBytes": 5912,
+      "expectedSizeBytes": null,
+      "sizeStatus": "NO_EXPECTED_SIZE"
+    }
+  ],
+  "checksumFileResults": [
+    {
+      "checksumFile": "handoff/index/PHASE3_PASS3_BATCH_A_SHA256SUMS",
+      "archive": "OIS_NEXTGEN_HANDOFF_V1_PHASE3_PASS3_BATCH_A.tar.gz",
+      "expectedSha256": "365cabb385e31a1056ed3cda1f66aee33dc1d32ebd9e57c1d9623e312d3a10e1",
+      "actualSha256": "365cabb385e31a1056ed3cda1f66aee33dc1d32ebd9e57c1d9623e312d3a10e1",
+      "status": "MATCH"
+    },
+    {
+      "checksumFile": "handoff/index/PHASE3_PASS3_BATCH_B_SHA256SUMS",
+      "archive": "OIS_NEXTGEN_HANDOFF_V1_PHASE3_PASS3_BATCH_B.tar.gz",
+      "expectedSha256": "75dfd03cefe6084b94586f67505345bde685890b077d3949ddc6d1bd55cab486",
+      "actualSha256": "75dfd03cefe6084b94586f67505345bde685890b077d3949ddc6d1bd55cab486",
+      "status": "MATCH"
+    }
+  ],
+  "countValidation": [
+    {
+      "metric": "uiPages",
+      "expected": 90,
+      "actual": 90,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "apiRoutes",
+      "expected": 273,
+      "actual": 273,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "legacyPrismaModels",
+      "expected": 135,
+      "actual": 135,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "serviceFiles",
+      "expected": 84,
+      "actual": 84,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "executableComponents",
+      "expected": 90,
+      "actual": 90,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "extractedBusinessRules",
+      "expected": 2962,
+      "actual": 2962,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "verifiedTier1Rules",
+      "expected": 78,
+      "actual": 78,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "verifiedStateMachines",
+      "expected": 7,
+      "actual": 7,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "verifiedTransitions",
+      "expected": 33,
+      "actual": 33,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "verifiedCriticalWriteAPIs",
+      "expected": 13,
+      "actual": 13,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "unverifiedCriticalWriteAPIs",
+      "expected": 10,
+      "actual": 10,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "approvedADRs",
+      "expected": 9,
+      "actual": 9,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "knownIssues",
+      "expected": 20,
+      "actual": 20,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "canonicalFixtures",
+      "expected": 220,
+      "actual": 220,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "runtimeSeedFixtures",
+      "expected": 216,
+      "actual": 216,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "negativeTestFixtures",
+      "expected": 4,
+      "actual": 4,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "formalScenarios",
+      "expected": 70,
+      "actual": 70,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "regressionRequirementsMinimum",
+      "expected": 81,
+      "actual": 135,
+      "comparator": "AT_LEAST",
+      "status": "PASS"
+    },
+    {
+      "metric": "portableBlueprints",
+      "expected": 81,
+      "actual": 81,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "historicalHotfixes",
+      "expected": 27,
+      "actual": 26,
+      "comparator": "EQUAL",
+      "status": "DISCREPANCY"
+    },
+    {
+      "metric": "coverageGaps",
+      "expected": 18,
+      "actual": 18,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    },
+    {
+      "metric": "ownerDecisionsPending",
+      "expected": 22,
+      "actual": 23,
+      "comparator": "EQUAL",
+      "status": "DISCREPANCY"
+    },
+    {
+      "metric": "implementationBlockers",
+      "expected": 29,
+      "actual": 29,
+      "comparator": "EQUAL",
+      "status": "PASS"
+    }
+  ],
+  "finalCompleteness": {
+    "overallResult": "PASS",
+    "totalChecks": 26,
+    "passedChecks": 26,
+    "failedChecks": 0
+  },
+  "finalVerdict": {
+    "overallVerdict": "GO_WITH_CONDITIONS",
+    "conditions": [
+      "18 coverage gaps identified and classified",
+      "22 owner decisions pending",
+      "34 implementation blockers registered (10 DOMAIN, 7 TEST, 7 DOMAIN porting, 2 DEFERRED, 2 NON_BLOCKING, 1 MIGRATION, 1 CUTOVER)",
+      "2 scenario groups deferred (csAgent, Analytics)",
+      "10 unverified critical APIs",
+      "Production cutover blocked until UAT + migration validation"
+    ]
+  },
+  "discrepancies": [
+    {
+      "id": "COUNT-historicalHotfixes",
+      "category": "COUNT_DISCREPANCY",
+      "sourceA": "AUTHORITATIVE_BASELINE_COUNTS.json / Stage 0B request",
+      "sourceB": "Extracted handoff JSON",
+      "detail": "historicalHotfixes: expected 27, actual 26",
+      "disposition": "Recorded; not silently altered."
+    },
+    {
+      "id": "COUNT-ownerDecisionsPending",
+      "category": "COUNT_DISCREPANCY",
+      "sourceA": "AUTHORITATIVE_BASELINE_COUNTS.json / Stage 0B request",
+      "sourceB": "Extracted handoff JSON",
+      "detail": "ownerDecisionsPending: expected 22, actual 23",
+      "disposition": "Recorded; not silently altered."
+    },
+    {
+      "id": "ARCHIVE-INDEX-BATCH-C",
+      "category": "ARCHIVE_INDEX_DISCREPANCY",
+      "sourceA": "handoff/phase3-pass3-batch-c/manifests/OIS_NEXTGEN_HANDOFF_ARCHIVE_INDEX.json",
+      "sourceB": "archives/OIS_NEXTGEN_HANDOFF_V1_PHASE3_PASS3_BATCH_C.tar.gz",
+      "detail": "Archive index has totalArchives=8 but lists 7 archives and marks Batch C pending; the Batch C archive is present locally with no expected hash in the index.",
+      "disposition": "Actual hash captured; portable archive index discrepancy recorded."
+    },
+    {
+      "id": "FINAL-VERDICT-BLOCKER-COUNT",
+      "category": "COUNT_DISCREPANCY",
+      "sourceA": "handoff/phase3-pass3-batch-c/final-validation/FINAL_HANDOFF_VERDICT.json",
+      "sourceB": "handoff/phase3-pass3-batch-c/final-readiness/CODEX_IMPLEMENTATION_BLOCKERS.json",
+      "detail": "Final verdict text says 34 implementation blockers; blocker register totalBlockers is 29, matching the Stage 0B request.",
+      "disposition": "Use blocker register as the implementation queue source; keep verdict text as a noted discrepancy."
+    },
+    {
+      "id": "BATCH-B-REGRESSION-MINIMUM",
+      "category": "VALIDATION_NOTE",
+      "sourceA": "handoff/phase3-pass3-batch-c/verification/batch_b_input_revalidation.json",
+      "sourceB": "handoff/phase3-pass3-batch-b/tests/NEXTGEN_REQUIRED_REGRESSION_SUITE.json",
+      "detail": "Batch B revalidation says expected regressionRequirements=81 and actual=135 while overallResult remains PASS. Interpreted as 135 >= minimum 81.",
+      "disposition": "Treat as minimum-count pass, not a blocking mismatch."
+    }
+  ]
+}

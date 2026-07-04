@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { resolveConfiguration } from "@ois/config-compiler";
-import { TenantScopeError } from "@ois/tenant-context";
+import { assertIdentityRealm, IdentityRealmError, TenantScopeError } from "@ois/tenant-context";
 import { demoIds, demoKernelData, demoTenantContexts } from "@ois/test-fixtures";
 import {
+  IdempotencyPayloadMismatchError,
   InMemoryKernelRepository,
+  OptimisticConcurrencyError,
   productRuntimeCanAccessControlPlaneRoute,
   validateHierarchy
 } from "../src/index";
@@ -40,6 +42,13 @@ describe("platform kernel", () => {
     expect(repo.can(demoTenantContexts.emeraldStaff, "product:installation:manage")).toBe(false);
   });
 
+  it("enforces identity realms", () => {
+    expect(() => assertIdentityRealm(demoTenantContexts.emeraldStaff, "OIS_ORGANIZATION_USER")).toThrow(
+      IdentityRealmError
+    );
+    expect(() => assertIdentityRealm(demoTenantContexts.emeraldStaff, "PITS_PROJECT_USER")).not.toThrow();
+  });
+
   it("resolves configuration precedence", () => {
     const value = resolveConfiguration([
       { scope: "PLATFORM", value: "platform-default" },
@@ -66,6 +75,58 @@ describe("platform kernel", () => {
     const first = repo.seed(demoKernelData);
     const second = repo.seed(demoKernelData);
     expect(second).toBe(first);
+  });
+
+  it("replays idempotent commands with the same payload", () => {
+    const repo = new InMemoryKernelRepository(demoKernelData);
+    const first = repo.executeIdempotent("idem-install-001", { action: "install", projectId: demoIds.emeraldProject }, () => ({
+      installationId: demoIds.emeraldPitsInstallation
+    }));
+    const second = repo.executeIdempotent("idem-install-001", { action: "install", projectId: demoIds.emeraldProject }, () => ({
+      installationId: "should_not_run"
+    }));
+
+    expect(first.replayed).toBe(false);
+    expect(second.replayed).toBe(true);
+    expect(second.result.installationId).toBe(demoIds.emeraldPitsInstallation);
+  });
+
+  it("rejects idempotency payload mismatch", () => {
+    const repo = new InMemoryKernelRepository(demoKernelData);
+    repo.executeIdempotent("idem-install-002", { projectId: demoIds.emeraldProject }, () => ({ ok: true }));
+
+    expect(() =>
+      repo.executeIdempotent("idem-install-002", { projectId: demoIds.secondProject }, () => ({ ok: false }))
+    ).toThrow(IdempotencyPayloadMismatchError);
+  });
+
+  it("updates versioned aggregates with the expected version", () => {
+    const repo = new InMemoryKernelRepository(demoKernelData);
+    const updated = repo.updateProductInstallationConfiguration({
+      productInstallationId: demoIds.emeraldPitsInstallation,
+      expectedVersion: 1,
+      configuration: { demoOnly: true, source: "stage-0b-test" }
+    });
+
+    expect(updated.version).toBe(2);
+    expect(updated.configuration).toMatchObject({ source: "stage-0b-test" });
+  });
+
+  it("rejects stale aggregate versions", () => {
+    const repo = new InMemoryKernelRepository(demoKernelData);
+    repo.updateProductInstallationConfiguration({
+      productInstallationId: demoIds.emeraldPitsInstallation,
+      expectedVersion: 1,
+      configuration: { firstWrite: true }
+    });
+
+    expect(() =>
+      repo.updateProductInstallationConfiguration({
+        productInstallationId: demoIds.emeraldPitsInstallation,
+        expectedVersion: 1,
+        configuration: { staleWrite: true }
+      })
+    ).toThrow(OptimisticConcurrencyError);
   });
 
   it("prevents Product Runtime from accessing Control Plane routes", () => {

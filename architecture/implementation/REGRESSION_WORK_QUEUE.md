@@ -1,0 +1,48 @@
+# Regression Work Queue
+
+Generated: 2026-07-04T07:42:05.119Z
+
+| Metric | Value |
+| --- | --- |
+| totalLayers | 23 |
+| totalExistingScenarios | 70 |
+| totalRequiredMinimumTests | 135 |
+| frozenMinimum | 81 |
+| blueprintGroups | 18 |
+| blueprintTestCases | 81 |
+| unverifiedCriticalApis | 10 |
+| openGaps | 18 |
+
+## Layers
+
+| Layer | Domain | Priority | Coverage | Readiness | Minimum Tests |
+| --- | --- | --- | --- | --- | --- |
+| REGR-L01 | TENANT_ISOLATION | P1 | COVERED | READY | 9 |
+| REGR-L02 | IDENTITY_PERMISSION | P1 | COVERED | READY | 9 |
+| REGR-L03 | WORKSPACE_MANAGEMENT | P2 | COVERED | READY | 7 |
+| REGR-L04 | PROJECT_MANAGEMENT | P2 | COVERED | READY | 7 |
+| REGR-L05 | FIELD_REPORT | P1 | COVERED | READY | 17 |
+| REGR-L06 | CASE_MANAGEMENT | P1 | COVERED | READY | 15 |
+| REGR-L07 | TASK_MANAGEMENT | P1 | COVERED | READY | 16 |
+| REGR-L08 | SLA_MANAGEMENT | P2 | COVERED | NEEDS_SCENARIOS | 3 |
+| REGR-L09 | DISPATCH | P2 | COVERED | NEEDS_SCENARIOS | 3 |
+| REGR-L10 | INSPECTION | P3 | GAP | NEEDS_SCENARIOS | 3 |
+| REGR-L11 | AUTOPILOT | P2 | COVERED | READY | 5 |
+| REGR-L12 | KNOWLEDGE | P2 | COVERED | READY | 4 |
+| REGR-L13 | WISDOM | P3 | COVERED | READY | 4 |
+| REGR-L14 | INTELLIGENCE | P3 | COVERED | READY | 4 |
+| REGR-L15 | LEARNING | P3 | COVERED | READY | 4 |
+| REGR-L16 | ENTITY_MANAGEMENT | P2 | COVERED | READY | 4 |
+| REGR-L17 | PRODUCT_INSTALLATION | P2 | COVERED | READY | 3 |
+| REGR-L18 | TRANSCRIPT_MANAGEMENT | P3 | GAP | NEEDS_SCENARIOS | 3 |
+| REGR-L19 | NOTIFICATION | P3 | GAP | NEEDS_SCENARIOS | 3 |
+| REGR-L20 | AUDIT | P2 | COVERED | NEEDS_SCENARIOS | 3 |
+| REGR-L21 | CONFIG_MANAGEMENT | P3 | COVERED | NEEDS_SCENARIOS | 3 |
+| REGR-L22 | LLM_GATEWAY | P3 | GAP | NEEDS_SCENARIOS | 3 |
+| REGR-L23 | ANALYTICS | P3 | GAP | NEEDS_SCENARIOS | 3 |
+
+## Deferred Capabilities
+
+- CSAGENT_RESIDENT_ISOLATION
+- ANALYTICS_DASHBOARD
+- GAP-008 Unified LLM Gateway

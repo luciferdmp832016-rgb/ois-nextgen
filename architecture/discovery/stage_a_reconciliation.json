@@ -1,0 +1,167 @@
+{
+  "generatedAt": "2026-07-04T07:42:05.119Z",
+  "startingCommit": "0cc85062d046052e6a877bbc61f3b031ddde0b3f",
+  "classificationsAllowed": [
+    "ALIGNED",
+    "ALIGNED_WITH_MINOR_CHANGE",
+    "CONFLICT_WITH_APPROVED_ADR",
+    "MISSING",
+    "PREMATURE_IMPLEMENTATION"
+  ],
+  "evidence": {
+    "prismaModels": [
+      "Industry",
+      "Organization",
+      "Workspace",
+      "Project",
+      "UserAccount",
+      "WorkspaceMembership",
+      "ProductDefinition",
+      "ProductInstallation",
+      "ProductCapabilityGrant",
+      "ModuleDefinition",
+      "IdentityRealm",
+      "RoleDefinition",
+      "PermissionDefinition",
+      "RolePermission",
+      "EffectiveConfigurationSnapshot",
+      "FeatureFlag",
+      "AuditRecord",
+      "LegacyIdentityMap"
+    ],
+    "hasIdempotencyRecordModel": false,
+    "hasDedicatedBlueprintModel": false,
+    "hasEffectiveConfigurationSnapshot": true,
+    "agentsFiles": [
+      "AGENTS.md",
+      "apps/core-api/AGENTS.md",
+      "apps/ois-console/AGENTS.md",
+      "apps/pits-shell/AGENTS.md",
+      "domains/knowledge/AGENTS.md",
+      "domains/pits/AGENTS.md",
+      "migration/AGENTS.md"
+    ]
+  },
+  "findings": [
+    {
+      "area": "monorepo boundaries",
+      "classification": "ALIGNED",
+      "evidence": "pnpm workspace separates apps, packages and domains.",
+      "nextAction": "Keep boundaries while adding future vertical slices."
+    },
+    {
+      "area": "AGENTS.md hierarchy",
+      "classification": "ALIGNED",
+      "evidence": "Root, app, domain and migration agent instructions exist.",
+      "nextAction": "Add narrower AGENTS.md files only when future ownership boundaries require them."
+    },
+    {
+      "area": "Prisma schema and migrations",
+      "classification": "ALIGNED_WITH_MINOR_CHANGE",
+      "evidence": "Stage A has a versioned platform kernel migration and no db push dependency.",
+      "nextAction": "Future schema changes still require ADR, migration and tests."
+    },
+    {
+      "area": "tenant context",
+      "classification": "ALIGNED",
+      "evidence": "Tenant context enforces workspace and project rejection in tests.",
+      "nextAction": "Extend to persisted query filters in future domain repositories."
+    },
+    {
+      "area": "identity realms",
+      "classification": "ALIGNED_WITH_MINOR_CHANGE",
+      "evidence": "Realm codes are modeled; Stage 0B adds explicit realm assertion coverage.",
+      "nextAction": "Map verified dual-auth behavior before PITS write APIs."
+    },
+    {
+      "area": "roles and permissions",
+      "classification": "ALIGNED",
+      "evidence": "Role and permission definitions plus role bindings exist in schema, seed and tests.",
+      "nextAction": "Expand from verified contracts only."
+    },
+    {
+      "area": "Product Registry",
+      "classification": "ALIGNED",
+      "evidence": "Product definitions and registry entries exist for OIS, PITS, CS_AGENT, KEIHB and ICR.",
+      "nextAction": "Keep runtime/admin separation."
+    },
+    {
+      "area": "Product Installation",
+      "classification": "ALIGNED",
+      "evidence": "ProductInstallation is scoped to organization/workspace/project and unique by project/product.",
+      "nextAction": "Add more installations only through canonical seed or verified workflows."
+    },
+    {
+      "area": "configuration compiler",
+      "classification": "ALIGNED_WITH_MINOR_CHANGE",
+      "evidence": "Compiler resolves scope precedence; persistent snapshots store compiled values.",
+      "nextAction": "Blueprint compiler persistence remains a future migration decision."
+    },
+    {
+      "area": "Effective Configuration Snapshot",
+      "classification": "ALIGNED",
+      "evidence": "EffectiveConfigurationSnapshot is present in Prisma schema and migration.",
+      "nextAction": "Keep using snapshots for computed runtime config."
+    },
+    {
+      "area": "audit infrastructure",
+      "classification": "ALIGNED",
+      "evidence": "AuditRecord exists in schema and audit envelope creation is tested.",
+      "nextAction": "Require sensitive writes to emit audit records in future slices."
+    },
+    {
+      "area": "idempotency infrastructure",
+      "classification": "ALIGNED_WITH_MINOR_CHANGE",
+      "evidence": "Stage 0B adds in-memory idempotency replay and payload mismatch coverage.",
+      "nextAction": "Persistent IdempotencyRecord table is not present; add only with ADR/migration/tests when write APIs require durable replay."
+    },
+    {
+      "area": "optimistic concurrency infrastructure",
+      "classification": "ALIGNED_WITH_MINOR_CHANGE",
+      "evidence": "Mutable kernel tables have version columns; Stage 0B adds expectedVersion tests.",
+      "nextAction": "Apply expectedVersion uniformly to future mutating APIs."
+    },
+    {
+      "area": "OIS Console",
+      "classification": "ALIGNED",
+      "evidence": "Console shell exists and remains a control-plane surface.",
+      "nextAction": "Keep Prisma out of frontend code."
+    },
+    {
+      "area": "PITS Shell",
+      "classification": "ALIGNED",
+      "evidence": "PITS runtime shell exists without importing control-plane routes.",
+      "nextAction": "Do not start PITS Field Report/Case/Task slices in Stage 0B."
+    },
+    {
+      "area": "Core API",
+      "classification": "ALIGNED",
+      "evidence": "Core API exposes /health, /docs, /auth/demo-login and platform/product bootstrap routes.",
+      "nextAction": "Root / may remain 404."
+    },
+    {
+      "area": "worker",
+      "classification": "ALIGNED",
+      "evidence": "Worker package exists as a bootstrap placeholder.",
+      "nextAction": "Attach real jobs only after verified domain requirements."
+    },
+    {
+      "area": "tests",
+      "classification": "ALIGNED_WITH_MINOR_CHANGE",
+      "evidence": "Stage A tests cover kernel boundaries; Stage 0B adds realm, idempotency and concurrency coverage.",
+      "nextAction": "Do not add full PITS lifecycle regression tests before the next stage."
+    }
+  ],
+  "specificInvestigations": {
+    "persistentIdempotencyRecord": {
+      "finding": "MISSING",
+      "evidence": "No IdempotencyRecord model or table is present in Stage A Prisma schema/migration. Stage 0B proves command replay behavior in memory only.",
+      "conclusion": "Persistence is missing from the current schema, not silently inferred as complete. It should be implemented as a future schema change only with ADR confirmation, versioned migration and tests."
+    },
+    "blueprintPersistence": {
+      "finding": "ALIGNED_WITH_MINOR_CHANGE",
+      "evidence": "No dedicated Blueprint table is present. Static registries plus EffectiveConfigurationSnapshot satisfy bootstrap runtime configuration for Stage 0B.",
+      "conclusion": "Dedicated Blueprint persistence appears deferred until the configuration domain requires mutable/admin-authored blueprint records. Do not add tables based only on naming expectations."
+    }
+  }
+}
