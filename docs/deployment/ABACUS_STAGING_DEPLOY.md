@@ -42,6 +42,8 @@ Stage 0I discovery result: Abacus live runtime configuration remains blocked. No
 
 Stage 0I-R1 owner-assisted source result: GitHub/source bootstrap is confirmed on Abacus SuperComputer. The repo is cloned at `/home/ubuntu/ois-nextgen`, `origin` points to `https://github.com/luciferdmp832016-rgb/ois-nextgen.git`, branch `stage-0b-complete-handoff-ingestion` is checked out at commit `64486c1ebf9d5bc96cadc8220d1616dea9ccbf70`, and the working tree is clean/up to date. No `pnpm install`, build, app start, migration, `prisma db push` or secret printing occurred. Runtime port/proxy behavior, env/secrets injection and public URL mapping remain unknown, so the runtime POC remains blocked.
 
+Stage 0J Core API only POC result: Abacus Agent verified the VM can install, lint, typecheck, test, build and start the Core API locally with mock-safe configuration. Core API `/health` and `/` returned HTTP 200 on `127.0.0.1:4000`, then the process was stopped and port 4000 was clear. `https://ois-nextgen.abacusai.cloud/health` returned HTTP 404 from cloudflare/nginx because no public deployment/routing was performed. Public URL routing remains blocked; this is not a Core API boot failure.
+
 ## Stage 0H Handoff Summary
 
 Initial Abacus POC scope must reproduce the Stage 0G mock-safe boot only:
@@ -71,6 +73,19 @@ Stage 0I go/no-go remains blocked until the following are confirmed with redacte
 - Fixed port or proxy behavior for 4000, 3000 and 3001, or a split-app equivalent.
 
 Stage 0I-R1 recommendation for Stage 0J: perform a Core API only POC first, using mock-safe env only. Do not call DB-backed endpoints, storage-backed endpoints or real AI/OpenRouter providers. Confirm local HTTP 200 at `127.0.0.1:4000/health` before trying any public URL `/health` mapping. Stop if Abacus requires production credentials, migrations, `prisma db push`, secret printing or an unconfirmed port/proxy path.
+
+Stage 0J outcome and Stage 0K direction: keep the next POC Core API only and solve public routing/deployment mapping. Do not expand to Console, PITS, DB-backed endpoints, storage-backed endpoints or real AI providers until the public Core API `/health` route is mapped safely.
+
+Stage 0J mock-safe Core API start command used by Abacus:
+
+```sh
+env -u DATABASE_URL -u ABACUS_DATABASE_URL -u ABACUS_STORAGE_* \
+  APP_ENV=codex-cloud-test DEPLOY_TARGET=codex-cloud-test LOCALHOST_REQUIRED=false \
+  AI_PROVIDER=mock AI_PROVIDER_MODE=mock OPENROUTER_API_KEY= STORAGE_PROVIDER=mock \
+  CORE_API_HOST=127.0.0.1 CORE_API_PORT=4000 CORE_API_URL=http://127.0.0.1:4000 \
+  NEXT_TELEMETRY_DISABLED=1 \
+  pnpm --filter @ois/core-api start
+```
 
 ## Stage 0F-R2 Readiness Matrix
 
@@ -115,6 +130,7 @@ Do not begin these steps until the Stage 0F-R3 checklist is complete and reviewe
 Stage 0F-R4 did not execute these steps.
 Stage 0H did not execute these steps.
 Stage 0I-R1 did not execute these steps.
+Stage 0J executed only a local VM Core API health POC, not a public deployment or full split-app staging POC.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -131,6 +147,8 @@ Stage 0I-R1 did not execute these steps.
 - OIS Console `/` renders `OIS Console`.
 - PITS Shell `/` renders `PITS Shell`.
 
+Stage 0J verified only the first two checks locally on `127.0.0.1:4000`; public `/health` still returned 404 until routing/deployment is configured.
+
 ## Stop Conditions
 
 - Missing migration evidence.
@@ -139,6 +157,7 @@ Stage 0I-R1 did not execute these steps.
 - Stage 0F-R3 owner checklist is incomplete or contains real secret values.
 - Stage 0H go/no-go gate is incomplete.
 - Abacus port behavior for services 4000, 3000 and 3001 is unknown.
+- Public routing for Core API `/health` is not configured or returns 404.
 - Any production credential appears in CI, Codex or staging logs.
 - Any smoke test fails.
 - Manual owner sign-off is missing.
