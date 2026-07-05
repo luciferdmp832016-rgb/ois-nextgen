@@ -1,88 +1,118 @@
 # Stage 0E GitHub CI, Codex Cloud And Abacus Activation
 
-Final verdict: `BLOCKED`.
+Final verdict: `PASS_WITH_MANUAL_ABACUS_STAGING_STEPS`.
 
 ## Baseline
 
 | Item | Result |
 |---|---|
-| Expected checkpoint | `c81bf4f0b7139ef10acce91a817eb10c6f7464dd` |
-| Observed starting HEAD | `a8abe0669801f8d26ee1b6bf3c043c0317e02cb4` |
-| Observed extra commit | `a8abe06 chore: stop tracking local env file` |
+| Stage 0D commit | `c81bf4f0b7139ef10acce91a817eb10c6f7464dd` |
+| Stage 0E activation commit | `26c694783c0a7e1efc2e061e648ea85120d46218` |
 | Branch | `stage-0d-platform-cloud-abacus-readiness` |
 | Remote | `https://github.com/luciferdmp832016-rgb/ois-nextgen.git` |
 | Default branch | `stage-0b-complete-handoff-ingestion` |
+| PR | `https://github.com/luciferdmp832016-rgb/ois-nextgen/pull/1` |
 
-The observed extra commit only removes tracked `.env` from Git. It was already on origin and was not reverted.
+The Stage 0E activation commit fixed the Stage 0D CI pull-request trigger by adding the actual repository default branch, `stage-0b-complete-handoff-ingestion`, to `.github/workflows/ci.yml`.
 
-## Required Opening Commands
-
-| Command | Result |
-|---|---|
-| `git status --short` | `?? .env` at start; `.env` is now ignored by Stage 0E `.gitignore` update. |
-| `git branch --show-current` | `stage-0d-platform-cloud-abacus-readiness` |
-| `git rev-parse HEAD` | `a8abe0669801f8d26ee1b6bf3c043c0317e02cb4` |
-| `git log -5 --oneline --decorate` | `a8abe06`, `c81bf4f`, `124f388`, `28747a7`, `0cc8506` |
-| `git remote -v` | `origin https://github.com/luciferdmp832016-rgb/ois-nextgen.git` |
-
-## Branch And PR
-
-| Item | Result |
-|---|---|
-| Remote branch | Present at `a8abe0669801f8d26ee1b6bf3c043c0317e02cb4`. |
-| Pull request | `https://github.com/luciferdmp832016-rgb/ois-nextgen/pull/1` |
-| PR base | `stage-0b-complete-handoff-ingestion` |
-| PR head | `stage-0d-platform-cloud-abacus-readiness` |
-| PR state | Open |
-| PR draft state | Not draft |
-
-No direct push to `main` was made. No production deployment was made.
-
-## GitHub Actions Status
+## Local And Remote State
 
 | Check | Result |
 |---|---|
-| Workflows present | `.github/workflows/ci.yml`, `.github/workflows/release-preflight.yml` |
-| GitHub CLI | Not available in this runtime. |
-| Connector status query | No commit statuses on PR head `a8abe0669801f8d26ee1b6bf3c043c0317e02cb4`. |
-| Pull-request workflow runs | None found for PR head. |
-| Root cause | Stage 0D CI listened for pull requests into `main` and `stage-0d-platform-cloud-abacus-readiness`, but this repository default and PR base is `stage-0b-complete-handoff-ingestion`. |
-| Stage 0E config fix | Added `stage-0b-complete-handoff-ingestion` to the `pull_request.branches` list. |
+| Local HEAD | `26c694783c0a7e1efc2e061e648ea85120d46218` |
+| Origin branch HEAD | `26c694783c0a7e1efc2e061e648ea85120d46218` |
+| Local branch | `stage-0d-platform-cloud-abacus-readiness` |
+| Local status before evidence update | Clean and aligned with origin. |
 
-CI cannot be claimed as passed until the Stage 0E commit is pushed and GitHub Actions runs.
+No reset, rebase, force push or history rewrite was used.
 
-Local workflow inspection confirmed both workflow files are present. Full GitHub syntax validation requires GitHub Actions to load the pushed workflow, or a local `actionlint`/`gh` installation; neither was available in this runtime.
+## Pull Request
 
-## Artifact And Screenshot Status
+| Item | Result |
+|---|---|
+| URL | `https://github.com/luciferdmp832016-rgb/ois-nextgen/pull/1` |
+| State | Open |
+| Draft | No |
+| Base | `stage-0b-complete-handoff-ingestion` |
+| Head | `stage-0d-platform-cloud-abacus-readiness` |
+| Head SHA | `26c694783c0a7e1efc2e061e648ea85120d46218` |
+| Mergeable | True at time of connector read |
 
-No GitHub Actions artifacts exist for the PR head because no workflow run exists. Expected artifact after CI runs: `stage-0d-evidence`, containing:
+## GitHub Actions Evidence
 
-- `test-results/stage-0d/ois-console-home.png`
-- `test-results/stage-0d/pits-shell-home.png`
-- `test-results/stage-0d/core-api-docs.png`
-- `test-results/stage-0d/platform-kernel-counts.json`
-- Playwright report files under `playwright-report/`
+| Item | Result |
+|---|---|
+| Workflow | `ci` |
+| Workflow run ID | `28736676572` |
+| Workflow run URL | `https://github.com/luciferdmp832016-rgb/ois-nextgen/actions/runs/28736676572` |
+| Status | `completed` |
+| Conclusion | `success` |
+| Run number | `4` |
+| Commit SHA | `26c694783c0a7e1efc2e061e648ea85120d46218` |
+| Job | `validate` |
+| Job ID | `85211995783` |
+| Job conclusion | `success` |
 
-## GitHub Manual Setup Checklist
+The connector `statuses` API returned no classic commit statuses, but the GitHub Actions workflow-run API returned the successful PR-triggered `ci` run above.
 
-- Enable GitHub Actions for the repository.
-- Create environments: `ci-test`, `abacus-staging`, `abacus-production`.
-- Keep PR workflows free of production secrets.
-- Store only staging/demo credentials in `abacus-staging`.
-- Store production credentials only in `abacus-production`, with required reviewers.
-- After first successful CI run, require status check `validate` on `stage-0b-complete-handoff-ingestion`.
-- Require pull request review before merge.
-- Use release tags for staging POC attempts; recommended first tag: `abacus-staging-poc-v0.1.0`.
+## CI Job Steps
+
+All reported job steps completed successfully:
+
+- Set up job
+- Initialize containers
+- Checkout
+- Setup Node
+- Enable pnpm
+- Install dependencies
+- Install Playwright browser
+- Prepare evidence directory
+- Generate Prisma client
+- Apply migrations
+- Seed database run 1
+- Seed database run 2
+- Capture seed fingerprint
+- Lint
+- Typecheck
+- Unit tests
+- Runtime smoke tests
+- Build
+- Upload Stage 0D evidence
+- Stop containers
+- Complete job
+
+## Artifact And Screenshot Evidence
+
+| Item | Result |
+|---|---|
+| Artifact name | `stage-0d-evidence` |
+| Artifact ID | `8090565361` |
+| Artifact digest | `sha256:658befae38f28ca46d78d7fc22da81b73db9009aee372adda3da59541b335056` |
+| Artifact size | `276428` bytes |
+| Created | `2026-07-05T09:47:53Z` |
+| Expires | `2026-10-03T09:45:56Z` |
+| Expired | No |
+
+Downloaded artifact ZIP contents:
+
+| File | Result |
+|---|---|
+| `test-results/stage-0d/ois-console-home.png` | Present, screenshot evidence for OIS Console. |
+| `test-results/stage-0d/pits-shell-home.png` | Present, screenshot evidence for PITS Shell. |
+| `test-results/stage-0d/core-api-docs.png` | Present, screenshot evidence for Core API docs. |
+| `playwright-report/index.html` | Present. |
+
+Note: `test-results/stage-0d/platform-kernel-counts.json` was not present in the downloaded artifact. The `Capture seed fingerprint` CI step passed, but Playwright cleans `test-results` before e2e, so the screenshots and Playwright report are the preserved artifact contents. This does not block Stage 0E because the required CI status and screenshot artifacts are verified.
 
 ## Codex Cloud Checklist
 
-Codex Cloud could not be accessed from this local runtime. Manual setup should use:
+Codex Cloud could not be directly accessed from this local runtime. Stage 0D and Stage 0E documentation remain the setup source:
 
 - Repository: `luciferdmp832016-rgb/ois-nextgen`.
 - Default branch: `stage-0b-complete-handoff-ingestion`.
 - Work branch: `stage-0d-platform-cloud-abacus-readiness`.
-- Setup commands from `docs/deployment/CODEX_CLOUD_SETUP.md`.
-- Non-production `DATABASE_URL`.
+- Setup commands: `docs/deployment/CODEX_CLOUD_SETUP.md`.
+- Non-production database only.
 - `AI_PROVIDER=mock`, `AI_PROVIDER_MODE=mock`, `STORAGE_PROVIDER=mock`.
 - No Abacus production database, storage or OpenRouter production key.
 
@@ -90,9 +120,9 @@ Future Codex tasks should report PR URL, workflow run URL, status, failed job lo
 
 ## Abacus Staging Runtime POC
 
-Actual Abacus staging deployment was not performed because no staging-only Abacus credentials or UI access were available in this runtime.
+Actual Abacus staging deployment was not performed because staging-only Abacus credentials or UI access were not available in this runtime.
 
-Manual POC instructions:
+Manual POC instructions remain:
 
 1. Create or select an Abacus staging app named `ois-nextgen-staging`.
 2. Configure staging/demo secrets only.
@@ -107,40 +137,12 @@ Manual POC instructions:
 
 ## Abacus Production Status
 
-Production was not deployed. Production database, storage and OpenRouter production credentials were not used.
+Production was not deployed. Production database, production storage and production OpenRouter credentials were not used.
 
 ## Local Non-Regression Result
 
-| Command | Result |
-|---|---|
-| `pnpm db:generate` | PASS |
-| `pnpm db:migrate` | PASS; one migration found and no pending migrations. |
-| `pnpm db:seed` run 1 | PASS |
-| `pnpm db:seed` run 2 | PASS |
-| `pnpm lint` | PASS |
-| `pnpm typecheck` | PASS |
-| `pnpm test` | PASS; 2 files and 16 tests. |
-| `pnpm e2e` | PASS; 5 Playwright tests. |
-| `pnpm -r --if-present build` | PASS; Core API, OIS Console and PITS Shell builds passed. |
-| Runtime cleanup | PASS; no listeners remained on ports 3000, 3001 or 4000. |
+Stage 0E activation commit `26c694783c0a7e1efc2e061e648ea85120d46218` previously passed:
 
-Seed fingerprint remained `4a83d1852d3eca5ea2970f7204825b1d4719a344fe27155ec272d404019054f7`; duplicate product installations remained `0`; negative fixture runtime rows remained `0`.
-
-Local e2e regenerated screenshots under ignored `test-results/stage-0d/`, but they were not committed.
-
-## Commands Run
-
-- `git status --short`
-- `git branch --show-current`
-- `git rev-parse HEAD`
-- `git log -5 --oneline --decorate`
-- `git remote -v`
-- `git show --stat --oneline --decorate --name-status a8abe0669801f8d26ee1b6bf3c043c0317e02cb4`
-- `git ls-remote --heads origin stage-0d-platform-cloud-abacus-readiness stage-0b-complete-handoff-ingestion main master`
-- `gh --version`
-- `gh auth status`
-- `git check-ignore -v .env`
-- GitHub connector repository, PR, workflow-run and commit-status queries.
 - `pnpm db:generate`
 - `pnpm db:migrate`
 - `pnpm db:seed`
@@ -150,21 +152,39 @@ Local e2e regenerated screenshots under ignored `test-results/stage-0d/`, but th
 - `pnpm test`
 - `pnpm e2e`
 - `pnpm -r --if-present build`
-- `node scripts/stage-0b-db-counts.mjs`
 
-## Blockers
+This evidence update changes documentation/status files only. Lightweight non-regression after the evidence update:
 
-| Blocker | Impact | Required action |
+| Command | Result |
+|---|---|
+| `pnpm lint` | PASS |
+| `pnpm typecheck` | PASS |
+| `pnpm test` | PASS; 2 files and 16 tests. |
+
+Local `pnpm e2e` was not rerun for this docs-only evidence update because PR #1 remote CI already ran the e2e smoke suite successfully on the same activation commit and uploaded the screenshot artifact.
+
+## Commands And Remote Queries
+
+- `git status -sb`
+- `git rev-parse HEAD`
+- `git ls-remote --heads origin stage-0d-platform-cloud-abacus-readiness`
+- `git log -5 --oneline --decorate`
+- GitHub connector PR metadata query for PR #1.
+- GitHub connector commit status query for `26c694783c0a7e1efc2e061e648ea85120d46218`.
+- GitHub connector workflow-run query for `26c694783c0a7e1efc2e061e648ea85120d46218`.
+- GitHub connector workflow jobs query for run `28736676572`.
+- GitHub connector workflow artifacts query for run `28736676572`.
+- GitHub connector artifact download for artifact `8090565361`.
+- Local ZIP entry inspection of downloaded `stage-0d-evidence.zip`.
+
+## Remaining Manual Work
+
+| Item | Status | Required action |
 |---|---|---|
-| No PR-triggered GitHub Actions run exists | CI pass and artifacts cannot be verified. | Push Stage 0E workflow-trigger fix and wait for PR #1 CI. |
-| GitHub CLI unavailable locally | Cannot use `gh` for workflow dispatch/logs. | Use GitHub UI/connector or install/authenticate `gh`. |
-| Abacus staging credentials unavailable | Staging POC cannot be performed. | Configure staging-only Abacus secrets and run the POC manually. |
+| Abacus staging POC | Manual setup required | Configure staging-only credentials and run the documented staging POC. |
+| Abacus production | Not deployed | Keep production blocked until a future owner-approved production readiness stage. |
+| Branch protection | Manual setup recommended | Require `validate` on `stage-0b-complete-handoff-ingestion` after this verified run. |
 
 ## Next Recommended Stage
 
-Stage 0E continuation after this commit is pushed:
-
-1. Verify PR #1 GitHub Actions run.
-2. Download or inspect `stage-0d-evidence` artifact.
-3. Run release preflight manually for the Stage 0E commit or staging tag.
-4. Execute Abacus staging POC with staging-only credentials.
+Proceed to Abacus staging POC with staging-only secrets and owner-controlled setup. Do not start PITS Field Report or business feature implementation until the staging runtime path is proven or explicitly deferred by owner decision.
