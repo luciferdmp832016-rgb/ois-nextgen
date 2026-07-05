@@ -30,6 +30,22 @@ Use the same release ref for all three services.
 - Production credentials are absent.
 - Deployment manifest draft is complete.
 
+Stage 0F-R2 discovery result: these prerequisites are not yet satisfied from Codex. Access to the `OIS NextGen Staging` project is partial, but staging env/secrets/deploy configuration, service identifiers, staging URLs, staging database, staging storage or mock mode, and staging AI mock values are still unknown.
+
+## Stage 0F-R2 Readiness Matrix
+
+| Area | Minimum staging-only input | Stage 0F-R2 status |
+|---|---|---|
+| DB | Staging-only `DATABASE_URL`, or confirmed mock DB mode. | Missing; no staging database URL or mock DB mode was confirmed. |
+| Storage | Confirmed `STORAGE_PROVIDER=mock`, or staging-only storage credentials after storage tests are approved. | Missing; Abacus storage/mock configuration remains unknown. |
+| AI | Confirmed `AI_PROVIDER=mock` and `AI_PROVIDER_MODE=mock`, or approved non-production AI key. | Missing; Abacus AI env values remain unknown. |
+| Abacus identifiers | Exact project/app/service/task identifiers for the split Core API, Console and PITS services. | Partial; project `OIS NextGen Staging` is known, exact app/service/task IDs are not. |
+| Runtime entrypoint | Confirmed split-app build/start commands and port behavior accepted by Abacus. | Partially known from repo scripts, but Abacus runtime and dynamic port behavior remain unknown. |
+| Secrets/env injection | Verified Abacus staging UI or agent path for environment values and secrets. | Unknown; no safe injection path was verified. |
+| Staging URLs | Staging subdomain/path for Core API, Console and PITS. | Missing. |
+
+Do not execute a staging deployment until every row above is confirmed as staging-only. If any row remains unknown, document the blocker and stop.
+
 ## Required Staging Secrets
 
 - `ABACUS_ENV=staging`
