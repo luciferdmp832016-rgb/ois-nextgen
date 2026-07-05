@@ -103,6 +103,31 @@ Stage 0K preview public routing evidence update: Abacus VM preview routing is co
 | Secret printing | `CONFIRMED_NOT_PRINTED` | No secrets printed. |
 | Process lifecycle | `INTENTIONALLY_RUNNING` | Core API process was intentionally kept running for live verification. |
 
+Stage 0L hosted-app custom domain evidence update: VM preview routing remains confirmed, but custom-domain hosted-app deployment is blocked from the VM shell. This table does not approve DB-backed endpoints, storage-backed endpoints, real AI providers, migrations, hosted-app creation without owner registration, Always On changes or production resources.
+
+| Item | Stage 0L status | Redacted reference |
+|---|---|---|
+| Abacus repo path | `CONFIRMED` | `/home/ubuntu/ois-nextgen` |
+| Abacus execution branch | `CONFIRMED` | `stage-0b-complete-handoff-ingestion` |
+| Abacus execution commit | `CONFIRMED` | `64486c1ebf9d5bc96cadc8220d1616dea9ccbf70` |
+| Abacus working tree | `CONFIRMED_WITH_PLATFORM_FILE` | Clean except untracked `.abacus.donotdelete` platform file. |
+| Code changes | `CONFIRMED_NOT_CHANGED` | No code changes made during Abacus Stage 0L. |
+| `.env` file | `CONFIRMED_NOT_CREATED` | No `.env` created or committed. |
+| Hosted app/service creation | `CONFIRMED_NOT_CREATED` | No hosted app/service was created. |
+| Always On | `CONFIRMED_NOT_CHANGED` | Always On was not changed. |
+| VM deploy CLI | `BLOCKED` | No `abacus`/`abacusai` deploy CLI found on `PATH`. |
+| SDK deploy path | `BLOCKED` | Found deployment methods target ML models/agents, not generic Node/Fastify custom-domain web service. |
+| VM preview origin | `CONFIRMED` | `APP_ORIGIN` / `PREVIEW_URL` = `https://7a162f29d.na116.preview.abacusai.app`. |
+| Preview proxy Core API `/health` | `CONFIRMED` | `https://7a162f29d-4000.na116.preview.abacusai.app/health` returned HTTP 200. |
+| Custom domain root | `EDGE_PLACEHOLDER_CONFIRMED` | `https://ois-nextgen.abacusai.cloud/` returned HTTP 200 body `READY`. |
+| Custom domain `/health` | `BLOCKED_BACKEND_MAPPING_MISSING` | `https://ois-nextgen.abacusai.cloud/health` returned HTTP 404. |
+| Core API local `/health` | `CONFIRMED` | `http://127.0.0.1:4000/health` returned HTTP 200. |
+| Process lifecycle | `CONFIRMED_STOPPED` | PID `782` stopped after evidence; no listener remained on port 4000. |
+| DB-backed endpoints | `CONFIRMED_NOT_CALLED` | No DB-backed endpoints called. |
+| Storage-backed endpoints | `CONFIRMED_NOT_CALLED` | No storage-backed endpoints called. |
+| AI/OpenRouter real key | `CONFIRMED_NOT_USED` | Mock mode; no real OpenRouter key. |
+| Secret printing | `CONFIRMED_NOT_PRINTED` | No secrets printed. |
+
 ## Required Readiness Summary
 
 | Area | Required for POC | Optional for first POC | Safe handoff format |
