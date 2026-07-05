@@ -11,3 +11,12 @@
 ## Production Separation
 
 Production database and storage values are never copied into local, Codex Cloud or GitHub Actions.
+
+## Stage 0F Staging Notes
+
+Stage 0F recommends split app staging:
+
+- Core API owns database connectivity.
+- OIS Console and PITS Shell run as separate Next.js staging services.
+- Storage remains `mock` until a storage ADR and staging storage tests exist.
+- AI remains `mock`; no production OpenRouter key is used.
