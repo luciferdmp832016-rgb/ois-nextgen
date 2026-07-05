@@ -40,6 +40,8 @@ Stage 0H handoff result: the Abacus staging runtime handoff package is documente
 
 Stage 0I discovery result: Abacus live runtime configuration remains blocked. No Abacus connector, CLI, authenticated UI, screenshots or owner-filled checklist were available in Stage 0I. Treat project ID, SuperComputer/cloud ID, public URL, GitHub/source state, service IDs, env/secrets mechanism, live mock config and port/proxy behavior as unknown until owner evidence is provided.
 
+Stage 0I-R1 owner-assisted source result: GitHub/source bootstrap is confirmed on Abacus SuperComputer. The repo is cloned at `/home/ubuntu/ois-nextgen`, `origin` points to `https://github.com/luciferdmp832016-rgb/ois-nextgen.git`, branch `stage-0b-complete-handoff-ingestion` is checked out at commit `64486c1ebf9d5bc96cadc8220d1616dea9ccbf70`, and the working tree is clean/up to date. No `pnpm install`, build, app start, migration, `prisma db push` or secret printing occurred. Runtime port/proxy behavior, env/secrets injection and public URL mapping remain unknown, so the runtime POC remains blocked.
+
 ## Stage 0H Handoff Summary
 
 Initial Abacus POC scope must reproduce the Stage 0G mock-safe boot only:
@@ -67,6 +69,8 @@ Stage 0I go/no-go remains blocked until the following are confirmed with redacte
 - `AI_PROVIDER=mock`, `AI_PROVIDER_MODE=mock`, `STORAGE_PROVIDER=mock`, and no production OpenRouter key.
 - Public staging URLs and healthcheck path configuration.
 - Fixed port or proxy behavior for 4000, 3000 and 3001, or a split-app equivalent.
+
+Stage 0I-R1 recommendation for Stage 0J: perform a Core API only POC first, using mock-safe env only. Do not call DB-backed endpoints, storage-backed endpoints or real AI/OpenRouter providers. Confirm local HTTP 200 at `127.0.0.1:4000/health` before trying any public URL `/health` mapping. Stop if Abacus requires production credentials, migrations, `prisma db push`, secret printing or an unconfirmed port/proxy path.
 
 ## Stage 0F-R2 Readiness Matrix
 
@@ -110,6 +114,7 @@ Keep storage secrets unset and `STORAGE_PROVIDER=mock` until staging storage tes
 Do not begin these steps until the Stage 0F-R3 checklist is complete and reviewed.
 Stage 0F-R4 did not execute these steps.
 Stage 0H did not execute these steps.
+Stage 0I-R1 did not execute these steps.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.

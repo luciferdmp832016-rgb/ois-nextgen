@@ -32,6 +32,31 @@ Stage 0I discovery status: live Abacus/SuperComputer runtime configuration is st
 | Build/start entrypoint options | `UNKNOWN` | Repo commands known; Abacus UI support not confirmed. |
 | Healthcheck config options | `UNKNOWN` | Repo healthchecks known; Abacus UI support not confirmed. |
 
+Stage 0I-R1 owner-assisted source evidence update: Abacus source bootstrap is now confirmed, but runtime configuration remains blocked. The rows below record non-secret evidence only and do not approve deployment, runtime start, DB use, storage use, OpenRouter use or migrations.
+
+| Item | Stage 0I-R1 status | Redacted reference |
+|---|---|---|
+| GitHub connected | `CONFIRMED` | Abacus UI shows GitHub account `@luciferdmp832016-rgb` connected. |
+| Abacus git command support | `CONFIRMED` | Abacus UI says git commands work automatically in the VM. |
+| OIS repo cloned | `CONFIRMED` | `/home/ubuntu/ois-nextgen` |
+| Repo remote | `CONFIRMED` | `origin -> https://github.com/luciferdmp832016-rgb/ois-nextgen.git` |
+| Active branch | `CONFIRMED` | `stage-0b-complete-handoff-ingestion` |
+| Active commit | `CONFIRMED` | `64486c1ebf9d5bc96cadc8220d1616dea9ccbf70` |
+| Working tree | `CONFIRMED` | Clean and up to date with `origin/stage-0b-complete-handoff-ingestion`. |
+| Fetch/checkout/pull verification | `CONFIRMED` | `git fetch origin`, `git checkout`, and `git pull --ff-only` completed without errors or new refs to pull. |
+| Package install/build/runtime | `CONFIRMED_NOT_RUN` | No `pnpm install`, build or app start was run. |
+| Migration / `prisma db push` | `CONFIRMED_NOT_RUN` | No migrations and no `prisma db push` were run. |
+| Secret printing | `CONFIRMED_NOT_RUN` | No secret values were printed. |
+| Public URL candidate | `CANDIDATE_VISIBLE_BUT_UNVERIFIED` | `https://ois-nextgen.abacusai.cloud`; runtime mapping unknown. |
+| SuperComputer/cloud ID candidate | `CANDIDATE_VISIBLE_BUT_UNVERIFIED` | `151e3ee5ff` |
+| Storage mechanism | `CONFIRMED_USAGE_DEFERRED` | `s3://abacusai-apps-63d0fc416a01edba9893570e-us-west-2/59543/`; first POC remains mock-only. |
+| Database mechanism | `CONFIRMED_USAGE_BLOCKED` | Attached DB `default`; available DBs `default`, `emerald_bql_web_dev`, `ois_phase1_dev`; DB use requires staging-only approval. |
+| SSH endpoints | `CONFIRMED_VISIBLE` | IPv6 `ssh ubuntu@ois-nextgen.ssh.abacusai.cloud`; IPv4 `ssh ubuntu@ois-nextgen.ssh4.abacusai.cloud -p 22411`. |
+| Always On | `CONFIRMED_VISIBLE` | Appears OFF. |
+| Env/secrets injection path | `PARTIAL/UNKNOWN` | Mechanism still not confirmed; record names/references only when available. |
+| Runtime port/proxy behavior | `UNKNOWN` | No runtime was started and no port mapping was inspected. |
+| Public URL runtime mapping | `UNKNOWN` | Candidate URL exists, but `/health` mapping has not been tested. |
+
 ## Required Readiness Summary
 
 | Area | Required for POC | Optional for first POC | Safe handoff format |
