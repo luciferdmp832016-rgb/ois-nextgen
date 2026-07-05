@@ -46,6 +46,8 @@ Stage 0J Core API only POC result: Abacus Agent verified the VM can install, lin
 
 Stage 0K preview public routing result: Abacus Agent verified public health through the Abacus VM preview proxy. Core API was bound to `0.0.0.0:4000`; local `http://127.0.0.1:4000/health` and preview `https://7a162f29d-4000.na116.preview.abacusai.app/health` both returned HTTP 200. The hosted-app custom domain `https://ois-nextgen.abacusai.cloud/health` still returned HTTP 404 because it requires an actual Abacus hosted-app deployment or Always-On app. Preview routing is suitable for controlled public POC evidence, not final live hosting.
 
+Stage 0L hosted-app custom domain result: Abacus Agent confirmed the custom domain cannot be mapped to Core API from the VM shell alone. No `abacus`/`abacusai` deploy CLI exists on `PATH`, and observed Abacus SDK deploy paths are for ML models/agents rather than a generic Node/Fastify web-service hosted-app deploy. `https://ois-nextgen.abacusai.cloud/` returns HTTP 200 body `READY` from the Abacus edge placeholder, while `https://ois-nextgen.abacusai.cloud/health` returns HTTP 404 because no backend hosted app is mapped. Owner-assisted Abacus hosted-app service registration is required.
+
 ## Stage 0H Handoff Summary
 
 Initial Abacus POC scope must reproduce the Stage 0G mock-safe boot only:
@@ -103,6 +105,19 @@ env -u DATABASE_URL -u ABACUS_DATABASE_URL -u ABACUS_STORAGE_ENDPOINT -u ABACUS_
 
 Recommended Stage 0L direction: Abacus Hosted-App Core API Deployment / Custom Domain POC. Keep Core API only, keep mock-safe env, avoid DB/storage-backed endpoints and real AI providers, and verify whether `https://ois-nextgen.abacusai.cloud/health` maps to the hosted Core API only after the hosted-app deployment path is configured.
 
+Stage 0L conclusion and Stage 0M direction: do not keep trying to bind the custom domain from the VM shell. Register a Core API hosted app/service through Abacus platform/console owner assistance, then map `https://ois-nextgen.abacusai.cloud/health` to that hosted backend. Keep the topology Core API only, mock-safe, no DB/storage/AI, healthcheck `/health`, port `4000` or platform-required `PORT`, and Always On only for the single Core API service with owner approval.
+
+Stage 0L mock-safe Core API start command used during investigation:
+
+```sh
+env -u DATABASE_URL -u ABACUS_DATABASE_URL -u ABACUS_STORAGE_* \
+  APP_ENV=codex-cloud-test DEPLOY_TARGET=codex-cloud-test \
+  LOCALHOST_REQUIRED=false AI_PROVIDER=mock AI_PROVIDER_MODE=mock \
+  OPENROUTER_API_KEY= STORAGE_PROVIDER=mock \
+  CORE_API_HOST=0.0.0.0 CORE_API_PORT=4000 \
+  pnpm --filter @ois/core-api start
+```
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -148,6 +163,7 @@ Stage 0H did not execute these steps.
 Stage 0I-R1 did not execute these steps.
 Stage 0J executed only a local VM Core API health POC, not a public deployment or full split-app staging POC.
 Stage 0K executed only a VM preview proxy Core API health POC, not a hosted-app deployment or full split-app staging POC.
+Stage 0L executed hosted-app/custom-domain investigation plus controlled Core API boot only; no hosted app/service was created.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -166,6 +182,7 @@ Stage 0K executed only a VM preview proxy Core API health POC, not a hosted-app 
 
 Stage 0J verified only the first two checks locally on `127.0.0.1:4000`; public `/health` still returned 404 until routing/deployment is configured.
 Stage 0K verified Core API `/health` publicly through the VM preview proxy at `https://7a162f29d-4000.na116.preview.abacusai.app/health`; the hosted custom domain remains unverified.
+Stage 0L confirmed `https://ois-nextgen.abacusai.cloud/` returns edge placeholder `READY`, while `https://ois-nextgen.abacusai.cloud/health` remains HTTP 404 until Abacus platform/console maps a hosted app backend.
 
 ## Stop Conditions
 
@@ -176,6 +193,7 @@ Stage 0K verified Core API `/health` publicly through the VM preview proxy at `h
 - Stage 0H go/no-go gate is incomplete.
 - Hosted-app port behavior and Console/PITS service port behavior remain unverified.
 - Hosted-app/custom-domain routing for Core API `/health` is not configured or returns 404.
+- No owner-assisted Abacus hosted-app service registration path is available.
 - Any production credential appears in CI, Codex or staging logs.
 - Any smoke test fails.
 - Manual owner sign-off is missing.
