@@ -57,6 +57,29 @@ Stage 0I-R1 owner-assisted source evidence update: Abacus source bootstrap is no
 | Runtime port/proxy behavior | `UNKNOWN` | No runtime was started and no port mapping was inspected. |
 | Public URL runtime mapping | `UNKNOWN` | Candidate URL exists, but `/health` mapping has not been tested. |
 
+Stage 0J Core API only POC evidence update: Abacus VM code/build/local runtime is confirmed for Core API with mock-safe env. Public routing remains blocked. This table does not approve DB-backed endpoints, storage-backed endpoints, real AI providers, migrations or production resources.
+
+| Item | Stage 0J status | Redacted reference |
+|---|---|---|
+| Abacus repo path | `CONFIRMED` | `/home/ubuntu/ois-nextgen` |
+| Abacus execution branch | `CONFIRMED` | `stage-0b-complete-handoff-ingestion` |
+| Abacus execution commit | `CONFIRMED` | `64486c1ebf9d5bc96cadc8220d1616dea9ccbf70` |
+| Abacus working tree | `CONFIRMED_WITH_PLATFORM_FILE` | Clean except untracked `.abacus.donotdelete` platform file. |
+| `.env` file | `CONFIRMED_NOT_CREATED` | No `.env` created or committed. |
+| Node.js version | `CONFIRMED` | `v22.14.0` |
+| pnpm version | `CONFIRMED` | `9.15.4` |
+| Install/build/test | `CONFIRMED` | `corepack enable`, `pnpm install`, lint, typecheck, tests and recursive build passed. |
+| Prisma client generation | `CONFIRMED` | Generated during install; no migration ran. |
+| Core API local listener | `CONFIRMED` | `127.0.0.1:4000` |
+| Core API local `/health` | `CONFIRMED` | HTTP 200 with `status=ok`. |
+| Core API local `/` | `CONFIRMED` | HTTP 200 with service `ois-nextgen-core-api`. |
+| Console/PITS runtime | `CONFIRMED_NOT_STARTED` | Core API only POC. |
+| DB-backed endpoints | `CONFIRMED_NOT_CALLED` | No DB-backed endpoints called. |
+| Storage-backed endpoints | `CONFIRMED_NOT_CALLED` | No storage-backed endpoints called. |
+| AI/OpenRouter real key | `CONFIRMED_NOT_USED` | Mock mode; `OPENROUTER_API_KEY` empty. |
+| Public URL `/health` | `BLOCKED_PUBLIC_MAPPING` | `https://ois-nextgen.abacusai.cloud/health` returned HTTP 404 from cloudflare/nginx. |
+| Process cleanup | `CONFIRMED` | SIGTERM sent, exit 143, post-stop port 4000 listener check clear. |
+
 ## Required Readiness Summary
 
 | Area | Required for POC | Optional for first POC | Safe handoff format |
