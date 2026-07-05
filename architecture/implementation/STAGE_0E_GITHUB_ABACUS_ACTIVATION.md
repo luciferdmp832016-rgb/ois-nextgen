@@ -8,6 +8,7 @@ Final verdict: `PASS_WITH_MANUAL_ABACUS_STAGING_STEPS`.
 |---|---|
 | Stage 0D commit | `c81bf4f0b7139ef10acce91a817eb10c6f7464dd` |
 | Stage 0E activation commit | `26c694783c0a7e1efc2e061e648ea85120d46218` |
+| Stage 0E pushed evidence commit | `e097fcaee67eb19e5f092fd2f4718f1b4addf64f` |
 | Branch | `stage-0d-platform-cloud-abacus-readiness` |
 | Remote | `https://github.com/luciferdmp832016-rgb/ois-nextgen.git` |
 | Default branch | `stage-0b-complete-handoff-ingestion` |
@@ -19,8 +20,8 @@ The Stage 0E activation commit fixed the Stage 0D CI pull-request trigger by add
 
 | Check | Result |
 |---|---|
-| Local HEAD | `26c694783c0a7e1efc2e061e648ea85120d46218` |
-| Origin branch HEAD | `26c694783c0a7e1efc2e061e648ea85120d46218` |
+| Local HEAD before this evidence update | `e097fcaee67eb19e5f092fd2f4718f1b4addf64f` |
+| Origin branch HEAD | `e097fcaee67eb19e5f092fd2f4718f1b4addf64f` |
 | Local branch | `stage-0d-platform-cloud-abacus-readiness` |
 | Local status before evidence update | Clean and aligned with origin. |
 
@@ -35,7 +36,7 @@ No reset, rebase, force push or history rewrite was used.
 | Draft | No |
 | Base | `stage-0b-complete-handoff-ingestion` |
 | Head | `stage-0d-platform-cloud-abacus-readiness` |
-| Head SHA | `26c694783c0a7e1efc2e061e648ea85120d46218` |
+| Head SHA | `e097fcaee67eb19e5f092fd2f4718f1b4addf64f` |
 | Mergeable | True at time of connector read |
 
 ## GitHub Actions Evidence
@@ -43,14 +44,14 @@ No reset, rebase, force push or history rewrite was used.
 | Item | Result |
 |---|---|
 | Workflow | `ci` |
-| Workflow run ID | `28736676572` |
-| Workflow run URL | `https://github.com/luciferdmp832016-rgb/ois-nextgen/actions/runs/28736676572` |
+| Workflow run ID | `28738572346` |
+| Workflow run URL | `https://github.com/luciferdmp832016-rgb/ois-nextgen/actions/runs/28738572346` |
 | Status | `completed` |
 | Conclusion | `success` |
-| Run number | `4` |
-| Commit SHA | `26c694783c0a7e1efc2e061e648ea85120d46218` |
+| Run number | `6` |
+| Commit SHA | `e097fcaee67eb19e5f092fd2f4718f1b4addf64f` |
 | Job | `validate` |
-| Job ID | `85211995783` |
+| Job ID | `85217128996` |
 | Job conclusion | `success` |
 
 The connector `statuses` API returned no classic commit statuses, but the GitHub Actions workflow-run API returned the successful PR-triggered `ci` run above.
@@ -86,11 +87,11 @@ All reported job steps completed successfully:
 | Item | Result |
 |---|---|
 | Artifact name | `stage-0d-evidence` |
-| Artifact ID | `8090565361` |
-| Artifact digest | `sha256:658befae38f28ca46d78d7fc22da81b73db9009aee372adda3da59541b335056` |
-| Artifact size | `276428` bytes |
-| Created | `2026-07-05T09:47:53Z` |
-| Expires | `2026-10-03T09:45:56Z` |
+| Artifact ID | `8091118447` |
+| Artifact digest | `sha256:c5ad79813ed6c2f8d7feacea3db5882abbdbb63dcdfbf5bf6bb323beaf8377c0` |
+| Artifact size | `279228` bytes |
+| Created | `2026-07-05T11:04:14Z` |
+| Expires | `2026-10-03T11:02:14Z` |
 | Expired | No |
 
 Downloaded artifact ZIP contents:
@@ -161,7 +162,7 @@ This evidence update changes documentation/status files only. Lightweight non-re
 | `pnpm typecheck` | PASS |
 | `pnpm test` | PASS; 2 files and 16 tests. |
 
-Local `pnpm e2e` was not rerun for this docs-only evidence update because PR #1 remote CI already ran the e2e smoke suite successfully on the same activation commit and uploaded the screenshot artifact.
+Local `pnpm e2e` was not rerun for this docs-only evidence update because PR #1 remote CI ran the e2e smoke suite successfully on pushed commit `e097fcaee67eb19e5f092fd2f4718f1b4addf64f` and uploaded the screenshot artifact.
 
 ## Commands And Remote Queries
 
@@ -170,12 +171,12 @@ Local `pnpm e2e` was not rerun for this docs-only evidence update because PR #1 
 - `git ls-remote --heads origin stage-0d-platform-cloud-abacus-readiness`
 - `git log -5 --oneline --decorate`
 - GitHub connector PR metadata query for PR #1.
-- GitHub connector commit status query for `26c694783c0a7e1efc2e061e648ea85120d46218`.
-- GitHub connector workflow-run query for `26c694783c0a7e1efc2e061e648ea85120d46218`.
-- GitHub connector workflow jobs query for run `28736676572`.
-- GitHub connector workflow artifacts query for run `28736676572`.
-- GitHub connector artifact download for artifact `8090565361`.
-- Local ZIP entry inspection of downloaded `stage-0d-evidence.zip`.
+- GitHub connector commit status query for `e097fcaee67eb19e5f092fd2f4718f1b4addf64f`.
+- GitHub connector workflow-run query for `e097fcaee67eb19e5f092fd2f4718f1b4addf64f`.
+- GitHub connector workflow jobs query for run `28738572346`.
+- GitHub connector workflow artifacts query for run `28738572346`.
+- GitHub connector artifact download for artifact `8091118447`.
+- Local ZIP entry inspection of downloaded `stage-0d-evidence-e097fca.zip`.
 
 ## Remaining Manual Work
 
