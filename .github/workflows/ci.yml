@@ -1,0 +1,116 @@
+name: ci
+
+on:
+  pull_request:
+    branches:
+      - main
+      - stage-0d-platform-cloud-abacus-readiness
+  push:
+    branches:
+      - main
+      - stage-0b-complete-handoff-ingestion
+      - stage-0d-platform-cloud-abacus-readiness
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ois_nextgen
+          POSTGRES_PASSWORD: ois_nextgen
+          POSTGRES_DB: ois_nextgen
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ois_nextgen -d ois_nextgen"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 8
+
+    env:
+      APP_ENV: ci
+      DEPLOY_TARGET: github-actions
+      LOCALHOST_REQUIRED: "false"
+      DATABASE_URL: postgresql://ois_nextgen:ois_nextgen@localhost:5432/ois_nextgen?schema=public
+      AI_PROVIDER: mock
+      AI_PROVIDER_MODE: mock
+      STORAGE_PROVIDER: mock
+      CORE_API_HOST: "::"
+      CORE_API_PORT: "4000"
+      OIS_CONSOLE_URL: http://localhost:3000
+      PITS_SHELL_URL: http://localhost:3001
+      CORE_API_URL: http://localhost:4000
+      NEXT_TELEMETRY_DISABLED: "1"
+      CI: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@9.15.4 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Prepare evidence directory
+        run: mkdir -p test-results/stage-0d
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      - name: Apply migrations
+        run: pnpm db:migrate
+
+      - name: Seed database run 1
+        run: pnpm db:seed
+
+      - name: Seed database run 2
+        run: pnpm db:seed
+
+      - name: Capture seed fingerprint
+        run: node scripts/stage-0b-db-counts.mjs > test-results/stage-0d/platform-kernel-counts.json
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Runtime smoke tests
+        run: pnpm e2e
+
+      - name: Build
+        run: pnpm -r --if-present build
+
+      - name: Upload Stage 0D evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage-0d-evidence
+          path: |
+            test-results/stage-0d/**
+            playwright-report/**
+            test-results/**/*.zip
+          if-no-files-found: ignore

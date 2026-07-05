@@ -9,6 +9,8 @@
 | Seed idempotency | Stage 0B checkpoint | PASSED | Stage 0C fixed seed no-op writes and verified two reruns with identical overall table fingerprint `4a83d1852d3eca5ea2970f7204825b1d4719a344fe27155ec272d404019054f7`. |
 | Core API root contract | Stage 0B checkpoint | PASSED | Core API `/`, `/docs`, `/health`, `127.0.0.1` and `::1` returned HTTP 200 while canonical `pnpm dev` was running. |
 | Local HTTP runtime | Stage 0B checkpoint | PASSED | `pnpm dev` serves OIS Console on 3000, PITS Shell on 3001, Core API root on 4000, `/docs` and `/health` simultaneously. Console/PITS scripts bind explicitly to `127.0.0.1`. |
+| Cloud CI readiness | Stage 0D checkpoint | PASSED_WITH_MANUAL_GITHUB_SETUP | GitHub Actions CI and release preflight workflows added with PostgreSQL service, migration, seed, lint, typecheck, unit, e2e smoke and build gates. Local Stage 0D gates pass; first GitHub run and branch protection remain manual. |
+| Abacus readiness foundation | Stage 0D checkpoint | MANUAL_SETUP_REQUIRED | Abacus staging and production readiness docs plus deployment manifest template added. No production deploy or credentials used. |
 | Platform kernel bootstrap | PITS vertical slices | PASSED | Kernel schema, seed, hierarchy, permission/capability, audit, idempotency and optimistic concurrency tests pass. |
 | Phase 2 business rules | PITS, Knowledge, Learning, Wisdom, Intelligence behavior | READY_WITH_CONDITIONS | Verified behavior imported; 18 coverage gaps, 10 unverified critical APIs and owner decisions remain open. |
 | Phase 2 API/UI contracts | Legacy compatibility and UI route mapping | READY_WITH_CONDITIONS | 273 route and 90 UI-page baselines preserved; unverified APIs are not authoritative contracts. |
