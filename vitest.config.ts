@@ -5,7 +5,7 @@ const pathFromRoot = (path: string) => fileURLToPath(new URL(path, import.meta.u
 
 export default defineConfig({
   test: {
-    include: ["domains/**/*.test.ts", "packages/**/*.test.ts"],
+    include: ["apps/**/*.test.ts", "domains/**/*.test.ts", "packages/**/*.test.ts"],
     environment: "node"
   },
   resolve: {

@@ -59,36 +59,72 @@ function hashJson(value: unknown): string {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
 
+function normalize(value: unknown): unknown {
+  if (value instanceof Date) return value.toISOString();
+  if (Array.isArray(value)) return value.map((entry) => normalize(entry));
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, entry]) => [key, normalize(entry)])
+    );
+  }
+  return value;
+}
+
+function valuesMatch(left: unknown, right: unknown): boolean {
+  return JSON.stringify(normalize(left)) === JSON.stringify(normalize(right));
+}
+
+function requiresUpdate(existing: Record<string, unknown>, desired: Record<string, unknown>): boolean {
+  return Object.entries(desired).some(([key, value]) => !valuesMatch(existing[key], value));
+}
+
+async function ensureRecord(
+  delegate: any,
+  where: Record<string, unknown>,
+  create: Record<string, unknown>,
+  update: Record<string, unknown> = create
+): Promise<void> {
+  const existing = await delegate.findUnique({ where });
+  if (!existing) {
+    await delegate.create({ data: create });
+    return;
+  }
+
+  if (requiresUpdate(existing, update)) {
+    await delegate.update({ where, data: update });
+  }
+}
+
 async function main(): Promise<void> {
   console.log("DEMO DATA - NOT PRODUCTION");
 
-  await prisma.industry.upsert({
-    where: { id: ids.industry },
-    update: { name: "Building Management" },
-    create: { id: ids.industry, code: "BUILDING_MANAGEMENT", name: "Building Management" }
+  await ensureRecord(prisma.industry, { id: ids.industry }, {
+    id: ids.industry,
+    code: "BUILDING_MANAGEMENT",
+    name: "Building Management"
   });
 
-  await prisma.organization.upsert({
-    where: { id: ids.organization },
-    update: { name: "PMC Demo" },
-    create: { id: ids.organization, code: "PMC_DEMO", name: "PMC Demo", industryId: ids.industry }
+  await ensureRecord(prisma.organization, { id: ids.organization }, {
+    id: ids.organization,
+    code: "PMC_DEMO",
+    name: "PMC Demo",
+    industryId: ids.industry
   });
 
-  await prisma.workspace.upsert({
-    where: { id: ids.workspace },
-    update: { name: "PMC Org Demo" },
-    create: { id: ids.workspace, code: "PMC_ORG_DEMO", name: "PMC Org Demo", organizationId: ids.organization }
+  await ensureRecord(prisma.workspace, { id: ids.workspace }, {
+    id: ids.workspace,
+    code: "PMC_ORG_DEMO",
+    name: "PMC Org Demo",
+    organizationId: ids.organization
   });
 
   for (const project of [
     { id: ids.emeraldProject, code: "EMERALD_PRECINCT_DEMO", name: "Emerald Precinct Demo" },
     { id: ids.secondProject, code: "SECOND_PROJECT_DEMO", name: "Second Project Demo" }
   ]) {
-    await prisma.project.upsert({
-      where: { id: project.id },
-      update: { name: project.name },
-      create: { ...project, workspaceId: ids.workspace }
-    });
+    await ensureRecord(prisma.project, { id: project.id }, { ...project, workspaceId: ids.workspace });
   }
 
   for (const product of [
@@ -98,11 +134,7 @@ async function main(): Promise<void> {
     { id: ids.products.KEIHB, code: "KEIHB", name: "KEIHB" },
     { id: ids.products.ICR, code: "ICR", name: "ICR" }
   ] as const) {
-    await prisma.productDefinition.upsert({
-      where: { id: product.id },
-      update: { name: product.name },
-      create: product
-    });
+    await ensureRecord(prisma.productDefinition, { id: product.id }, product);
   }
 
   for (const realm of [
@@ -112,58 +144,56 @@ async function main(): Promise<void> {
     { id: "realm_external_partner", code: "EXTERNAL_PARTNER", name: "External Partner" },
     { id: "realm_system_service", code: "SYSTEM_SERVICE", name: "System Service" }
   ] as const) {
-    await prisma.identityRealm.upsert({
-      where: { id: realm.id },
-      update: { name: realm.name },
-      create: realm
-    });
+    await ensureRecord(prisma.identityRealm, { id: realm.id }, realm);
   }
 
   for (const user of users) {
-    await prisma.userAccount.upsert({
-      where: { id: user.id },
-      update: { displayName: user.displayName, realmCode: user.realmCode },
-      create: {
-        id: user.id,
-        email: user.email,
-        displayName: user.displayName,
-        realmCode: user.realmCode
-      }
+    await ensureRecord(prisma.userAccount, { id: user.id }, {
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      realmCode: user.realmCode
     });
 
-    await prisma.workspaceMembership.upsert({
-      where: {
+    await ensureRecord(
+      prisma.workspaceMembership,
+      {
         workspaceId_userId_roleCode: {
           workspaceId: ids.workspace,
           userId: user.id,
           roleCode: user.roleCode
         }
       },
-      update: { lifecycle: "ACTIVE" },
-      create: {
+      {
         id: `membership_${user.roleCode.toLowerCase()}`,
         organizationId: ids.organization,
         workspaceId: ids.workspace,
         userId: user.id,
         roleCode: user.roleCode
-      }
-    });
+      },
+      { lifecycle: "ACTIVE" }
+    );
   }
 
   for (const role of roles) {
-    await prisma.roleDefinition.upsert({
-      where: { id: role.id },
-      update: { name: role.name, lifecycle: "ACTIVE" },
-      create: { ...role, organizationId: ids.organization }
-    });
+    await ensureRecord(
+      prisma.roleDefinition,
+      { id: role.id },
+      { ...role, organizationId: ids.organization },
+      {
+        name: role.name,
+        lifecycle: "ACTIVE"
+      }
+    );
   }
 
   for (const permission of permissions) {
-    await prisma.permissionDefinition.upsert({
-      where: { id: permission.id },
-      update: { name: permission.name, lifecycle: "ACTIVE" },
-      create: { ...permission, layerCode: "L0_OPERATIONAL_DATA" }
-    });
+    await ensureRecord(
+      prisma.permissionDefinition,
+      { id: permission.id },
+      { ...permission, layerCode: "L0_OPERATIONAL_DATA" },
+      { name: permission.name, lifecycle: "ACTIVE" }
+    );
   }
 
   const rolePermissionPairs = [
@@ -180,15 +210,16 @@ async function main(): Promise<void> {
   ] as const;
 
   for (const [roleId, permissionId] of rolePermissionPairs) {
-    await prisma.rolePermission.upsert({
-      where: { roleId_permissionId: { roleId, permissionId } },
-      update: { lifecycle: "ACTIVE" },
-      create: {
+    await ensureRecord(
+      prisma.rolePermission,
+      { roleId_permissionId: { roleId, permissionId } },
+      {
         id: `rp_${roleId}_${permissionId}`,
         roleId,
         permissionId
-      }
-    });
+      },
+      { lifecycle: "ACTIVE" }
+    );
   }
 
   for (const module of [
@@ -223,53 +254,52 @@ async function main(): Promise<void> {
       moduleType: "PRODUCT_RUNTIME_VIEW"
     }
   ] as const) {
-    await prisma.moduleDefinition.upsert({
-      where: { id: module.id },
-      update: { lifecycle: "ACTIVE" },
-      create: module
-    });
+    await ensureRecord(prisma.moduleDefinition, { id: module.id }, module, { lifecycle: "ACTIVE" });
   }
 
+  const productInstallationConfiguration = { demoOnly: true, label: "DEMO DATA - NOT PRODUCTION" };
   for (const installation of [
     { id: ids.installations.emeraldPits, projectId: ids.emeraldProject },
     { id: ids.installations.secondPits, projectId: ids.secondProject }
   ]) {
-    await prisma.productInstallation.upsert({
-      where: { id: installation.id },
-      update: { lifecycle: "ACTIVE", configuration: { demoOnly: true } },
-      create: {
+    await ensureRecord(
+      prisma.productInstallation,
+      { id: installation.id },
+      {
         id: installation.id,
         productCode: "PITS",
         productId: ids.products.PITS,
         organizationId: ids.organization,
         workspaceId: ids.workspace,
         projectId: installation.projectId,
-        configuration: { demoOnly: true, label: "DEMO DATA - NOT PRODUCTION" }
-      }
-    });
+        configuration: productInstallationConfiguration
+      },
+      { lifecycle: "ACTIVE", configuration: productInstallationConfiguration }
+    );
 
-    await prisma.productCapabilityGrant.upsert({
-      where: {
+    await ensureRecord(
+      prisma.productCapabilityGrant,
+      {
         productInstallationId_capabilityCode: {
           productInstallationId: installation.id,
           capabilityCode: "pits:runtime:access"
         }
       },
-      update: { enabled: true, lifecycle: "ACTIVE" },
-      create: {
+      {
         id: `grant_${installation.id}_pits_runtime_access`,
         productInstallationId: installation.id,
         capabilityCode: "pits:runtime:access",
         enabled: true
-      }
-    });
+      },
+      { enabled: true, lifecycle: "ACTIVE" }
+    );
   }
 
   const configValue = { source: "bootstrap-stage-a", demoOnly: true };
-  await prisma.effectiveConfigurationSnapshot.upsert({
-    where: { id: "config_stage_a_demo_notice_v1" },
-    update: { value: configValue, valueHash: hashJson(configValue), isCurrent: true },
-    create: {
+  await ensureRecord(
+    prisma.effectiveConfigurationSnapshot,
+    { id: "config_stage_a_demo_notice_v1" },
+    {
       id: "config_stage_a_demo_notice_v1",
       key: "demo.notice",
       value: configValue,
@@ -277,26 +307,28 @@ async function main(): Promise<void> {
       scope: "WORKSPACE",
       organizationId: ids.organization,
       workspaceId: ids.workspace
-    }
-  });
+    },
+    { value: configValue, valueHash: hashJson(configValue), isCurrent: true }
+  );
 
-  await prisma.featureFlag.upsert({
-    where: { id: "flag_stage_a_kernel_only" },
-    update: { enabled: true },
-    create: {
+  await ensureRecord(
+    prisma.featureFlag,
+    { id: "flag_stage_a_kernel_only" },
+    {
       id: "flag_stage_a_kernel_only",
       code: "stage_a.kernel_only",
       enabled: true,
       scope: "WORKSPACE",
       organizationId: ids.organization,
       workspaceId: ids.workspace
-    }
-  });
+    },
+    { enabled: true }
+  );
 
-  await prisma.auditRecord.upsert({
-    where: { id: "audit_stage_a_seed" },
-    update: { metadata: { idempotent: true, demoOnly: true } },
-    create: {
+  await ensureRecord(
+    prisma.auditRecord,
+    { id: "audit_stage_a_seed" },
+    {
       id: "audit_stage_a_seed",
       organizationId: ids.organization,
       workspaceId: ids.workspace,
@@ -306,19 +338,20 @@ async function main(): Promise<void> {
       targetId: ids.workspace,
       sensitive: true,
       metadata: { idempotent: true, demoOnly: true }
-    }
-  });
+    },
+    { metadata: { idempotent: true, demoOnly: true } }
+  );
 
-  await prisma.legacyIdentityMap.upsert({
-    where: {
+  await ensureRecord(
+    prisma.legacyIdentityMap,
+    {
       legacySystem_legacyEntityType_legacyEntityId: {
         legacySystem: "OIS_LEGACY_REFERENCE",
         legacyEntityType: "Workspace",
         legacyEntityId: "PMC_DEMO_PLACEHOLDER"
       }
     },
-    update: { nextgenEntityId: ids.workspace },
-    create: {
+    {
       id: "legacy_map_workspace_demo_placeholder",
       legacySystem: "OIS_LEGACY_REFERENCE",
       legacyEntityType: "Workspace",
@@ -327,8 +360,9 @@ async function main(): Promise<void> {
       nextgenEntityId: ids.workspace,
       organizationId: ids.organization,
       workspaceId: ids.workspace
-    }
-  });
+    },
+    { nextgenEntityId: ids.workspace }
+  );
 }
 
 main()

@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { createHash } from "node:crypto";
 
 const prisma = new PrismaClient();
 
@@ -23,8 +24,48 @@ const models = {
   legacyIdentityMaps: "legacyIdentityMap"
 };
 
+const publicTables = {
+  industries: "Industry",
+  organizations: "Organization",
+  workspaces: "Workspace",
+  projects: "Project",
+  userAccounts: "UserAccount",
+  workspaceMemberships: "WorkspaceMembership",
+  productDefinitions: "ProductDefinition",
+  productInstallations: "ProductInstallation",
+  productCapabilityGrants: "ProductCapabilityGrant",
+  moduleDefinitions: "ModuleDefinition",
+  identityRealms: "IdentityRealm",
+  roleDefinitions: "RoleDefinition",
+  permissionDefinitions: "PermissionDefinition",
+  rolePermissions: "RolePermission",
+  effectiveConfigurationSnapshots: "EffectiveConfigurationSnapshot",
+  featureFlags: "FeatureFlag",
+  auditRecords: "AuditRecord",
+  legacyIdentityMaps: "LegacyIdentityMap"
+};
+
 async function countModel(clientName) {
   return prisma[clientName].count();
+}
+
+function stableStringify(value) {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map((entry) => stableStringify(entry)).join(",")}]`;
+
+  return `{${Object.keys(value)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`)
+    .join(",")}}`;
+}
+
+function sha256(value) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+async function tableFingerprint(tableName) {
+  const rows = await prisma.$queryRawUnsafe(`SELECT to_jsonb(t) AS row FROM "${tableName}" t ORDER BY "id" ASC`);
+  return sha256(stableStringify(rows.map((entry) => entry.row)));
 }
 
 async function intQuery(sql) {
@@ -37,6 +78,11 @@ async function main() {
   const counts = {};
   for (const [label, clientName] of Object.entries(models)) {
     counts[label] = await countModel(clientName);
+  }
+
+  const tableFingerprints = {};
+  for (const [label, tableName] of Object.entries(publicTables)) {
+    tableFingerprints[label] = await tableFingerprint(tableName);
   }
 
   const migrations = await prisma.$queryRaw`
@@ -133,6 +179,8 @@ async function main() {
       {
         capturedAt: new Date().toISOString(),
         counts,
+        tableFingerprints,
+        overallTableFingerprint: sha256(stableStringify(tableFingerprints)),
         migrations: {
           count: migrations.length,
           allFinished: migrations.every((migration) => migration.finished),
@@ -140,7 +188,12 @@ async function main() {
         },
         logicalDuplicates,
         duplicateProductInstallations: logicalDuplicates.productInstallationsByProjectProduct,
-        negativeFixtureRuntimeRows
+        negativeFixtureRuntimeRows,
+        seedSpecific: {
+          productInstallationCount: counts.productInstallations,
+          duplicateProductInstallationCount: logicalDuplicates.productInstallationsByProjectProduct,
+          negativeFixtureMarkerCount: negativeFixtureRuntimeRows
+        }
       },
       null,
       2

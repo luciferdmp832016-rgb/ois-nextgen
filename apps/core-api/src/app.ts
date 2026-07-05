@@ -9,6 +9,14 @@ const demoLoginSchema = z.object({
   product: z.enum(["OIS", "PITS"]).default("OIS")
 });
 
+const serviceIdentity = {
+  service: "ois-nextgen-core-api",
+  status: "ok",
+  version: "0.1.0",
+  health: "/health",
+  docs: "/docs"
+} as const;
+
 export function buildCoreApi() {
   const app = Fastify({ logger: { name: "ois-nextgen-core-api" } });
   const prisma = new PrismaClient();
@@ -20,6 +28,31 @@ export function buildCoreApi() {
         version: "0.1.0"
       },
       paths: {
+        "/": {
+          get: {
+            tags: ["runtime"],
+            responses: {
+              "200": {
+                description: "Core API service identity response",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["service", "status", "version", "health", "docs"],
+                      properties: {
+                        service: { type: "string" },
+                        status: { type: "string" },
+                        version: { type: "string" },
+                        health: { type: "string" },
+                        docs: { type: "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "/health": {
           get: {
             tags: ["runtime"],
@@ -46,6 +79,29 @@ export function buildCoreApi() {
       }
     }
   });
+
+  app.get(
+    "/",
+    {
+      schema: {
+        tags: ["runtime"],
+        response: {
+          200: {
+            type: "object",
+            required: ["service", "status", "version", "health", "docs"],
+            properties: {
+              service: { type: "string" },
+              status: { type: "string" },
+              version: { type: "string" },
+              health: { type: "string" },
+              docs: { type: "string" }
+            }
+          }
+        }
+      }
+    },
+    async () => serviceIdentity
+  );
 
   app.get(
     "/health",

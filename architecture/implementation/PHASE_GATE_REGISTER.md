@@ -4,8 +4,11 @@
 |---|---|---|---|
 | Phase 1 input validation | Stage A code generation | PASSED | Previous Stage A evidence plus `PHASE1_DIRECTORY_RECONCILIATION.md`. |
 | Complete handoff ingestion | Stage 0B checkpoint | PASSED_WITH_DISCREPANCIES | All required path, checksum and validation outputs created; hotfix/owner count drift recorded. |
-| Native PostgreSQL runtime | Stage 0B checkpoint | PASSED | `pnpm db:migrate` passed; seed counts stable across two reruns. |
-| Local HTTP runtime | Stage 0B checkpoint | PARTIAL_BLOCKED_BY_LOCAL_PROCESS_OWNERSHIP | Core API exact-port checks passed; exact Console/PITS ports are occupied by protected HTTP 500 processes; clean alternate Next runtime passed. |
+| Native PostgreSQL runtime | Stage 0B checkpoint | PASSED | Stage 0C verified PostgreSQL 16.14, database `ois_nextgen`, role `ois_nextgen`, schema `public`; `pnpm db:migrate` passed. |
+| Prisma client generation | Stage 0B checkpoint | PASSED | Stage 0C `$env:CI='true'; pnpm db:generate` passed and generated Prisma Client v6.19.3. |
+| Seed idempotency | Stage 0B checkpoint | PASSED | Stage 0C fixed seed no-op writes and verified two reruns with identical overall table fingerprint `4a83d1852d3eca5ea2970f7204825b1d4719a344fe27155ec272d404019054f7`. |
+| Core API root contract | Stage 0B checkpoint | PASSED | Core API `/`, `/docs`, `/health`, `127.0.0.1` and `::1` returned HTTP 200 while canonical `pnpm dev` was running. |
+| Local HTTP runtime | Stage 0B checkpoint | PASSED | `pnpm dev` serves OIS Console on 3000, PITS Shell on 3001, Core API root on 4000, `/docs` and `/health` simultaneously. Console/PITS scripts bind explicitly to `127.0.0.1`. |
 | Platform kernel bootstrap | PITS vertical slices | PASSED | Kernel schema, seed, hierarchy, permission/capability, audit, idempotency and optimistic concurrency tests pass. |
 | Phase 2 business rules | PITS, Knowledge, Learning, Wisdom, Intelligence behavior | READY_WITH_CONDITIONS | Verified behavior imported; 18 coverage gaps, 10 unverified critical APIs and owner decisions remain open. |
 | Phase 2 API/UI contracts | Legacy compatibility and UI route mapping | READY_WITH_CONDITIONS | 273 route and 90 UI-page baselines preserved; unverified APIs are not authoritative contracts. |

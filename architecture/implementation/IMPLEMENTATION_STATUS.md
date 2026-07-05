@@ -2,45 +2,81 @@
 
 Stage 0B checkpoint branch: `stage-0b-complete-handoff-ingestion`
 
+Stage 0B checkpoint commit: `28747a7cddecd741e685c2dbcb52a48656de77f0`
+
+Stage 0C verdict: `PASS_WITH_NON_BLOCKING_DEFERRED_ITEMS`
+
+## Current Gate Summary
+
 | Area | Status | Notes |
 |---|---|---|
 | COMPLETE_HANDOFF_INGESTION | COMPLETE | Complete handoff paths, checksums, source pointers, validation, discrepancies and Stage A reconciliation are recorded under `architecture/discovery/`. |
-| LOCAL_RUNTIME | PARTIAL_BLOCKED_BY_PROTECTED_STALE_PROCESSES | Native PostgreSQL and Core API exact-port checks passed. Existing protected Node processes on ports 3000 and 3001 returned HTTP 500 and could not be stopped by `Stop-Process` or `taskkill`; clean temporary Console/PITS instances returned 200 on ports 3100/3101. |
-| PLATFORM_KERNEL_BOOTSTRAP | COMPLETE | Versioned migration is applied, seed reruns are idempotent by database counts, duplicate Product Installations remain 0, and kernel tests pass. |
+| HANDOFF_RECONCILIATION | COMPLETE_WITH_RECORDED_DISCREPANCIES | Hotfix, owner-decision, blocker-count and Batch C hash-source discrepancies remain visible and are not silently corrected. |
+| NATIVE_POSTGRESQL_RUNTIME | PASSED | PostgreSQL 16.14 service is running; `ois_nextgen` database, `ois_nextgen` role, `public` schema and CONNECT privilege verified. |
+| PRISMA_GENERATE | PASSED | `$env:CI='true'; pnpm db:generate` exits 0. No schema or Prisma-version workaround was used. |
+| PLATFORM_KERNEL_BOOTSTRAP | COMPLETE | `pnpm db:migrate` passed, one committed migration is applied, seed reruns are count-stable and fingerprint-stable, duplicate Product Installations remain 0. |
+| CORE_API_CONTRACT | COMPLETE | Root `/` now returns deterministic service identity HTTP 200; `/docs`, `/health`, IPv4 `127.0.0.1` and IPv6 `::1` were verified on port 4000 while `pnpm dev` was running. |
+| LOCAL_HTTP_RUNTIME | PASSED | `pnpm dev` serves OIS Console on 3000, PITS Shell on 3001 and Core API on 4000 simultaneously. Console/PITS dev scripts now bind explicitly to `127.0.0.1`. |
+| QUALITY_AND_BUILDS | PASSED | Lint, typecheck, tests, e2e and recursive builds pass. |
 | PITS_BUSINESS_LOGIC | NOT_STARTED | No Field Report, Case or Task lifecycle vertical slice was started. |
 | KNOWLEDGE_VERTICAL_SLICE | NOT_STARTED | No Knowledge/Learning/Wisdom/Intelligence vertical slice was started. |
-| LEGACY_DATA_MIGRATION | BLOCKED | Production data migration requires dry-run on a production clone, owner sign-off and full regression suite completion. |
-| PRODUCTION_CUTOVER | BLOCKED | Cutover requires UAT, migration validation, rollback validation and all required regression tests. |
+| LEGACY_DATA_MIGRATION | BLOCKED_DOMAIN_PORT | Production data migration requires dry-run on a production clone, owner sign-off and full regression suite completion. |
+| PRODUCTION_CUTOVER | BLOCKED_DOMAIN_PORT | Cutover requires UAT, migration validation, rollback validation and all required regression tests. |
+
+## Stage 0B Result Classification
+
+| Gate | Classification |
+|---|---|
+| Handoff ingestion status | PASS |
+| Reconciliation status | PASS_WITH_NON_BLOCKING_DEFERRED_ITEMS |
+| Migration status | PASS |
+| Seed status | PASS |
+| Seed idempotency status | PASS |
+| Test status | PASS |
+| Build status | PASS |
+| Prisma generate status | PASS |
+| Exact-port runtime status | PASS |
+| Final Stage 0B verdict | PASS_WITH_NON_BLOCKING_DEFERRED_ITEMS |
+
+## Blocking Stage 0B Items
+
+Exact `BLOCKING_STAGE_0B` count: 0.
+
+| Stable ID | Classification | Status | Evidence | Required corrective action |
+|---|---|---|---|---|
+| STAGE0C-BLOCK-001 | BLOCKING_STAGE_0B | CLOSED | Root cause was Next dev default host behavior on this Windows runtime. `@ois/ois-console` and `@ois/pits-shell` now bind explicitly to `127.0.0.1` on ports 3000 and 3001. Canonical `pnpm dev` returned HTTP 200 for both apps. | None. |
 
 ## Verification Results
 
 | Command or Check | Result |
 |---|---|
-| `pnpm install` | Initial non-TTY run failed; rerun with `CI=true` passed, already up to date. |
-| `pnpm db:generate` | Blocked by Windows EPERM replacing `query_engine-windows.dll.node`; sandboxed and escalated reruns failed. Existing and generated temp DLL hashes were identical (`263946105F428384D2318DC3241B85B1C3DD98FBB1BFAC62D3E81F513AB35897`). |
-| `pnpm db:migrate` | Passed: one migration found, no pending migrations. |
-| seed rerun 1 | Passed. |
-| seed rerun 2 | Passed. |
+| `git status --short` at start | Dirty by design with prior Stage 0C working-tree changes preserved. |
+| `git branch --show-current` at start | `stage-0b-complete-handoff-ingestion`. |
+| `git rev-parse HEAD` at start | `28747a7cddecd741e685c2dbcb52a48656de77f0`. |
+| `pnpm db:generate` | Passed with `CI=true`; generated Prisma Client v6.19.3. |
+| `pnpm db:migrate` | Passed with `CI=true`; one migration found, no pending migrations. |
+| `pnpm db:seed` run 1 | Passed after seed idempotency fix. |
+| `pnpm db:seed` run 2 | Passed after seed idempotency fix. |
+| Seed fingerprint comparison | Passed; run 1 and run 2 overall table fingerprint both `4a83d1852d3eca5ea2970f7204825b1d4719a344fe27155ec272d404019054f7`. |
 | `pnpm lint` | Passed: architecture guard. |
 | `pnpm typecheck` | Passed. |
-| `pnpm test` | Passed: 15 tests. |
-| `pnpm e2e` | Passed: 1 Playwright boundary test. |
-| `pnpm --filter @ois/ois-console build` | Passed. |
-| `pnpm --filter @ois/pits-shell build` | Passed. |
-| `pnpm --filter @ois/core-api build` | Passed after adding the package build script and local `tsconfig.json`. |
-| `http://localhost:4000` and `http://127.0.0.1:4000` | HTTP 404 as expected because no root route is defined. |
-| `http://localhost:4000/docs` and `http://127.0.0.1:4000/docs` | HTTP 200. |
-| `http://127.0.0.1:4000/health` | HTTP 200. |
-| `http://127.0.0.1:4000/platform/overview` | HTTP 200. |
-| `POST http://127.0.0.1:4000/auth/demo-login` | HTTP 200 for demo PITS user. |
-| `http://[::1]:4000` | Connection refused; Core API observed as IPv4-only locally. |
-| `http://127.0.0.1:3000` / `http://127.0.0.1:3001` | Existing protected processes returned HTTP 500. |
-| Temporary Console/PITS on `http://127.0.0.1:3100` / `http://127.0.0.1:3101` | HTTP 200; app code and local Next runtime verified on alternate ports. |
+| `pnpm test` | Passed: 2 files, 16 tests. |
+| `pnpm e2e` | Passed: 1 test. |
+| `pnpm -r --if-present build` | Passed: Core API, OIS Console and PITS Shell builds passed. Worker has no build script. |
+| `http://localhost:4000` | HTTP 200 while `pnpm dev` was running; deterministic Core API service identity. |
+| `http://127.0.0.1:4000` | HTTP 200 while `pnpm dev` was running. |
+| `http://[::1]:4000` | HTTP 200 while `pnpm dev` was running. |
+| `http://localhost:4000/docs` | HTTP 200 while `pnpm dev` was running. |
+| `http://localhost:4000/health` | HTTP 200 while `pnpm dev` was running. |
+| `http://localhost:4000/platform/overview` | HTTP 200 while `pnpm dev` was running; database-backed counts returned. |
+| `http://localhost:3000` | HTTP 200 under canonical `pnpm dev`; title `OIS Console`, served by listener on `127.0.0.1:3000`. |
+| `http://localhost:3001` | HTTP 200 under canonical `pnpm dev`; title `PITS Shell`, served by listener on `127.0.0.1:3001`. |
 
 ## Handoff Discrepancies Preserved
 
-| Item | Expected | Actual | Disposition |
-|---|---:|---:|---|
-| Historical hotfixes | 27 | 26 | Recorded in `HANDOFF_DISCREPANCIES.md`; not silently altered. |
-| Pending owner decisions | 22 | 23 | Recorded in `HANDOFF_DISCREPANCIES.md`; not silently altered. |
-| Implementation blockers | 29 | 29 | Register count used; final verdict prose says 34 and is recorded as a discrepancy. |
+| Item | Source-reported count | Actual parsed count | Source authority | Status | Classification | Follow-up |
+|---|---:|---:|---|---|---|---|
+| Historical hotfixes | 27 | 26 | `AUTHORITATIVE_BASELINE_COUNTS.json` / Stage 0B request | Recorded; not silently altered. | NON_BLOCKING | Owner review in future reconciliation. |
+| Pending owner decisions | 22 | 23 | Stage 0B request/final verdict versus extracted owner backlog | Recorded; actual register has 23 including deferred CSAGENT and Analytics decisions. | NON_BLOCKING | Use 23-entry register as backlog source. |
+| Implementation blockers | 34 in final verdict prose | 29 in blocker register | Batch C final verdict prose versus `CODEX_IMPLEMENTATION_BLOCKERS.json` | Recorded; blocker register remains authoritative implementation queue. | NON_BLOCKING | Preserve discrepancy until owner confirms source prose. |
+| Batch C archive hash | Expected by Complete Index | Missing from source Complete Index | Batch C archive and Complete Index | Archive exists; missing hash source is preserved. | NON_BLOCKING | Verify hash if a future authoritative source arrives. |
