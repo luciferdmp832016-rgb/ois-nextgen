@@ -18,6 +18,8 @@ Stage 0F-R2 verdict: `BLOCKED_STAGING_INPUTS`
 
 Stage 0F-R3 verdict: `INPUTS_ACQUISITION_PACKAGE_READY`
 
+Stage 0F-R4 verdict: `BLOCKED_STAGING_INPUTS`
+
 ## Current Gate Summary
 
 | Area | Status | Notes |
@@ -32,7 +34,7 @@ Stage 0F-R3 verdict: `INPUTS_ACQUISITION_PACKAGE_READY`
 | QUALITY_AND_BUILDS | PASSED | Lint, typecheck, tests, e2e and recursive builds pass. |
 | PLATFORM_CLOUD_READINESS | PASSED_WITH_MANUAL_GITHUB_SETUP | Stage 0D adds OIS-BIBLE, LLM context, deployment docs, env placeholders, GitHub CI workflows, release preflight workflow, deployment manifest template and runtime smoke tests. Local validation passed; first GitHub Actions run and branch protection are manual. |
 | GITHUB_CI_ACTIVATION | PASSED | PR #1 final-head CI run `28738991764` completed successfully on commit `622d42d42572e44ace34795f860231e5027feb55`; job `validate` passed and artifact `stage-0d-evidence` contains Console, PITS and Core API docs screenshots. |
-| ABACUS_STAGING_POC | BLOCKED_STAGING_INPUTS | Stage 0F selected split app staging as safest topology, verified PR #1 final-head CI/artifacts, and documented manual Abacus staging steps. Stage 0F-R1 records partial Abacus access to project `OIS NextGen Staging`. Stage 0F-R2 confirms staging DB, storage/mock mode, AI mock config, Abacus service identifiers, env/secrets injection, runtime port behavior and staging URLs remain unknown or missing, so the staging runtime POC was not executed. Stage 0F-R3 adds a redacted owner checklist to acquire the missing staging-only inputs; runtime POC remains blocked until they are confirmed. |
+| ABACUS_STAGING_POC | BLOCKED_STAGING_INPUTS | Stage 0F selected split app staging as safest topology, verified PR #1 final-head CI/artifacts, and documented manual Abacus staging steps. Stage 0F-R1 records partial Abacus access to project `OIS NextGen Staging`. Stage 0F-R2 confirms staging DB, storage/mock mode, AI mock config, Abacus service identifiers, env/secrets injection, runtime port behavior and staging URLs remain unknown or missing, so the staging runtime POC was not executed. Stage 0F-R3 adds a redacted owner checklist to acquire the missing staging-only inputs. Stage 0F-R4 verifies repo/local facts only: env names, scripts and mock defaults are documented, but owner inputs, Abacus IDs, env/secrets injection, URLs and port behavior remain unknown or blocked, so runtime POC remains blocked. |
 | ABACUS_READINESS | MANUAL_SETUP_REQUIRED | Abacus staging and production runbooks are documented. No Abacus production database, storage or deployment was used. Stage 0F keeps production untouched and staging manual. |
 | PITS_BUSINESS_LOGIC | NOT_STARTED | No Field Report, Case or Task lifecycle vertical slice was started. |
 | KNOWLEDGE_VERTICAL_SLICE | NOT_STARTED | No Knowledge/Learning/Wisdom/Intelligence vertical slice was started. |
