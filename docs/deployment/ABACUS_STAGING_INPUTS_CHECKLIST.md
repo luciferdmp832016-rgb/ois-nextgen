@@ -80,6 +80,29 @@ Stage 0J Core API only POC evidence update: Abacus VM code/build/local runtime i
 | Public URL `/health` | `BLOCKED_PUBLIC_MAPPING` | `https://ois-nextgen.abacusai.cloud/health` returned HTTP 404 from cloudflare/nginx. |
 | Process cleanup | `CONFIRMED` | SIGTERM sent, exit 143, post-stop port 4000 listener check clear. |
 
+Stage 0K preview public routing evidence update: Abacus VM preview routing is confirmed for Core API `/health`. Hosted-app/custom-domain routing is still unverified. This table does not approve DB-backed endpoints, storage-backed endpoints, real AI providers, migrations, hosted-app deployment or production resources.
+
+| Item | Stage 0K status | Redacted reference |
+|---|---|---|
+| Abacus repo path | `CONFIRMED` | `/home/ubuntu/ois-nextgen` |
+| Abacus execution branch | `CONFIRMED` | `stage-0b-complete-handoff-ingestion` |
+| Abacus execution commit | `CONFIRMED` | `64486c1ebf9d5bc96cadc8220d1616dea9ccbf70` |
+| Abacus working tree | `CONFIRMED_WITH_PLATFORM_FILE` | Clean except untracked `.abacus.donotdelete` platform file. |
+| `.env` file | `CONFIRMED_NOT_CREATED` | No `.env` created or committed. |
+| Service scope | `CONFIRMED_CORE_API_ONLY` | Console and PITS were not started. |
+| Runtime bind | `CONFIRMED` | `0.0.0.0:4000` |
+| Process | `CONFIRMED` | PID `682`, `tsx src/server.ts`. |
+| Local Core API `/health` | `CONFIRMED` | `http://127.0.0.1:4000/health` returned HTTP 200. |
+| Preview proxy Core API `/health` | `CONFIRMED` | `https://7a162f29d-4000.na116.preview.abacusai.app/health` returned HTTP 200 with Core API health payload. |
+| Hosted custom domain `/health` | `EXPECTED_NOT_ROUTED` | `https://ois-nextgen.abacusai.cloud/health` returned HTTP 404; no hosted-app deployment exists. |
+| Preview vs hosted distinction | `CONFIRMED` | Preview URL maps to VM process; hosted-app domain requires deployment/Always-On app. |
+| Always On | `CONFIRMED_NOT_TOUCHED` | Always On was not touched. |
+| DB-backed endpoints | `CONFIRMED_NOT_CALLED` | No DB-backed endpoints called. |
+| Storage-backed endpoints | `CONFIRMED_NOT_CALLED` | No storage-backed endpoints called. |
+| AI/OpenRouter real key | `CONFIRMED_NOT_USED` | Mock mode; no real OpenRouter key. |
+| Secret printing | `CONFIRMED_NOT_PRINTED` | No secrets printed. |
+| Process lifecycle | `INTENTIONALLY_RUNNING` | Core API process was intentionally kept running for live verification. |
+
 ## Required Readiness Summary
 
 | Area | Required for POC | Optional for first POC | Safe handoff format |

@@ -44,6 +44,8 @@ Stage 0I-R1 owner-assisted source result: GitHub/source bootstrap is confirmed o
 
 Stage 0J Core API only POC result: Abacus Agent verified the VM can install, lint, typecheck, test, build and start the Core API locally with mock-safe configuration. Core API `/health` and `/` returned HTTP 200 on `127.0.0.1:4000`, then the process was stopped and port 4000 was clear. `https://ois-nextgen.abacusai.cloud/health` returned HTTP 404 from cloudflare/nginx because no public deployment/routing was performed. Public URL routing remains blocked; this is not a Core API boot failure.
 
+Stage 0K preview public routing result: Abacus Agent verified public health through the Abacus VM preview proxy. Core API was bound to `0.0.0.0:4000`; local `http://127.0.0.1:4000/health` and preview `https://7a162f29d-4000.na116.preview.abacusai.app/health` both returned HTTP 200. The hosted-app custom domain `https://ois-nextgen.abacusai.cloud/health` still returned HTTP 404 because it requires an actual Abacus hosted-app deployment or Always-On app. Preview routing is suitable for controlled public POC evidence, not final live hosting.
+
 ## Stage 0H Handoff Summary
 
 Initial Abacus POC scope must reproduce the Stage 0G mock-safe boot only:
@@ -86,6 +88,20 @@ env -u DATABASE_URL -u ABACUS_DATABASE_URL -u ABACUS_STORAGE_* \
   NEXT_TELEMETRY_DISABLED=1 \
   pnpm --filter @ois/core-api start
 ```
+
+Stage 0K preview proxy conclusion: for VM preview checks, bind Core API to `0.0.0.0:4000` and use the Abacus preview hostname with the `-4000` suffix. For hosted-app/custom-domain checks, do not expect `https://ois-nextgen.abacusai.cloud/health` to work until a controlled hosted-app deployment or Always-On app is configured.
+
+Stage 0K mock-safe Core API start command used by Abacus:
+
+```sh
+env -u DATABASE_URL -u ABACUS_DATABASE_URL -u ABACUS_STORAGE_ENDPOINT -u ABACUS_STORAGE_ACCESS_KEY -u ABACUS_STORAGE_SECRET_KEY \
+  APP_ENV=codex-cloud-test DEPLOY_TARGET=codex-cloud-test LOCALHOST_REQUIRED=false \
+  AI_PROVIDER=mock AI_PROVIDER_MODE=mock OPENROUTER_API_KEY= STORAGE_PROVIDER=mock \
+  CORE_API_HOST=0.0.0.0 CORE_API_PORT=4000 CORE_API_URL=http://0.0.0.0:4000 NEXT_TELEMETRY_DISABLED=1 \
+  pnpm --filter @ois/core-api start
+```
+
+Recommended Stage 0L direction: Abacus Hosted-App Core API Deployment / Custom Domain POC. Keep Core API only, keep mock-safe env, avoid DB/storage-backed endpoints and real AI providers, and verify whether `https://ois-nextgen.abacusai.cloud/health` maps to the hosted Core API only after the hosted-app deployment path is configured.
 
 ## Stage 0F-R2 Readiness Matrix
 
@@ -131,6 +147,7 @@ Stage 0F-R4 did not execute these steps.
 Stage 0H did not execute these steps.
 Stage 0I-R1 did not execute these steps.
 Stage 0J executed only a local VM Core API health POC, not a public deployment or full split-app staging POC.
+Stage 0K executed only a VM preview proxy Core API health POC, not a hosted-app deployment or full split-app staging POC.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -148,6 +165,7 @@ Stage 0J executed only a local VM Core API health POC, not a public deployment o
 - PITS Shell `/` renders `PITS Shell`.
 
 Stage 0J verified only the first two checks locally on `127.0.0.1:4000`; public `/health` still returned 404 until routing/deployment is configured.
+Stage 0K verified Core API `/health` publicly through the VM preview proxy at `https://7a162f29d-4000.na116.preview.abacusai.app/health`; the hosted custom domain remains unverified.
 
 ## Stop Conditions
 
@@ -156,8 +174,8 @@ Stage 0J verified only the first two checks locally on `127.0.0.1:4000`; public 
 - Staging-only mock database mode, mock storage mode, staging subdomain/path or AI provider config is missing.
 - Stage 0F-R3 owner checklist is incomplete or contains real secret values.
 - Stage 0H go/no-go gate is incomplete.
-- Abacus port behavior for services 4000, 3000 and 3001 is unknown.
-- Public routing for Core API `/health` is not configured or returns 404.
+- Hosted-app port behavior and Console/PITS service port behavior remain unverified.
+- Hosted-app/custom-domain routing for Core API `/health` is not configured or returns 404.
 - Any production credential appears in CI, Codex or staging logs.
 - Any smoke test fails.
 - Manual owner sign-off is missing.
