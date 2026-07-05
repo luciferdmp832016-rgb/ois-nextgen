@@ -9,6 +9,8 @@
 - Stage 0D smoke evidence.
 - Deployment manifest.
 
+For the first Abacus staging POC, use a tag such as `abacus-staging-poc-v0.1.0` and deploy the same ref to Core API, OIS Console and PITS Shell staging services.
+
 ## Release Preflight
 
 Run `.github/workflows/release-preflight.yml` for the release ref. It performs Prisma generate, migrations, seed idempotency, lint, typecheck, unit tests, e2e smoke tests and recursive builds.
@@ -21,6 +23,8 @@ Run `.github/workflows/release-preflight.yml` for the release ref. It performs P
 4. Restore storage policy/config to the prior hash.
 5. Run runtime smoke tests.
 6. Record rollback outcome in the deployment manifest.
+
+For split app staging, roll back all three services to the same previously known-good ref. Do not roll back only one service unless the deployment manifest explicitly records the mixed-version state.
 
 ## Stop Conditions
 

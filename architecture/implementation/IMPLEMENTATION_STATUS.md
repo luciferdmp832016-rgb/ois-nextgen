@@ -10,6 +10,8 @@ Stage 0D verdict: `PASS_WITH_MANUAL_ABACUS_AND_GITHUB_SETUP`
 
 Stage 0E verdict: `PASS_WITH_MANUAL_ABACUS_STAGING_STEPS`
 
+Stage 0F verdict: `PASS_WITH_MANUAL_ABACUS_STEPS`
+
 ## Current Gate Summary
 
 | Area | Status | Notes |
@@ -23,8 +25,9 @@ Stage 0E verdict: `PASS_WITH_MANUAL_ABACUS_STAGING_STEPS`
 | LOCAL_HTTP_RUNTIME | PASSED | `pnpm dev` serves OIS Console on 3000, PITS Shell on 3001 and Core API on 4000 simultaneously. Console/PITS dev scripts now bind explicitly to `127.0.0.1`. |
 | QUALITY_AND_BUILDS | PASSED | Lint, typecheck, tests, e2e and recursive builds pass. |
 | PLATFORM_CLOUD_READINESS | PASSED_WITH_MANUAL_GITHUB_SETUP | Stage 0D adds OIS-BIBLE, LLM context, deployment docs, env placeholders, GitHub CI workflows, release preflight workflow, deployment manifest template and runtime smoke tests. Local validation passed; first GitHub Actions run and branch protection are manual. |
-| GITHUB_CI_ACTIVATION | PASSED | PR #1 CI run `28738572346` completed successfully on pushed commit `e097fcaee67eb19e5f092fd2f4718f1b4addf64f`; job `validate` passed and artifact `stage-0d-evidence` contains Console, PITS and Core API docs screenshots. |
-| ABACUS_READINESS | MANUAL_SETUP_REQUIRED | Abacus staging and production runbooks are documented. No Abacus production database, storage or deployment was used. Stage 0E could not perform staging POC without staging-only credentials or UI access. |
+| GITHUB_CI_ACTIVATION | PASSED | PR #1 final-head CI run `28738991764` completed successfully on commit `622d42d42572e44ace34795f860231e5027feb55`; job `validate` passed and artifact `stage-0d-evidence` contains Console, PITS and Core API docs screenshots. |
+| ABACUS_STAGING_POC | PASS_WITH_MANUAL_ABACUS_STEPS | Stage 0F selected split app staging as safest topology, verified PR #1 final-head CI/artifacts, and documented manual Abacus staging steps. Actual Abacus staging deployment was not executed because no Abacus CLI, UI access or staging-only credentials were available. |
+| ABACUS_READINESS | MANUAL_SETUP_REQUIRED | Abacus staging and production runbooks are documented. No Abacus production database, storage or deployment was used. Stage 0F keeps production untouched and staging manual. |
 | PITS_BUSINESS_LOGIC | NOT_STARTED | No Field Report, Case or Task lifecycle vertical slice was started. |
 | KNOWLEDGE_VERTICAL_SLICE | NOT_STARTED | No Knowledge/Learning/Wisdom/Intelligence vertical slice was started. |
 | LEGACY_DATA_MIGRATION | BLOCKED_DOMAIN_PORT | Production data migration requires dry-run on a production clone, owner sign-off and full regression suite completion. |
