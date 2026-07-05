@@ -13,6 +13,9 @@ Final verdict: `PASS_WITH_MANUAL_ABACUS_STEPS`.
 | PR state | Closed and merged. |
 | PR merge commit | `888c52487684a5f0308ac0b75d6eb355ee0a68e0` |
 | Final PR head | `622d42d42572e44ace34795f860231e5027feb55` |
+| Stage 0F PR | `https://github.com/luciferdmp832016-rgb/ois-nextgen/pull/2` |
+| Stage 0F PR state | Closed and merged. |
+| Stage 0F merge commit | `a1e9a2f13844d623b7c9bc5813108fc8e8e9d081` |
 
 Opening checks:
 
@@ -52,13 +55,29 @@ No connector-visible GitHub Actions run was found for the merge commit `888c5248
 
 | Check | Result |
 |---|---|
+| Access status | Partial. |
+| Project | `OIS NextGen Staging` |
+| Project access | Yes. |
+| Can create/edit app/chat/task | Yes, via redirect to Abacus AI Agent. |
+| Can configure staging-only environment values | Unknown. |
+| Can configure secrets | Unknown. |
+| Can deploy to Abacus.AI staging/default domain | Unknown. |
 | Abacus CLI | Not available in this runtime. |
 | Abacus staging environment variable names | None present in the local process environment. |
-| Staging credentials | Not available. |
-| Abacus UI access | Not available from this runtime. |
+| Staging credentials | Not available in this runtime. |
+| Abacus AI Agent deployment configuration UI | Not directly accessible from the current chat interface. |
 | Actual staging deployment | Not executed. |
 
-No production database, production storage, production OpenRouter key or production deployment was used.
+Reason POC was not executed: Abacus AI Agent deployment configuration UI was not directly accessible from the current chat interface, staging env/secrets/deploy configuration access was not verified, and staging-only mock inputs were not available.
+
+Missing staging-only inputs:
+
+- Mock/test database connection string or confirmed mock DB mode.
+- Mock/test storage credentials or confirmed mock storage mode.
+- Staging subdomain/path identifier.
+- Staging-only AI provider configuration, preferably `AI_PROVIDER=mock`.
+
+No production database, production storage, production OpenRouter key or production deployment was used. `prisma db push` was not used.
 
 ## Runtime Topology Options
 
@@ -107,7 +126,7 @@ Reason: the current topology already separates API and product shell runtimes. S
 | Field | Value |
 |---|---|
 | Shape | No staging deploy from this runtime. |
-| Cause | Abacus CLI, UI access and staging-only credentials are unavailable. |
+| Cause | Abacus access is partial: project access exists and app/chat/task editing redirects to Abacus AI Agent, but staging env/secrets/deploy configuration access is unknown and staging-only mock inputs are missing. |
 | Result | Manual setup required. |
 
 ## Selected Topology
@@ -166,6 +185,14 @@ Performed:
 - Checked for Abacus/staging environment variable names without printing secret values.
 - Verified PR #1 merged state and final PR-head CI.
 - Verified final PR-head `stage-0d-evidence` artifact and screenshot file names.
+- Recorded Stage 0F-R1 Abacus access check: project access is partial and deployment configuration remains unverified.
+
+Not performed:
+
+- No Abacus staging deployment was executed.
+- No production deployment was executed.
+- No production database, storage or OpenRouter credential was used.
+- No `prisma db push` was used.
 
 ## Local Validation
 
@@ -178,6 +205,14 @@ Stage 0F changed documentation and status files only. Lightweight validation pas
 | `pnpm test` | PASS; 2 files and 16 tests. |
 
 Fuller database, e2e and build gates were not rerun because Stage 0F did not change source code, runtime config, Prisma schema or package scripts. PR #1 final-head CI already passed those gates on `622d42d42572e44ace34795f860231e5027feb55`.
+
+Stage 0F-R1 also changed documentation/status files only. Lightweight validation passed:
+
+| Command | Result |
+|---|---|
+| `pnpm lint` | PASS |
+| `pnpm typecheck` | PASS |
+| `pnpm test` | PASS; 2 files and 16 tests. |
 
 ## Required Manual POC Steps
 
@@ -212,14 +247,20 @@ Fuller database, e2e and build gates were not rerun because Stage 0F did not cha
 | Item | Status | Action |
 |---|---|---|
 | Abacus CLI/UI access | Unavailable | Owner must provide staging access or run manual setup. |
-| Staging-only credentials | Unavailable | Owner must configure staging secrets in Abacus. |
+| Abacus access | Partial | Project access exists, but env/secrets/deploy configuration access is unknown. |
+| Abacus AI Agent redirect | Partial | App/chat/task editing redirects to Abacus AI Agent; deployment configuration UI is not directly accessible from this chat interface. |
+| Staging-only credentials | Unavailable | Owner must configure staging secrets or confirm mock modes in Abacus. |
+| Mock/test database mode | Missing | Owner must provide mock/test database connection string or confirm mock DB mode. |
+| Mock/test storage mode | Missing | Owner must provide mock/test storage credentials or confirm `STORAGE_PROVIDER=mock`. |
+| Staging subdomain/path | Missing | Owner must provide the staging subdomain or path identifier. |
+| Staging AI provider mode | Missing | Owner must confirm staging-only `AI_PROVIDER=mock` or equivalent non-production configuration. |
 | Multi-process topology | Unknown Abacus support | Prefer split app staging. |
 | Dynamic port behavior | Unknown Abacus requirement | If Abacus requires `$PORT`, add a small runtime script in a future config-only stage. |
 | Storage runtime | Deferred | Keep `STORAGE_PROVIDER=mock` until storage ADR/tests exist. |
 
 ## Production Untouched
 
-Stage 0F did not access or deploy production. It did not use production database, production storage, production OpenRouter key or `prisma db push`.
+Stage 0F and Stage 0F-R1 did not access or deploy production. They did not use production database, production storage, production OpenRouter key or `prisma db push`. Production is not live.
 
 ## Recommendation For Stage 1A
 

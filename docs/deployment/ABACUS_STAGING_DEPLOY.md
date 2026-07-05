@@ -25,6 +25,7 @@ Use the same release ref for all three services.
 - CI green on the release ref.
 - Release preflight green on the same ref.
 - Abacus staging app exists.
+- Abacus staging project access is sufficient to configure environment values, secrets and deployment settings.
 - Abacus staging database and storage are provisioned.
 - Production credentials are absent.
 - Deployment manifest draft is complete.
@@ -72,6 +73,8 @@ Keep storage secrets unset and `STORAGE_PROVIDER=mock` until staging storage tes
 ## Stop Conditions
 
 - Missing migration evidence.
+- Abacus access is limited to project/chat/task editing and does not expose staging env/secrets/deploy configuration.
+- Staging-only mock database mode, mock storage mode, staging subdomain/path or AI provider config is missing.
 - Any production credential appears in CI, Codex or staging logs.
 - Any smoke test fails.
 - Manual owner sign-off is missing.
