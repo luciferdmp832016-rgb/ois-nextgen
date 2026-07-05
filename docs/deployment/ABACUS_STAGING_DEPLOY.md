@@ -36,6 +36,26 @@ Stage 0F-R3 owner acquisition package: complete `docs/deployment/ABACUS_STAGING_
 
 Stage 0F-R4 discovery result: repo/local verification confirms the expected env var names, split-app package scripts, `.env.example`, mock AI/storage defaults and Prisma `DATABASE_URL` contract. It does not confirm owner-filled staging values, Abacus project/service IDs, env/secrets injection, staging URLs, SuperComputer/cloud evidence, Always On status, GitHub connection status or Abacus port behavior. The runtime POC remains blocked.
 
+Stage 0H handoff result: the Abacus staging runtime handoff package is documented in `architecture/implementation/STAGE_0H_ABACUS_STAGING_RUNTIME_HANDOFF.md`. Use it as the no-deploy source of truth for the first Abacus staging POC. The handoff is ready, but Abacus owner inputs remain blocked.
+
+## Stage 0H Handoff Summary
+
+Initial Abacus POC scope must reproduce the Stage 0G mock-safe boot only:
+
+| Service | Build command | Start command | Port | Healthcheck |
+|---|---|---|---:|---|
+| Core API | `pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @ois/core-api build` | `pnpm --filter @ois/core-api start` | 4000 | `/health` |
+| OIS Console | `pnpm install --frozen-lockfile && pnpm --filter @ois/ois-console build` | `pnpm --filter @ois/ois-console start` | 3000 | `/` |
+| PITS Shell | `pnpm install --frozen-lockfile && pnpm --filter @ois/pits-shell build` | `pnpm --filter @ois/pits-shell start` | 3001 | `/` |
+
+Initial POC exclusions:
+
+- Do not call DB-backed endpoints.
+- Do not run `pnpm db:migrate` unless a staging-only DB and owner approval are confirmed.
+- Do not run `pnpm db:seed` unless demo-only staging seed approval is confirmed.
+- Do not use OpenRouter or storage runtime credentials; keep AI and storage mock-only.
+- Do not deploy to production or use production values.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -77,6 +97,7 @@ Keep storage secrets unset and `STORAGE_PROVIDER=mock` until staging storage tes
 
 Do not begin these steps until the Stage 0F-R3 checklist is complete and reviewed.
 Stage 0F-R4 did not execute these steps.
+Stage 0H did not execute these steps.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -99,6 +120,8 @@ Stage 0F-R4 did not execute these steps.
 - Abacus access is limited to project/chat/task editing and does not expose staging env/secrets/deploy configuration.
 - Staging-only mock database mode, mock storage mode, staging subdomain/path or AI provider config is missing.
 - Stage 0F-R3 owner checklist is incomplete or contains real secret values.
+- Stage 0H go/no-go gate is incomplete.
+- Abacus port behavior for services 4000, 3000 and 3001 is unknown.
 - Any production credential appears in CI, Codex or staging logs.
 - Any smoke test fails.
 - Manual owner sign-off is missing.
