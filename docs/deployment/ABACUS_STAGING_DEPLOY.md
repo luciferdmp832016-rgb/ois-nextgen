@@ -32,6 +32,8 @@ Use the same release ref for all three services.
 
 Stage 0F-R2 discovery result: these prerequisites are not yet satisfied from Codex. Access to the `OIS NextGen Staging` project is partial, but staging env/secrets/deploy configuration, service identifiers, staging URLs, staging database, staging storage or mock mode, and staging AI mock values are still unknown.
 
+Stage 0F-R3 owner acquisition package: complete `docs/deployment/ABACUS_STAGING_INPUTS_CHECKLIST.md` with staging-only confirmations, secret names/private paths and approvals before any staging runtime POC is attempted. Do not commit real secret values.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -71,6 +73,8 @@ Keep storage secrets unset and `STORAGE_PROVIDER=mock` until staging storage tes
 
 ## Staging Steps
 
+Do not begin these steps until the Stage 0F-R3 checklist is complete and reviewed.
+
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
 3. Run the idempotent seed only if the staging owner approves demo bootstrap data.
@@ -91,6 +95,7 @@ Keep storage secrets unset and `STORAGE_PROVIDER=mock` until staging storage tes
 - Missing migration evidence.
 - Abacus access is limited to project/chat/task editing and does not expose staging env/secrets/deploy configuration.
 - Staging-only mock database mode, mock storage mode, staging subdomain/path or AI provider config is missing.
+- Stage 0F-R3 owner checklist is incomplete or contains real secret values.
 - Any production credential appears in CI, Codex or staging logs.
 - Any smoke test fails.
 - Manual owner sign-off is missing.
