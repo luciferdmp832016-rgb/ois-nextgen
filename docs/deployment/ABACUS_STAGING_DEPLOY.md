@@ -38,6 +38,8 @@ Stage 0F-R4 discovery result: repo/local verification confirms the expected env 
 
 Stage 0H handoff result: the Abacus staging runtime handoff package is documented in `architecture/implementation/STAGE_0H_ABACUS_STAGING_RUNTIME_HANDOFF.md`. Use it as the no-deploy source of truth for the first Abacus staging POC. The handoff is ready, but Abacus owner inputs remain blocked.
 
+Stage 0I discovery result: Abacus live runtime configuration remains blocked. No Abacus connector, CLI, authenticated UI, screenshots or owner-filled checklist were available in Stage 0I. Treat project ID, SuperComputer/cloud ID, public URL, GitHub/source state, service IDs, env/secrets mechanism, live mock config and port/proxy behavior as unknown until owner evidence is provided.
+
 ## Stage 0H Handoff Summary
 
 Initial Abacus POC scope must reproduce the Stage 0G mock-safe boot only:
@@ -55,6 +57,16 @@ Initial POC exclusions:
 - Do not run `pnpm db:seed` unless demo-only staging seed approval is confirmed.
 - Do not use OpenRouter or storage runtime credentials; keep AI and storage mock-only.
 - Do not deploy to production or use production values.
+
+Stage 0I go/no-go remains blocked until the following are confirmed with redacted staging-only evidence:
+
+- Abacus project ID and SuperComputer/cloud ID.
+- GitHub connection or cloned repo path, branch and commit.
+- Core API, OIS Console and PITS service/task IDs.
+- Env/secrets injection path with names only and values hidden.
+- `AI_PROVIDER=mock`, `AI_PROVIDER_MODE=mock`, `STORAGE_PROVIDER=mock`, and no production OpenRouter key.
+- Public staging URLs and healthcheck path configuration.
+- Fixed port or proxy behavior for 4000, 3000 and 3001, or a split-app equivalent.
 
 ## Stage 0F-R2 Readiness Matrix
 

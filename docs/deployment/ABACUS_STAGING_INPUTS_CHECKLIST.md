@@ -8,6 +8,30 @@ Do not commit real secret values to this file. Fill this checklist with staging-
 
 Stage 0F-R2 blocked safely because staging-only inputs were missing or unknown. Stage 0F-R3 does not deploy and does not run the runtime POC. The runtime POC remains blocked until every required item below is confirmed as staging-only.
 
+Stage 0I discovery status: live Abacus/SuperComputer runtime configuration is still blocked. No Abacus connector, CLI, authenticated UI, screenshots or owner-filled checklist were available. Use the table below for redacted status tracking only.
+
+| Item | Stage 0I status | Redacted reference |
+|---|---|---|
+| Project name | `CANDIDATE_VISIBLE_BUT_UNVERIFIED` | `OIS NextGen Staging` from prior notes; not re-confirmed live in Stage 0I. |
+| Project ID | `UNKNOWN` | `<staging-project-id>` |
+| SuperComputer/cloud ID | `UNKNOWN` | `<staging-cloud-id>` |
+| Public URL | `UNKNOWN` | `<staging-public-url>` |
+| Always On | `UNKNOWN` | `<enabled | disabled | unknown>` |
+| GitHub connected | `UNKNOWN` | `<connected | disconnected | unknown>` |
+| OIS repo cloned | `UNKNOWN` | `<repo-path-branch-commit>` |
+| Core API service/task ID | `UNKNOWN` | `<staging-core-api-service-id>` |
+| OIS Console service/task ID | `UNKNOWN` | `<staging-console-service-id>` |
+| PITS Shell service/task ID | `UNKNOWN` | `<staging-pits-service-id>` |
+| Env/secrets injection path | `BLOCKED` | `<staging-only-path-description>` |
+| `DATABASE_URL` staging secret/reference | `UNKNOWN` | `<secret-name-or-private-reference-only>` |
+| Storage mock mode | `UNKNOWN` | Expected `STORAGE_PROVIDER=mock`; live Abacus value not confirmed. |
+| AI mock mode | `UNKNOWN` | Expected `AI_PROVIDER=mock` and `AI_PROVIDER_MODE=mock`; live Abacus value not confirmed. |
+| OpenRouter key | `UNKNOWN` | Expected unset for first POC; no value recorded. |
+| Runtime port/proxy behavior | `UNKNOWN` | `<fixed-ports | dynamic-port | split-app-proxy>` |
+| Multiple service support | `UNKNOWN` | `<split-apps | multi-service | unknown>` |
+| Build/start entrypoint options | `UNKNOWN` | Repo commands known; Abacus UI support not confirmed. |
+| Healthcheck config options | `UNKNOWN` | Repo healthchecks known; Abacus UI support not confirmed. |
+
 ## Required Readiness Summary
 
 | Area | Required for POC | Optional for first POC | Safe handoff format |
