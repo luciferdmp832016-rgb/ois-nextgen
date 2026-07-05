@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - stage-0b-complete-handoff-ingestion
       - stage-0d-platform-cloud-abacus-readiness
   push:
     branches:

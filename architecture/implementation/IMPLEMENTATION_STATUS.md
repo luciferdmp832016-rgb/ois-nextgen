@@ -8,6 +8,8 @@ Stage 0C verdict: `PASS_WITH_NON_BLOCKING_DEFERRED_ITEMS`
 
 Stage 0D verdict: `PASS_WITH_MANUAL_ABACUS_AND_GITHUB_SETUP`
 
+Stage 0E verdict: `BLOCKED`
+
 ## Current Gate Summary
 
 | Area | Status | Notes |
@@ -21,7 +23,8 @@ Stage 0D verdict: `PASS_WITH_MANUAL_ABACUS_AND_GITHUB_SETUP`
 | LOCAL_HTTP_RUNTIME | PASSED | `pnpm dev` serves OIS Console on 3000, PITS Shell on 3001 and Core API on 4000 simultaneously. Console/PITS dev scripts now bind explicitly to `127.0.0.1`. |
 | QUALITY_AND_BUILDS | PASSED | Lint, typecheck, tests, e2e and recursive builds pass. |
 | PLATFORM_CLOUD_READINESS | PASSED_WITH_MANUAL_GITHUB_SETUP | Stage 0D adds OIS-BIBLE, LLM context, deployment docs, env placeholders, GitHub CI workflows, release preflight workflow, deployment manifest template and runtime smoke tests. Local validation passed; first GitHub Actions run and branch protection are manual. |
-| ABACUS_READINESS | MANUAL_SETUP_REQUIRED | Abacus staging and production runbooks are documented. No Abacus production database, storage or deployment was used. |
+| GITHUB_CI_ACTIVATION | BLOCKED | PR #1 exists, but no GitHub Actions run exists for the PR head because Stage 0D CI did not include the repository default branch in `pull_request.branches`. Stage 0E patches this trigger; CI must run after the commit is pushed. |
+| ABACUS_READINESS | MANUAL_SETUP_REQUIRED | Abacus staging and production runbooks are documented. No Abacus production database, storage or deployment was used. Stage 0E could not perform staging POC without staging-only credentials or UI access. |
 | PITS_BUSINESS_LOGIC | NOT_STARTED | No Field Report, Case or Task lifecycle vertical slice was started. |
 | KNOWLEDGE_VERTICAL_SLICE | NOT_STARTED | No Knowledge/Learning/Wisdom/Intelligence vertical slice was started. |
 | LEGACY_DATA_MIGRATION | BLOCKED_DOMAIN_PORT | Production data migration requires dry-run on a production clone, owner sign-off and full regression suite completion. |
