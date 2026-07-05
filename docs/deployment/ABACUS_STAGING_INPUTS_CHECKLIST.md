@@ -224,6 +224,8 @@ If dynamic `PORT` is required and the current scripts cannot consume it, stop. A
 
 All required checkboxes below must be checked before a future stage can run the minimum safe staging runtime POC.
 
+- [ ] I reviewed the Stage 0H Abacus staging runtime handoff package.
+- [ ] I confirm the first Abacus POC scope excludes DB-backed endpoints unless staging DB approval is separately granted.
 - [ ] I confirm every provided input is staging-only.
 - [ ] I confirm no production database, storage bucket, OpenRouter key, Abacus app, Abacus project or Abacus task is used.
 - [ ] I confirm all secret values are stored only in Abacus or an approved private secret manager.
