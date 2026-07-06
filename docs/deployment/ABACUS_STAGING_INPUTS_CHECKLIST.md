@@ -14,6 +14,8 @@ Stage 0P applied the default DB Prisma baseline and verified the first DB-backed
 
 Stage 0Q applied Platform Kernel demo/staging seed data to the `default` DB and verified seeded `/platform/overview` counts. Seed data is `DEMO DATA - NOT PRODUCTION`. This does not approve `/auth/demo-login`, write endpoints, Console deployment, PITS deployment, worker deployment, storage-backed behavior, real OpenRouter usage or custom `dmp247.com` domain publication.
 
+Stage 0R-A inspected Platform Kernel gate and DB-backed smoke logic only. `/platform/overview` remains read-only, `PLATFORM_KERNEL` remains `IN_PROGRESS` by hardcoded API logic, and focused tests are required before gate advancement. This does not approve deploys, runtime changes, migrations, seed reruns, row-data inspection, write endpoints, production resources or custom `dmp247.com` domain publication.
+
 Stage 0I discovery status: live Abacus/SuperComputer runtime configuration is still blocked. No Abacus connector, CLI, authenticated UI, screenshots or owner-filled checklist were available. Use the table below for redacted status tracking only.
 
 | Item | Stage 0I status | Redacted reference |
@@ -249,6 +251,19 @@ Stage 0Q Platform Kernel seed evidence update: the `default` DB now contains dem
 | Real Phase 1 data | `CONFIRMED_NOT_IMPORTED` | Not imported. |
 | nginx/systemd config | `CONFIRMED_NOT_MODIFIED` | Not modified; service remained active. |
 | Legacy DBs/domains/storage | `CONFIRMED_NOT_TOUCHED` | `ois_phase1_dev`, `emerald_bql_web_dev`, `ois.dmp247.com`, `oisys.abacusai.app`, `49816/` and `52067/` untouched. |
+
+Stage 0R-A Platform Kernel gate smoke stabilization evidence update: local code inspection confirms the route/gate behavior and records test coverage gaps. This table records non-secret documentation evidence only and does not approve runtime behavior changes.
+
+| Item | Stage 0R-A status | Redacted reference |
+|---|---|---|
+| `/health` DB requirement | `CONFIRMED_NO_DB_ROUTE` | Static Core API health response in `apps/core-api/src/app.ts`. |
+| `/platform/overview` operation type | `CONFIRMED_READ_ONLY` | Eight Prisma `count()` calls; no writes or side effects observed. |
+| `PLATFORM_KERNEL` phase gate | `CONFIRMED_IN_PROGRESS_LITERAL` | Hardcoded API response literal; not count-driven. |
+| Config/feature flag gate control | `CONFIRMED_NOT_USED` | Route does not read `FeatureFlag`, `EffectiveConfigurationSnapshot` or env config for gate status. |
+| Missing DB behavior | `TEST_REQUIRED` | No route-level fallback for `/platform/overview`; behavior should be tested explicitly. |
+| Test coverage | `REQUIRED` | Overview count mapping, gate status, no-DB health and legacy/prod reference guards are missing. |
+| Endpoint delta | `CONFIRMED_NONE` | No endpoints added, changed, deprecated or stopped in Stage 0R-A. |
+| Production/legacy resources | `CONFIRMED_NOT_TOUCHED` | Documentation/code inspection only. |
 
 ## Required Readiness Summary
 
