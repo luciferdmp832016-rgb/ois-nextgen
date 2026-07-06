@@ -68,6 +68,8 @@ Stage 0R-E SSH relay diagnostic result: direct external SSH through the Abacus S
 
 Stage 0R-F ops restart grace window result: owner Web Terminal evidence showed immediate post-restart local connection failures and public HTTP 502 responses that cleared on a later `status.sh` run after Core API had bound port `4000`. `safe-restart-core-api.sh` and `runtime-sync.sh` now treat transient restart failures as `WARMING_UP` until a 30-second retry timeout expires. Final result is `OPS_RESTART_GRACE_WINDOW_ADDED`.
 
+Stage 0R-G ops script unbound variable fix result: after Stage 0R-F was merged and pulled into the Abacus VM at commit `124741498e1557e660aa1f960f9f5c8e1c3e55c9`, `status.sh` crashed with `body: unbound variable` in `lib-core-api-checks.sh` even though systemd reported Core API active/running. Stage 0R-G fixes the shell helper variable initialization/shadowing bug and adds a no-network parser self-test. Final result is `OPS_SCRIPT_UNBOUND_VARIABLE_FIX_READY`.
+
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
 ## Stage 0H Handoff Summary
@@ -159,6 +161,8 @@ Stage 0R-D result: safe SSH operation scripts are ready. Recommended next stage:
 Stage 0R-E result: direct external SSH is blocked by the Abacus platform relay, not by the local key or in-VM `sshd`. Use Abacus Web Terminal plus `ops/abacus/*.sh` as the fallback path until Abacus support fixes the relay. Recommended next stage: Stage 0S-A - Platform Kernel Gate Advancement Plan, or an owner/support follow-up to retest SSH after relay remediation.
 
 Stage 0R-F result: safe restart verification now includes a 30-second grace window and 2-second retry loop. Temporary local connection failures or public HTTP 502 responses immediately after restart are expected warm-up states until `RESTART_VERIFICATION_TIMEOUT`. Recommended next stage: Stage 0R-F1 - Owner Web Terminal retry evidence, or Stage 0S-A - Platform Kernel Gate Advancement Plan.
+
+Stage 0R-G result: ops helper parsing now handles empty/missing response bodies safely under `set -u`. HTTP 502, timeout and no-body cases should report clean failures or `WARMING_UP`, not crash with an unbound variable. Recommended next stage: Stage 0R-G1 - Owner Web Terminal retry evidence, or Stage 0S-A - Platform Kernel Gate Advancement Plan.
 
 ## Stage 0N Resource Boundaries
 
@@ -497,6 +501,21 @@ Stage 0R-F updates restart verification after owner Web Terminal evidence showed
 
 This does not add, change or deprecate endpoints. It only prevents false restart failures while Core API warms up and binds port `4000`.
 
+## Stage 0R-G Ops Script Unbound Variable Fix
+
+Stage 0R-G fixes a shell helper bug observed after the Stage 0R-F scripts were pulled into the Abacus VM.
+
+| Area | Contract |
+|---|---|
+| Observed crash | `lib-core-api-checks.sh: line 110: body: unbound variable`. |
+| Runtime interpretation | Not evidence of Core API runtime failure; systemd service was active/running. |
+| Root cause | Helper-local `body` variable shadowed caller `body` under Bash dynamic scoping, leaving the caller variable unset under `set -u`. |
+| Fix | Initialize response variables and avoid helper/caller variable shadowing in `http_get_body`. |
+| Empty/no-body behavior | HTTP 502, curl timeout or missing body now reports a clean failure detail instead of crashing. |
+| Self-test | `bash ops/abacus/self-test-core-api-checks.sh`; stubs `curl` and does not hit live endpoints. |
+
+This does not add, change or deprecate endpoints.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -553,6 +572,7 @@ Stage 0R-C synced Abacus runtime to the latest integration commit and restarted 
 Stage 0R-D added reusable SSH scripts and documentation only. It did not SSH to Abacus, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
 Stage 0R-E documented the Abacus SSH relay diagnostic and Web Terminal fallback only. It did not SSH to Abacus, run Web Terminal operations, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
 Stage 0R-F updated safe ops scripts and documentation only. It did not run Web Terminal operations, deploy, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
+Stage 0R-G fixed safe ops shell helper parsing and documentation only. It did not run Web Terminal operations, deploy, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -583,6 +603,7 @@ Stage 0R-C confirmed no endpoint behavior regression after Abacus runtime sync. 
 Stage 0R-D did not change endpoints. It added owner-run SSH scripts that check the existing active endpoints and avoid legacy probes by default.
 Stage 0R-E did not change endpoints. It documented that Web Terminal plus `ops/abacus/*.sh` is the fallback operation path while Abacus SSH relay routing is blocked.
 Stage 0R-F did not change endpoints. It updated restart verification so transient post-restart local failures or public HTTP 502 responses are retried before failure is reported.
+Stage 0R-G did not change endpoints. It fixed ops helper response parsing so HTTP failures report cleanly instead of crashing under `set -u`.
 
 ## Stop Conditions
 

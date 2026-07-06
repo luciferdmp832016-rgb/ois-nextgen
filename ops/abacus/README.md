@@ -19,6 +19,7 @@ bash ops/abacus/status.sh
 | `runtime-sync.sh` | Fetches/pulls the integration branch, runs install/lint/typecheck/test/build, then restarts Core API through `safe-restart-core-api.sh` with the restart grace window. | Yes, source sync and service restart only. |
 | `rollback-core-api-nginx-poc.sh` | Prints the Stage 0O rollback plan by default. Requires `--confirm-rollback` to stop/disable service and remove nginx/systemd POC files. | Yes, destructive only with explicit confirmation. |
 | `lib-core-api-checks.sh` | Shared helper for health/overview validation and restart readiness retry logic. | No direct use; sourced by scripts. |
+| `self-test-core-api-checks.sh` | No-network self-test for `lib-core-api-checks.sh` response parsing under `set -u`. | No. Local parser test only. |
 
 ## Restart Grace Window
 
@@ -47,6 +48,22 @@ Optional tuning:
 ```sh
 RESTART_VERIFY_TIMEOUT=30 RESTART_VERIFY_INTERVAL=2 bash ops/abacus/safe-restart-core-api.sh
 ```
+
+## Helper Self-Test
+
+Run this after changing `lib-core-api-checks.sh`:
+
+```sh
+bash ops/abacus/self-test-core-api-checks.sh
+```
+
+The self-test stubs `curl` and does not call live endpoints. It verifies:
+
+- Health HTTP 200 body parsing.
+- Empty-body HTTP 502 clean failure.
+- Curl timeout clean failure.
+- Platform overview HTTP 200 body parsing.
+- No unbound variables under `set -u`.
 
 ## Security Rules
 
