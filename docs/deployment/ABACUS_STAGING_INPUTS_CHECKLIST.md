@@ -8,6 +8,8 @@ Do not commit real secret values to this file. Fill this checklist with staging-
 
 Stage 0F-R2 blocked safely because staging-only inputs were missing or unknown. Stage 0F-R3 does not deploy and does not run the runtime POC. The runtime POC remains blocked until every required item below is confirmed as staging-only.
 
+Stage 0O verified the first Core API-only SuperComputer nginx/systemd staging health POC. `https://ois-nextgen.abacusai.cloud/health` now returns HTTP/2 200 with the Core API health payload. This does not approve DB-backed endpoints, storage-backed endpoints, Console deployment, PITS deployment, worker deployment, migrations, `prisma db push`, real OpenRouter usage or external `dmp247.com` custom-domain publication.
+
 Stage 0I discovery status: live Abacus/SuperComputer runtime configuration is still blocked. No Abacus connector, CLI, authenticated UI, screenshots or owner-filled checklist were available. Use the table below for redacted status tracking only.
 
 | Item | Stage 0I status | Redacted reference |
@@ -150,6 +152,38 @@ Stage 0N resource boundary evidence update: the Abacus-managed public domain and
 | Emerald/BQL storage | `DO_NOT_TOUCH` | Inferred prefix `49816/` |
 | PITS current placement | `PRODUCT_BOUNDARY_RISK` | PITS is bundled inside OIS Phase 1 shell. |
 | Next deployment path | `CONTRACT_READY` | Stage 0O SuperComputer nginx + systemd Core API staging POC. |
+
+Stage 0O managed-domain Core API health evidence update: Core API `/health` is now verified on the Abacus-managed public staging domain. This table records non-secret evidence only and does not approve DB/storage-backed behavior, migrations, `prisma db push`, real AI providers, Console deployment, PITS deployment or production resources.
+
+| Item | Stage 0O status | Redacted reference |
+|---|---|---|
+| Abacus execution branch | `CONFIRMED` | `stage-0b-complete-handoff-ingestion` |
+| Abacus execution commit | `CONFIRMED` | `cc7ed28704c9e804385f6d2a4c21e8d887a775e3` |
+| Package deployed | `CONFIRMED_CORE_API_ONLY` | `@ois/core-api`, path `apps/core-api`. |
+| Framework | `CONFIRMED` | Fastify. |
+| Runtime entrypoint | `CONFIRMED` | `pnpm start` via `tsx src/server.ts`. |
+| Install | `CONFIRMED` | `pnpm install --frozen-lockfile` passed; Prisma client generation only. |
+| systemd service | `CONFIRMED` | `/etc/systemd/system/ois-nextgen-core-api.service`, enabled at boot and active/running. |
+| systemd env file | `CONFIRMED_REDACTED` | `/home/ubuntu/ois-nextgen/.env`; gitignored; no values recorded. |
+| nginx vhost | `CONFIRMED` | `/etc/nginx/conf.d/ois-nextgen.conf`; `sudo nginx -t` passed. |
+| nginx routes | `CONFIRMED` | `/health`, `/api/` and `/` proxy to `127.0.0.1:4000`. |
+| Local health | `CONFIRMED` | `http://127.0.0.1:4000/health` returned HTTP 200. |
+| Public managed-domain health | `CONFIRMED` | `https://ois-nextgen.abacusai.cloud/health` returned HTTP/2 200. |
+| Health payload | `CONFIRMED` | `status=ok`, `service=core-api`, `stage=bootstrap-stage-a`. |
+| OIS Console runtime | `CONFIRMED_NOT_STARTED` | Not deployed in Stage 0O. |
+| PITS runtime | `CONFIRMED_NOT_STARTED` | Not deployed in Stage 0O. |
+| Worker runtime | `CONFIRMED_NOT_STARTED` | Not deployed in Stage 0O. |
+| DB-backed functionality | `CONFIRMED_NOT_ENABLED` | No database connection and no DB-backed endpoints called. |
+| Storage-backed functionality | `CONFIRMED_NOT_ENABLED` | No real storage values and no storage-backed endpoints called. |
+| AI/OpenRouter real key | `CONFIRMED_NOT_USED` | `OPENROUTER_API_KEY` empty; mock-safe env only. |
+| `DATABASE_URL` | `CONFIRMED_ABSENT` | Not present in VM env for Stage 0O. |
+| `ABACUS_DATABASE_URL` | `CONFIRMED_ABSENT` | Not present in VM env for Stage 0O. |
+| Migrations | `CONFIRMED_NOT_RUN` | No migrations. |
+| `prisma db push` | `CONFIRMED_NOT_RUN` | Not used. |
+| External custom domains | `CONFIRMED_NOT_TOUCHED` | `ois.dmp247.com` untouched. |
+| OIS Phase 1 | `CONFIRMED_NOT_TOUCHED` | `oisys.abacusai.app` and `ois_phase1_dev` untouched. |
+| Emerald/BQL | `CONFIRMED_NOT_TOUCHED` | `emerald_bql_web_dev` untouched. |
+| Rollback | `CONFIRMED_DOCUMENTED` | Stop/disable service, remove service/vhost, reload nginx; expected domain reverts to `READY`. |
 
 ## Required Readiness Summary
 

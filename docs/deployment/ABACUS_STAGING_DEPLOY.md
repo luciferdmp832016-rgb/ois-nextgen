@@ -50,6 +50,8 @@ Stage 0L hosted-app custom domain result: Abacus Agent confirmed the custom doma
 
 Stage 0N resource boundary contract: `https://ois-nextgen.abacusai.cloud` is the Abacus-managed public domain for the OIS NextGen SuperComputer/App Shell. Codex/GitHub is the engineering/test plane. Abacus SuperComputer is the staging VM/App Shell plane with nginx, systemd, SSH, GitHub integration, attached `default` DB and S3 prefix `59543/`. VM preview proxy URLs remain temporary. External `dmp247.com` custom domains are optional branding/publication layers and must not be touched until NextGen is validated.
 
+Stage 0O managed-domain Core API health result: Abacus Agent verified the first SuperComputer nginx/systemd staging slice. `@ois/core-api` runs under systemd, nginx proxies the Abacus-managed public staging domain to `127.0.0.1:4000`, and `https://ois-nextgen.abacusai.cloud/health` returns HTTP/2 200 with the Core API health payload. Console, PITS and worker were not started. DB-backed functionality, storage-backed functionality and real AI/OpenRouter usage remain disabled.
+
 ## Stage 0H Handoff Summary
 
 Initial Abacus POC scope must reproduce the Stage 0G mock-safe boot only:
@@ -122,6 +124,8 @@ env -u DATABASE_URL -u ABACUS_DATABASE_URL -u ABACUS_STORAGE_* \
 
 Stage 0N deployment pivot: the safer immediate path is SuperComputer nginx + systemd on the Abacus-managed public domain. Stage 0O should deploy Core API only behind nginx/systemd and target `https://ois-nextgen.abacusai.cloud/health` HTTP 200. The initial Stage 0O POC must remain mock-safe, must not call DB-backed or storage-backed endpoints, must not run migrations, and must not use `prisma db push`.
 
+Stage 0O result: Core API `/health` is verified on the Abacus-managed public staging domain. Continue to treat this as Core API-only staging health, not full product deployment. Recommended next stage: Stage 0P - Default DB Staging Migration Gate / Prisma Baseline.
+
 ## Stage 0N Resource Boundaries
 
 | Resource | Contract |
@@ -135,7 +139,7 @@ Stage 0N deployment pivot: the safer immediate path is SuperComputer nginx + sys
 | Secrets | Create fresh OIS NextGen staging secrets. Never reuse Phase 1 JWT, DB, Redis, MinIO or Neo4j secrets. |
 | Repo state | Session-dependent; always preflight clone/pull before deployment work. |
 
-## Stage 0O Gate
+## Stage 0O Gate And Result
 
 Stage 0O is SuperComputer Nginx/Systemd Core API Staging Deploy POC.
 
@@ -152,6 +156,50 @@ Required constraints:
 - nginx vhost scoped to OIS NextGen only.
 - Target health: `https://ois-nextgen.abacusai.cloud/health` returns HTTP 200.
 - Do not touch `ois.dmp247.com`, `oisys.abacusai.app`, `ois_phase1_dev`, `emerald_bql_web_dev`, `49816/` or `52067/`.
+
+Stage 0O verified result:
+
+| Area | Evidence |
+|---|---|
+| Package | `@ois/core-api` from `apps/core-api`. |
+| Abacus VM commit | `cc7ed28704c9e804385f6d2a4c21e8d887a775e3`. |
+| Install | `pnpm install --frozen-lockfile` passed in 24s; Prisma client generation only. |
+| systemd service | `/etc/systemd/system/ois-nextgen-core-api.service`, enabled at boot and active/running. |
+| nginx vhost | `/etc/nginx/conf.d/ois-nextgen.conf`; `sudo nginx -t` passed. |
+| Local health | `http://127.0.0.1:4000/health` returned HTTP 200. |
+| Public health | `https://ois-nextgen.abacusai.cloud/health` returned HTTP/2 200 via Cloudflare/Envoy. |
+| Exclusions | Console, PITS and worker not started; no DB-backed endpoints, storage-backed endpoints, migrations, `prisma db push` or real credentials. |
+
+Stage 0O VM env names, values redacted or omitted:
+
+| Key | Contract |
+|---|---|
+| `APP_ENV` | Runtime env key only; value kept on VM. |
+| `DEPLOY_TARGET` | Runtime env key only; value kept on VM. |
+| `LOCALHOST_REQUIRED` | Runtime env key only; value kept on VM. |
+| `AI_PROVIDER` | Mock-safe. |
+| `AI_PROVIDER_MODE` | Mock-safe. |
+| `OPENROUTER_API_KEY` | Empty. |
+| `STORAGE_PROVIDER` | Mock-safe. |
+| `CORE_API_HOST` | Runtime env key only; value kept on VM. |
+| `CORE_API_PORT` | Port `4000`. |
+| `CORE_API_URL` | Runtime env key only; value kept on VM. |
+| `NEXT_TELEMETRY_DISABLED` | Runtime env key only; value kept on VM. |
+| `DATABASE_URL` | Absent. |
+| `ABACUS_DATABASE_URL` | Absent. |
+
+Stage 0O rollback:
+
+```sh
+sudo systemctl stop ois-nextgen-core-api
+sudo systemctl disable ois-nextgen-core-api
+sudo rm /etc/systemd/system/ois-nextgen-core-api.service
+sudo systemctl daemon-reload
+sudo rm /etc/nginx/conf.d/ois-nextgen.conf
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Expected rollback result: `https://ois-nextgen.abacusai.cloud` reverts to the default `READY` page.
 
 ## Stage 0F-R2 Readiness Matrix
 
@@ -200,6 +248,7 @@ Stage 0J executed only a local VM Core API health POC, not a public deployment o
 Stage 0K executed only a VM preview proxy Core API health POC, not a hosted-app deployment or full split-app staging POC.
 Stage 0L executed hosted-app/custom-domain investigation plus controlled Core API boot only; no hosted app/service was created.
 Stage 0N did not execute staging steps; it records the resource boundary and SuperComputer nginx/systemd deployment contract.
+Stage 0O executed the Core API-only SuperComputer nginx/systemd staging health POC and verified `https://ois-nextgen.abacusai.cloud/health` HTTP/2 200. It did not execute Console, PITS, worker, DB-backed functionality, storage-backed functionality or real AI/OpenRouter usage.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -220,6 +269,7 @@ Stage 0J verified only the first two checks locally on `127.0.0.1:4000`; public 
 Stage 0K verified Core API `/health` publicly through the VM preview proxy at `https://7a162f29d-4000.na116.preview.abacusai.app/health`; the hosted custom domain remains unverified.
 Stage 0L confirmed `https://ois-nextgen.abacusai.cloud/` returns edge placeholder `READY`, while `https://ois-nextgen.abacusai.cloud/health` remains HTTP 404 until Abacus platform/console maps a hosted app backend.
 Stage 0N pivots the next target to SuperComputer nginx/systemd on the Abacus-managed public domain, with `https://ois-nextgen.abacusai.cloud/health` as the Stage 0O target healthcheck.
+Stage 0O verified `https://ois-nextgen.abacusai.cloud/health` returns HTTP/2 200 with the Core API health payload. Core API `/`, `/docs`, Console `/` and PITS `/` remain outside the Stage 0O public managed-domain smoke scope.
 
 ## Stop Conditions
 
@@ -229,8 +279,8 @@ Stage 0N pivots the next target to SuperComputer nginx/systemd on the Abacus-man
 - Stage 0F-R3 owner checklist is incomplete or contains real secret values.
 - Stage 0H go/no-go gate is incomplete.
 - Hosted-app port behavior and Console/PITS service port behavior remain unverified.
-- Hosted-app/custom-domain routing for Core API `/health` is not configured or returns 404.
-- No owner-assisted Abacus hosted-app service registration path is available.
+- Core API managed-domain `/health` returns non-200 after nginx/systemd changes.
+- A workflow tries to use hosted-app service registration or external custom-domain publication instead of the verified SuperComputer nginx/systemd path without owner approval.
 - Any action would touch OIS Phase 1 or Emerald/BQL databases, storage prefixes, app shells or external custom domains.
 - Any action would reuse Phase 1 JWT, DB, Redis, MinIO or Neo4j secrets.
 - Any production credential appears in CI, Codex or staging logs.
