@@ -38,6 +38,8 @@ Stage 0N verdict: `ABACUS_RESOURCE_BOUNDARY_SUPERCOMPUTER_DEPLOYMENT_CONTRACT_RE
 
 Stage 0O verdict: `ABACUS_MANAGED_DOMAIN_CORE_API_HEALTH_VERIFIED`
 
+Published endpoint registry status: `ESTABLISHED`
+
 ## Current Gate Summary
 
 | Area | Status | Notes |
@@ -62,6 +64,7 @@ Stage 0O verdict: `ABACUS_MANAGED_DOMAIN_CORE_API_HEALTH_VERIFIED`
 | ABACUS_RESOURCE_BOUNDARY_SUPERCOMPUTER_CONTRACT | ABACUS_RESOURCE_BOUNDARY_SUPERCOMPUTER_DEPLOYMENT_CONTRACT_READY | Stage 0N records the corrected Abacus resource boundary: `ois-nextgen.abacusai.cloud` is the Abacus-managed public domain for the OIS NextGen SuperComputer/App Shell, `default` DB and S3 prefix `59543/` are the safe OIS NextGen staging resources, Phase 1 `ois_phase1_dev`/`52067/` and Emerald/BQL `emerald_bql_web_dev`/`49816/` must not be touched, and the next safe deploy path is SuperComputer nginx + systemd for Core API only. |
 | ABACUS_MANAGED_DOMAIN_CORE_API_HEALTH | ABACUS_MANAGED_DOMAIN_CORE_API_HEALTH_VERIFIED | Stage 0O records Abacus SuperComputer nginx/systemd evidence for Core API only: `@ois/core-api` runs under systemd, nginx proxies `https://ois-nextgen.abacusai.cloud/health` to `127.0.0.1:4000`, and the Abacus-managed public staging domain returns HTTP/2 200 with the Core API health payload. Console, PITS and worker were not started; DB-backed functionality is not enabled. |
 | ABACUS_STAGING_POC | ABACUS_MANAGED_DOMAIN_CORE_API_HEALTH_VERIFIED | Stage 0F selected split app staging as safest topology, verified PR #1 final-head CI/artifacts, and documented manual Abacus staging steps. Stage 0I-R1 confirmed source bootstrap. Stage 0J confirmed Core API local boot on the Abacus VM. Stage 0K confirmed public preview proxy health. Stage 0L confirmed hosted-app deploy cannot be completed from VM shell alone. Stage 0N pivoted to SuperComputer nginx/systemd, and Stage 0O verified Core API `/health` on the Abacus-managed public staging domain with mock-safe env, no DB/storage-backed endpoints, no real AI credentials, no migrations and no `prisma db push`. |
+| PUBLISHED_ENDPOINT_REGISTRY | ESTABLISHED | `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` is the persistent source of truth for local, Codex Cloud, Abacus VM local, Abacus preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section with added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries. |
 | ABACUS_READINESS | MANUAL_SETUP_REQUIRED | Abacus staging and production runbooks are documented. No Abacus production database, storage or deployment was used. Stage 0F keeps production untouched and staging manual. |
 | PITS_BUSINESS_LOGIC | NOT_STARTED | No Field Report, Case or Task lifecycle vertical slice was started. |
 | KNOWLEDGE_VERTICAL_SLICE | NOT_STARTED | No Knowledge/Learning/Wisdom/Intelligence vertical slice was started. |

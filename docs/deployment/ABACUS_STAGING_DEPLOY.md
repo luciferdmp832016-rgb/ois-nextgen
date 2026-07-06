@@ -52,6 +52,8 @@ Stage 0N resource boundary contract: `https://ois-nextgen.abacusai.cloud` is the
 
 Stage 0O managed-domain Core API health result: Abacus Agent verified the first SuperComputer nginx/systemd staging slice. `@ois/core-api` runs under systemd, nginx proxies the Abacus-managed public staging domain to `127.0.0.1:4000`, and `https://ois-nextgen.abacusai.cloud/health` returns HTTP/2 200 with the Core API health payload. Console, PITS and worker were not started. DB-backed functionality, storage-backed functionality and real AI/OpenRouter usage remain disabled.
 
+Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
+
 ## Stage 0H Handoff Summary
 
 Initial Abacus POC scope must reproduce the Stage 0G mock-safe boot only:
