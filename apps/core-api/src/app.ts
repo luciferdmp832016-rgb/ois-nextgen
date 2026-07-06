@@ -17,9 +17,27 @@ const serviceIdentity = {
   docs: "/docs"
 } as const;
 
-export function buildCoreApi() {
+export type CoreApiPrismaClient = Pick<
+  PrismaClient,
+  | "$disconnect"
+  | "auditRecord"
+  | "industry"
+  | "moduleDefinition"
+  | "organization"
+  | "productDefinition"
+  | "productInstallation"
+  | "project"
+  | "userAccount"
+  | "workspace"
+>;
+
+export interface BuildCoreApiOptions {
+  prisma?: CoreApiPrismaClient;
+}
+
+export function buildCoreApi(options: BuildCoreApiOptions = {}) {
   const app = Fastify({ logger: { name: "ois-nextgen-core-api" } });
-  const prisma = new PrismaClient();
+  const prisma = options.prisma ?? new PrismaClient();
 
   app.register(swagger, {
     openapi: {
