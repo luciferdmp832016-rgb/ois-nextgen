@@ -145,7 +145,7 @@ Stage 0T-B preserves these rules:
 
 Stage 0T-B is marked `UI_DEMO_TEST_HARNESS_READY`.
 
-Recommended next stage: Stage 0T-C - Owner-Assisted Abacus App Shell Creation Evidence.
+Recommended next stage: Stage 0T-C - OIS Console App Shell Deploy.
 
 ## Validation
 

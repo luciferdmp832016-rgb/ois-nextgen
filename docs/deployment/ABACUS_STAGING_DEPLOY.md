@@ -13,6 +13,7 @@ Stage 0T-A corrected the UI deployment model:
 - Connected Services are connector configuration, not App Shell deployment.
 - Abacus CLI is not currently available for this project because API metering must be enabled first.
 - Stage 0T-B adds local/Codex UI demo test harness coverage before any owner-assisted App Shell deployment.
+- Stage 0T-C deployed OIS Console only as an Abacus App Shell at `https://161acd4ff8.na116.preview.abacusai.app`; PITS Shell remains undeployed.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -87,6 +88,8 @@ Stage 0S-B two UI shell preview ops result: safe Abacus Web Terminal scripts now
 Stage 0T-A App Shell deployment contract result: owner evidence from Apps Management Console corrected the canonical UI deployment path. OIS Console and PITS Shell should not be proven through SuperComputer preview/nginx routing; each must be created as its own Abacus App Shell with its own Abacus-managed Deployment URL, Database, Storage, Versions and Custom Domain lifecycle. Core API remains on `https://ois-nextgen.abacusai.cloud`. Final result is `ABACUS_APP_SHELL_DEPLOYMENT_CONTRACT_READY`.
 
 Stage 0T-B UI demo test harness result: local/Codex Vitest coverage now renders the OIS Console and PITS Shell demo pages with mocked Core API `/health` and `/platform/overview` responses. Tests verify shell names, product codes, Core API URL, demo banner, health OK state, seeded counts and that UI packages avoid direct DB and legacy/production references. Final result is `UI_DEMO_TEST_HARNESS_READY`.
+
+Stage 0T-C OIS Console App Shell deploy result: owner/Abacus App Shell evidence confirms `OIS NextGen Console Demo` deployed as a Next.js App Shell at `https://161acd4ff8.na116.preview.abacusai.app`. The page shows `OIS_CONSOLE`, shared Core API URL `https://ois-nextgen.abacusai.cloud`, Core API health OK, demo banner, canonical seeded counts and the Core API-only DB access boundary. PITS was not deployed, Core API was not modified, and no production/legacy resources were touched. Final result is `OIS_CONSOLE_APP_SHELL_DEPLOYED`.
 
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
@@ -188,7 +191,9 @@ Stage 0S-B result: temporary UI demo shell preview operations are ready for owne
 
 Stage 0T-A result: canonical UI deployment should use Apps Management Console App Shells, not SuperComputer preview proxy.
 
-Stage 0T-B result: local/Codex UI demo page harness is ready. Recommended next stage: Stage 0T-C - Owner-Assisted Abacus App Shell Creation Evidence.
+Stage 0T-B result: local/Codex UI demo page harness is ready.
+
+Stage 0T-C result: OIS Console App Shell is deployed at `https://161acd4ff8.na116.preview.abacusai.app`. Recommended next stage: Stage 0T-D - PITS Shell App Shell Deploy.
 
 ## Stage 0N Resource Boundaries
 
@@ -565,7 +570,7 @@ Stage 0T-A App Shell checks supersede the older Stage 0S-B preview checks:
 
 | Planned endpoint | Status | Expected check |
 |---|---|---|
-| OIS Console Apps Management Console deployment URL | `PLANNED_NOT_CREATED` | HTTP 200 and OIS Console demo/status page after later App Shell deployment. |
+| `https://161acd4ff8.na116.preview.abacusai.app` | `ABACUS_APP_SHELL_PREVIEW_PUBLIC` | HTTP 200 and OIS Console demo/status page with `OIS_CONSOLE`, shared Core API URL and canonical seeded counts. |
 | PITS Shell Apps Management Console deployment URL | `PLANNED_NOT_CREATED` | HTTP 200 and PITS Shell demo/status page after later App Shell deployment. |
 | `https://<abacus-preview-base>-3000.../` | `DEPRECATED` | VM diagnostic only; not canonical OIS Console App Shell proof. |
 | `https://<abacus-preview-base>-3001.../` | `DEPRECATED` | VM diagnostic only; not canonical PITS Shell App Shell proof. |
@@ -718,6 +723,60 @@ Required pre-deploy checks before owner-assisted App Shell deployment:
 | Static guard | `pnpm test` | UI packages contain no direct DB or legacy/production references. |
 | Full local quality gate | `pnpm lint && pnpm typecheck && pnpm test && pnpm -r --if-present build` | All pass before App Shell creation evidence is requested. |
 
+## Stage 0T-C OIS Console App Shell Deploy
+
+Stage 0T-C records owner/Abacus App Shell evidence for OIS Console only.
+
+Deployment:
+
+| Field | Value |
+|---|---|
+| App Shell URL | `https://161acd4ff8.na116.preview.abacusai.app` |
+| App name | `OIS NextGen Console Demo` |
+| App type | `nextjs` |
+| Source repo | `https://github.com/luciferdmp832016-rgb/ois-nextgen` |
+| Branch | `stage-0b-complete-handoff-ingestion` |
+| App path/package | `apps/ois-console` / `@ois/ois-console` |
+| Build command | `corepack enable || true && pnpm install --frozen-lockfile && pnpm --filter @ois/ois-console build` |
+| Start command | `pnpm --filter @ois/ois-console start` |
+| Port | `3000` |
+
+Safe environment:
+
+| Key | Value |
+|---|---|
+| `CORE_API_URL` | `https://ois-nextgen.abacusai.cloud` |
+| `NEXT_PUBLIC_CORE_API_URL` | `https://ois-nextgen.abacusai.cloud` |
+| `NEXT_TELEMETRY_DISABLED` | `1` |
+| `DATABASE_URL` | Excluded. |
+| `ABACUS_DATABASE_URL` | Excluded. |
+
+Screenshot evidence confirms:
+
+| Check | Evidence |
+|---|---|
+| Product code | `OIS_CONSOLE`. |
+| Core API health | `status=ok`, `service=core-api`, `stage=bootstrap-stage-a`, `HTTP=200`. |
+| Demo banner | `DEMO DATA - NOT PRODUCTION`. |
+| Data boundary | UI shell does not import Prisma or read DB connection settings; DB-backed demo data is accessed only through Core API. |
+| Canonical seeded counts | industries 1, organizations 1, workspaces 1, projects 2, products 5, installations 2, modules 3, auditRecords 1. |
+
+Do not record the pasted Abacus text typo of `workspaces=2` and `products=1` as canonical; the screenshot/canonical seeded counts above remain authoritative.
+
+Stage 0T-C safety:
+
+- OIS Console only.
+- PITS was not deployed.
+- Core API was not modified.
+- No migrations.
+- No seed.
+- No `prisma db push`.
+- No write endpoints.
+- No `/auth/demo-login`.
+- No production DB/storage/OpenRouter credentials.
+- No `dmp247.com` custom domain attached.
+- OIS Phase 1 domains `https://oisys.abacusai.app` and `https://ois.dmp247.com` remain untouched.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -779,6 +838,7 @@ Stage 0S-A added OIS Console and PITS Shell demo pages plus documentation only. 
 Stage 0S-B added temporary UI demo shell ops scripts plus documentation only. It did not run Web Terminal operations, deploy, modify Abacus runtime, migrate, seed, call live endpoints, start UI shells, modify nginx/systemd or touch legacy resources.
 Stage 0T-A corrected UI deployment documentation only. It did not deploy, modify Abacus runtime, migrate, seed, call live endpoints, create App Shells, modify nginx/systemd or touch legacy resources.
 Stage 0T-B added local/Codex UI demo tests and documentation only. It did not deploy, modify Abacus runtime, migrate, seed, call live endpoints, create App Shells, modify nginx/systemd or touch legacy resources.
+Stage 0T-C records owner/Abacus App Shell deployment evidence for OIS Console only. PITS was not deployed; Core API was not modified; no migrations, seed, `prisma db push`, write endpoints, `/auth/demo-login`, production credentials, legacy domains or `dmp247.com` custom domains were used.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -814,6 +874,7 @@ Stage 0S-A did not change active endpoints. It added planned OIS Console and PIT
 Stage 0S-B did not change active endpoints. It added scripts for planned Abacus preview checks on ports `3000` and `3001`; the preview URLs remain `PLANNED_NOT_CREATED` until owner-run Abacus evidence verifies them.
 Stage 0T-A did not change active endpoints. It marks SuperComputer preview UI URLs as deprecated for App Shell proof and adds planned OIS Console/PITS Shell App Shell managed deployment URLs.
 Stage 0T-B did not change active endpoints. It adds local/Codex mocked UI demo tests and keeps OIS Console/PITS Shell App Shell URLs `PLANNED_NOT_CREATED`.
+Stage 0T-C adds OIS Console App Shell public preview endpoint `https://161acd4ff8.na116.preview.abacusai.app`. PITS Shell remains `PLANNED_NOT_CREATED`; Core API `/health` and `/platform/overview` remain unchanged.
 
 ## Stop Conditions
 
