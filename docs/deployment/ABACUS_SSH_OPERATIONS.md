@@ -6,6 +6,8 @@ Stage 0R-E result: `ABACUS_SSH_RELAY_BLOCKED_WEB_TERMINAL_FALLBACK_READY`.
 
 Stage 0R-F result: `OPS_RESTART_GRACE_WINDOW_ADDED`.
 
+Stage 0R-G result: `OPS_SCRIPT_UNBOUND_VARIABLE_FIX_READY`.
+
 These scripts let the owner run common OIS NextGen Abacus SuperComputer checks, syncs and restarts through SSH when the relay works, or through Abacus Web Terminal while the relay is blocked, without spending Abacus Agent credits.
 
 The scripts still run on Abacus VM resources. They do not replace owner approval for migrations, seed operations, deployments, production access or destructive rollback.
@@ -64,6 +66,26 @@ Expected output labels:
 - `RESTART_VERIFICATION_TIMEOUT`
 
 Failure should only be reported after `RESTART_VERIFICATION_TIMEOUT`. Temporary HTTP 502 responses immediately after restart are warm-up evidence until the timeout expires.
+
+## Stage 0R-G Unbound Variable Fix
+
+After Stage 0R-F was merged and pulled into the Abacus VM, `ops/abacus/status.sh` crashed with:
+
+```text
+/home/ubuntu/ois-nextgen/ops/abacus/lib-core-api-checks.sh: line 110: body: unbound variable
+```
+
+The systemd service was still active/running, so this was an ops shell helper bug, not evidence that Core API runtime was broken.
+
+Stage 0R-G fixes `lib-core-api-checks.sh` so response body/code variables are initialized safely and helper internals do not shadow caller variables under `set -u`. Empty-body, HTTP 502, timeout and curl-error cases now report clean check failures instead of crashing.
+
+No-network helper self-test:
+
+```sh
+bash ops/abacus/self-test-core-api-checks.sh
+```
+
+This self-test stubs `curl`; it does not call live endpoints or print secrets.
 
 ## Setup Once
 
@@ -199,6 +221,7 @@ Use these SSH forms only after the Abacus SSH relay is confirmed working again. 
 | `ops/abacus/safe-restart-core-api.sh` | Restarts `ois-nextgen-core-api`, waits up to 30 seconds for readiness and verifies local/public health and overview. | Service restart only; no nginx/systemd unit edits. |
 | `ops/abacus/runtime-sync.sh` | Fetches/pulls `stage-0b-complete-handoff-ingestion`, runs install/lint/typecheck/test/build, restarts Core API and verifies health/overview with the restart grace window. | Source sync and service restart only. Stops if Prisma schema, migration or seed files changed. |
 | `ops/abacus/lib-core-api-checks.sh` | Shared helper for health/overview payload validation and restart readiness retry logic. | Sourced helper; no direct operations. |
+| `ops/abacus/self-test-core-api-checks.sh` | No-network self-test for helper parsing and `set -u` safety. | Local parser test only; no live endpoints. |
 | `ops/abacus/rollback-core-api-nginx-poc.sh` | Prints the Stage 0O rollback plan. | No-op without `--confirm-rollback`. |
 | `ops/abacus/rollback-core-api-nginx-poc.sh --confirm-rollback` | Stops/disables Core API service, removes Stage 0O systemd unit and nginx vhost, validates and reloads nginx. | Destructive; owner approval required. |
 

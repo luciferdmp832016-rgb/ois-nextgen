@@ -13,33 +13,50 @@ http_get_body() {
   local url="$3"
   local body_file
   local err_file
-  local http_code
-  local curl_exit
-  local body
-  local err_text
+  local response_code=""
+  local curl_exit=0
+  local response_body=""
+  local err_text=""
+  local errexit_was_set=false
 
   body_file="$(mktemp)"
   err_file="$(mktemp)"
 
-  http_code="$(curl -sS --max-time "$CURL_TIMEOUT" -o "$body_file" -w "%{http_code}" "$url" 2>"$err_file")"
+  case "$-" in
+    *e*)
+      errexit_was_set=true
+      set +e
+      ;;
+  esac
+
+  response_code="$(curl -sS --max-time "$CURL_TIMEOUT" -o "$body_file" -w "%{http_code}" "$url" 2>"$err_file")"
   curl_exit=$?
 
-  if [ "$curl_exit" -ne 0 ]; then
-    err_text="$(tr '\n' ' ' < "$err_file" | sed 's/[[:space:]]*$//')"
-    HTTP_DETAIL="curl_exit=$curl_exit ${err_text}"
-    rm -f "$body_file" "$err_file"
-    return 1
+  if [ "$errexit_was_set" = true ]; then
+    set -e
   fi
 
-  body="$(cat "$body_file")"
+  if [ -f "$body_file" ]; then
+    response_body="$(cat "$body_file")"
+  fi
+
+  if [ "$curl_exit" -ne 0 ] && [ -f "$err_file" ]; then
+    err_text="$(tr '\n' ' ' < "$err_file" | sed 's/[[:space:]]*$//')"
+  fi
+
   rm -f "$body_file" "$err_file"
 
-  printf -v "$body_var" '%s' "$body"
-  printf -v "$code_var" '%s' "$http_code"
+  printf -v "$body_var" '%s' "$response_body"
+  printf -v "$code_var" '%s' "${response_code:-000}"
+
+  if [ "$curl_exit" -ne 0 ]; then
+    HTTP_DETAIL="curl_exit=$curl_exit ${err_text}"
+    return 1
+  fi
 }
 
 validate_health_body() {
-  local body="$1"
+  local body="${1-}"
 
   HEALTH_BODY="$body" node <<'NODE'
 const payload = JSON.parse(process.env.HEALTH_BODY);
@@ -51,7 +68,7 @@ NODE
 }
 
 validate_overview_body() {
-  local body="$1"
+  local body="${1-}"
 
   OVERVIEW_BODY="$body" node <<'NODE'
 const payload = JSON.parse(process.env.OVERVIEW_BODY);
@@ -94,8 +111,8 @@ NODE
 check_core_api_health_once() {
   local label="$1"
   local url="$2"
-  local body
-  local code
+  local body=""
+  local code=""
 
   if ! http_get_body body code "$url"; then
     CHECK_DETAIL="$label /health request failed ($HTTP_DETAIL)"
@@ -118,8 +135,8 @@ check_core_api_health_once() {
 check_platform_overview_once() {
   local label="$1"
   local url="$2"
-  local body
-  local code
+  local body=""
+  local code=""
 
   if ! http_get_body body code "$url"; then
     CHECK_DETAIL="$label /platform/overview request failed ($HTTP_DETAIL)"
@@ -142,8 +159,8 @@ check_platform_overview_once() {
 print_platform_overview_once() {
   local label="$1"
   local url="$2"
-  local body
-  local code
+  local body=""
+  local code=""
 
   if ! http_get_body body code "$url"; then
     CHECK_DETAIL="$label /platform/overview request failed ($HTTP_DETAIL)"
