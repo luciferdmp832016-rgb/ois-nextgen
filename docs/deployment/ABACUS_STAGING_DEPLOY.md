@@ -54,6 +54,8 @@ Stage 0O managed-domain Core API health result: Abacus Agent verified the first 
 
 Stage 0P default DB Prisma baseline result: Abacus Agent verified readiness label `DEFAULT_DB_PRISMA_READINESS_CONFIRMED`, then applied migration `202607040001_platform_kernel` to the `default` DB only with `pnpm db:migrate`, which maps to `prisma migrate deploy`. Final verdict is `DEFAULT_DB_PRISMA_BASELINE_APPLIED`; Abacus execution label is `DEFAULT_DB_MIGRATION_APPLIED_SUCCESS`. `https://ois-nextgen.abacusai.cloud/platform/overview` now returns HTTP 200 as the first DB-backed read-only public staging endpoint. Counts are 0 because no seed data exists yet. Console, PITS, worker, `/auth/demo-login`, write endpoints and custom `dmp247.com` domains remain out of scope.
 
+Stage 0Q Platform Kernel seed result: Abacus Agent verified readiness label `PLATFORM_KERNEL_SEED_SCRIPT_READY`, then executed `pnpm db:seed`, which maps to `prisma db seed -> tsx prisma/seed.ts`. Final result is `PLATFORM_KERNEL_SEED_APPLIED`. The seed populated 66 `DEMO DATA - NOT PRODUCTION` records across all 18 application tables in the `default` DB. `https://ois-nextgen.abacusai.cloud/platform/overview` remains HTTP 200 and now returns seeded Platform Kernel counts. `PLATFORM_KERNEL` remains `IN_PROGRESS` by API-controlled logic, which is expected. Console, PITS, worker, `/auth/demo-login`, write endpoints and custom `dmp247.com` domains remain out of scope.
+
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
 ## Stage 0H Handoff Summary
@@ -131,6 +133,8 @@ Stage 0N deployment pivot: the safer immediate path is SuperComputer nginx + sys
 Stage 0O result: Core API `/health` is verified on the Abacus-managed public staging domain. Continue to treat this as Core API-only staging health, not full product deployment.
 
 Stage 0P result: the `default` DB Prisma baseline is applied and `/platform/overview` is verified as the first DB-backed read-only public staging endpoint. Recommended next stage: Stage 0Q - Platform Kernel Seed / DB-backed Smoke Stabilization.
+
+Stage 0Q result: Platform Kernel demo/staging seed data is applied to the `default` DB and `/platform/overview` is verified with seeded counts. Recommended next stage: Stage 0R - Platform Kernel Gate Logic / DB-backed Smoke Stabilization.
 
 ## Stage 0N Resource Boundaries
 
@@ -249,6 +253,64 @@ Stage 0P exclusions:
 - No custom `dmp247.com` domain changes.
 - No legacy DB, legacy domain or legacy storage-prefix touch.
 
+## Stage 0Q Platform Kernel Seed
+
+Stage 0Q-A readiness facts:
+
+| Area | Evidence |
+|---|---|
+| Seed script | `prisma/seed.ts`. |
+| Seed command | `pnpm db:seed`. |
+| Command mapping | `prisma db seed -> tsx prisma/seed.ts`. |
+| Table coverage | All 18 application tables. |
+| Expected total records | 66. |
+| Idempotency | Deterministic IDs with `ensureRecord` / `findUnique` -> create if missing -> update if changed. |
+| Data label | `DEMO DATA - NOT PRODUCTION`. |
+| Stage 0Q-A writes | None. |
+
+Stage 0Q-B execution facts:
+
+| Area | Evidence |
+|---|---|
+| Seed command | `pnpm db:seed`; exit code 0. |
+| Output summary | `DEMO DATA - NOT PRODUCTION`; `The seed command has been executed.` |
+| Stderr | Non-blocking Prisma 7 deprecation notice about `package.json#prisma` config. |
+| Second seed run | Not performed. |
+| Public DB-backed check | `https://ois-nextgen.abacusai.cloud/platform/overview` returned HTTP 200 with seeded Platform Kernel counts. |
+| Public health | `https://ois-nextgen.abacusai.cloud/health` remained HTTP 200. |
+| Service continuity | `ois-nextgen-core-api.service` remained active and was never interrupted. |
+
+Seeded `/platform/overview` expected counts:
+
+| Field | Count |
+|---|---:|
+| `industries` | 1 |
+| `organizations` | 1 |
+| `workspaces` | 1 |
+| `projects` | 2 |
+| `products` | 5 |
+| `installations` | 2 |
+| `modules` | 3 |
+| `auditRecords` | 1 |
+
+`PLATFORM_KERNEL` remains `IN_PROGRESS` because gate advancement is API-controlled logic, not purely count-driven. This is expected.
+
+Stage 0Q backlog note: Prisma emitted a non-blocking Prisma 7 deprecation warning that `package.json#prisma` seed configuration should later migrate to `prisma.config.ts`. Do not fix that in Stage 0Q unless separately planned.
+
+Stage 0Q exclusions:
+
+- No `prisma db push`.
+- No `prisma migrate dev`.
+- No secrets or `DATABASE_URL` value printed.
+- No `.env` committed.
+- No second seed run.
+- No write HTTP endpoints called.
+- No `/auth/demo-login` call.
+- No real Phase 1 data imported.
+- No OIS Console, PITS Shell or worker runtime.
+- No nginx/systemd config modification.
+- No legacy DB, legacy domain or legacy storage-prefix touch.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -298,6 +360,7 @@ Stage 0L executed hosted-app/custom-domain investigation plus controlled Core AP
 Stage 0N did not execute staging steps; it records the resource boundary and SuperComputer nginx/systemd deployment contract.
 Stage 0O executed the Core API-only SuperComputer nginx/systemd staging health POC and verified `https://ois-nextgen.abacusai.cloud/health` HTTP/2 200. It did not execute Console, PITS, worker, DB-backed functionality, storage-backed functionality or real AI/OpenRouter usage.
 Stage 0P executed the default DB Prisma baseline on Abacus and verified `https://ois-nextgen.abacusai.cloud/platform/overview` HTTP 200 as a DB-backed read-only endpoint. It did not seed data, call `/auth/demo-login`, call write endpoints, start Console/PITS/worker or touch legacy resources.
+Stage 0Q executed the Platform Kernel seed on Abacus and verified `https://ois-nextgen.abacusai.cloud/platform/overview` HTTP 200 with seeded demo/staging counts. It did not call `/auth/demo-login`, call write endpoints, start Console/PITS/worker, modify nginx/systemd or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -310,7 +373,7 @@ Stage 0P executed the default DB Prisma baseline on Abacus and verified `https:/
 
 - Core API `/` returns service identity `ois-nextgen-core-api`.
 - Core API `/health` returns `status=ok`.
-- Core API `/platform/overview` returns HTTP 200 and zero counts until seed data exists.
+- Core API `/platform/overview` returns HTTP 200, `DEMO DATA - NOT PRODUCTION` banner and seeded Platform Kernel counts.
 - Core API `/docs` renders Swagger UI.
 - OIS Console `/` renders `OIS Console`.
 - PITS Shell `/` renders `PITS Shell`.
@@ -321,6 +384,7 @@ Stage 0L confirmed `https://ois-nextgen.abacusai.cloud/` returns edge placeholde
 Stage 0N pivots the next target to SuperComputer nginx/systemd on the Abacus-managed public domain, with `https://ois-nextgen.abacusai.cloud/health` as the Stage 0O target healthcheck.
 Stage 0O verified `https://ois-nextgen.abacusai.cloud/health` returns HTTP/2 200 with the Core API health payload. Core API `/`, `/docs`, Console `/` and PITS `/` remain outside the Stage 0O public managed-domain smoke scope.
 Stage 0P verified `https://ois-nextgen.abacusai.cloud/platform/overview` returns HTTP 200 and executes live Prisma reads against the migrated `default` DB. Counts are expected to be 0 until Stage 0Q or a later approved seed stage.
+Stage 0Q verified `https://ois-nextgen.abacusai.cloud/platform/overview` returns HTTP 200 with seeded Platform Kernel counts: industries 1, organizations 1, workspaces 1, projects 2, products 5, installations 2, modules 3 and auditRecords 1.
 
 ## Stop Conditions
 
@@ -331,8 +395,8 @@ Stage 0P verified `https://ois-nextgen.abacusai.cloud/platform/overview` returns
 - Stage 0H go/no-go gate is incomplete.
 - Hosted-app port behavior and Console/PITS service port behavior remain unverified.
 - Core API managed-domain `/health` returns non-200 after nginx/systemd changes.
-- `/platform/overview` returns non-200 after the Stage 0P Prisma baseline.
-- Any seed, `/auth/demo-login`, write endpoint or row-data inspection is attempted before Stage 0Q or later owner approval.
+- `/platform/overview` returns non-200 after the Stage 0P Prisma baseline or Stage 0Q seed.
+- Any additional seed execution, `/auth/demo-login`, write endpoint or row-data inspection is attempted without later owner approval.
 - A workflow tries to use hosted-app service registration or external custom-domain publication instead of the verified SuperComputer nginx/systemd path without owner approval.
 - Any action would touch OIS Phase 1 or Emerald/BQL databases, storage prefixes, app shells or external custom domains.
 - Any action would reuse Phase 1 JWT, DB, Redis, MinIO or Neo4j secrets.

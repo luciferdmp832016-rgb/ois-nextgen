@@ -12,6 +12,8 @@ Stage 0O verified the first Core API-only SuperComputer nginx/systemd staging he
 
 Stage 0P applied the default DB Prisma baseline and verified the first DB-backed read-only public staging endpoint. `DATABASE_URL` exists in the Abacus VM `.env`; the value was not printed and `.env` remains gitignored and uncommitted. This does not approve seed data, `/auth/demo-login`, write endpoints, Console deployment, PITS deployment, worker deployment, storage-backed behavior, real OpenRouter usage or custom `dmp247.com` domain publication.
 
+Stage 0Q applied Platform Kernel demo/staging seed data to the `default` DB and verified seeded `/platform/overview` counts. Seed data is `DEMO DATA - NOT PRODUCTION`. This does not approve `/auth/demo-login`, write endpoints, Console deployment, PITS deployment, worker deployment, storage-backed behavior, real OpenRouter usage or custom `dmp247.com` domain publication.
+
 Stage 0I discovery status: live Abacus/SuperComputer runtime configuration is still blocked. No Abacus connector, CLI, authenticated UI, screenshots or owner-filled checklist were available. Use the table below for redacted status tracking only.
 
 | Item | Stage 0I status | Redacted reference |
@@ -217,6 +219,35 @@ Stage 0P default DB Prisma baseline evidence update: the `default` DB is migrate
 | `/auth/demo-login` | `CONFIRMED_NOT_CALLED` | Not called. |
 | Write endpoints | `CONFIRMED_NOT_CALLED` | Not called. |
 | Row data inspection | `CONFIRMED_NOT_DONE` | No row data inspected. |
+| Legacy DBs/domains/storage | `CONFIRMED_NOT_TOUCHED` | `ois_phase1_dev`, `emerald_bql_web_dev`, `ois.dmp247.com`, `oisys.abacusai.app`, `49816/` and `52067/` untouched. |
+
+Stage 0Q Platform Kernel seed evidence update: the `default` DB now contains demo/staging seed data across all 18 application tables. This table records non-secret evidence only and does not approve row-data inspection, `/auth/demo-login`, write endpoints, production resources, storage-backed behavior, real AI providers, Console deployment or PITS deployment.
+
+| Item | Stage 0Q status | Redacted reference |
+|---|---|---|
+| Stage 0Q-A readiness label | `CONFIRMED` | `PLATFORM_KERNEL_SEED_SCRIPT_READY` |
+| Stage 0Q-B execution label | `CONFIRMED` | `PLATFORM_KERNEL_SEED_APPLIED` |
+| Seed script | `CONFIRMED` | `prisma/seed.ts` |
+| Seed command | `CONFIRMED` | `pnpm db:seed`, mapping to `prisma db seed -> tsx prisma/seed.ts`. |
+| Seed table coverage | `CONFIRMED` | All 18 application tables. |
+| Seed total | `CONFIRMED` | 66 records. |
+| Seed data label | `CONFIRMED` | `DEMO DATA - NOT PRODUCTION`. |
+| Idempotency mechanism | `CONFIRMED` | Deterministic IDs with `ensureRecord` / `findUnique` -> create if missing -> update if changed. |
+| Stage 0Q-A writes | `CONFIRMED_NOT_RUN` | Readiness only; no writes. |
+| Stage 0Q-B seed result | `CONFIRMED` | Exit code 0; seed command executed. |
+| Stderr | `NON_BLOCKING` | Prisma 7 deprecation notice about `package.json#prisma` config. |
+| Second seed run | `CONFIRMED_NOT_RUN` | Not performed. |
+| Public health | `CONFIRMED_UNCHANGED` | `https://ois-nextgen.abacusai.cloud/health` remained HTTP 200. |
+| Public seeded overview | `CONFIRMED` | `https://ois-nextgen.abacusai.cloud/platform/overview` returned HTTP 200 with seeded counts. |
+| `PLATFORM_KERNEL` phase gate | `EXPECTED_IN_PROGRESS` | Remains `IN_PROGRESS` by API-controlled logic, not count-driven. |
+| `prisma db push` | `CONFIRMED_NOT_RUN` | Not called. |
+| `prisma migrate dev` | `CONFIRMED_NOT_RUN` | Not called. |
+| Secrets / `DATABASE_URL` printing | `CONFIRMED_NOT_PRINTED` | No values printed. |
+| `.env` | `CONFIRMED_NOT_COMMITTED` | Not committed. |
+| `/auth/demo-login` | `CONFIRMED_NOT_CALLED` | Not called. |
+| Write HTTP endpoints | `CONFIRMED_NOT_CALLED` | Not called. |
+| Real Phase 1 data | `CONFIRMED_NOT_IMPORTED` | Not imported. |
+| nginx/systemd config | `CONFIRMED_NOT_MODIFIED` | Not modified; service remained active. |
 | Legacy DBs/domains/storage | `CONFIRMED_NOT_TOUCHED` | `ois_phase1_dev`, `emerald_bql_web_dev`, `ois.dmp247.com`, `oisys.abacusai.app`, `49816/` and `52067/` untouched. |
 
 ## Required Readiness Summary
