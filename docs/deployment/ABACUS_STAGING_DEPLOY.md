@@ -4,7 +4,16 @@ Stage 0F defines the first safe staging path. Use staging/demo data only.
 
 ## Recommended Topology
 
-Use split app staging unless Abacus explicitly supports one app supervising three public Node processes.
+Stage 0T-A corrected the UI deployment model:
+
+- Core API can remain on SuperComputer/nginx/systemd at `https://ois-nextgen.abacusai.cloud`.
+- OIS Console must be deployed as its own Abacus App Shell through Apps Management Console.
+- PITS Shell must be deployed as its own Abacus App Shell through Apps Management Console.
+- SuperComputer preview proxy URLs are temporary VM/process previews and are not canonical proof of UI App Shell deployment.
+- Connected Services are connector configuration, not App Shell deployment.
+- Abacus CLI is not currently available for this project because API metering must be enabled first.
+
+Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
 | Service | Build command | Start command | Health check |
 |---|---|---|---|
@@ -73,6 +82,8 @@ Stage 0R-G ops script unbound variable fix result: after Stage 0R-F was merged a
 Stage 0S-A two UI shell demo result: OIS Console and PITS Shell now have minimal root demo/status pages ready for Abacus preview. Both shells call the same Core API, default to `https://ois-nextgen.abacusai.cloud`, show `/health` status plus `/platform/overview` counts and keep DB access behind Core API only. No Abacus deploy, runtime modification, migration, seed, `prisma db push`, production credential or legacy resource touch occurred. Final result is `TWO_UI_SHELL_DEMO_READY_FOR_ABACUS_PREVIEW`.
 
 Stage 0S-B two UI shell preview ops result: safe Abacus Web Terminal scripts now build, start, status-check, stop and restart temporary OIS Console and PITS Shell demo processes on ports `3000` and `3001`. Both shells use `CORE_API_URL=https://ois-nextgen.abacusai.cloud`, no UI `DATABASE_URL`, no Core API DB/runtime change, no nginx change and no `dmp247.com`/legacy touch. Final result is `TWO_UI_SHELL_PREVIEW_OPS_READY`.
+
+Stage 0T-A App Shell deployment contract result: owner evidence from Apps Management Console corrected the canonical UI deployment path. OIS Console and PITS Shell should not be proven through SuperComputer preview/nginx routing; each must be created as its own Abacus App Shell with its own Abacus-managed Deployment URL, Database, Storage, Versions and Custom Domain lifecycle. Core API remains on `https://ois-nextgen.abacusai.cloud`. Final result is `ABACUS_APP_SHELL_DEPLOYMENT_CONTRACT_READY`.
 
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
@@ -170,7 +181,9 @@ Stage 0R-G result: ops helper parsing now handles empty/missing response bodies 
 
 Stage 0S-A result: two UI shell demos are code-ready for Abacus preview. Recommended next stage: Stage 0S-B - Abacus OIS Console and PITS Shell Preview POC, keeping both shells pointed at the existing Core API staging URL and avoiding production/legacy resources.
 
-Stage 0S-B result: temporary UI demo shell preview operations are ready for owner execution in Abacus Web Terminal. Recommended next stage: Stage 0S-C - Owner-run Abacus UI Preview Evidence, using the scripts in `ops/abacus` and keeping preview URLs `PLANNED_NOT_CREATED` until verified.
+Stage 0S-B result: temporary UI demo shell preview operations are ready for owner execution in Abacus Web Terminal. Stage 0T-A later supersedes this path for canonical UI App Shell proof; keep the scripts for VM diagnostics only.
+
+Stage 0T-A result: canonical UI deployment should use Apps Management Console App Shells, not SuperComputer preview proxy. Recommended next stage: Stage 0T-B - Owner-Assisted Abacus App Shell Creation Evidence.
 
 ## Stage 0N Resource Boundaries
 
@@ -543,18 +556,22 @@ Stage 0S-A UI contract:
 - Do not call DB directly from UI shells; DB-backed demo data is accessed only through Core API.
 - Keep Console and PITS preview/deploy endpoints planned until a later Abacus preview stage creates them.
 
-Planned Stage 0S-B preview checks:
+Stage 0T-A App Shell checks supersede the older Stage 0S-B preview checks:
 
 | Planned endpoint | Status | Expected check |
 |---|---|---|
-| `https://<ois-console-abacus-preview-or-app-shell>/` | `PLANNED_NOT_CREATED` | HTTP 200 and OIS Console demo/status page. |
-| `https://<pits-shell-abacus-preview-or-app-shell>/` | `PLANNED_NOT_CREATED` | HTTP 200 and PITS Shell demo/status page. |
+| OIS Console Apps Management Console deployment URL | `PLANNED_NOT_CREATED` | HTTP 200 and OIS Console demo/status page after later App Shell deployment. |
+| PITS Shell Apps Management Console deployment URL | `PLANNED_NOT_CREATED` | HTTP 200 and PITS Shell demo/status page after later App Shell deployment. |
+| `https://<abacus-preview-base>-3000.../` | `DEPRECATED` | VM diagnostic only; not canonical OIS Console App Shell proof. |
+| `https://<abacus-preview-base>-3001.../` | `DEPRECATED` | VM diagnostic only; not canonical PITS Shell App Shell proof. |
 | `https://ois-nextgen.abacusai.cloud/health` | `ABACUS_MANAGED_PUBLIC_STAGING` | Existing Core API health remains HTTP 200. |
 | `https://ois-nextgen.abacusai.cloud/platform/overview` | `ABACUS_MANAGED_PUBLIC_STAGING` | Existing read-only seeded overview remains HTTP 200. |
 
 ## Stage 0S-B Two UI Shell Preview Ops
 
 Stage 0S-B adds safe Web Terminal operations for temporary UI preview only. It does not execute the preview from this local workspace and does not modify Abacus runtime during documentation/script creation.
+
+Stage 0T-A supersedes this path for UI App Shell proof. Keep these scripts for VM diagnostics only; do not treat `-3000` or `-3001` preview URLs as canonical OIS/PITS App Shell deployment evidence.
 
 Port map:
 
@@ -610,6 +627,69 @@ Stage 0S-B is preview/demo only:
 - No UI `DATABASE_URL`.
 - No Core API DB/runtime logic change.
 - No nginx change.
+
+## Stage 0T-A App Shell Deployment Contract
+
+Apps Management Console is now the source of truth for OIS/PITS UI App Shell deployment.
+
+Corrected model:
+
+| Area | Contract |
+|---|---|
+| Core API | Remains on SuperComputer/nginx/systemd at `https://ois-nextgen.abacusai.cloud`. |
+| OIS Console | Separate Abacus App Shell with its own Abacus-managed Deployment URL. |
+| PITS Shell | Separate Abacus App Shell with its own Abacus-managed Deployment URL. |
+| SuperComputer preview proxy | Temporary diagnostic route only; not canonical UI App Shell proof. |
+| Connected Services | Connector configuration only. |
+| Abacus CLI | Not currently available because API metering must be enabled first. |
+
+Existing App Shells visible in Apps Management Console:
+
+| App Shell | Deployment URL evidence | Boundary |
+|---|---|---|
+| `9 - Organizational Intelligence System` | `oisys.abacusai.app`; custom domain, database, storage and version links visible. | OIS Phase 1; do not touch. |
+| `Multi-Tenant Condo App PRD` | Deployment URL starts with `emerald-bql-web-`; custom domain, database, storage and version links visible. | Emerald/BQL legacy; do not touch. |
+
+OIS Console App Shell contract:
+
+| Field | Value |
+|---|---|
+| App name | `OIS NextGen Console Demo` |
+| Source repo | `luciferdmp832016-rgb/ois-nextgen` |
+| Branch | `stage-0b-complete-handoff-ingestion` |
+| App path/package | `apps/ois-console` / `@ois/ois-console` |
+| Build command | `corepack enable || true && pnpm install --frozen-lockfile && pnpm --filter @ois/ois-console build` |
+| Start command | `pnpm --filter @ois/ois-console start` |
+| Env | `CORE_API_URL=https://ois-nextgen.abacusai.cloud`, `NEXT_PUBLIC_CORE_API_URL=https://ois-nextgen.abacusai.cloud`, `NEXT_TELEMETRY_DISABLED=1` |
+| Forbidden env | Do not set `DATABASE_URL`. |
+| Initial domain | Abacus-managed deployment URL. |
+| Later custom domain candidates | `ois-ng.dmp247.com` or `ois-staging.dmp247.com`; do not touch `ois.dmp247.com`. |
+
+PITS Shell App Shell contract:
+
+| Field | Value |
+|---|---|
+| App name | `PITS NextGen Shell Demo` |
+| Source repo | `luciferdmp832016-rgb/ois-nextgen` |
+| Branch | `stage-0b-complete-handoff-ingestion` |
+| App path/package | `apps/pits-shell` / `@ois/pits-shell` |
+| Build command | `corepack enable || true && pnpm install --frozen-lockfile && pnpm --filter @ois/pits-shell build` |
+| Start command | `pnpm --filter @ois/pits-shell start` |
+| Env | `CORE_API_URL=https://ois-nextgen.abacusai.cloud`, `NEXT_PUBLIC_CORE_API_URL=https://ois-nextgen.abacusai.cloud`, `NEXT_TELEMETRY_DISABLED=1` |
+| Forbidden env | Do not set `DATABASE_URL`. |
+| Initial domain | Abacus-managed deployment URL. |
+| Later custom domain candidates | `pits-ng.dmp247.com` or `pits-staging.dmp247.com`. |
+
+Manual deployment checklist for a later stage:
+
+1. Create or open `OIS NextGen Console Demo` in Apps Management Console.
+2. Configure source repo, branch and app path/package.
+3. Configure env values without `DATABASE_URL`.
+4. Deploy to Abacus-managed URL.
+5. Verify OIS page shows `OIS_CONSOLE` and Core API seeded counts.
+6. Repeat for `PITS NextGen Shell Demo`.
+7. Verify both App Shell URLs are separate and both call the same Core API.
+8. Only after both pass, test optional custom staging subdomains.
 
 ## Stage 0F-R2 Readiness Matrix
 
@@ -670,6 +750,7 @@ Stage 0R-F updated safe ops scripts and documentation only. It did not run Web T
 Stage 0R-G fixed safe ops shell helper parsing and documentation only. It did not run Web Terminal operations, deploy, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
 Stage 0S-A added OIS Console and PITS Shell demo pages plus documentation only. It did not deploy, modify Abacus runtime, migrate, seed, call live endpoints, start UI shells or touch legacy resources.
 Stage 0S-B added temporary UI demo shell ops scripts plus documentation only. It did not run Web Terminal operations, deploy, modify Abacus runtime, migrate, seed, call live endpoints, start UI shells, modify nginx/systemd or touch legacy resources.
+Stage 0T-A corrected UI deployment documentation only. It did not deploy, modify Abacus runtime, migrate, seed, call live endpoints, create App Shells, modify nginx/systemd or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -703,6 +784,7 @@ Stage 0R-F did not change endpoints. It updated restart verification so transien
 Stage 0R-G did not change endpoints. It fixed ops helper response parsing so HTTP failures report cleanly instead of crashing under `set -u`.
 Stage 0S-A did not change active endpoints. It added planned OIS Console and PITS Shell demo endpoints for a later Abacus preview stage; when running, each root page should show the app name, product code, shared Core API URL, `/health` status, `/platform/overview` counts, the demo banner and the Core API-only DB access note.
 Stage 0S-B did not change active endpoints. It added scripts for planned Abacus preview checks on ports `3000` and `3001`; the preview URLs remain `PLANNED_NOT_CREATED` until owner-run Abacus evidence verifies them.
+Stage 0T-A did not change active endpoints. It marks SuperComputer preview UI URLs as deprecated for App Shell proof and adds planned OIS Console/PITS Shell App Shell managed deployment URLs.
 
 ## Stop Conditions
 
@@ -720,6 +802,7 @@ Stage 0S-B did not change active endpoints. It added scripts for planned Abacus 
 - A UI shell imports Prisma, reads `DATABASE_URL` or attempts direct DB access.
 - A UI shell points to a Core API URL other than the owner-approved staging Core API without explicit approval.
 - UI preview scripts attempt to modify Core API, nginx, systemd units, DB schema, seed data or `dmp247.com` domains.
+- OIS Console or PITS Shell deployment is attempted outside Apps Management Console App Shells without owner approval.
 - Any additional seed execution, `/auth/demo-login`, write endpoint or row-data inspection is attempted without later owner approval.
 - A workflow tries to use hosted-app service registration or external custom-domain publication instead of the verified SuperComputer nginx/systemd path without owner approval.
 - Direct external SSH is required while the Abacus SSH relay still times out before authentication; use Web Terminal fallback instead.

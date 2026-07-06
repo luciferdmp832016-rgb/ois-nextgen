@@ -8,9 +8,13 @@ Stage 0R-F result: `OPS_RESTART_GRACE_WINDOW_ADDED`.
 
 Stage 0R-G result: `OPS_SCRIPT_UNBOUND_VARIABLE_FIX_READY`.
 
+Stage 0T-A result: `ABACUS_APP_SHELL_DEPLOYMENT_CONTRACT_READY`.
+
 These scripts let the owner run common OIS NextGen Abacus SuperComputer checks, syncs and restarts through SSH when the relay works, or through Abacus Web Terminal while the relay is blocked, without spending Abacus Agent credits.
 
 The scripts still run on Abacus VM resources. They do not replace owner approval for migrations, seed operations, deployments, production access or destructive rollback.
+
+Stage 0T-A correction: SSH/Web Terminal scripts are for SuperComputer VM operations only. They are not the canonical OIS Console or PITS Shell deployment path. UI deployment must happen through Apps Management Console App Shells, where each shell has its own Deployment URL, Database, Storage, Versions and Custom Domain lifecycle.
 
 ## Stage 0R-E SSH Relay Diagnostic
 
@@ -86,6 +90,23 @@ bash ops/abacus/self-test-core-api-checks.sh
 ```
 
 This self-test stubs `curl`; it does not call live endpoints or print secrets.
+
+## Stage 0T-A App Shell Boundary
+
+Owner evidence from Apps Management Console shows that OIS/PITS UI shells should be deployed as Abacus App Shells, not as long-running SuperComputer preview processes.
+
+Correct boundary:
+
+| Surface | Operational path |
+|---|---|
+| Core API | SuperComputer VM scripts may check, sync and restart the existing Core API staging runtime. |
+| OIS Console | Apps Management Console App Shell deployment named `OIS NextGen Console Demo`. |
+| PITS Shell | Apps Management Console App Shell deployment named `PITS NextGen Shell Demo`. |
+| SuperComputer preview `-3000`/`-3001` URLs | Deprecated for App Shell proof; keep only as temporary VM diagnostics if needed. |
+| Connected Services | Connector configuration only, not App Shell deployment. |
+| Abacus CLI | Not available for this stage until API metering is enabled. |
+
+Do not use SSH/Web Terminal scripts to deploy OIS Console or PITS Shell as canonical App Shells. Use Apps Management Console in the later owner-assisted App Shell creation stage.
 
 ## Setup Once
 
