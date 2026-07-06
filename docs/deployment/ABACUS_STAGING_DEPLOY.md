@@ -72,6 +72,8 @@ Stage 0R-G ops script unbound variable fix result: after Stage 0R-F was merged a
 
 Stage 0S-A two UI shell demo result: OIS Console and PITS Shell now have minimal root demo/status pages ready for Abacus preview. Both shells call the same Core API, default to `https://ois-nextgen.abacusai.cloud`, show `/health` status plus `/platform/overview` counts and keep DB access behind Core API only. No Abacus deploy, runtime modification, migration, seed, `prisma db push`, production credential or legacy resource touch occurred. Final result is `TWO_UI_SHELL_DEMO_READY_FOR_ABACUS_PREVIEW`.
 
+Stage 0S-B two UI shell preview ops result: safe Abacus Web Terminal scripts now build, start, status-check, stop and restart temporary OIS Console and PITS Shell demo processes on ports `3000` and `3001`. Both shells use `CORE_API_URL=https://ois-nextgen.abacusai.cloud`, no UI `DATABASE_URL`, no Core API DB/runtime change, no nginx change and no `dmp247.com`/legacy touch. Final result is `TWO_UI_SHELL_PREVIEW_OPS_READY`.
+
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
 ## Stage 0H Handoff Summary
@@ -167,6 +169,8 @@ Stage 0R-F result: safe restart verification now includes a 30-second grace wind
 Stage 0R-G result: ops helper parsing now handles empty/missing response bodies safely under `set -u`. HTTP 502, timeout and no-body cases should report clean failures or `WARMING_UP`, not crash with an unbound variable. Recommended next stage: Stage 0R-G1 - Owner Web Terminal retry evidence, or Stage 0S-A - Two UI Shell Demo.
 
 Stage 0S-A result: two UI shell demos are code-ready for Abacus preview. Recommended next stage: Stage 0S-B - Abacus OIS Console and PITS Shell Preview POC, keeping both shells pointed at the existing Core API staging URL and avoiding production/legacy resources.
+
+Stage 0S-B result: temporary UI demo shell preview operations are ready for owner execution in Abacus Web Terminal. Recommended next stage: Stage 0S-C - Owner-run Abacus UI Preview Evidence, using the scripts in `ops/abacus` and keeping preview URLs `PLANNED_NOT_CREATED` until verified.
 
 ## Stage 0N Resource Boundaries
 
@@ -548,6 +552,65 @@ Planned Stage 0S-B preview checks:
 | `https://ois-nextgen.abacusai.cloud/health` | `ABACUS_MANAGED_PUBLIC_STAGING` | Existing Core API health remains HTTP 200. |
 | `https://ois-nextgen.abacusai.cloud/platform/overview` | `ABACUS_MANAGED_PUBLIC_STAGING` | Existing read-only seeded overview remains HTTP 200. |
 
+## Stage 0S-B Two UI Shell Preview Ops
+
+Stage 0S-B adds safe Web Terminal operations for temporary UI preview only. It does not execute the preview from this local workspace and does not modify Abacus runtime during documentation/script creation.
+
+Port map:
+
+| Service | Port | Runtime role | Persistence |
+|---|---:|---|---|
+| Core API | 4000 | Existing systemd/nginx staging API. | Unchanged. |
+| OIS Console demo | 3000 | Temporary `nohup` UI shell preview process. | PID/log under `.abacus-ui-demo/`. |
+| PITS Shell demo | 3001 | Temporary `nohup` UI shell preview process. | PID/log under `.abacus-ui-demo/`. |
+
+Owner Web Terminal commands:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+bash ops/abacus/start-ui-demo-shells.sh
+bash ops/abacus/status-ui-demo-shells.sh
+bash ops/abacus/stop-ui-demo-shells.sh
+```
+
+Restart both UI demos:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+bash ops/abacus/restart-ui-demo-shells.sh
+```
+
+Safe env used by UI scripts:
+
+| Key | Value |
+|---|---|
+| `CORE_API_URL` | `https://ois-nextgen.abacusai.cloud` |
+| `NEXT_PUBLIC_CORE_API_URL` | `https://ois-nextgen.abacusai.cloud` |
+| `NEXT_TELEMETRY_DISABLED` | `1` |
+| `PORT` | `3000` for OIS Console, `3001` for PITS Shell. |
+| `DATABASE_URL` | Explicitly unset for UI shell build/start commands. |
+| `ABACUS_DATABASE_URL` | Explicitly unset for UI shell build/start commands. |
+
+Preview URL inference:
+
+| Shell | Local check | Preview check if `PREVIEW_URL` or `APP_ORIGIN` is available |
+|---|---|---|
+| OIS Console | `http://127.0.0.1:3000/` | `<preview-base>-3000.../` |
+| PITS Shell | `http://127.0.0.1:3001/` | `<preview-base>-3001.../` |
+
+The status script verifies HTTP 200, product markers and seeded Platform Kernel counts in each UI page. It does not probe legacy endpoints.
+
+Stage 0S-B is preview/demo only:
+
+- No `dmp247.com` deploy.
+- No OIS Phase 1 touch.
+- No migrations.
+- No seed.
+- No `prisma db push`.
+- No UI `DATABASE_URL`.
+- No Core API DB/runtime logic change.
+- No nginx change.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -606,6 +669,7 @@ Stage 0R-E documented the Abacus SSH relay diagnostic and Web Terminal fallback 
 Stage 0R-F updated safe ops scripts and documentation only. It did not run Web Terminal operations, deploy, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
 Stage 0R-G fixed safe ops shell helper parsing and documentation only. It did not run Web Terminal operations, deploy, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
 Stage 0S-A added OIS Console and PITS Shell demo pages plus documentation only. It did not deploy, modify Abacus runtime, migrate, seed, call live endpoints, start UI shells or touch legacy resources.
+Stage 0S-B added temporary UI demo shell ops scripts plus documentation only. It did not run Web Terminal operations, deploy, modify Abacus runtime, migrate, seed, call live endpoints, start UI shells, modify nginx/systemd or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -638,6 +702,7 @@ Stage 0R-E did not change endpoints. It documented that Web Terminal plus `ops/a
 Stage 0R-F did not change endpoints. It updated restart verification so transient post-restart local failures or public HTTP 502 responses are retried before failure is reported.
 Stage 0R-G did not change endpoints. It fixed ops helper response parsing so HTTP failures report cleanly instead of crashing under `set -u`.
 Stage 0S-A did not change active endpoints. It added planned OIS Console and PITS Shell demo endpoints for a later Abacus preview stage; when running, each root page should show the app name, product code, shared Core API URL, `/health` status, `/platform/overview` counts, the demo banner and the Core API-only DB access note.
+Stage 0S-B did not change active endpoints. It added scripts for planned Abacus preview checks on ports `3000` and `3001`; the preview URLs remain `PLANNED_NOT_CREATED` until owner-run Abacus evidence verifies them.
 
 ## Stop Conditions
 
@@ -654,6 +719,7 @@ Stage 0S-A did not change active endpoints. It added planned OIS Console and PIT
 - Restart verification reports `RESTART_VERIFICATION_TIMEOUT` after the warm-up window.
 - A UI shell imports Prisma, reads `DATABASE_URL` or attempts direct DB access.
 - A UI shell points to a Core API URL other than the owner-approved staging Core API without explicit approval.
+- UI preview scripts attempt to modify Core API, nginx, systemd units, DB schema, seed data or `dmp247.com` domains.
 - Any additional seed execution, `/auth/demo-login`, write endpoint or row-data inspection is attempted without later owner approval.
 - A workflow tries to use hosted-app service registration or external custom-domain publication instead of the verified SuperComputer nginx/systemd path without owner approval.
 - Direct external SSH is required while the Abacus SSH relay still times out before authentication; use Web Terminal fallback instead.

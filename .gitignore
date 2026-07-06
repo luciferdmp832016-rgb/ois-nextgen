@@ -6,4 +6,5 @@ playwright-report/
 dist/
 .env
 .env.local
+.abacus-ui-demo/
 *.log
