@@ -2,9 +2,35 @@
 
 Stage 0R-D result: `SAFE_SSH_OPERATIONS_READY`.
 
-These scripts let the owner run common OIS NextGen Abacus SuperComputer checks, syncs and restarts through SSH without spending Abacus Agent credits.
+Stage 0R-E result: `ABACUS_SSH_RELAY_BLOCKED_WEB_TERMINAL_FALLBACK_READY`.
+
+These scripts let the owner run common OIS NextGen Abacus SuperComputer checks, syncs and restarts through SSH when the relay works, or through Abacus Web Terminal while the relay is blocked, without spending Abacus Agent credits.
 
 The scripts still run on Abacus VM resources. They do not replace owner approval for migrations, seed operations, deployments, production access or destructive rollback.
+
+## Stage 0R-E SSH Relay Diagnostic
+
+Direct external SSH is currently blocked by the Abacus platform edge/relay path.
+
+Owner attempted:
+
+```powershell
+ssh ubuntu@ois-nextgen.ssh4.abacusai.cloud -p 22469
+```
+
+External SSH failed from both Wi-Fi and 5G. `Test-NetConnection` returned `TcpTestSucceeded False`, and `ssh -vvv` timed out before authentication.
+
+Abacus internal diagnostics confirmed that `sshd` is active and healthy inside the VM, listens on `0.0.0.0:22` and `[::]:22`, and has a valid `authorized_keys` file containing one ED25519 key:
+
+```text
+SHA256:majzUhvYdiEw8IRkimxA5RXJXgiHF6bmi5CP1pey+5A ois-nextgen-abacus
+```
+
+The local VM SSH TCP path works. No in-VM tunnel agent exists, and VM metadata exposes HTTP ingress only, not SSH relay information. The external SSH endpoint is platform-managed by Abacus edge/relay.
+
+Conclusion: the SSH failure is a platform-side Abacus edge/relay routing issue, not a local key or in-VM `sshd` issue.
+
+Until Abacus fixes the relay, use Abacus Web Terminal plus the same `ops/abacus/*.sh` scripts.
 
 ## Setup Once
 
@@ -54,6 +80,36 @@ macOS/Linux:
 ssh -i ~/.ssh/ois_nextgen_abacus -p <PORT> ubuntu@ois-nextgen.ssh4.abacusai.cloud "pwd"
 ```
 
+If SSH times out before authentication and `Test-NetConnection` reports `TcpTestSucceeded False`, stop treating the failure as a key problem. Use the Web Terminal fallback below and escalate the Abacus relay issue with the support text in this document.
+
+## Web Terminal Fallback
+
+Open the Abacus Web Terminal for the OIS NextGen SuperComputer and run safe scripts from the VM repo root:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+bash ops/abacus/status.sh
+bash ops/abacus/check-live-endpoints.sh
+bash ops/abacus/safe-restart-core-api.sh
+bash ops/abacus/runtime-sync.sh
+```
+
+Print the rollback plan only:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+bash ops/abacus/rollback-core-api-nginx-poc.sh
+```
+
+Execute rollback only after owner approval:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+bash ops/abacus/rollback-core-api-nginx-poc.sh --confirm-rollback
+```
+
+The Web Terminal fallback still runs on Abacus VM resources. Do not use it to print `.env`, print secrets, run migrations, run seed, call `prisma db push`, call write endpoints, probe legacy resources by default or run destructive rollback without explicit owner approval.
+
 ## Run Safe Operations
 
 Status check from Windows PowerShell:
@@ -98,6 +154,8 @@ Execute rollback only after owner approval:
 ssh -i ~/.ssh/ois_nextgen_abacus -p <PORT> ubuntu@ois-nextgen.ssh4.abacusai.cloud "cd /home/ubuntu/ois-nextgen && bash ops/abacus/rollback-core-api-nginx-poc.sh --confirm-rollback"
 ```
 
+Use these SSH forms only after the Abacus SSH relay is confirmed working again. While the Stage 0R-E relay blocker remains active, prefer the Web Terminal fallback commands above.
+
 ## Script Catalog
 
 | Script | Purpose | Safety |
@@ -126,6 +184,22 @@ sudo rm -rf
 ```
 
 Also do not manually print `DATABASE_URL`, Abacus database URLs, storage keys, OpenRouter keys, JWT secrets or session secrets.
+
+## Support Escalation Text
+
+```text
+OIS NextGen SuperComputer SSH relay appears blocked at the Abacus edge/relay layer.
+
+External endpoint attempted:
+ssh ubuntu@ois-nextgen.ssh4.abacusai.cloud -p 22469
+
+Owner generated an ED25519 key and added it to the Abacus SSH tile. External SSH failed from both Wi-Fi and 5G. Windows Test-NetConnection returned TcpTestSucceeded False, and ssh -vvv timed out before authentication.
+
+Internal VM diagnostics show sshd is active and healthy, listening on 0.0.0.0:22 and [::]:22. authorized_keys exists with correct permissions and includes one ED25519 key fingerprint:
+SHA256:majzUhvYdiEw8IRkimxA5RXJXgiHF6bmi5CP1pey+5A ois-nextgen-abacus
+
+The local VM SSH TCP path works. No in-VM tunnel agent was found, and VM metadata exposes HTTP ingress only, not SSH relay details. Please inspect or refresh the platform-managed SSH edge/relay route for this SuperComputer.
+```
 
 ## Published Endpoint Delta
 

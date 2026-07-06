@@ -62,7 +62,9 @@ Stage 0R-B Platform Kernel test coverage result: local-only tests now cover `/he
 
 Stage 0R-C Abacus runtime sync result: Abacus runtime fast-forwarded from `cc7ed28704c9e804385f6d2a4c21e8d887a775e3` to integration commit `e862b98ea601fa6ab8be6b78fd3ebbde5e66c66d`, validation passed, Core API restarted cleanly, and local/public `/health` plus `/platform/overview` remained HTTP 200 with seeded counts. Stage 0R-B test coverage is now live in runtime source. No endpoint behavior, DB schema, migration or seed behavior changed. Final result is `ABACUS_RUNTIME_SYNCED_NO_BEHAVIOR_REGRESSION`.
 
-Stage 0R-D safe SSH operations result: reusable scripts under `ops/abacus/` and owner documentation in `docs/deployment/ABACUS_SSH_OPERATIONS.md` are ready. The scripts support safe status checks, active endpoint checks, Core API restart, runtime sync and guarded Stage 0O rollback over SSH. Default scripts do not print secrets, run migrations, run seed, run `prisma db push`, call write endpoints or probe legacy endpoints. Final result is `SAFE_SSH_OPERATIONS_READY`.
+Stage 0R-D safe SSH operations result: reusable scripts under `ops/abacus/` and owner documentation in `docs/deployment/ABACUS_SSH_OPERATIONS.md` are ready. The scripts support safe status checks, active endpoint checks, Core API restart, runtime sync and guarded Stage 0O rollback over SSH when the relay works, or through Web Terminal while the relay is blocked. Default scripts do not print secrets, run migrations, run seed, run `prisma db push`, call write endpoints or probe legacy endpoints. Final result is `SAFE_SSH_OPERATIONS_READY`.
+
+Stage 0R-E SSH relay diagnostic result: direct external SSH through the Abacus SSH tile endpoint is blocked by platform-side Abacus edge/relay routing. Owner SSH attempts timed out before authentication from Wi-Fi and 5G, while Abacus internal diagnostics confirmed healthy in-VM `sshd`, valid `authorized_keys` and working local VM SSH TCP. Until Abacus fixes the relay, use Abacus Web Terminal plus `ops/abacus/*.sh`. Final result is `ABACUS_SSH_RELAY_BLOCKED_WEB_TERMINAL_FALLBACK_READY`.
 
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
@@ -151,6 +153,8 @@ Stage 0R-B result: Platform Kernel gate and DB-backed overview tests are added a
 Stage 0R-C result: Abacus runtime is synced to integration commit `e862b98ea601fa6ab8be6b78fd3ebbde5e66c66d` with no behavior regression. Recommended next stage: Stage 0R-D - Safe SSH Operations Scripts, or Stage 0S-A - Platform Kernel Gate Advancement Plan.
 
 Stage 0R-D result: safe SSH operation scripts are ready. Recommended next stage: Stage 0S-A - Platform Kernel Gate Advancement Plan, unless the owner first wants Stage 0R-D1 to manually run the SSH scripts and record evidence.
+
+Stage 0R-E result: direct external SSH is blocked by the Abacus platform relay, not by the local key or in-VM `sshd`. Use Abacus Web Terminal plus `ops/abacus/*.sh` as the fallback path until Abacus support fixes the relay. Recommended next stage: Stage 0S-A - Platform Kernel Gate Advancement Plan, or an owner/support follow-up to retest SSH after relay remediation.
 
 ## Stage 0N Resource Boundaries
 
@@ -434,7 +438,43 @@ Stage 0R-D adds owner-run SSH scripts under `ops/abacus/`:
 | `runtime-sync.sh` | Fetch/pull integration, run validation, restart Core API and verify health/overview. | Source sync and service restart only. |
 | `rollback-core-api-nginx-poc.sh` | Print rollback plan; execute only with `--confirm-rollback`. | Destructive only with explicit confirmation. |
 
-Stage 0R-D scripts and docs do not add, change or deprecate endpoints. They reduce Abacus Agent credit use by letting the owner run repeatable SSH commands directly.
+Stage 0R-D scripts and docs do not add, change or deprecate endpoints. They reduce Abacus Agent credit use by letting the owner run repeatable operations through SSH when the relay works, or through Abacus Web Terminal while the relay is blocked.
+
+## Stage 0R-E SSH Relay Diagnostic
+
+Stage 0R-E confirms the Stage 0R-D scripts remain usable, but direct external SSH is not currently a reliable transport.
+
+| Area | Evidence |
+|---|---|
+| External SSH endpoint | `ssh ubuntu@ois-nextgen.ssh4.abacusai.cloud -p 22469`. |
+| Owner network tests | Failed from Wi-Fi and 5G. |
+| Windows TCP check | `Test-NetConnection` returned `TcpTestSucceeded False`. |
+| Verbose SSH | `ssh -vvv` timed out before authentication. |
+| In-VM `sshd` | Active and healthy. |
+| SSH listeners | `0.0.0.0:22` and `[::]:22`. |
+| Authorized key | `authorized_keys` exists with correct permissions and one ED25519 key fingerprint `SHA256:majzUhvYdiEw8IRkimxA5RXJXgiHF6bmi5CP1pey+5A ois-nextgen-abacus`. |
+| Local VM SSH TCP path | Works. |
+| In-VM tunnel agent | None found. |
+| VM metadata | HTTP ingress only; no SSH relay details. |
+| Conclusion | Platform-side Abacus edge/relay routing issue. |
+
+Fallback path until the relay is fixed:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+bash ops/abacus/status.sh
+bash ops/abacus/check-live-endpoints.sh
+bash ops/abacus/safe-restart-core-api.sh
+bash ops/abacus/runtime-sync.sh
+```
+
+Rollback remains owner-approved only:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+bash ops/abacus/rollback-core-api-nginx-poc.sh
+bash ops/abacus/rollback-core-api-nginx-poc.sh --confirm-rollback
+```
 
 ## Stage 0F-R2 Readiness Matrix
 
@@ -490,6 +530,7 @@ Stage 0R-A performed local code inspection and documentation only. It did not de
 Stage 0R-B added local-only tests only. It did not deploy, run runtime, migrate, seed, call endpoints or touch legacy resources.
 Stage 0R-C synced Abacus runtime to the latest integration commit and restarted Core API. It did not run migrations, seed data, modify nginx/systemd units, call write endpoints or touch legacy resources.
 Stage 0R-D added reusable SSH scripts and documentation only. It did not SSH to Abacus, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
+Stage 0R-E documented the Abacus SSH relay diagnostic and Web Terminal fallback only. It did not SSH to Abacus, run Web Terminal operations, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -518,6 +559,7 @@ Stage 0R-A did not change endpoints. It confirmed by code inspection that `/plat
 Stage 0R-B did not change endpoints. It added local tests that lock the no-DB `/health` contract and the read-only `/platform/overview` phase gate contract.
 Stage 0R-C confirmed no endpoint behavior regression after Abacus runtime sync. Local and public `/health` plus `/platform/overview` remained HTTP 200, seeded counts remained stable and `PLATFORM_KERNEL` remained `IN_PROGRESS`.
 Stage 0R-D did not change endpoints. It added owner-run SSH scripts that check the existing active endpoints and avoid legacy probes by default.
+Stage 0R-E did not change endpoints. It documented that Web Terminal plus `ops/abacus/*.sh` is the fallback operation path while Abacus SSH relay routing is blocked.
 
 ## Stop Conditions
 
@@ -533,6 +575,7 @@ Stage 0R-D did not change endpoints. It added owner-run SSH scripts that check t
 - `PLATFORM_KERNEL` gate promotion is attempted without a documented rule, focused tests and owner approval.
 - Any additional seed execution, `/auth/demo-login`, write endpoint or row-data inspection is attempted without later owner approval.
 - A workflow tries to use hosted-app service registration or external custom-domain publication instead of the verified SuperComputer nginx/systemd path without owner approval.
+- Direct external SSH is required while the Abacus SSH relay still times out before authentication; use Web Terminal fallback instead.
 - Any action would touch OIS Phase 1 or Emerald/BQL databases, storage prefixes, app shells or external custom domains.
 - Any action would reuse Phase 1 JWT, DB, Redis, MinIO or Neo4j secrets.
 - Any production credential appears in CI, Codex or staging logs.
