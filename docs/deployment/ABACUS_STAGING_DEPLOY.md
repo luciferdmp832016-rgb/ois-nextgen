@@ -60,6 +60,8 @@ Stage 0R-A Platform Kernel gate smoke stabilization result: local code inspectio
 
 Stage 0R-B Platform Kernel test coverage result: local-only tests now cover `/health` no-DB behavior, `/platform/overview` read-only Prisma count mapping, current phase gate statuses, DB-unavailable HTTP 500 behavior and static legacy/prod resource guards. `buildCoreApi()` accepts an optional Prisma client for mocked tests while default runtime behavior remains unchanged. Final result is `PLATFORM_KERNEL_TEST_COVERAGE_ADDED`.
 
+Stage 0R-C Abacus runtime sync result: Abacus runtime fast-forwarded from `cc7ed28704c9e804385f6d2a4c21e8d887a775e3` to integration commit `e862b98ea601fa6ab8be6b78fd3ebbde5e66c66d`, validation passed, Core API restarted cleanly, and local/public `/health` plus `/platform/overview` remained HTTP 200 with seeded counts. Stage 0R-B test coverage is now live in runtime source. No endpoint behavior, DB schema, migration or seed behavior changed. Final result is `ABACUS_RUNTIME_SYNCED_NO_BEHAVIOR_REGRESSION`.
+
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
 ## Stage 0H Handoff Summary
@@ -143,6 +145,8 @@ Stage 0Q result: Platform Kernel demo/staging seed data is applied to the `defau
 Stage 0R-A result: Platform Kernel gate logic is confirmed as intentionally not count-driven, and no endpoint delta occurred. Recommended next stage: Stage 0R-B - Platform Kernel Gate and Overview Test Coverage.
 
 Stage 0R-B result: Platform Kernel gate and DB-backed overview tests are added and pass locally. Future gate advancement still requires an explicit promotion rule and owner approval.
+
+Stage 0R-C result: Abacus runtime is synced to integration commit `e862b98ea601fa6ab8be6b78fd3ebbde5e66c66d` with no behavior regression. Recommended next stage: Stage 0R-D - Safe SSH Operations Scripts, or Stage 0S-A - Platform Kernel Gate Advancement Plan.
 
 ## Stage 0N Resource Boundaries
 
@@ -380,6 +384,40 @@ Stage 0R-B exclusions:
 - No live endpoint probe.
 - No production or legacy resource touch.
 
+## Stage 0R-C Abacus Runtime Sync No Regression
+
+Stage 0R-C Abacus execution facts:
+
+| Area | Evidence |
+|---|---|
+| Runtime branch | `stage-0b-complete-handoff-ingestion`. |
+| Commit before | `cc7ed28704c9e804385f6d2a4c21e8d887a775e3`. |
+| Commit after | `e862b98ea601fa6ab8be6b78fd3ebbde5e66c66d`. |
+| Pull type | Fast-forward, `+11` commits. |
+| Working tree | Clean except expected `.abacus-backups/` and `.abacus.donotdelete`. |
+| Validation | `pnpm install --frozen-lockfile`, lint, typecheck, tests and recursive build passed. |
+| Test note | One HTTP 500 log line is expected from the deliberate DB-error-path test. |
+| Service restart | `ois-nextgen-core-api` restarted and active running, PID `7674`, started `2026-07-06 04:34:18 UTC`. |
+| Local health | `http://127.0.0.1:4000/health` HTTP 200. |
+| Public health | `https://ois-nextgen.abacusai.cloud/health` HTTP 200. |
+| Local overview | `http://127.0.0.1:4000/platform/overview` HTTP 200. |
+| Public overview | `https://ois-nextgen.abacusai.cloud/platform/overview` HTTP 200. |
+| `PLATFORM_KERNEL` | Remains `IN_PROGRESS` by current API logic. |
+
+Stage 0R-C exclusions:
+
+- No migrations.
+- No `prisma db push`.
+- No `prisma migrate dev`.
+- No `prisma migrate deploy`.
+- No seed.
+- No nginx config modification.
+- No systemd unit modification.
+- No `DATABASE_URL` or secret printing.
+- No DB schema or seed data change.
+- No write endpoint or `/auth/demo-login` call.
+- No OIS Phase 1, Emerald/BQL, legacy domain or legacy storage-prefix touch.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -432,6 +470,7 @@ Stage 0P executed the default DB Prisma baseline on Abacus and verified `https:/
 Stage 0Q executed the Platform Kernel seed on Abacus and verified `https://ois-nextgen.abacusai.cloud/platform/overview` HTTP 200 with seeded demo/staging counts. It did not call `/auth/demo-login`, call write endpoints, start Console/PITS/worker, modify nginx/systemd or touch legacy resources.
 Stage 0R-A performed local code inspection and documentation only. It did not deploy, run runtime, migrate, seed, call endpoints or touch legacy resources.
 Stage 0R-B added local-only tests only. It did not deploy, run runtime, migrate, seed, call endpoints or touch legacy resources.
+Stage 0R-C synced Abacus runtime to the latest integration commit and restarted Core API. It did not run migrations, seed data, modify nginx/systemd units, call write endpoints or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -458,6 +497,7 @@ Stage 0P verified `https://ois-nextgen.abacusai.cloud/platform/overview` returns
 Stage 0Q verified `https://ois-nextgen.abacusai.cloud/platform/overview` returns HTTP 200 with seeded Platform Kernel counts: industries 1, organizations 1, workspaces 1, projects 2, products 5, installations 2, modules 3 and auditRecords 1.
 Stage 0R-A did not change endpoints. It confirmed by code inspection that `/platform/overview` is read-only and `PLATFORM_KERNEL` remains `IN_PROGRESS` by hardcoded API logic until a later tested gate rule changes it.
 Stage 0R-B did not change endpoints. It added local tests that lock the no-DB `/health` contract and the read-only `/platform/overview` phase gate contract.
+Stage 0R-C confirmed no endpoint behavior regression after Abacus runtime sync. Local and public `/health` plus `/platform/overview` remained HTTP 200, seeded counts remained stable and `PLATFORM_KERNEL` remained `IN_PROGRESS`.
 
 ## Stop Conditions
 
