@@ -4,8 +4,12 @@ import { fileURLToPath } from "node:url";
 const pathFromRoot = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
 export default defineConfig({
+  esbuild: {
+    jsx: "automatic",
+    jsxImportSource: "react"
+  },
   test: {
-    include: ["apps/**/*.test.ts", "domains/**/*.test.ts", "packages/**/*.test.ts"],
+    include: ["apps/**/*.test.ts", "apps/**/*.test.tsx", "domains/**/*.test.ts", "packages/**/*.test.ts"],
     environment: "node"
   },
   resolve: {
