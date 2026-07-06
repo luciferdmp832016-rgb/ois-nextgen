@@ -52,6 +52,8 @@ Stage 0N resource boundary contract: `https://ois-nextgen.abacusai.cloud` is the
 
 Stage 0O managed-domain Core API health result: Abacus Agent verified the first SuperComputer nginx/systemd staging slice. `@ois/core-api` runs under systemd, nginx proxies the Abacus-managed public staging domain to `127.0.0.1:4000`, and `https://ois-nextgen.abacusai.cloud/health` returns HTTP/2 200 with the Core API health payload. Console, PITS and worker were not started. DB-backed functionality, storage-backed functionality and real AI/OpenRouter usage remain disabled.
 
+Stage 0P default DB Prisma baseline result: Abacus Agent verified readiness label `DEFAULT_DB_PRISMA_READINESS_CONFIRMED`, then applied migration `202607040001_platform_kernel` to the `default` DB only with `pnpm db:migrate`, which maps to `prisma migrate deploy`. Final verdict is `DEFAULT_DB_PRISMA_BASELINE_APPLIED`; Abacus execution label is `DEFAULT_DB_MIGRATION_APPLIED_SUCCESS`. `https://ois-nextgen.abacusai.cloud/platform/overview` now returns HTTP 200 as the first DB-backed read-only public staging endpoint. Counts are 0 because no seed data exists yet. Console, PITS, worker, `/auth/demo-login`, write endpoints and custom `dmp247.com` domains remain out of scope.
+
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
 ## Stage 0H Handoff Summary
@@ -126,7 +128,9 @@ env -u DATABASE_URL -u ABACUS_DATABASE_URL -u ABACUS_STORAGE_* \
 
 Stage 0N deployment pivot: the safer immediate path is SuperComputer nginx + systemd on the Abacus-managed public domain. Stage 0O should deploy Core API only behind nginx/systemd and target `https://ois-nextgen.abacusai.cloud/health` HTTP 200. The initial Stage 0O POC must remain mock-safe, must not call DB-backed or storage-backed endpoints, must not run migrations, and must not use `prisma db push`.
 
-Stage 0O result: Core API `/health` is verified on the Abacus-managed public staging domain. Continue to treat this as Core API-only staging health, not full product deployment. Recommended next stage: Stage 0P - Default DB Staging Migration Gate / Prisma Baseline.
+Stage 0O result: Core API `/health` is verified on the Abacus-managed public staging domain. Continue to treat this as Core API-only staging health, not full product deployment.
+
+Stage 0P result: the `default` DB Prisma baseline is applied and `/platform/overview` is verified as the first DB-backed read-only public staging endpoint. Recommended next stage: Stage 0Q - Platform Kernel Seed / DB-backed Smoke Stabilization.
 
 ## Stage 0N Resource Boundaries
 
@@ -203,6 +207,48 @@ sudo nginx -t && sudo systemctl reload nginx
 
 Expected rollback result: `https://ois-nextgen.abacusai.cloud` reverts to the default `READY` page.
 
+## Stage 0P Default DB Prisma Baseline
+
+Stage 0P-A readiness facts:
+
+| Area | Evidence |
+|---|---|
+| Prisma schema | `/home/ubuntu/ois-nextgen/prisma/schema.prisma`, provider `postgresql`. |
+| DB env var | `DATABASE_URL`. |
+| Existing migration | `202607040001_platform_kernel`, creating 18 tables, 36 indexes and 5 enum types. |
+| Target DB | `default`, DB ID/name `2c30a48b7`; empty with 0 tables before migration. |
+| Correct command | `pnpm db:migrate`, mapping to `prisma migrate deploy`. |
+| Forbidden command | `prisma db push` was not required and must not be used. |
+
+Stage 0P-B execution facts:
+
+| Area | Evidence |
+|---|---|
+| Backup | `/home/ubuntu/ois-nextgen/.abacus-backups/default_schema_pre_0p_b_20260706_023524.sql`, 728 B and 27 lines. |
+| Migration command | `pnpm db:migrate`; exit code 0. |
+| Applied migration | `202607040001_platform_kernel`. |
+| Migration status | Database schema is up to date. |
+| Post-migration schema | 19 tables: 18 domain tables plus `_prisma_migrations`; 55 public indexes; 5 enum types. |
+| Runtime env | `DATABASE_URL` added to VM `.env`; value not printed, `.env` not committed. |
+| Service restart | `sudo systemctl restart ois-nextgen-core-api` succeeded; service active/running with Main PID `5754`. |
+| nginx | Unchanged and active. |
+| Public DB-backed check | `https://ois-nextgen.abacusai.cloud/platform/overview` returned HTTP 200 after 8 live Prisma `count()` queries. |
+
+Stage 0P exclusions:
+
+- No `prisma db push`.
+- No `prisma migrate dev`.
+- No production database, storage or OpenRouter credentials.
+- No secrets or `DATABASE_URL` value printed.
+- No `.env` committed.
+- No row data inspected.
+- No seed data created.
+- No `/auth/demo-login` call.
+- No write endpoints called.
+- No OIS Console, PITS Shell or worker runtime.
+- No custom `dmp247.com` domain changes.
+- No legacy DB, legacy domain or legacy storage-prefix touch.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -251,6 +297,7 @@ Stage 0K executed only a VM preview proxy Core API health POC, not a hosted-app 
 Stage 0L executed hosted-app/custom-domain investigation plus controlled Core API boot only; no hosted app/service was created.
 Stage 0N did not execute staging steps; it records the resource boundary and SuperComputer nginx/systemd deployment contract.
 Stage 0O executed the Core API-only SuperComputer nginx/systemd staging health POC and verified `https://ois-nextgen.abacusai.cloud/health` HTTP/2 200. It did not execute Console, PITS, worker, DB-backed functionality, storage-backed functionality or real AI/OpenRouter usage.
+Stage 0P executed the default DB Prisma baseline on Abacus and verified `https://ois-nextgen.abacusai.cloud/platform/overview` HTTP 200 as a DB-backed read-only endpoint. It did not seed data, call `/auth/demo-login`, call write endpoints, start Console/PITS/worker or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -263,6 +310,7 @@ Stage 0O executed the Core API-only SuperComputer nginx/systemd staging health P
 
 - Core API `/` returns service identity `ois-nextgen-core-api`.
 - Core API `/health` returns `status=ok`.
+- Core API `/platform/overview` returns HTTP 200 and zero counts until seed data exists.
 - Core API `/docs` renders Swagger UI.
 - OIS Console `/` renders `OIS Console`.
 - PITS Shell `/` renders `PITS Shell`.
@@ -272,6 +320,7 @@ Stage 0K verified Core API `/health` publicly through the VM preview proxy at `h
 Stage 0L confirmed `https://ois-nextgen.abacusai.cloud/` returns edge placeholder `READY`, while `https://ois-nextgen.abacusai.cloud/health` remains HTTP 404 until Abacus platform/console maps a hosted app backend.
 Stage 0N pivots the next target to SuperComputer nginx/systemd on the Abacus-managed public domain, with `https://ois-nextgen.abacusai.cloud/health` as the Stage 0O target healthcheck.
 Stage 0O verified `https://ois-nextgen.abacusai.cloud/health` returns HTTP/2 200 with the Core API health payload. Core API `/`, `/docs`, Console `/` and PITS `/` remain outside the Stage 0O public managed-domain smoke scope.
+Stage 0P verified `https://ois-nextgen.abacusai.cloud/platform/overview` returns HTTP 200 and executes live Prisma reads against the migrated `default` DB. Counts are expected to be 0 until Stage 0Q or a later approved seed stage.
 
 ## Stop Conditions
 
@@ -282,6 +331,8 @@ Stage 0O verified `https://ois-nextgen.abacusai.cloud/health` returns HTTP/2 200
 - Stage 0H go/no-go gate is incomplete.
 - Hosted-app port behavior and Console/PITS service port behavior remain unverified.
 - Core API managed-domain `/health` returns non-200 after nginx/systemd changes.
+- `/platform/overview` returns non-200 after the Stage 0P Prisma baseline.
+- Any seed, `/auth/demo-login`, write endpoint or row-data inspection is attempted before Stage 0Q or later owner approval.
 - A workflow tries to use hosted-app service registration or external custom-domain publication instead of the verified SuperComputer nginx/systemd path without owner approval.
 - Any action would touch OIS Phase 1 or Emerald/BQL databases, storage prefixes, app shells or external custom domains.
 - Any action would reuse Phase 1 JWT, DB, Redis, MinIO or Neo4j secrets.

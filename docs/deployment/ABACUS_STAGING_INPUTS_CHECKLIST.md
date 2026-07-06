@@ -10,6 +10,8 @@ Stage 0F-R2 blocked safely because staging-only inputs were missing or unknown. 
 
 Stage 0O verified the first Core API-only SuperComputer nginx/systemd staging health POC. `https://ois-nextgen.abacusai.cloud/health` now returns HTTP/2 200 with the Core API health payload. This does not approve DB-backed endpoints, storage-backed endpoints, Console deployment, PITS deployment, worker deployment, migrations, `prisma db push`, real OpenRouter usage or external `dmp247.com` custom-domain publication.
 
+Stage 0P applied the default DB Prisma baseline and verified the first DB-backed read-only public staging endpoint. `DATABASE_URL` exists in the Abacus VM `.env`; the value was not printed and `.env` remains gitignored and uncommitted. This does not approve seed data, `/auth/demo-login`, write endpoints, Console deployment, PITS deployment, worker deployment, storage-backed behavior, real OpenRouter usage or custom `dmp247.com` domain publication.
+
 Stage 0I discovery status: live Abacus/SuperComputer runtime configuration is still blocked. No Abacus connector, CLI, authenticated UI, screenshots or owner-filled checklist were available. Use the table below for redacted status tracking only.
 
 | Item | Stage 0I status | Redacted reference |
@@ -184,6 +186,38 @@ Stage 0O managed-domain Core API health evidence update: Core API `/health` is n
 | OIS Phase 1 | `CONFIRMED_NOT_TOUCHED` | `oisys.abacusai.app` and `ois_phase1_dev` untouched. |
 | Emerald/BQL | `CONFIRMED_NOT_TOUCHED` | `emerald_bql_web_dev` untouched. |
 | Rollback | `CONFIRMED_DOCUMENTED` | Stop/disable service, remove service/vhost, reload nginx; expected domain reverts to `READY`. |
+
+Stage 0P default DB Prisma baseline evidence update: the `default` DB is migrated, and `/platform/overview` is now verified as the first DB-backed read-only public staging endpoint. This table records non-secret evidence only and does not approve seed data, row inspection, `/auth/demo-login`, write endpoints, production resources, storage-backed behavior, real AI providers, Console deployment or PITS deployment.
+
+| Item | Stage 0P status | Redacted reference |
+|---|---|---|
+| Stage 0P-A readiness label | `CONFIRMED` | `DEFAULT_DB_PRISMA_READINESS_CONFIRMED` |
+| Stage 0P-B execution label | `CONFIRMED` | `DEFAULT_DB_MIGRATION_APPLIED_SUCCESS` |
+| Final project verdict | `CONFIRMED` | `DEFAULT_DB_PRISMA_BASELINE_APPLIED` |
+| Abacus execution branch | `CONFIRMED` | `stage-0b-complete-handoff-ingestion` |
+| Abacus execution commit | `CONFIRMED` | `cc7ed28704c9e804385f6d2a4c21e8d887a775e3` |
+| Prisma schema | `CONFIRMED` | `/home/ubuntu/ois-nextgen/prisma/schema.prisma`, provider `postgresql`. |
+| Target DB | `CONFIRMED_STAGING_ONLY` | `default`, DB ID/name `2c30a48b7`. |
+| Pre-migration DB state | `CONFIRMED` | Empty, 0 tables. |
+| Pre-migration backup | `CONFIRMED` | `/home/ubuntu/ois-nextgen/.abacus-backups/default_schema_pre_0p_b_20260706_023524.sql`; 728 B, 27 lines. |
+| Migration command | `CONFIRMED` | `pnpm db:migrate`, mapping to `prisma migrate deploy`. |
+| Applied migration | `CONFIRMED` | `202607040001_platform_kernel`. |
+| Migration result | `CONFIRMED` | Exit code 0; all migrations successfully applied. |
+| Post-migration status | `CONFIRMED` | Database schema is up to date. |
+| Post-migration schema | `CONFIRMED` | 18 domain tables plus `_prisma_migrations`, 55 public indexes, 5 enum types. |
+| `DATABASE_URL` | `CONFIRMED_REDACTED` | Present in `/home/ubuntu/ois-nextgen/.env`; value never printed. |
+| `.env` | `CONFIRMED_NOT_COMMITTED` | Gitignored and not committed. |
+| Core API restart | `CONFIRMED` | `sudo systemctl restart ois-nextgen-core-api` succeeded; service active/running with Main PID `5754`. |
+| Public health | `CONFIRMED_UNCHANGED` | `https://ois-nextgen.abacusai.cloud/health` returned HTTP 200 before and after migration. |
+| Public DB-backed overview | `CONFIRMED` | `https://ois-nextgen.abacusai.cloud/platform/overview` returned HTTP 200. |
+| Prisma read behavior | `CONFIRMED` | 8 live Prisma `count()` queries; all counts 0 because no seed data exists yet. |
+| `prisma db push` | `CONFIRMED_NOT_RUN` | Not used. |
+| `prisma migrate dev` | `CONFIRMED_NOT_RUN` | Not used. |
+| Seed data | `CONFIRMED_NOT_CREATED` | No seed data exists yet. |
+| `/auth/demo-login` | `CONFIRMED_NOT_CALLED` | Not called. |
+| Write endpoints | `CONFIRMED_NOT_CALLED` | Not called. |
+| Row data inspection | `CONFIRMED_NOT_DONE` | No row data inspected. |
+| Legacy DBs/domains/storage | `CONFIRMED_NOT_TOUCHED` | `ois_phase1_dev`, `emerald_bql_web_dev`, `ois.dmp247.com`, `oisys.abacusai.app`, `49816/` and `52067/` untouched. |
 
 ## Required Readiness Summary
 
