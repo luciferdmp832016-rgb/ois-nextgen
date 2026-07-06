@@ -12,6 +12,7 @@ Stage 0T-A corrected the UI deployment model:
 - SuperComputer preview proxy URLs are temporary VM/process previews and are not canonical proof of UI App Shell deployment.
 - Connected Services are connector configuration, not App Shell deployment.
 - Abacus CLI is not currently available for this project because API metering must be enabled first.
+- Stage 0T-B adds local/Codex UI demo test harness coverage before any owner-assisted App Shell deployment.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -84,6 +85,8 @@ Stage 0S-A two UI shell demo result: OIS Console and PITS Shell now have minimal
 Stage 0S-B two UI shell preview ops result: safe Abacus Web Terminal scripts now build, start, status-check, stop and restart temporary OIS Console and PITS Shell demo processes on ports `3000` and `3001`. Both shells use `CORE_API_URL=https://ois-nextgen.abacusai.cloud`, no UI `DATABASE_URL`, no Core API DB/runtime change, no nginx change and no `dmp247.com`/legacy touch. Final result is `TWO_UI_SHELL_PREVIEW_OPS_READY`.
 
 Stage 0T-A App Shell deployment contract result: owner evidence from Apps Management Console corrected the canonical UI deployment path. OIS Console and PITS Shell should not be proven through SuperComputer preview/nginx routing; each must be created as its own Abacus App Shell with its own Abacus-managed Deployment URL, Database, Storage, Versions and Custom Domain lifecycle. Core API remains on `https://ois-nextgen.abacusai.cloud`. Final result is `ABACUS_APP_SHELL_DEPLOYMENT_CONTRACT_READY`.
+
+Stage 0T-B UI demo test harness result: local/Codex Vitest coverage now renders the OIS Console and PITS Shell demo pages with mocked Core API `/health` and `/platform/overview` responses. Tests verify shell names, product codes, Core API URL, demo banner, health OK state, seeded counts and that UI packages avoid direct DB and legacy/production references. Final result is `UI_DEMO_TEST_HARNESS_READY`.
 
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
@@ -183,7 +186,9 @@ Stage 0S-A result: two UI shell demos are code-ready for Abacus preview. Recomme
 
 Stage 0S-B result: temporary UI demo shell preview operations are ready for owner execution in Abacus Web Terminal. Stage 0T-A later supersedes this path for canonical UI App Shell proof; keep the scripts for VM diagnostics only.
 
-Stage 0T-A result: canonical UI deployment should use Apps Management Console App Shells, not SuperComputer preview proxy. Recommended next stage: Stage 0T-B - Owner-Assisted Abacus App Shell Creation Evidence.
+Stage 0T-A result: canonical UI deployment should use Apps Management Console App Shells, not SuperComputer preview proxy.
+
+Stage 0T-B result: local/Codex UI demo page harness is ready. Recommended next stage: Stage 0T-C - Owner-Assisted Abacus App Shell Creation Evidence.
 
 ## Stage 0N Resource Boundaries
 
@@ -691,6 +696,28 @@ Manual deployment checklist for a later stage:
 7. Verify both App Shell URLs are separate and both call the same Core API.
 8. Only after both pass, test optional custom staging subdomains.
 
+## Stage 0T-B UI Demo Test Harness
+
+Stage 0T-B adds the local/Codex gate before spending Abacus App Shell hosting or visit credits.
+
+Harness checks:
+
+| Package | Test file | Coverage |
+|---|---|---|
+| `@ois/ois-console` | `apps/ois-console/app/page.test.tsx` | Renders the OIS Console root demo page with mocked Core API health and seeded overview data. |
+| `@ois/pits-shell` | `apps/pits-shell/app/page.test.tsx` | Renders the PITS Shell root demo page with the same mocked Core API health and seeded overview data. |
+| UI package guard | `apps/ui-demo-static-guard.test.ts` | Blocks direct DB and legacy/production references in `apps/ois-console` and `apps/pits-shell`. |
+
+The harness uses mocked responses only. It does not call `https://ois-nextgen.abacusai.cloud`, does not deploy App Shells, does not modify Abacus runtime and does not read or print secrets.
+
+Required pre-deploy checks before owner-assisted App Shell deployment:
+
+| Check | Command | Expected |
+|---|---|---|
+| UI demo harness | `pnpm test` | OIS Console and PITS Shell page tests pass. |
+| Static guard | `pnpm test` | UI packages contain no direct DB or legacy/production references. |
+| Full local quality gate | `pnpm lint && pnpm typecheck && pnpm test && pnpm -r --if-present build` | All pass before App Shell creation evidence is requested. |
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -751,6 +778,7 @@ Stage 0R-G fixed safe ops shell helper parsing and documentation only. It did no
 Stage 0S-A added OIS Console and PITS Shell demo pages plus documentation only. It did not deploy, modify Abacus runtime, migrate, seed, call live endpoints, start UI shells or touch legacy resources.
 Stage 0S-B added temporary UI demo shell ops scripts plus documentation only. It did not run Web Terminal operations, deploy, modify Abacus runtime, migrate, seed, call live endpoints, start UI shells, modify nginx/systemd or touch legacy resources.
 Stage 0T-A corrected UI deployment documentation only. It did not deploy, modify Abacus runtime, migrate, seed, call live endpoints, create App Shells, modify nginx/systemd or touch legacy resources.
+Stage 0T-B added local/Codex UI demo tests and documentation only. It did not deploy, modify Abacus runtime, migrate, seed, call live endpoints, create App Shells, modify nginx/systemd or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -785,6 +813,7 @@ Stage 0R-G did not change endpoints. It fixed ops helper response parsing so HTT
 Stage 0S-A did not change active endpoints. It added planned OIS Console and PITS Shell demo endpoints for a later Abacus preview stage; when running, each root page should show the app name, product code, shared Core API URL, `/health` status, `/platform/overview` counts, the demo banner and the Core API-only DB access note.
 Stage 0S-B did not change active endpoints. It added scripts for planned Abacus preview checks on ports `3000` and `3001`; the preview URLs remain `PLANNED_NOT_CREATED` until owner-run Abacus evidence verifies them.
 Stage 0T-A did not change active endpoints. It marks SuperComputer preview UI URLs as deprecated for App Shell proof and adds planned OIS Console/PITS Shell App Shell managed deployment URLs.
+Stage 0T-B did not change active endpoints. It adds local/Codex mocked UI demo tests and keeps OIS Console/PITS Shell App Shell URLs `PLANNED_NOT_CREATED`.
 
 ## Stop Conditions
 

@@ -198,7 +198,7 @@ Stage 0T-A preserves these rules:
 
 Stage 0T-A is marked `ABACUS_APP_SHELL_DEPLOYMENT_CONTRACT_READY`.
 
-Recommended next stage: Stage 0T-B - Owner-Assisted Abacus App Shell Creation Evidence.
+Recommended next stage: Stage 0T-B - UI Demo Test Harness before owner-assisted Abacus App Shell creation evidence.
 
 ## Validation
 

@@ -178,8 +178,8 @@ export default async function Page() {
       <section className="panel">
         <h2>Data Access Boundary</h2>
         <p className="muted">
-          This UI shell does not import Prisma and does not use `DATABASE_URL`. DB-backed demo data is accessed only
-          through the Core API.
+          This UI shell does not import Prisma or read database connection settings. DB-backed demo data is accessed
+          only through the Core API.
         </p>
       </section>
     </main>
