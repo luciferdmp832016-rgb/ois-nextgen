@@ -128,6 +128,29 @@ Stage 0L hosted-app custom domain evidence update: VM preview routing remains co
 | AI/OpenRouter real key | `CONFIRMED_NOT_USED` | Mock mode; no real OpenRouter key. |
 | Secret printing | `CONFIRMED_NOT_PRINTED` | No secrets printed. |
 
+Stage 0N resource boundary evidence update: the Abacus-managed public domain and SuperComputer/App Shell resource boundaries are clarified. This table does not approve deployment, runtime start, migrations, `prisma db push`, production resources, external custom-domain changes or reuse of Phase 1 secrets.
+
+| Item | Stage 0N status | Redacted reference |
+|---|---|---|
+| Audit verdict | `PARTIALLY_CONFIRMED_APP_SHELLS_FOUND` | User-provided Abacus Resource Boundary and App Shell Inventory Audit. |
+| SuperComputer/cloud ID | `CONFIRMED` | `151e3ee5ff` |
+| OIS NextGen Abacus-managed public domain | `CONFIRMED` | `https://ois-nextgen.abacusai.cloud` |
+| Domain wording | `CONFIRMED` | Use "Abacus-managed public domain". |
+| Current domain status | `CONFIRMED` | Static `READY` page; no app deployed yet. |
+| Active nginx vhost | `CONFIRMED` | Only `default.conf`. |
+| User-deployed systemd services | `CONFIRMED_NONE` | None. |
+| GitHub integration | `CONFIRMED` | Connected to `luciferdmp832016-rgb`. |
+| Repo state | `SESSION_DEPENDENT` | `/home/ubuntu/ois-nextgen` not present in audit VM session; always preflight clone/pull. |
+| OIS NextGen database | `CONFIRMED_SAFE_STAGING` | `default`, active, empty, 0 tables. |
+| OIS NextGen storage | `CONFIRMED_SAFE_STAGING` | S3 prefix `59543/`, empty. |
+| OIS Phase 1 App Shell | `CONFIRMED_DO_NOT_TOUCH` | `oisys.abacusai.app`, `ois.dmp247.com`, live Next.js app. |
+| OIS Phase 1 database | `DO_NOT_TOUCH` | `ois_phase1_dev` |
+| OIS Phase 1 storage | `DO_NOT_TOUCH` | Inferred prefix `52067/` |
+| Emerald/BQL database | `DO_NOT_TOUCH` | `emerald_bql_web_dev` |
+| Emerald/BQL storage | `DO_NOT_TOUCH` | Inferred prefix `49816/` |
+| PITS current placement | `PRODUCT_BOUNDARY_RISK` | PITS is bundled inside OIS Phase 1 shell. |
+| Next deployment path | `CONTRACT_READY` | Stage 0O SuperComputer nginx + systemd Core API staging POC. |
+
 ## Required Readiness Summary
 
 | Area | Required for POC | Optional for first POC | Safe handoff format |
@@ -140,6 +163,16 @@ Stage 0L hosted-app custom domain evidence update: VM preview routing remains co
 | Staging URLs | Core API, Console and PITS staging URLs. | Preview aliases. | Public staging URL or redacted placeholder. |
 | Runtime entrypoint | Build/start commands and port behavior confirmed. | Dynamic port adaptation decision. | Checkbox plus notes. |
 | DB operations approval | `pnpm db:migrate` approval for staging only. | Demo-only `pnpm db:seed` approval. | Owner/date checkbox. |
+
+Stage 0O readiness additions:
+
+| Area | Required for Stage 0O | Safe handoff format |
+|---|---|---|
+| Source checkout | Repo cloned/pulled in current VM session. | Commit SHA and clean-tree evidence. |
+| systemd service | Core API-only user service. | Service name and redacted unit path. |
+| nginx vhost | OIS NextGen-only vhost for `ois-nextgen.abacusai.cloud`. | vhost filename and redacted config excerpt. |
+| Domain target | `https://ois-nextgen.abacusai.cloud/health` returns HTTP 200. | HTTP status evidence only. |
+| Resource boundary | `default` DB and `59543/` are the only allowed NextGen staging resources. | Confirmation checklist, no secret values. |
 
 ## 1. Staging Database
 
