@@ -15,9 +15,38 @@ bash ops/abacus/status.sh
 |---|---|---|
 | `status.sh` | Shows repo branch/commit/status, Core API systemd status, local/public health, local/public platform overview and seeded counts. | No. Read-only. |
 | `check-live-endpoints.sh` | Checks active OIS NextGen public staging endpoints only. Legacy probes require `--include-legacy-readonly`. | No. Read-only. |
-| `safe-restart-core-api.sh` | Restarts `ois-nextgen-core-api`, then verifies local/public `/health` and `/platform/overview`. | Yes, service restart only. |
-| `runtime-sync.sh` | Fetches/pulls the integration branch, runs install/lint/typecheck/test/build, then restarts Core API through `safe-restart-core-api.sh`. | Yes, source sync and service restart only. |
+| `safe-restart-core-api.sh` | Restarts `ois-nextgen-core-api`, waits for local `/health`, then verifies public `/health` and local/public `/platform/overview`. | Yes, service restart only. |
+| `runtime-sync.sh` | Fetches/pulls the integration branch, runs install/lint/typecheck/test/build, then restarts Core API through `safe-restart-core-api.sh` with the restart grace window. | Yes, source sync and service restart only. |
 | `rollback-core-api-nginx-poc.sh` | Prints the Stage 0O rollback plan by default. Requires `--confirm-rollback` to stop/disable service and remove nginx/systemd POC files. | Yes, destructive only with explicit confirmation. |
+| `lib-core-api-checks.sh` | Shared helper for health/overview validation and restart readiness retry logic. | No direct use; sourced by scripts. |
+
+## Restart Grace Window
+
+After `systemctl restart`, systemd can report the service as active before `tsx src/server.ts` has bound port `4000`. During that warm-up gap, local requests can fail and public nginx/Cloudflare can briefly return HTTP 502.
+
+`safe-restart-core-api.sh` now waits up to 30 seconds and retries every 2 seconds:
+
+1. Wait for local `/health` to return HTTP 200.
+2. Check public `/health`.
+3. Check local `/platform/overview`.
+4. Check public `/platform/overview`.
+
+Transient connection failures or HTTP 502 responses during this window are printed as warm-up progress, not immediate failure. A restart is failed only after `RESTART_VERIFICATION_TIMEOUT`.
+
+Output labels:
+
+- `WARMING_UP`
+- `LOCAL_HEALTH_READY`
+- `PUBLIC_HEALTH_READY`
+- `PLATFORM_OVERVIEW_READY`
+- `RESTART_VERIFICATION_PASSED`
+- `RESTART_VERIFICATION_TIMEOUT`
+
+Optional tuning:
+
+```sh
+RESTART_VERIFY_TIMEOUT=30 RESTART_VERIFY_INTERVAL=2 bash ops/abacus/safe-restart-core-api.sh
+```
 
 ## Security Rules
 

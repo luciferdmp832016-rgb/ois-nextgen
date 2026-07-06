@@ -45,6 +45,7 @@ pnpm typecheck
 pnpm test
 pnpm -r --if-present build
 
+printf '%s\n' "Restart verification uses a grace window so transient post-restart 502/connection failures are treated as WARMING_UP until timeout."
 bash ops/abacus/safe-restart-core-api.sh
 
 printf '\nRuntime sync completed with no behavior regression detected by scripted checks.\n'
