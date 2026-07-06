@@ -70,6 +70,8 @@ Stage 0R-F ops restart grace window result: owner Web Terminal evidence showed i
 
 Stage 0R-G ops script unbound variable fix result: after Stage 0R-F was merged and pulled into the Abacus VM at commit `124741498e1557e660aa1f960f9f5c8e1c3e55c9`, `status.sh` crashed with `body: unbound variable` in `lib-core-api-checks.sh` even though systemd reported Core API active/running. Stage 0R-G fixes the shell helper variable initialization/shadowing bug and adds a no-network parser self-test. Final result is `OPS_SCRIPT_UNBOUND_VARIABLE_FIX_READY`.
 
+Stage 0S-A two UI shell demo result: OIS Console and PITS Shell now have minimal root demo/status pages ready for Abacus preview. Both shells call the same Core API, default to `https://ois-nextgen.abacusai.cloud`, show `/health` status plus `/platform/overview` counts and keep DB access behind Core API only. No Abacus deploy, runtime modification, migration, seed, `prisma db push`, production credential or legacy resource touch occurred. Final result is `TWO_UI_SHELL_DEMO_READY_FOR_ABACUS_PREVIEW`.
+
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
 ## Stage 0H Handoff Summary
@@ -154,15 +156,17 @@ Stage 0R-A result: Platform Kernel gate logic is confirmed as intentionally not 
 
 Stage 0R-B result: Platform Kernel gate and DB-backed overview tests are added and pass locally. Future gate advancement still requires an explicit promotion rule and owner approval.
 
-Stage 0R-C result: Abacus runtime is synced to integration commit `e862b98ea601fa6ab8be6b78fd3ebbde5e66c66d` with no behavior regression. Recommended next stage: Stage 0R-D - Safe SSH Operations Scripts, or Stage 0S-A - Platform Kernel Gate Advancement Plan.
+Stage 0R-C result: Abacus runtime is synced to integration commit `e862b98ea601fa6ab8be6b78fd3ebbde5e66c66d` with no behavior regression. Recommended next stage: Stage 0R-D - Safe SSH Operations Scripts, or Stage 0S-A - Two UI Shell Demo.
 
-Stage 0R-D result: safe SSH operation scripts are ready. Recommended next stage: Stage 0S-A - Platform Kernel Gate Advancement Plan, unless the owner first wants Stage 0R-D1 to manually run the SSH scripts and record evidence.
+Stage 0R-D result: safe SSH operation scripts are ready. Recommended next stage: Stage 0S-A - Two UI Shell Demo, unless the owner first wants Stage 0R-D1 to manually run the SSH scripts and record evidence.
 
-Stage 0R-E result: direct external SSH is blocked by the Abacus platform relay, not by the local key or in-VM `sshd`. Use Abacus Web Terminal plus `ops/abacus/*.sh` as the fallback path until Abacus support fixes the relay. Recommended next stage: Stage 0S-A - Platform Kernel Gate Advancement Plan, or an owner/support follow-up to retest SSH after relay remediation.
+Stage 0R-E result: direct external SSH is blocked by the Abacus platform relay, not by the local key or in-VM `sshd`. Use Abacus Web Terminal plus `ops/abacus/*.sh` as the fallback path until Abacus support fixes the relay. Recommended next stage: Stage 0S-A - Two UI Shell Demo, or an owner/support follow-up to retest SSH after relay remediation.
 
-Stage 0R-F result: safe restart verification now includes a 30-second grace window and 2-second retry loop. Temporary local connection failures or public HTTP 502 responses immediately after restart are expected warm-up states until `RESTART_VERIFICATION_TIMEOUT`. Recommended next stage: Stage 0R-F1 - Owner Web Terminal retry evidence, or Stage 0S-A - Platform Kernel Gate Advancement Plan.
+Stage 0R-F result: safe restart verification now includes a 30-second grace window and 2-second retry loop. Temporary local connection failures or public HTTP 502 responses immediately after restart are expected warm-up states until `RESTART_VERIFICATION_TIMEOUT`. Recommended next stage: Stage 0R-F1 - Owner Web Terminal retry evidence, or Stage 0S-A - Two UI Shell Demo.
 
-Stage 0R-G result: ops helper parsing now handles empty/missing response bodies safely under `set -u`. HTTP 502, timeout and no-body cases should report clean failures or `WARMING_UP`, not crash with an unbound variable. Recommended next stage: Stage 0R-G1 - Owner Web Terminal retry evidence, or Stage 0S-A - Platform Kernel Gate Advancement Plan.
+Stage 0R-G result: ops helper parsing now handles empty/missing response bodies safely under `set -u`. HTTP 502, timeout and no-body cases should report clean failures or `WARMING_UP`, not crash with an unbound variable. Recommended next stage: Stage 0R-G1 - Owner Web Terminal retry evidence, or Stage 0S-A - Two UI Shell Demo.
+
+Stage 0S-A result: two UI shell demos are code-ready for Abacus preview. Recommended next stage: Stage 0S-B - Abacus OIS Console and PITS Shell Preview POC, keeping both shells pointed at the existing Core API staging URL and avoiding production/legacy resources.
 
 ## Stage 0N Resource Boundaries
 
@@ -516,6 +520,34 @@ Stage 0R-G fixes a shell helper bug observed after the Stage 0R-F scripts were p
 
 This does not add, change or deprecate endpoints.
 
+## Stage 0S-A Two UI Shell Demo
+
+Stage 0S-A prepares the first minimal separate UI shell demo for Abacus preview. It does not deploy or modify the Abacus runtime.
+
+| Shell | Package | Page | Port | Product code | Start command |
+|---|---|---|---:|---|---|
+| OIS Console | `@ois/ois-console` | `/` | 3000 | `OIS_CONSOLE` | `CORE_API_URL=https://ois-nextgen.abacusai.cloud pnpm --filter @ois/ois-console start` |
+| PITS Shell | `@ois/pits-shell` | `/` | 3001 | `PITS_SHELL` | `CORE_API_URL=https://ois-nextgen.abacusai.cloud pnpm --filter @ois/pits-shell start` |
+
+Stage 0S-A UI contract:
+
+- Use `CORE_API_URL` or `NEXT_PUBLIC_CORE_API_URL`, defaulting to `https://ois-nextgen.abacusai.cloud`.
+- Fetch Core API `/health` and `/platform/overview` server-side from the Next page.
+- Show app shell name, product code, Core API URL, Core API health, Platform Kernel counts and `DEMO DATA - NOT PRODUCTION`.
+- Do not import Prisma in UI shells.
+- Do not use `DATABASE_URL` in UI shells.
+- Do not call DB directly from UI shells; DB-backed demo data is accessed only through Core API.
+- Keep Console and PITS preview/deploy endpoints planned until a later Abacus preview stage creates them.
+
+Planned Stage 0S-B preview checks:
+
+| Planned endpoint | Status | Expected check |
+|---|---|---|
+| `https://<ois-console-abacus-preview-or-app-shell>/` | `PLANNED_NOT_CREATED` | HTTP 200 and OIS Console demo/status page. |
+| `https://<pits-shell-abacus-preview-or-app-shell>/` | `PLANNED_NOT_CREATED` | HTTP 200 and PITS Shell demo/status page. |
+| `https://ois-nextgen.abacusai.cloud/health` | `ABACUS_MANAGED_PUBLIC_STAGING` | Existing Core API health remains HTTP 200. |
+| `https://ois-nextgen.abacusai.cloud/platform/overview` | `ABACUS_MANAGED_PUBLIC_STAGING` | Existing read-only seeded overview remains HTTP 200. |
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -573,6 +605,7 @@ Stage 0R-D added reusable SSH scripts and documentation only. It did not SSH to 
 Stage 0R-E documented the Abacus SSH relay diagnostic and Web Terminal fallback only. It did not SSH to Abacus, run Web Terminal operations, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
 Stage 0R-F updated safe ops scripts and documentation only. It did not run Web Terminal operations, deploy, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
 Stage 0R-G fixed safe ops shell helper parsing and documentation only. It did not run Web Terminal operations, deploy, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
+Stage 0S-A added OIS Console and PITS Shell demo pages plus documentation only. It did not deploy, modify Abacus runtime, migrate, seed, call live endpoints, start UI shells or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -604,6 +637,7 @@ Stage 0R-D did not change endpoints. It added owner-run SSH scripts that check t
 Stage 0R-E did not change endpoints. It documented that Web Terminal plus `ops/abacus/*.sh` is the fallback operation path while Abacus SSH relay routing is blocked.
 Stage 0R-F did not change endpoints. It updated restart verification so transient post-restart local failures or public HTTP 502 responses are retried before failure is reported.
 Stage 0R-G did not change endpoints. It fixed ops helper response parsing so HTTP failures report cleanly instead of crashing under `set -u`.
+Stage 0S-A did not change active endpoints. It added planned OIS Console and PITS Shell demo endpoints for a later Abacus preview stage; when running, each root page should show the app name, product code, shared Core API URL, `/health` status, `/platform/overview` counts, the demo banner and the Core API-only DB access note.
 
 ## Stop Conditions
 
@@ -618,6 +652,8 @@ Stage 0R-G did not change endpoints. It fixed ops helper response parsing so HTT
 - `/platform/overview` gains writes, side effects or legacy/prod resource references.
 - `PLATFORM_KERNEL` gate promotion is attempted without a documented rule, focused tests and owner approval.
 - Restart verification reports `RESTART_VERIFICATION_TIMEOUT` after the warm-up window.
+- A UI shell imports Prisma, reads `DATABASE_URL` or attempts direct DB access.
+- A UI shell points to a Core API URL other than the owner-approved staging Core API without explicit approval.
 - Any additional seed execution, `/auth/demo-login`, write endpoint or row-data inspection is attempted without later owner approval.
 - A workflow tries to use hosted-app service registration or external custom-domain publication instead of the verified SuperComputer nginx/systemd path without owner approval.
 - Direct external SSH is required while the Abacus SSH relay still times out before authentication; use Web Terminal fallback instead.

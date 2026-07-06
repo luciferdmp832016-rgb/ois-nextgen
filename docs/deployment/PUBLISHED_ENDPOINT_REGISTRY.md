@@ -36,7 +36,7 @@ Do not probe or mutate legacy production endpoints during NextGen staging work u
 | OIS Phase 1 App Shell | `https://oisys.abacusai.app` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Existing live OIS Phase 1 app shell. | Do not touch during NextGen staging. |
 | OIS Phase 1 custom domain | `https://ois.dmp247.com` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Same OIS Phase 1 backend/custom domain. | Do not touch during NextGen staging. |
 
-Current NextGen live scope is Core API `/health` and DB-backed read-only `/platform/overview` only. Platform Kernel seed data is demo/staging data marked `DEMO DATA - NOT PRODUCTION`. OIS Console, PITS Shell, worker, `/auth/demo-login`, write endpoints and custom `dmp247.com` domains are not live on the Abacus-managed public staging domain yet.
+Current NextGen live scope is Core API `/health` and DB-backed read-only `/platform/overview` only. Platform Kernel seed data is demo/staging data marked `DEMO DATA - NOT PRODUCTION`. Stage 0S-A prepares OIS Console and PITS Shell demo pages, but their Abacus public/preview endpoints are still planned and not created. Worker, `/auth/demo-login`, write endpoints and custom `dmp247.com` domains are not live on the Abacus-managed public staging domain yet.
 
 ## 2. Local/Loopback Endpoints
 
@@ -77,8 +77,8 @@ The Abacus preview proxy is public and useful for temporary proof, but it is tie
 | OIS NextGen Core API root | `https://ois-nextgen.abacusai.cloud/` | `BLOCKED` | Stage 0O did not verify public root as a staging contract. | Do not claim until verified in a future stage. |
 | OIS NextGen Core API docs | `https://ois-nextgen.abacusai.cloud/docs` | `BLOCKED` | Not verified on the managed staging domain. | Do not claim until verified in a future stage. |
 | OIS NextGen additional DB-backed API routes | `https://ois-nextgen.abacusai.cloud/api/<db-backed-route>` | `BLOCKED` | Stages 0P and 0Q verified only read-only `/platform/overview`. | Blocked until later route-specific gates. |
-| OIS Console staging UI | `https://ois-nextgen.abacusai.cloud/<console-route>` | `PLANNED_NOT_CREATED` | Console was not started in Stage 0O. | Planned after Core API and DB gates. |
-| PITS Shell staging UI | `https://ois-nextgen.abacusai.cloud/<pits-route>` | `PLANNED_NOT_CREATED` | PITS was not started in Stage 0O. | Planned after product-boundary approval. |
+| OIS Console demo UI | `https://<ois-console-abacus-preview-or-app-shell>/` | `PLANNED_NOT_CREATED` | Stage 0S-A adds the root demo page but does not deploy it. | Expected to show OIS Console shell name, product code `OIS_CONSOLE`, shared Core API URL, health, overview counts and Core API-only DB access note. |
+| PITS Shell demo UI | `https://<pits-shell-abacus-preview-or-app-shell>/` | `PLANNED_NOT_CREATED` | Stage 0S-A adds the root demo page but does not deploy it. | Expected to show PITS Shell shell name, product code `PITS_SHELL`, shared Core API URL, health, overview counts and Core API-only DB access note. |
 
 ## 6. Existing Production/Legacy Endpoints - Do Not Touch
 
@@ -97,6 +97,8 @@ Known OIS Phase 1 production-equivalent resources include database `ois_phase1_d
 | Future OIS NextGen `dmp247.com` publication | Owner-approved future `dmp247.com` hostname; not the current Phase 1 endpoint unless a production cutover gate approves it. | `PLANNED_NOT_CREATED` | Production cutover gate. Current `https://ois.dmp247.com` remains `LEGACY_PRODUCTION_DO_NOT_TOUCH`. |
 | OIS Console public staging | Owner-approved Abacus-managed path/domain | `PLANNED_NOT_CREATED` | Console staging deploy gate after Core API baseline. |
 | PITS Shell public staging | Owner-approved Abacus-managed path/domain | `PLANNED_NOT_CREATED` | PITS product-boundary approval and staging deploy gate. |
+| OIS Console demo preview | `https://<ois-console-abacus-preview-or-app-shell>/` | `PLANNED_NOT_CREATED` | Stage 0S-B or later Abacus preview/deploy gate for the OIS Console shell. |
+| PITS Shell demo preview | `https://<pits-shell-abacus-preview-or-app-shell>/` | `PLANNED_NOT_CREATED` | Stage 0S-B or later Abacus preview/deploy gate for the PITS Shell. |
 | Additional DB-backed Core API routes | `https://ois-nextgen.abacusai.cloud/api/<route>` | `PLANNED_NOT_CREATED` | Stage 0Q or later route-specific smoke/stabilization gate. |
 
 ## 8. Stage Endpoint Matrix
@@ -122,6 +124,8 @@ Known OIS Phase 1 production-equivalent resources include database `ois_phase1_d
 | Stage 0R-C | `https://ois-nextgen.abacusai.cloud/platform/overview` | `ABACUS_MANAGED_PUBLIC_STAGING` | Unchanged after Abacus runtime sync; seeded counts and `PLATFORM_KERNEL=IN_PROGRESS` remained stable. | HTTP 200 with seeded Platform Kernel counts verified on Abacus after Core API restart. |
 | Stage 0R-D | `https://ois-nextgen.abacusai.cloud/health` | `ABACUS_MANAGED_PUBLIC_STAGING` | Unchanged; safe SSH scripts can check this endpoint from Abacus, but Stage 0R-D did not probe it locally. | HTTP 200 current live health endpoint. |
 | Stage 0R-D | `https://ois-nextgen.abacusai.cloud/platform/overview` | `ABACUS_MANAGED_PUBLIC_STAGING` | Unchanged; safe SSH scripts can check this endpoint from Abacus, but Stage 0R-D did not probe it locally. | HTTP 200 with seeded Platform Kernel counts. |
+| Stage 0S-A | `https://<ois-console-abacus-preview-or-app-shell>/` | `PLANNED_NOT_CREATED` | Planned OIS Console demo endpoint; code ready, not deployed. | Should render the OIS Console demo/status page and call `https://ois-nextgen.abacusai.cloud` server-side. |
+| Stage 0S-A | `https://<pits-shell-abacus-preview-or-app-shell>/` | `PLANNED_NOT_CREATED` | Planned PITS Shell demo endpoint; code ready, not deployed. | Should render the PITS Shell demo/status page and call `https://ois-nextgen.abacusai.cloud` server-side. |
 | Stage 0N audit | `https://oisys.abacusai.app` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Existing live Phase 1 app shell. | Do not touch. |
 | Stage 0N audit | `https://ois.dmp247.com` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Existing live Phase 1 custom domain. | Do not touch. |
 
@@ -191,6 +195,8 @@ Use these commands only on endpoints allowed by the current stage. Do not probe 
 | Core API local root | `curl -i http://127.0.0.1:4000/` | HTTP 200 and Core API service identity. |
 | OIS Console local root | `curl -i http://127.0.0.1:3000/` | HTTP 200 when Console is running. |
 | PITS Shell local root | `curl -i http://127.0.0.1:3001/` | HTTP 200 when PITS Shell is running. |
+| OIS Console local demo | `curl -i http://127.0.0.1:3000/` | HTTP 200 and the Stage 0S-A OIS Console demo/status page when Console is running. |
+| PITS Shell local demo | `curl -i http://127.0.0.1:3001/` | HTTP 200 and the Stage 0S-A PITS Shell demo/status page when PITS Shell is running. |
 
 ### Abacus VM Preview Command
 
@@ -207,7 +213,7 @@ Use these commands only on endpoints allowed by the current stage. Do not probe 
 | Additional DB-backed public API routes | `https://ois-nextgen.abacusai.cloud/api/<db-backed-route>` | `BLOCKED` | Requires later route-specific approval. |
 | Auth/demo-login | `https://ois-nextgen.abacusai.cloud/auth/demo-login` | `BLOCKED` | Not called through Stage 0Q; requires later auth gate. |
 | Write endpoints | Owner-approved future URLs | `BLOCKED` | Not called through Stage 0Q; requires later write-path gate. |
-| Console public staging | Owner-approved future URL | `PLANNED_NOT_CREATED` | Requires future Console staging gate. |
-| PITS public staging | Owner-approved future URL | `PLANNED_NOT_CREATED` | Requires future PITS/product-boundary gate. |
+| Console public staging | Owner-approved future URL | `PLANNED_NOT_CREATED` | Requires future Console staging gate; Stage 0S-A code is demo-ready but not deployed. |
+| PITS public staging | Owner-approved future URL | `PLANNED_NOT_CREATED` | Requires future PITS/product-boundary gate; Stage 0S-A code is demo-ready but not deployed. |
 | OIS Phase 1 live app shell | `https://oisys.abacusai.app` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Do not test or mutate without owner approval. |
 | OIS Phase 1 custom domain | `https://ois.dmp247.com` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Do not test or mutate without owner approval. |
