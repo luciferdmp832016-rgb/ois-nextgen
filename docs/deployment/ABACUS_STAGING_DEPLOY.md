@@ -62,6 +62,8 @@ Stage 0R-B Platform Kernel test coverage result: local-only tests now cover `/he
 
 Stage 0R-C Abacus runtime sync result: Abacus runtime fast-forwarded from `cc7ed28704c9e804385f6d2a4c21e8d887a775e3` to integration commit `e862b98ea601fa6ab8be6b78fd3ebbde5e66c66d`, validation passed, Core API restarted cleanly, and local/public `/health` plus `/platform/overview` remained HTTP 200 with seeded counts. Stage 0R-B test coverage is now live in runtime source. No endpoint behavior, DB schema, migration or seed behavior changed. Final result is `ABACUS_RUNTIME_SYNCED_NO_BEHAVIOR_REGRESSION`.
 
+Stage 0R-D safe SSH operations result: reusable scripts under `ops/abacus/` and owner documentation in `docs/deployment/ABACUS_SSH_OPERATIONS.md` are ready. The scripts support safe status checks, active endpoint checks, Core API restart, runtime sync and guarded Stage 0O rollback over SSH. Default scripts do not print secrets, run migrations, run seed, run `prisma db push`, call write endpoints or probe legacy endpoints. Final result is `SAFE_SSH_OPERATIONS_READY`.
+
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
 ## Stage 0H Handoff Summary
@@ -147,6 +149,8 @@ Stage 0R-A result: Platform Kernel gate logic is confirmed as intentionally not 
 Stage 0R-B result: Platform Kernel gate and DB-backed overview tests are added and pass locally. Future gate advancement still requires an explicit promotion rule and owner approval.
 
 Stage 0R-C result: Abacus runtime is synced to integration commit `e862b98ea601fa6ab8be6b78fd3ebbde5e66c66d` with no behavior regression. Recommended next stage: Stage 0R-D - Safe SSH Operations Scripts, or Stage 0S-A - Platform Kernel Gate Advancement Plan.
+
+Stage 0R-D result: safe SSH operation scripts are ready. Recommended next stage: Stage 0S-A - Platform Kernel Gate Advancement Plan, unless the owner first wants Stage 0R-D1 to manually run the SSH scripts and record evidence.
 
 ## Stage 0N Resource Boundaries
 
@@ -418,6 +422,20 @@ Stage 0R-C exclusions:
 - No write endpoint or `/auth/demo-login` call.
 - No OIS Phase 1, Emerald/BQL, legacy domain or legacy storage-prefix touch.
 
+## Stage 0R-D Safe SSH Operations
+
+Stage 0R-D adds owner-run SSH scripts under `ops/abacus/`:
+
+| Script | Purpose | Mutation level |
+|---|---|---|
+| `status.sh` | Repo/service/health/overview status and seeded counts. | Read-only. |
+| `check-live-endpoints.sh` | Active OIS NextGen public staging endpoint checks. | Read-only. |
+| `safe-restart-core-api.sh` | Restart Core API service and verify health/overview. | Service restart only. |
+| `runtime-sync.sh` | Fetch/pull integration, run validation, restart Core API and verify health/overview. | Source sync and service restart only. |
+| `rollback-core-api-nginx-poc.sh` | Print rollback plan; execute only with `--confirm-rollback`. | Destructive only with explicit confirmation. |
+
+Stage 0R-D scripts and docs do not add, change or deprecate endpoints. They reduce Abacus Agent credit use by letting the owner run repeatable SSH commands directly.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -471,6 +489,7 @@ Stage 0Q executed the Platform Kernel seed on Abacus and verified `https://ois-n
 Stage 0R-A performed local code inspection and documentation only. It did not deploy, run runtime, migrate, seed, call endpoints or touch legacy resources.
 Stage 0R-B added local-only tests only. It did not deploy, run runtime, migrate, seed, call endpoints or touch legacy resources.
 Stage 0R-C synced Abacus runtime to the latest integration commit and restarted Core API. It did not run migrations, seed data, modify nginx/systemd units, call write endpoints or touch legacy resources.
+Stage 0R-D added reusable SSH scripts and documentation only. It did not SSH to Abacus, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -498,6 +517,7 @@ Stage 0Q verified `https://ois-nextgen.abacusai.cloud/platform/overview` returns
 Stage 0R-A did not change endpoints. It confirmed by code inspection that `/platform/overview` is read-only and `PLATFORM_KERNEL` remains `IN_PROGRESS` by hardcoded API logic until a later tested gate rule changes it.
 Stage 0R-B did not change endpoints. It added local tests that lock the no-DB `/health` contract and the read-only `/platform/overview` phase gate contract.
 Stage 0R-C confirmed no endpoint behavior regression after Abacus runtime sync. Local and public `/health` plus `/platform/overview` remained HTTP 200, seeded counts remained stable and `PLATFORM_KERNEL` remained `IN_PROGRESS`.
+Stage 0R-D did not change endpoints. It added owner-run SSH scripts that check the existing active endpoints and avoid legacy probes by default.
 
 ## Stop Conditions
 
