@@ -66,6 +66,8 @@ Stage 0R-D safe SSH operations result: reusable scripts under `ops/abacus/` and 
 
 Stage 0R-E SSH relay diagnostic result: direct external SSH through the Abacus SSH tile endpoint is blocked by platform-side Abacus edge/relay routing. Owner SSH attempts timed out before authentication from Wi-Fi and 5G, while Abacus internal diagnostics confirmed healthy in-VM `sshd`, valid `authorized_keys` and working local VM SSH TCP. Until Abacus fixes the relay, use Abacus Web Terminal plus `ops/abacus/*.sh`. Final result is `ABACUS_SSH_RELAY_BLOCKED_WEB_TERMINAL_FALLBACK_READY`.
 
+Stage 0R-F ops restart grace window result: owner Web Terminal evidence showed immediate post-restart local connection failures and public HTTP 502 responses that cleared on a later `status.sh` run after Core API had bound port `4000`. `safe-restart-core-api.sh` and `runtime-sync.sh` now treat transient restart failures as `WARMING_UP` until a 30-second retry timeout expires. Final result is `OPS_RESTART_GRACE_WINDOW_ADDED`.
+
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
 ## Stage 0H Handoff Summary
@@ -155,6 +157,8 @@ Stage 0R-C result: Abacus runtime is synced to integration commit `e862b98ea601f
 Stage 0R-D result: safe SSH operation scripts are ready. Recommended next stage: Stage 0S-A - Platform Kernel Gate Advancement Plan, unless the owner first wants Stage 0R-D1 to manually run the SSH scripts and record evidence.
 
 Stage 0R-E result: direct external SSH is blocked by the Abacus platform relay, not by the local key or in-VM `sshd`. Use Abacus Web Terminal plus `ops/abacus/*.sh` as the fallback path until Abacus support fixes the relay. Recommended next stage: Stage 0S-A - Platform Kernel Gate Advancement Plan, or an owner/support follow-up to retest SSH after relay remediation.
+
+Stage 0R-F result: safe restart verification now includes a 30-second grace window and 2-second retry loop. Temporary local connection failures or public HTTP 502 responses immediately after restart are expected warm-up states until `RESTART_VERIFICATION_TIMEOUT`. Recommended next stage: Stage 0R-F1 - Owner Web Terminal retry evidence, or Stage 0S-A - Platform Kernel Gate Advancement Plan.
 
 ## Stage 0N Resource Boundaries
 
@@ -476,6 +480,23 @@ bash ops/abacus/rollback-core-api-nginx-poc.sh
 bash ops/abacus/rollback-core-api-nginx-poc.sh --confirm-rollback
 ```
 
+## Stage 0R-F Ops Restart Grace Window
+
+Stage 0R-F updates restart verification after owner Web Terminal evidence showed a false negative immediately after `systemctl restart`.
+
+| Area | Contract |
+|---|---|
+| Warm-up timeout | `RESTART_VERIFY_TIMEOUT=30` seconds by default. |
+| Retry interval | `RESTART_VERIFY_INTERVAL=2` seconds by default. |
+| First gate | Local `/health` must return HTTP 200 before public checks run. |
+| Public health | Public `/health` is checked after local health is ready. |
+| Overview | Local and public `/platform/overview` are checked only after health is ready. |
+| Temporary 502 | Treated as `WARMING_UP` until timeout expires. |
+| Final success | `RESTART_VERIFICATION_PASSED`. |
+| Final failure | `RESTART_VERIFICATION_TIMEOUT`. |
+
+This does not add, change or deprecate endpoints. It only prevents false restart failures while Core API warms up and binds port `4000`.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -531,6 +552,7 @@ Stage 0R-B added local-only tests only. It did not deploy, run runtime, migrate,
 Stage 0R-C synced Abacus runtime to the latest integration commit and restarted Core API. It did not run migrations, seed data, modify nginx/systemd units, call write endpoints or touch legacy resources.
 Stage 0R-D added reusable SSH scripts and documentation only. It did not SSH to Abacus, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
 Stage 0R-E documented the Abacus SSH relay diagnostic and Web Terminal fallback only. It did not SSH to Abacus, run Web Terminal operations, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
+Stage 0R-F updated safe ops scripts and documentation only. It did not run Web Terminal operations, deploy, run runtime operations, migrate, seed, call endpoints or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -560,6 +582,7 @@ Stage 0R-B did not change endpoints. It added local tests that lock the no-DB `/
 Stage 0R-C confirmed no endpoint behavior regression after Abacus runtime sync. Local and public `/health` plus `/platform/overview` remained HTTP 200, seeded counts remained stable and `PLATFORM_KERNEL` remained `IN_PROGRESS`.
 Stage 0R-D did not change endpoints. It added owner-run SSH scripts that check the existing active endpoints and avoid legacy probes by default.
 Stage 0R-E did not change endpoints. It documented that Web Terminal plus `ops/abacus/*.sh` is the fallback operation path while Abacus SSH relay routing is blocked.
+Stage 0R-F did not change endpoints. It updated restart verification so transient post-restart local failures or public HTTP 502 responses are retried before failure is reported.
 
 ## Stop Conditions
 
@@ -573,6 +596,7 @@ Stage 0R-E did not change endpoints. It documented that Web Terminal plus `ops/a
 - `/platform/overview` returns non-200 after the Stage 0P Prisma baseline or Stage 0Q seed.
 - `/platform/overview` gains writes, side effects or legacy/prod resource references.
 - `PLATFORM_KERNEL` gate promotion is attempted without a documented rule, focused tests and owner approval.
+- Restart verification reports `RESTART_VERIFICATION_TIMEOUT` after the warm-up window.
 - Any additional seed execution, `/auth/demo-login`, write endpoint or row-data inspection is attempted without later owner approval.
 - A workflow tries to use hosted-app service registration or external custom-domain publication instead of the verified SuperComputer nginx/systemd path without owner approval.
 - Direct external SSH is required while the Abacus SSH relay still times out before authentication; use Web Terminal fallback instead.

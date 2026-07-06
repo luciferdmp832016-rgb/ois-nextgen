@@ -5,7 +5,10 @@ SERVICE_NAME="${SERVICE_NAME:-ois-nextgen-core-api}"
 REPO_DIR="${REPO_DIR:-/home/ubuntu/ois-nextgen}"
 LOCAL_BASE="${LOCAL_BASE:-http://127.0.0.1:4000}"
 PUBLIC_BASE="${PUBLIC_BASE:-https://ois-nextgen.abacusai.cloud}"
-CURL_TIMEOUT="${CURL_TIMEOUT:-20}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=ops/abacus/lib-core-api-checks.sh
+. "$SCRIPT_DIR/lib-core-api-checks.sh"
 
 failures=0
 
@@ -16,78 +19,6 @@ section() {
 record_failure() {
   printf 'FAIL: %s\n' "$1" >&2
   failures=$((failures + 1))
-}
-
-check_health() {
-  local label="$1"
-  local url="$2"
-  local body
-
-  if ! body="$(curl -fsS --max-time "$CURL_TIMEOUT" "$url")"; then
-    record_failure "$label health request failed"
-    return
-  fi
-
-  if ! HEALTH_BODY="$body" node <<'NODE'
-const payload = JSON.parse(process.env.HEALTH_BODY);
-if (payload.status !== "ok" || payload.service !== "core-api" || payload.stage !== "bootstrap-stage-a") {
-  console.error(JSON.stringify(payload));
-  process.exit(1);
-}
-console.log(`OK ${payload.status} ${payload.service} ${payload.stage}`);
-NODE
-  then
-    record_failure "$label health payload mismatch"
-    return
-  fi
-}
-
-print_overview_counts() {
-  local label="$1"
-  local url="$2"
-  local body
-
-  if ! body="$(curl -fsS --max-time "$CURL_TIMEOUT" "$url")"; then
-    record_failure "$label platform overview request failed"
-    return
-  fi
-
-  if ! OVERVIEW_BODY="$body" node <<'NODE'
-const payload = JSON.parse(process.env.OVERVIEW_BODY);
-const expected = {
-  industries: 1,
-  organizations: 1,
-  workspaces: 1,
-  projects: 2,
-  products: 5,
-  installations: 2,
-  modules: 3,
-  auditRecords: 1
-};
-if (payload.banner !== "DEMO DATA - NOT PRODUCTION") {
-  console.error(`unexpected banner: ${payload.banner}`);
-  process.exit(1);
-}
-for (const [key, value] of Object.entries(expected)) {
-  if (payload.kernel?.[key] !== value) {
-    console.error(`unexpected ${key}: ${payload.kernel?.[key]} expected ${value}`);
-    process.exit(1);
-  }
-}
-if (payload.phaseGates?.PLATFORM_KERNEL !== "IN_PROGRESS") {
-  console.error(`unexpected PLATFORM_KERNEL: ${payload.phaseGates?.PLATFORM_KERNEL}`);
-  process.exit(1);
-}
-console.log(`banner=${payload.banner}`);
-for (const key of Object.keys(expected)) {
-  console.log(`${key}=${payload.kernel[key]}`);
-}
-console.log(`PLATFORM_KERNEL=${payload.phaseGates.PLATFORM_KERNEL}`);
-NODE
-  then
-    record_failure "$label platform overview payload mismatch"
-    return
-  fi
 }
 
 section "Safety"
@@ -110,12 +41,30 @@ else
 fi
 
 section "Health"
-check_health "local" "$LOCAL_BASE/health"
-check_health "public" "$PUBLIC_BASE/health"
+if check_core_api_health_once "local" "$LOCAL_BASE/health"; then
+  printf 'OK %s\n' "$CHECK_DETAIL"
+else
+  record_failure "$CHECK_DETAIL"
+fi
+
+if check_core_api_health_once "public" "$PUBLIC_BASE/health"; then
+  printf 'OK %s\n' "$CHECK_DETAIL"
+else
+  record_failure "$CHECK_DETAIL"
+fi
 
 section "Platform Overview"
-print_overview_counts "local" "$LOCAL_BASE/platform/overview"
-print_overview_counts "public" "$PUBLIC_BASE/platform/overview"
+if print_platform_overview_once "local" "$LOCAL_BASE/platform/overview"; then
+  printf 'OK %s\n' "$CHECK_DETAIL"
+else
+  record_failure "$CHECK_DETAIL"
+fi
+
+if print_platform_overview_once "public" "$PUBLIC_BASE/platform/overview"; then
+  printf 'OK %s\n' "$CHECK_DETAIL"
+else
+  record_failure "$CHECK_DETAIL"
+fi
 
 if [ "$failures" -gt 0 ]; then
   printf '\nCompleted with %s failure(s).\n' "$failures" >&2

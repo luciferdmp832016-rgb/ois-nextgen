@@ -4,6 +4,8 @@ Stage 0R-D result: `SAFE_SSH_OPERATIONS_READY`.
 
 Stage 0R-E result: `ABACUS_SSH_RELAY_BLOCKED_WEB_TERMINAL_FALLBACK_READY`.
 
+Stage 0R-F result: `OPS_RESTART_GRACE_WINDOW_ADDED`.
+
 These scripts let the owner run common OIS NextGen Abacus SuperComputer checks, syncs and restarts through SSH when the relay works, or through Abacus Web Terminal while the relay is blocked, without spending Abacus Agent credits.
 
 The scripts still run on Abacus VM resources. They do not replace owner approval for migrations, seed operations, deployments, production access or destructive rollback.
@@ -31,6 +33,37 @@ The local VM SSH TCP path works. No in-VM tunnel agent exists, and VM metadata e
 Conclusion: the SSH failure is a platform-side Abacus edge/relay routing issue, not a local key or in-VM `sshd` issue.
 
 Until Abacus fixes the relay, use Abacus Web Terminal plus the same `ops/abacus/*.sh` scripts.
+
+## Stage 0R-F Restart Grace Window
+
+Owner-run Web Terminal evidence showed an initial false negative immediately after restart: local `/health` and local `/platform/overview` could not connect, while public `/health` and `/platform/overview` returned HTTP 502. Process inspection immediately after showed the Core API process was running, and a later `ops/abacus/status.sh` run passed with health OK, overview OK, seeded counts unchanged and `PLATFORM_KERNEL=IN_PROGRESS`.
+
+Conclusion: systemd can report the service as active before the Node/Fastify process has fully bound port `4000`. During that short warm-up period, a temporary local connection failure or public HTTP 502 is expected and must not be treated as a final restart failure.
+
+`ops/abacus/safe-restart-core-api.sh` and `ops/abacus/runtime-sync.sh` now use a restart verification grace window:
+
+| Setting | Default | Purpose |
+|---|---:|---|
+| `RESTART_VERIFY_TIMEOUT` | `30` seconds | Maximum time to wait before reporting failure. |
+| `RESTART_VERIFY_INTERVAL` | `2` seconds | Retry interval during warm-up. |
+
+Verification order:
+
+1. Wait for local `/health` to return HTTP 200.
+2. Check public `/health`.
+3. Check local `/platform/overview`.
+4. Check public `/platform/overview`.
+
+Expected output labels:
+
+- `WARMING_UP`
+- `LOCAL_HEALTH_READY`
+- `PUBLIC_HEALTH_READY`
+- `PLATFORM_OVERVIEW_READY`
+- `RESTART_VERIFICATION_PASSED`
+- `RESTART_VERIFICATION_TIMEOUT`
+
+Failure should only be reported after `RESTART_VERIFICATION_TIMEOUT`. Temporary HTTP 502 responses immediately after restart are warm-up evidence until the timeout expires.
 
 ## Setup Once
 
@@ -163,8 +196,9 @@ Use these SSH forms only after the Abacus SSH relay is confirmed working again. 
 | `ops/abacus/status.sh` | Shows repo branch/commit/status, Core API service status and local/public health/overview seeded counts. | Read-only. |
 | `ops/abacus/check-live-endpoints.sh` | Checks `https://ois-nextgen.abacusai.cloud/health` and `/platform/overview`. | Read-only. Does not probe legacy endpoints by default. |
 | `ops/abacus/check-live-endpoints.sh --include-legacy-readonly` | Also checks readonly HTTP status for `https://oisys.abacusai.app` and `https://ois.dmp247.com`. | Optional owner-approved legacy status probe only; labels them `LEGACY_DO_NOT_TOUCH`. |
-| `ops/abacus/safe-restart-core-api.sh` | Restarts `ois-nextgen-core-api` and verifies local/public health and overview. | Service restart only; no nginx/systemd unit edits. |
-| `ops/abacus/runtime-sync.sh` | Fetches/pulls `stage-0b-complete-handoff-ingestion`, runs install/lint/typecheck/test/build, restarts Core API and verifies health/overview. | Source sync and service restart only. Stops if Prisma schema, migration or seed files changed. |
+| `ops/abacus/safe-restart-core-api.sh` | Restarts `ois-nextgen-core-api`, waits up to 30 seconds for readiness and verifies local/public health and overview. | Service restart only; no nginx/systemd unit edits. |
+| `ops/abacus/runtime-sync.sh` | Fetches/pulls `stage-0b-complete-handoff-ingestion`, runs install/lint/typecheck/test/build, restarts Core API and verifies health/overview with the restart grace window. | Source sync and service restart only. Stops if Prisma schema, migration or seed files changed. |
+| `ops/abacus/lib-core-api-checks.sh` | Shared helper for health/overview payload validation and restart readiness retry logic. | Sourced helper; no direct operations. |
 | `ops/abacus/rollback-core-api-nginx-poc.sh` | Prints the Stage 0O rollback plan. | No-op without `--confirm-rollback`. |
 | `ops/abacus/rollback-core-api-nginx-poc.sh --confirm-rollback` | Stops/disables Core API service, removes Stage 0O systemd unit and nginx vhost, validates and reloads nginx. | Destructive; owner approval required. |
 
