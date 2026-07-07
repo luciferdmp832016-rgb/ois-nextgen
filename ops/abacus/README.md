@@ -21,6 +21,9 @@ bash ops/abacus/status.sh
 | `status-ui-demo-shells.sh` | Checks temporary OIS Console/PITS demo PIDs, local HTTP 200 pages, expected shell markers and seeded Core API data; checks preview URLs when `PREVIEW_URL` or `APP_ORIGIN` is available. | No. Read-only. |
 | `stop-ui-demo-shells.sh` | Stops only the temporary OIS Console and PITS Shell demo processes recorded by PID files. | Yes, stops UI demo processes only. |
 | `restart-ui-demo-shells.sh` | Stops, starts and verifies both temporary UI demo shell processes. | Yes, temporary UI demo processes only. |
+| `enable-product-subdomain-demo-routes.sh` | Adds a dedicated nginx host-routing config for `ois-ng.dmp247.com` -> port 3000 and `pits-ng.dmp247.com` -> port 3001. | Yes, nginx config only. |
+| `status-product-subdomain-demo-routes.sh` | Checks local Host-header product subdomain routing and optional public DNS/TLS routes. | No. Read-only. |
+| `disable-product-subdomain-demo-routes.sh` | Removes only the Stage 0U-A managed nginx product-subdomain config. | Yes, nginx config only. |
 | `package-pits-shell-upload-bundle.sh` | Creates `artifacts/abacus/pits-shell-abacus-upload-bundle.zip` for direct PITS Shell App Shell source upload. | No. Local packaging only. |
 | `rollback-core-api-nginx-poc.sh` | Prints the Stage 0O rollback plan by default. Requires `--confirm-rollback` to stop/disable service and remove nginx/systemd POC files. | Yes, destructive only with explicit confirmation. |
 | `lib-core-api-checks.sh` | Shared helper for health/overview validation and restart readiness retry logic. | No direct use; sourced by scripts. |
@@ -83,6 +86,59 @@ Expected Abacus preview URLs, when `PREVIEW_URL` or `APP_ORIGIN` is available:
 - `<preview-base>-3001.../` for PITS Shell.
 
 The status script verifies HTTP 200, product markers and seeded Platform Kernel counts in each UI page. It does not probe legacy endpoints.
+
+## Product Subdomain Routing Demo
+
+Stage 0U-A adds a SuperComputer nginx host-routing demo for owner-approved staging subdomains:
+
+| Host | Nginx upstream | Product |
+|---|---|---|
+| `ois-ng.dmp247.com` | `http://127.0.0.1:3000` | OIS Console |
+| `pits-ng.dmp247.com` | `http://127.0.0.1:3001` | PITS Shell |
+
+DNS principle:
+
+- DNS CNAME maps hostnames only, not URL paths.
+- `ois-ng.dmp247.com` may CNAME to `ois-nextgen.abacusai.cloud`.
+- `pits-ng.dmp247.com` may CNAME to `ois-nextgen.abacusai.cloud`.
+- DNS cannot map `ois-ng.dmp247.com` to `ois-nextgen.abacusai.cloud/ois`.
+- Path and product routing are nginx/app concerns.
+
+Owner Web Terminal sequence:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+bash ops/abacus/start-ui-demo-shells.sh
+bash ops/abacus/enable-product-subdomain-demo-routes.sh
+bash ops/abacus/status-product-subdomain-demo-routes.sh
+```
+
+Expected local Host-header success label:
+
+```text
+SUPERCOMPUTER_PRODUCT_SUBDOMAIN_LOCAL_ROUTING_READY
+```
+
+After owner-controlled DNS CNAME records are configured:
+
+```sh
+bash ops/abacus/status-product-subdomain-demo-routes.sh --include-public
+```
+
+Public outcome labels:
+
+- `SUPERCOMPUTER_PRODUCT_SUBDOMAIN_PUBLIC_DEMO_VERIFIED`
+- `CUSTOM_SUBDOMAIN_HTTP_OK_TLS_BLOCKED`
+- `CUSTOM_SUBDOMAIN_TLS_BLOCKED`
+- `CUSTOM_SUBDOMAIN_BLOCKED_BY_ABACUS_EDGE`
+
+Disable only these demo routes:
+
+```sh
+bash ops/abacus/disable-product-subdomain-demo-routes.sh
+```
+
+These scripts do not modify DNS, `ois.dmp247.com`, `oisys.abacusai.app`, Core API service files, DB schema, seed data, production credentials or legacy resources.
 
 ## PITS Shell Upload Bundle
 
