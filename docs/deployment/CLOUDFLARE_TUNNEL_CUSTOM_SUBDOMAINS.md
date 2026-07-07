@@ -9,6 +9,8 @@ Runtime labels:
 - `CLOUDFLARE_TUNNEL_CONNECTOR_HEALTHY`
 - `CLOUDFLARE_TUNNEL_PRODUCT_SUBDOMAINS_VERIFIED`
 - `PUBLIC_STAGING_RUNTIME_HARDENING_READY`
+- `PUBLIC_STAGING_RUNTIME_OPERATIONAL`
+- `PUBLIC_STAGING_RUNTIME_SECRET_SAFE_HOTFIX_READY`
 
 ## Purpose
 
@@ -138,6 +140,32 @@ bash ops/abacus/check-public-staging-endpoints.sh
 
 Do not modify Cloudflare public hostname routes for Stage 0W-A. The existing tunnel routes remain valid because the durable services use the same local ports.
 
+## Stage 0W-B Runtime Hotfix
+
+Stage 0W-B records that public staging is operational after owner execution:
+
+| Public route | Result |
+|---|---|
+| `https://ois-ng.dmp247.com` | PASS. |
+| `https://ois-ng.dmp247.com/dashboard` | PASS. |
+| `https://pits-ng.dmp247.com` | PASS. |
+| `https://pits-ng.dmp247.com/projects` | PASS. |
+
+`ops/abacus/check-public-staging-endpoints.sh` passed, and Core API, OIS Console, PITS Shell and cloudflared were active.
+
+Important hotfix: do not print full `systemctl status cloudflared` in shared logs. That output can expose the tunnel token through the process command line.
+
+Use only token-safe status checks:
+
+```sh
+systemctl is-active cloudflared
+systemctl show cloudflared --property=ActiveState,SubState,MainPID,NRestarts --no-pager
+```
+
+`ops/abacus/status-public-staging-runtime.sh` now uses this token-safe cloudflared status path.
+
+`ops/abacus/restart-public-staging-runtime.sh` now stops legacy temporary UI demo processes before OIS/PITS systemd restart and prints safe port diagnostics for ports `3000` and `3001`. It does not restart cloudflared unless `--include-cloudflared` is explicitly passed.
+
 ## Cloudflare Dashboard Reference Steps
 
 These steps are retained as the reference path. Stage 0V-B/C owner execution completed the OIS and PITS routes; do not repeat unless restoring or recreating the tunnel.
@@ -225,6 +253,8 @@ Public validation:
 | PITS projects | `curl -i https://pits-ng.dmp247.com/projects` | HTTP 200 PITS Shell projects route. |
 | Full public staging status | `bash ops/abacus/status-public-staging-runtime.sh` | Core API, OIS/PITS systemd services, cloudflared and endpoint checks pass. |
 | Public staging endpoint smoke | `bash ops/abacus/check-public-staging-endpoints.sh` | Core API, OIS and PITS public marker/count checks pass. |
+| Token-safe cloudflared active check | `systemctl is-active cloudflared` | `active`; no token or command line printed. |
+| Token-safe cloudflared properties | `systemctl show cloudflared --property=ActiveState,SubState,MainPID,NRestarts --no-pager` | Selected properties only; no `ExecStart`, process command line or token. |
 
 Legacy do-not-touch:
 
@@ -272,6 +302,8 @@ This removes only `ois-nextgen-ois-console` and `ois-nextgen-pits-shell`; it doe
 - Never print a Cloudflare tunnel token in logs.
 - Never paste a Cloudflare tunnel token into Markdown docs.
 - Never add `.cloudflared/`, tunnel credentials JSON, cert files or token files to git.
+- Never print full `systemctl status cloudflared` in shared logs.
+- Never print cloudflared `ExecStart` or process command lines.
 - Do not set `DATABASE_URL` or `ABACUS_DATABASE_URL` in UI shell services.
 - Do not restart cloudflared unless explicitly requested by the owner.
 - Do not run `prisma db push`.

@@ -23,8 +23,8 @@ bash ops/abacus/status.sh
 | `restart-ui-demo-shells.sh` | Stops, starts and verifies both temporary UI demo shell processes. | Yes, temporary UI demo processes only. |
 | `install-ui-shell-systemd-services.sh` | Installs and starts durable systemd services for OIS Console and PITS Shell public staging shells. | Yes, UI systemd units only. |
 | `uninstall-ui-shell-systemd-services.sh` | Stops, disables and removes only the OIS Console/PITS Shell public staging systemd units. Requires `--confirm`. | Yes, UI systemd units only. |
-| `restart-public-staging-runtime.sh` | Restarts Core API plus OIS/PITS UI shell services and verifies local/public staging endpoints. Does not restart `cloudflared` unless `--include-cloudflared` is passed. | Yes, service restart only. |
-| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, `cloudflared`, local loopback URLs and public staging URLs. | No. Read-only. |
+| `restart-public-staging-runtime.sh` | Stops legacy temporary UI demo processes, restarts Core API plus OIS/PITS UI shell services, prints safe port diagnostics and verifies local/public staging endpoints. Does not restart `cloudflared` unless `--include-cloudflared` is passed. | Yes, service restart only. |
+| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs and public staging URLs. | No. Read-only. |
 | `check-public-staging-endpoints.sh` | Checks public Core API, OIS and PITS staging endpoints for HTTP 200, product markers, Core API URL and seeded counts. | No. Read-only. |
 | `enable-product-subdomain-demo-routes.sh` | Adds a dedicated nginx host-routing config for `ois-ng.dmp247.com` -> port 3000 and `pits-ng.dmp247.com` -> port 3001. | Yes, nginx config only. |
 | `status-product-subdomain-demo-routes.sh` | Checks local Host-header product subdomain routing and optional public DNS/TLS routes. | No. Read-only. |
@@ -226,6 +226,13 @@ To include `cloudflared`, both an all-service restart and the explicit cloudflar
 PUBLIC_STAGING_RESTART_SCOPE=all RESTART_CLOUDFLARED=true bash ops/abacus/runtime-sync.sh
 ```
 
+Stage 0W-B hotfix note:
+
+- Public staging runtime is verified operational after owner execution of Stage 0W-A.
+- `status-public-staging-runtime.sh` must not print full `systemctl status cloudflared`; it uses `systemctl is-active` and selected `systemctl show` properties only.
+- `restart-public-staging-runtime.sh` stops legacy temporary UI demo processes before restarting OIS/PITS systemd services.
+- Port diagnostics for `3000` and `3001` intentionally avoid process command lines and environment values.
+
 ## PITS Shell Upload Bundle
 
 Stage 0T-D-R1 adds a direct source upload bundle path for PITS Shell because Abacus App Shell deployment reported that external GitHub clone is blocked.
@@ -294,6 +301,8 @@ The self-test stubs `curl` and does not call live endpoints. It verifies:
 - Do not print `DATABASE_URL`.
 - Do not print secrets.
 - Do not run `printenv`, `env` or `set -x`.
+- Do not print full `systemctl status cloudflared` in shared logs.
+- Do not print cloudflared `ExecStart`, process command lines or tunnel token values.
 - Do not run `prisma db push`.
 - Do not run `prisma migrate dev`.
 - Do not run migrations or seed unless a future owner-approved stage explicitly calls for it.
