@@ -4,7 +4,8 @@ import {
   kernelFields,
   type KernelField,
   type PlatformRegistrySnapshot,
-  type PlatformSnapshot
+  type PlatformSnapshot,
+  type RegistryDetailSnapshot
 } from "@ois/shared-ui";
 
 const navItems = [
@@ -89,7 +90,9 @@ export function ProjectSelector({ snapshot }: { snapshot: PlatformRegistrySnapsh
           snapshot.projects.map((project) => (
             <article className="project-card" key={project.id}>
               <span className="eyebrow">{project.code}</span>
-              <h3>{project.name}</h3>
+              <h3>
+                <Link href={`/projects/${project.id}`}>{project.name}</Link>
+              </h3>
               <p className="muted">
                 {project.organization?.name ?? "Unknown organization"} / {project.workspace?.name ?? "Unknown workspace"}
               </p>
@@ -187,6 +190,106 @@ export function InstallationRegistryPanel({ snapshot }: { snapshot: PlatformRegi
             <h3>No installations returned</h3>
             <p className="muted">Core API returned an empty installation registry array.</p>
             <strong>Read-only</strong>
+          </article>
+        )}
+      </div>
+    </section>
+  );
+}
+
+export function DetailStatusPanel<T>({ detail, label }: { detail: RegistryDetailSnapshot<T>; label: string }) {
+  return (
+    <section className="panel">
+      <div className="panel-heading">
+        <div>
+          <h3>{label} Source</h3>
+          <p className="muted">Read-only detail data from Core API.</p>
+        </div>
+        <StatusBadge ok={detail.detail.ok} label={detail.detail.ok ? "Detail ready" : detail.notFound ? "Not found" : "Detail fallback"} />
+      </div>
+      <dl className="facts">
+        <div>
+          <dt>Source</dt>
+          <dd>{detail.metadata?.source ?? "unavailable"}</dd>
+        </div>
+        <div>
+          <dt>Mode</dt>
+          <dd>{detail.metadata?.mode ?? "read-only"}</dd>
+        </div>
+        <div>
+          <dt>HTTP</dt>
+          <dd>{detail.detail.status ?? detail.errorMessage ?? "unavailable"}</dd>
+        </div>
+        <div>
+          <dt>Core API</dt>
+          <dd>{detail.coreApiUrl}</dd>
+        </div>
+      </dl>
+    </section>
+  );
+}
+
+export function DetailFallbackPanel({ title, message }: { title: string; message: string }) {
+  return (
+    <section className="panel">
+      <span className="eyebrow">Read-only fallback</span>
+      <h3>{title}</h3>
+      <p className="muted">{message}</p>
+    </section>
+  );
+}
+
+export function DetailFacts({ facts }: { facts: Array<[string, string | number | null | undefined]> }) {
+  return (
+    <dl className="facts">
+      {facts.map(([label, value]) => (
+        <div key={label}>
+          <dt>{label}</dt>
+          <dd>{value ?? "unavailable"}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+export function RelatedLinksPanel({
+  title,
+  description,
+  links
+}: {
+  title: string;
+  description: string;
+  links: Array<{ href: string | null; label: string; detail?: string | undefined; external?: boolean }>;
+}) {
+  const availableLinks = links.filter((link) => link.href);
+
+  return (
+    <section>
+      <div className="panel-heading">
+        <div>
+          <h3>{title}</h3>
+          <p className="muted">{description}</p>
+        </div>
+        <span className="pill">{availableLinks.length} link(s)</span>
+      </div>
+      <div className="project-grid">
+        {availableLinks.length > 0 ? (
+          availableLinks.map((link) => (
+            <article className="project-card" key={`${link.href}-${link.label}`}>
+              <span className="eyebrow">{link.external ? "Cross-product" : "PITS Shell"}</span>
+              {link.external ? (
+                <a href={link.href ?? "#"}>{link.label}</a>
+              ) : (
+                <Link href={link.href ?? "#"}>{link.label}</Link>
+              )}
+              {link.detail ? <p className="muted">{link.detail}</p> : null}
+            </article>
+          ))
+        ) : (
+          <article className="project-card">
+            <span className="eyebrow">Not linked yet</span>
+            <h3>No registry relationship link</h3>
+            <p className="muted">This project has no related registry link in the current read-only payload.</p>
           </article>
         )}
       </div>

@@ -1,6 +1,8 @@
 export const demoBannerText = "DEMO DATA - NOT PRODUCTION";
 
 export const defaultCoreApiUrl = "https://ois-nextgen.abacusai.cloud";
+export const defaultOisPublicBaseUrl = "https://ois-ng.dmp247.com";
+export const defaultPitsPublicBaseUrl = "https://pits-ng.dmp247.com";
 
 export const kernelFields = [
   "industries",
@@ -60,6 +62,15 @@ export type ProductRegistryItem = RegistryLifecycle & {
   installations: ProductInstallationRegistryItem[];
 };
 
+export type ProductRegistryDetail = ProductRegistryItem & {
+  relationships?: {
+    modules: ModuleRegistryItem[];
+    installations: ProductInstallationRegistryItem[];
+    projects: ProjectRegistryItem[];
+    workspaces: WorkspaceRegistryItem[];
+  };
+};
+
 export type OrganizationRegistryItem = RegistryLifecycle & {
   code: string;
   name: string;
@@ -80,6 +91,16 @@ export type WorkspaceRegistryItem = RegistryLifecycle & {
   }>;
 };
 
+export type WorkspaceRegistryDetail = WorkspaceRegistryItem & {
+  relationships?: {
+    organization: RegistryRelationship;
+    projects: ProjectRegistryItem[];
+    products: ProductRegistryItem[];
+    modules: ModuleRegistryItem[];
+    installations: WorkspaceRegistryItem["installations"];
+  };
+};
+
 export type ProjectRegistryItem = RegistryLifecycle & {
   code: string;
   name: string;
@@ -88,11 +109,22 @@ export type ProjectRegistryItem = RegistryLifecycle & {
   organization?: RegistryRelationship;
   installations: Array<{
     id: string;
+    productId?: string;
     productCode: string;
     productName: string;
     lifecycle: string;
     version: number;
   }>;
+};
+
+export type ProjectRegistryDetail = ProjectRegistryItem & {
+  relationships?: {
+    workspace?: RegistryRelationship;
+    organization?: RegistryRelationship;
+    products: ProductRegistryItem[];
+    modules: ModuleRegistryItem[];
+    installations: ProjectRegistryItem["installations"];
+  };
 };
 
 export type ModuleRegistryItem = RegistryLifecycle & {
@@ -103,6 +135,13 @@ export type ModuleRegistryItem = RegistryLifecycle & {
   realmCode: string;
   moduleType: string;
   product?: RegistryRelationship;
+};
+
+export type ModuleRegistryDetail = ModuleRegistryItem & {
+  relationships?: {
+    product: ProductRegistryItem | null;
+    installations: ProductInstallationRegistryItem[];
+  };
 };
 
 export type ProductInstallationRegistryItem = RegistryLifecycle & {
@@ -117,6 +156,15 @@ export type ProductInstallationRegistryItem = RegistryLifecycle & {
   project: Omit<RegistryRelationship, "id"> | null;
 };
 
+export type ProductInstallationRegistryDetail = ProductInstallationRegistryItem & {
+  relationships?: {
+    product: ProductRegistryItem | null;
+    project: ProjectRegistryItem | null;
+    workspace: WorkspaceRegistryItem | null;
+    modules: ModuleRegistryItem[];
+  };
+};
+
 export type PlatformRegistrySnapshot = PlatformSnapshot & {
   registry: ApiResult;
   registryMetadata: RegistryMetadata | null;
@@ -128,9 +176,77 @@ export type PlatformRegistrySnapshot = PlatformSnapshot & {
   installations: ProductInstallationRegistryItem[];
 };
 
+export type RegistryDetailSnapshot<T> = {
+  coreApiUrl: string;
+  detail: ApiResult;
+  metadata: RegistryMetadata | null;
+  item: T | null;
+  notFound: boolean;
+  errorMessage: string | null;
+};
+
+export type PublicBaseUrls = {
+  ois: string;
+  pits: string;
+};
+
+export type CrossProductLinkTargets = {
+  oisProduct: string | null;
+  oisWorkspace: string | null;
+  oisModule: string | null;
+  oisInstallation: string | null;
+  pitsProject: string | null;
+};
+
 export function getCoreApiUrl() {
   const configured = process.env.CORE_API_URL ?? process.env.NEXT_PUBLIC_CORE_API_URL ?? defaultCoreApiUrl;
   return configured.replace(/\/+$/, "");
+}
+
+function normalizeBaseUrl(value: string) {
+  return value.replace(/\/+$/, "");
+}
+
+export function getPublicBaseUrls(): PublicBaseUrls {
+  return {
+    ois: normalizeBaseUrl(process.env.OIS_PUBLIC_BASE_URL ?? process.env.NEXT_PUBLIC_OIS_PUBLIC_BASE_URL ?? defaultOisPublicBaseUrl),
+    pits: normalizeBaseUrl(
+      process.env.PITS_PUBLIC_BASE_URL ?? process.env.NEXT_PUBLIC_PITS_PUBLIC_BASE_URL ?? defaultPitsPublicBaseUrl
+    )
+  };
+}
+
+export function buildPublicUrl(baseUrl: string, path: string) {
+  const normalizedBase = normalizeBaseUrl(baseUrl);
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${normalizedBase}${normalizedPath}`;
+}
+
+export function buildOisDetailUrl(kind: "products" | "workspaces" | "modules" | "installations", id: string, baseUrl = getPublicBaseUrls().ois) {
+  return buildPublicUrl(baseUrl, `/${kind}/${encodeURIComponent(id)}`);
+}
+
+export function buildPitsProjectUrl(id: string, baseUrl = getPublicBaseUrls().pits) {
+  return buildPublicUrl(baseUrl, `/projects/${encodeURIComponent(id)}`);
+}
+
+export function buildCrossProductLinkTargets(
+  ids: {
+    productId?: string | null | undefined;
+    workspaceId?: string | null | undefined;
+    moduleId?: string | null | undefined;
+    installationId?: string | null | undefined;
+    projectId?: string | null | undefined;
+  },
+  baseUrls = getPublicBaseUrls()
+): CrossProductLinkTargets {
+  return {
+    oisProduct: ids.productId ? buildOisDetailUrl("products", ids.productId, baseUrls.ois) : null,
+    oisWorkspace: ids.workspaceId ? buildOisDetailUrl("workspaces", ids.workspaceId, baseUrls.ois) : null,
+    oisModule: ids.moduleId ? buildOisDetailUrl("modules", ids.moduleId, baseUrls.ois) : null,
+    oisInstallation: ids.installationId ? buildOisDetailUrl("installations", ids.installationId, baseUrls.ois) : null,
+    pitsProject: ids.projectId ? buildPitsProjectUrl(ids.projectId, baseUrls.pits) : null
+  };
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
@@ -183,7 +299,7 @@ function getArray<T>(source: unknown, key: string): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
-function getRegistryMetadata(source: unknown): RegistryMetadata | null {
+export function getRegistryMetadata(source: unknown): RegistryMetadata | null {
   if (!isRecord(source) || !isRecord(source.metadata)) {
     return null;
   }
@@ -204,6 +320,23 @@ function getRegistryMetadata(source: unknown): RegistryMetadata | null {
     environment,
     generatedAt
   };
+}
+
+function getRegistryErrorMessage(source: unknown) {
+  if (!isRecord(source) || !isRecord(source.error)) {
+    return null;
+  }
+
+  return getString(source.error, "message");
+}
+
+function getObject<T>(source: unknown, key: string): T | null {
+  if (!isRecord(source)) {
+    return null;
+  }
+
+  const value = source[key];
+  return isRecord(value) ? (value as T) : null;
 }
 
 export async function fetchCoreApi(path: string, coreApiUrl: string): Promise<ApiResult> {
@@ -285,4 +418,63 @@ export async function getPlatformRegistrySnapshot(): Promise<PlatformRegistrySna
     modules: getArray<ModuleRegistryItem>(registry.data, "modules"),
     installations: getArray<ProductInstallationRegistryItem>(registry.data, "installations")
   };
+}
+
+function createRegistryDetailSnapshot<T>(coreApiUrl: string, detail: ApiResult, key: string): RegistryDetailSnapshot<T> {
+  return {
+    coreApiUrl,
+    detail,
+    metadata: getRegistryMetadata(detail.data),
+    item: getObject<T>(detail.data, key),
+    notFound: detail.status === 404,
+    errorMessage: getRegistryErrorMessage(detail.data) ?? detail.error
+  };
+}
+
+export async function getProductRegistryDetail(
+  id: string,
+  coreApiUrl = getCoreApiUrl()
+): Promise<RegistryDetailSnapshot<ProductRegistryDetail>> {
+  const detail = await fetchCoreApi(`/platform/products/${encodeURIComponent(id)}`, coreApiUrl);
+  return createRegistryDetailSnapshot<ProductRegistryDetail>(coreApiUrl, detail, "product");
+}
+
+export async function getProductRegistryDetailByCode(
+  code: string,
+  coreApiUrl = getCoreApiUrl()
+): Promise<RegistryDetailSnapshot<ProductRegistryDetail>> {
+  const detail = await fetchCoreApi(`/platform/products/code/${encodeURIComponent(code)}`, coreApiUrl);
+  return createRegistryDetailSnapshot<ProductRegistryDetail>(coreApiUrl, detail, "product");
+}
+
+export async function getWorkspaceRegistryDetail(
+  id: string,
+  coreApiUrl = getCoreApiUrl()
+): Promise<RegistryDetailSnapshot<WorkspaceRegistryDetail>> {
+  const detail = await fetchCoreApi(`/platform/workspaces/${encodeURIComponent(id)}`, coreApiUrl);
+  return createRegistryDetailSnapshot<WorkspaceRegistryDetail>(coreApiUrl, detail, "workspace");
+}
+
+export async function getProjectRegistryDetail(
+  id: string,
+  coreApiUrl = getCoreApiUrl()
+): Promise<RegistryDetailSnapshot<ProjectRegistryDetail>> {
+  const detail = await fetchCoreApi(`/platform/projects/${encodeURIComponent(id)}`, coreApiUrl);
+  return createRegistryDetailSnapshot<ProjectRegistryDetail>(coreApiUrl, detail, "project");
+}
+
+export async function getModuleRegistryDetail(
+  id: string,
+  coreApiUrl = getCoreApiUrl()
+): Promise<RegistryDetailSnapshot<ModuleRegistryDetail>> {
+  const detail = await fetchCoreApi(`/platform/modules/${encodeURIComponent(id)}`, coreApiUrl);
+  return createRegistryDetailSnapshot<ModuleRegistryDetail>(coreApiUrl, detail, "module");
+}
+
+export async function getInstallationRegistryDetail(
+  id: string,
+  coreApiUrl = getCoreApiUrl()
+): Promise<RegistryDetailSnapshot<ProductInstallationRegistryDetail>> {
+  const detail = await fetchCoreApi(`/platform/installations/${encodeURIComponent(id)}`, coreApiUrl);
+  return createRegistryDetailSnapshot<ProductInstallationRegistryDetail>(coreApiUrl, detail, "installation");
 }

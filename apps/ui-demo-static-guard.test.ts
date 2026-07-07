@@ -21,10 +21,15 @@ const expectedRouteFiles = [
   "ois-console/app/page.tsx",
   "ois-console/app/dashboard/page.tsx",
   "ois-console/app/products/page.tsx",
+  "ois-console/app/products/[id]/page.tsx",
   "ois-console/app/workspaces/page.tsx",
+  "ois-console/app/workspaces/[id]/page.tsx",
+  "ois-console/app/modules/[id]/page.tsx",
+  "ois-console/app/installations/[id]/page.tsx",
   "ois-console/app/runtime/page.tsx",
   "pits-shell/app/page.tsx",
   "pits-shell/app/projects/page.tsx",
+  "pits-shell/app/projects/[id]/page.tsx",
   "pits-shell/app/runtime/page.tsx"
 ];
 

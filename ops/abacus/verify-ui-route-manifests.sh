@@ -50,7 +50,8 @@ const fs = require("node:fs");
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 const expectedRoutes = (process.env.EXPECTED_ROUTES || "").split("|").filter(Boolean);
 const staticRoutes = new Set((manifest.staticRoutes || []).map((route) => route.page));
-const missing = expectedRoutes.filter((route) => !staticRoutes.has(route));
+const dynamicRoutes = new Set((manifest.dynamicRoutes || []).map((route) => route.page));
+const missing = expectedRoutes.filter((route) => !staticRoutes.has(route) && !dynamicRoutes.has(route));
 
 if (missing.length > 0) {
   console.error(`missing routes in ${manifestPath}: ${missing.join(", ")}`);
@@ -117,12 +118,12 @@ if [ ! -f "$REPO_DIR/package.json" ]; then
   exit 1
 fi
 
-check_app "OIS_CONSOLE" "apps/ois-console" "/" "/dashboard" "/products" "/workspaces" "/runtime"
-check_app "PITS_SHELL" "apps/pits-shell" "/" "/projects" "/runtime"
+check_app "OIS_CONSOLE" "apps/ois-console" "/" "/dashboard" "/products" "/products/[id]" "/workspaces" "/workspaces/[id]" "/modules/[id]" "/installations/[id]" "/runtime"
+check_app "PITS_SHELL" "apps/pits-shell" "/" "/projects" "/projects/[id]" "/runtime"
 
 if [ "$failures" -gt 0 ]; then
   printf '\nUI_ROUTE_MANIFEST_CHECK_FAILED failures=%s\n' "$failures" >&2
   exit 1
 fi
 
-printf '\nUI_ROUTE_MANIFEST_CHECK_PASSED OIS Console and PITS Shell Stage 1A routes are present in production build artifacts.\n'
+printf '\nUI_ROUTE_MANIFEST_CHECK_PASSED OIS Console and PITS Shell Stage 1A/1C routes are present in production build artifacts.\n'

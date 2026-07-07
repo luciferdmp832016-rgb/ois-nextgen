@@ -20,6 +20,12 @@ OIS_CONSOLE_PUBLIC_URL="${OIS_CONSOLE_PUBLIC_URL:-https://ois-ng.dmp247.com}"
 PITS_SHELL_PUBLIC_URL="${PITS_SHELL_PUBLIC_URL:-https://pits-ng.dmp247.com}"
 
 PUBLIC_STAGING_DETAIL=""
+REGISTRY_PRODUCT_ID=""
+REGISTRY_PRODUCT_CODE=""
+REGISTRY_WORKSPACE_ID=""
+REGISTRY_PROJECT_ID=""
+REGISTRY_MODULE_ID=""
+REGISTRY_INSTALLATION_ID=""
 
 public_staging_print_safety() {
   printf '%s\n' "Safety: public staging runtime checks/ops only."
@@ -307,4 +313,55 @@ public_staging_check_route_once() {
   shift 2
 
   public_staging_check_markers_once "$label" "$url" "$@"
+}
+
+public_staging_discover_registry_ids() {
+  local base_url="${1:-$CORE_API_URL}"
+  local body=""
+  local code=""
+  local values=()
+
+  if ! public_staging_http_get_body body code "$base_url/platform/registry"; then
+    PUBLIC_STAGING_DETAIL="registry discovery request failed ($PUBLIC_STAGING_DETAIL)"
+    return 1
+  fi
+
+  if [ "$code" != "200" ]; then
+    PUBLIC_STAGING_DETAIL="registry discovery HTTP $code"
+    return 1
+  fi
+
+  mapfile -t values < <(
+    REGISTRY_BODY="$body" node <<'NODE'
+const payload = JSON.parse(process.env.REGISTRY_BODY || "{}");
+const product = payload.products?.find((item) => item.code === "PITS") || payload.products?.[0];
+const workspace = payload.workspaces?.[0];
+const project = payload.projects?.find((item) => item.code === "EMERALD_PRECINCT_DEMO") || payload.projects?.[0];
+const module = payload.modules?.find((item) => item.code === "PITS_RUNTIME_SHELL") || payload.modules?.[0];
+const installation =
+  payload.installations?.find((item) => item.projectId === project?.id && item.productCode === product?.code) ||
+  payload.installations?.[0];
+const values = [product?.id, product?.code, workspace?.id, project?.id, module?.id, installation?.id];
+if (values.some((value) => !value)) {
+  console.error("missing registry ids for detail checks");
+  process.exit(1);
+}
+for (const value of values) {
+  console.log(value);
+}
+NODE
+  )
+
+  if [ "${#values[@]}" -ne 6 ]; then
+    PUBLIC_STAGING_DETAIL="registry discovery did not return six ids"
+    return 1
+  fi
+
+  REGISTRY_PRODUCT_ID="${values[0]}"
+  REGISTRY_PRODUCT_CODE="${values[1]}"
+  REGISTRY_WORKSPACE_ID="${values[2]}"
+  REGISTRY_PROJECT_ID="${values[3]}"
+  REGISTRY_MODULE_ID="${values[4]}"
+  REGISTRY_INSTALLATION_ID="${values[5]}"
+  PUBLIC_STAGING_DETAIL="registry ids discovered product=$REGISTRY_PRODUCT_ID workspace=$REGISTRY_WORKSPACE_ID project=$REGISTRY_PROJECT_ID module=$REGISTRY_MODULE_ID installation=$REGISTRY_INSTALLATION_ID"
 }

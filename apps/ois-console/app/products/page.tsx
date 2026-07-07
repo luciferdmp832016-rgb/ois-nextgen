@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getPlatformRegistrySnapshot } from "@ois/shared-ui";
 import { CountGrid, DataBoundaryPanel, OisConsoleShell, PageHeading, RegistryStatusPanel, RuntimeStatusCard } from "../shell";
 
@@ -26,7 +27,9 @@ export default async function ProductsPage() {
           snapshot.products.map((product) => (
             <article className="panel compact-panel" key={product.id}>
               <span className="eyebrow">{product.code}</span>
-              <h3>{product.name}</h3>
+              <h3>
+                <Link href={`/products/${product.id}`}>{product.name}</Link>
+              </h3>
               <p className="muted">
                 {product.lifecycle} product with {product.modules.length} module(s) and {product.installations.length} installation(s).
               </p>
@@ -46,7 +49,9 @@ export default async function ProductsPage() {
           snapshot.modules.map((module) => (
             <article className="panel compact-panel" key={module.id}>
               <span className="eyebrow">{module.productCode}</span>
-              <h3>{module.code}</h3>
+              <h3>
+                <Link href={`/modules/${module.id}`}>{module.code}</Link>
+              </h3>
               <p className="muted">
                 {module.moduleType} in {module.layerCode}; scope {module.scope}; realm {module.realmCode}.
               </p>
