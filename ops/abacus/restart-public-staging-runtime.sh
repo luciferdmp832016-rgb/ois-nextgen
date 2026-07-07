@@ -55,6 +55,12 @@ printf '%s\n' "Safety: cloudflared is not restarted unless --include-cloudflared
 
 public_staging_require_repo
 
+if ! bash "$SCRIPT_DIR/verify-ui-route-manifests.sh"; then
+  record_failure "UI production route manifest verification failed before restart"
+  printf '\nPUBLIC_STAGING_RESTART_BLOCKED reason=ui_route_manifest_check_failed\n' >&2
+  exit 1
+fi
+
 if [ "$INCLUDE_CLOUDFLARED" = true ]; then
   printf 'SYSTEMD_RESTART %s explicit=true\n' "$CLOUDFLARED_SERVICE"
   sudo systemctl restart "$CLOUDFLARED_SERVICE"
