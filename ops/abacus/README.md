@@ -140,6 +140,20 @@ bash ops/abacus/disable-product-subdomain-demo-routes.sh
 
 These scripts do not modify DNS, `ois.dmp247.com`, `oisys.abacusai.app`, Core API service files, DB schema, seed data, production credentials or legacy resources.
 
+## Cloudflare Tunnel Custom Subdomain Plan
+
+Stage 0V-A documents the Cloudflare Tunnel path for public custom staging subdomains after Abacus confirmed SuperComputer custom hostnames are not supported directly.
+
+Planned routes:
+
+| Public hostname | Tunnel target |
+|---|---|
+| `https://ois-ng.dmp247.com` | `http://127.0.0.1:3000` |
+| `https://pits-ng.dmp247.com` | `http://127.0.0.1:3001` |
+| `https://api-ng.dmp247.com` | Optional later `http://127.0.0.1:4000` route. |
+
+Do not install `cloudflared`, paste tunnel tokens, create DNS records or start a connector from this README. Use `docs/deployment/CLOUDFLARE_TUNNEL_CUSTOM_SUBDOMAINS.md` in a later owner-approved execution stage.
+
 ## PITS Shell Upload Bundle
 
 Stage 0T-D-R1 adds a direct source upload bundle path for PITS Shell because Abacus App Shell deployment reported that external GitHub clone is blocked.
