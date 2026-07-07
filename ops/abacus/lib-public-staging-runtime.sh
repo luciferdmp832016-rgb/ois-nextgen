@@ -113,6 +113,30 @@ public_staging_report_port_listener() {
   printf 'PORT_LISTENER %s unavailable reason=no_ss_or_netstat\n' "$label"
 }
 
+public_staging_port_has_listener() {
+  local port="$1"
+  local output=""
+
+  if command -v ss >/dev/null 2>&1; then
+    output="$(ss -H -ltn "sport = :$port" 2>/dev/null || true)"
+    [ -n "$output" ]
+    return
+  fi
+
+  if command -v netstat >/dev/null 2>&1; then
+    output="$(netstat -ltn 2>/dev/null | awk -v p=":$port" '$4 ~ p "$" {print}' || true)"
+    [ -n "$output" ]
+    return
+  fi
+
+  if command -v fuser >/dev/null 2>&1; then
+    fuser -s "$port/tcp" >/dev/null 2>&1
+    return
+  fi
+
+  return 1
+}
+
 public_staging_http_get_body() {
   local body_var="$1"
   local code_var="$2"
@@ -218,6 +242,42 @@ public_staging_wait_for_root_shell() {
 
   while true; do
     if public_staging_check_root_shell_once "$label" "$url" "$product_code" "$app_name"; then
+      printf '%s %s\n' "$ready_label" "$PUBLIC_STAGING_DETAIL"
+      return 0
+    fi
+
+    elapsed=$((SECONDS - start_seconds))
+    if [ "$elapsed" -ge "$UI_DEMO_READY_TIMEOUT" ]; then
+      printf 'PUBLIC_STAGING_READY_TIMEOUT %s after %ss: %s\n' "$label" "$UI_DEMO_READY_TIMEOUT" "$PUBLIC_STAGING_DETAIL" >&2
+      return 1
+    fi
+
+    printf 'PUBLIC_STAGING_WARMING_UP %s attempt=%s elapsed=%ss detail=%s\n' "$label" "$attempt" "$elapsed" "$PUBLIC_STAGING_DETAIL"
+    remaining=$((UI_DEMO_READY_TIMEOUT - elapsed))
+    sleep_for="$UI_DEMO_READY_INTERVAL"
+    if [ "$sleep_for" -gt "$remaining" ]; then
+      sleep_for="$remaining"
+    fi
+    if [ "$sleep_for" -gt 0 ]; then
+      sleep "$sleep_for"
+    fi
+    attempt=$((attempt + 1))
+  done
+}
+
+public_staging_wait_for_route() {
+  local ready_label="$1"
+  local label="$2"
+  local url="$3"
+  shift 3
+  local attempt=1
+  local start_seconds="$SECONDS"
+  local elapsed=0
+  local remaining
+  local sleep_for
+
+  while true; do
+    if public_staging_check_route_once "$label" "$url" "$@"; then
       printf '%s %s\n' "$ready_label" "$PUBLIC_STAGING_DETAIL"
       return 0
     fi
