@@ -1,29 +1,31 @@
-import Link from "next/link";
-import { demoBannerText } from "@ois/shared-ui";
+import { getPlatformSnapshot } from "@ois/shared-ui";
+import {
+  DataBoundaryPanel,
+  PageHeading,
+  PitsShell,
+  PlatformCountsPanel,
+  ProjectOverviewCards,
+  ProjectSelector,
+  RuntimeStatusCard
+} from "../shell";
 
-export default function ProjectsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ProjectsPage() {
+  const snapshot = await getPlatformSnapshot();
+
   return (
-    <main className="runtime">
-      <header className="top">
-        <div>
-          <div className="brand">PITS</div>
-          <div className="demo">{demoBannerText}</div>
-        </div>
-        <span className="chip">PMC Org Demo</span>
-      </header>
-      <section className="content">
-        <h1>Project Selector</h1>
-        <div className="grid">
-          <Link className="tile" href="/home">
-            <h2>Emerald Precinct Demo</h2>
-            <p className="muted">PITS installation active</p>
-          </Link>
-          <Link className="tile" href="/home">
-            <h2>Second Project Demo</h2>
-            <p className="muted">PITS installation active</p>
-          </Link>
-        </div>
+    <PitsShell active="projects" snapshot={snapshot}>
+      <PageHeading eyebrow="Projects" title="Project Selector">
+        Select from seeded staging projects that read shared platform state through Core API.
+      </PageHeading>
+      <ProjectSelector snapshot={snapshot} />
+      <ProjectOverviewCards snapshot={snapshot} />
+      <section className="content-grid">
+        <RuntimeStatusCard snapshot={snapshot} />
+        <DataBoundaryPanel />
       </section>
-    </main>
+      <PlatformCountsPanel snapshot={snapshot} />
+    </PitsShell>
   );
 }

@@ -1,7 +1,12 @@
 import { renderToStaticMarkup } from "react-dom/server";
+import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import Page from "./page";
+import DashboardPage from "./dashboard/page";
+import ProductsPage from "./products/page";
+import RuntimePage from "./runtime/page";
+import WorkspacesPage from "./workspaces/page";
 
 const coreApiUrl = "https://ois-nextgen.abacusai.cloud";
 const dbEnvKey = ["DATABASE", "URL"].join("_");
@@ -29,6 +34,8 @@ const overviewPayload = {
   }
 };
 
+type RouteComponent = () => Promise<ReactElement>;
+
 function jsonResponse(payload: unknown, status = 200) {
   return new Response(JSON.stringify(payload), {
     status,
@@ -55,8 +62,8 @@ function mockCoreApiFetch() {
   return fetchMock;
 }
 
-async function renderPageHtml() {
-  return renderToStaticMarkup(await Page());
+async function renderRouteHtml(Component: RouteComponent) {
+  return renderToStaticMarkup(await Component());
 }
 
 function restoreEnv(name: string, value: string | undefined) {
@@ -68,7 +75,7 @@ function restoreEnv(name: string, value: string | undefined) {
   process.env[name] = value;
 }
 
-describe("OIS Console demo page", () => {
+describe("OIS Console product shell", () => {
   const previousCoreApiUrl = process.env.CORE_API_URL;
   const previousNextPublicCoreApiUrl = process.env.NEXT_PUBLIC_CORE_API_URL;
   const previousDbEnv = process.env[dbEnvKey];
@@ -86,40 +93,62 @@ describe("OIS Console demo page", () => {
     restoreEnv(dbEnvKey, previousDbEnv);
   });
 
-  it("renders the mocked Core API health, seeded counts and demo boundary", async () => {
+  it("renders the root navigation baseline with Core API health and seeded counts", async () => {
     const fetchMock = mockCoreApiFetch();
 
-    const html = await renderPageHtml();
+    const html = await renderRouteHtml(Page);
 
     expect(html).toContain("OIS Console");
     expect(html).toContain("OIS_CONSOLE");
+    expect(html).toContain("Product Administration Overview");
+    expect(html).toContain("Dashboard");
+    expect(html).toContain("Products");
+    expect(html).toContain("Workspaces");
+    expect(html).toContain("Runtime");
     expect(html).toContain(coreApiUrl);
     expect(html).toContain("Core API healthy");
-    expect(html).toContain("ok");
-    expect(html).toContain("core-api");
     expect(html).toContain("bootstrap-stage-a");
     expect(html).toContain("DEMO DATA - NOT PRODUCTION");
-    expect(html).toContain("This UI shell does not import Prisma or read database connection settings.");
     expect(html).toContain("DB-backed demo data is accessed only through the Core API.");
     expect(html).not.toContain(dbEnvKey);
 
-    expect(html).toMatch(/industries<\/span><strong>1<\/strong>/);
-    expect(html).toMatch(/organizations<\/span><strong>1<\/strong>/);
-    expect(html).toMatch(/workspaces<\/span><strong>1<\/strong>/);
-    expect(html).toMatch(/projects<\/span><strong>2<\/strong>/);
-    expect(html).toMatch(/products<\/span><strong>5<\/strong>/);
-    expect(html).toMatch(/installations<\/span><strong>2<\/strong>/);
-    expect(html).toMatch(/modules<\/span><strong>3<\/strong>/);
-    expect(html).toMatch(/auditRecords<\/span><strong>1<\/strong>/);
+    expect(html).toMatch(/Industries<\/span><strong>1<\/strong>/);
+    expect(html).toMatch(/Organizations<\/span><strong>1<\/strong>/);
+    expect(html).toMatch(/Workspaces<\/span><strong>1<\/strong>/);
+    expect(html).toMatch(/Projects<\/span><strong>2<\/strong>/);
+    expect(html).toMatch(/Products<\/span><strong>5<\/strong>/);
+    expect(html).toMatch(/Installations<\/span><strong>2<\/strong>/);
+    expect(html).toMatch(/Modules<\/span><strong>3<\/strong>/);
+    expect(html).toMatch(/Audit Records<\/span><strong>1<\/strong>/);
 
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/health`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/overview`, { cache: "no-store" });
   });
 
+  it.each([
+    ["dashboard", DashboardPage, ["Platform Overview", "Control plane areas"]],
+    ["products", ProductsPage, ["Products &amp; Modules", "Product &amp; Module Overview"]],
+    ["workspaces", WorkspacesPage, ["Organizations, Workspaces &amp; Projects", "Workspace Overview"]],
+    ["runtime", RuntimePage, ["Runtime Status", "Health ready"]]
+  ] satisfies Array<[string, RouteComponent, string[]]>)("renders the %s route shell", async (_name, Component, markers) => {
+    mockCoreApiFetch();
+
+    const html = await renderRouteHtml(Component);
+
+    expect(html).toContain("OIS_CONSOLE");
+    expect(html).toContain(coreApiUrl);
+    expect(html).toContain("Core API healthy");
+    expect(html).toContain("DEMO DATA - NOT PRODUCTION");
+    for (const marker of markers) {
+      expect(html).toContain(marker);
+    }
+    expect(html).not.toContain(dbEnvKey);
+  });
+
   it("renders without a direct database environment value", async () => {
     mockCoreApiFetch();
 
-    await expect(renderPageHtml()).resolves.toContain("OIS Console");
+    await expect(renderRouteHtml(Page)).resolves.toContain("OIS Console");
     expect(process.env[dbEnvKey]).toBeUndefined();
   });
 });

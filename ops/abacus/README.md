@@ -233,6 +233,12 @@ Stage 0W-B hotfix note:
 - `restart-public-staging-runtime.sh` stops legacy temporary UI demo processes before restarting OIS/PITS systemd services.
 - Port diagnostics for `3000` and `3001` intentionally avoid process command lines and environment values.
 
+Stage 1A product shell route checks:
+
+- OIS Console root, `/dashboard`, `/products`, `/workspaces` and `/runtime`.
+- PITS Shell root, `/projects` and `/runtime`.
+- New Stage 1A routes are expected to pass after the owner pulls the Stage 1A branch and restarts the public staging runtime.
+
 ## PITS Shell Upload Bundle
 
 Stage 0T-D-R1 adds a direct source upload bundle path for PITS Shell because Abacus App Shell deployment reported that external GitHub clone is blocked.
