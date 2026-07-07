@@ -84,6 +84,7 @@ const registryRows = {
     installations: [
       {
         id: "inst_pits_emerald",
+        productId: "prod_pits",
         productCode: "PITS",
         product: { name: "PITS" },
         lifecycle: "ACTIVE",
@@ -447,6 +448,74 @@ describe("platform registry read-only endpoints", () => {
         modules: [],
         installations: []
       });
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it.each([
+    ["/platform/products/prod_pits", "product", "PITS_RUNTIME_SHELL", "productDefinition.findMany"],
+    ["/platform/products/code/PITS", "product", "EMERALD_PRECINCT_DEMO", "productDefinition.findMany"],
+    ["/platform/workspaces/ws_pmc_org_demo", "workspace", "PITS_RUNTIME_SHELL", "workspace.findMany"],
+    ["/platform/projects/prj_emerald_precinct_demo", "project", "prod_pits", "project.findMany"],
+    ["/platform/modules/module_pits_runtime_shell", "module", "inst_pits_emerald", "moduleDefinition.findMany"],
+    ["/platform/installations/inst_pits_emerald", "installation", "PITS_RUNTIME_SHELL", "productInstallation.findMany"]
+  ] satisfies Array<[string, string, string, string]>)(
+    "returns %s detail with relationship context",
+    async (url, detailKey, expectedMarker, expectedReadCall) => {
+      const mock = createMockPrisma();
+      const app = buildCoreApi({ prisma: mock.prisma });
+
+      try {
+        const response = await app.inject({ method: "GET", url });
+        const body = response.json() as Record<string, unknown>;
+
+        expect(response.statusCode).toBe(200);
+        expect(body.metadata).toMatchObject({
+          source: "default-db",
+          mode: "read-only",
+          environment: "staging"
+        });
+        expect(typeof (body.metadata as Record<string, unknown>).generatedAt).toBe("string");
+        expect(JSON.stringify(body[detailKey])).toContain(expectedMarker);
+        expect(JSON.stringify(body[detailKey])).toContain("relationships");
+        expect(mock.readCalls).toContain(expectedReadCall);
+        expect(mock.writeCalls).toEqual([]);
+      } finally {
+        await app.close();
+      }
+    }
+  );
+
+  it.each([
+    ["/platform/products/missing", "product", "id"],
+    ["/platform/products/code/MISSING", "product", "code"],
+    ["/platform/workspaces/missing", "workspace", "id"],
+    ["/platform/projects/missing", "project", "id"],
+    ["/platform/modules/missing", "module", "id"],
+    ["/platform/installations/missing", "installation", "id"]
+  ] satisfies Array<[string, string, string]>)("returns controlled 404 for %s", async (url, entity, lookupKey) => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(404);
+      expect(body).toMatchObject({
+        metadata: {
+          source: "default-db",
+          mode: "read-only",
+          environment: "staging"
+        },
+        error: {
+          code: "NOT_FOUND",
+          entity
+        }
+      });
+      expect(body.error.lookup[lookupKey]).toBeDefined();
       expect(mock.writeCalls).toEqual([]);
     } finally {
       await app.close();

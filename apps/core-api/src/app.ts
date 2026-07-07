@@ -1,4 +1,4 @@
-import Fastify from "fastify";
+import Fastify, { type FastifyReply } from "fastify";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { PrismaClient } from "@prisma/client";
@@ -167,6 +167,29 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
   });
 
   const byCode = <T extends { code: string }>(left: T, right: T) => left.code.localeCompare(right.code);
+  const uniqueById = <T extends { id?: string }>(items: T[]) => {
+    const seen = new Set<string>();
+    return items.filter((item) => {
+      if (!item.id || seen.has(item.id)) {
+        return false;
+      }
+
+      seen.add(item.id);
+      return true;
+    });
+  };
+
+  function registryNotFound(reply: FastifyReply, entity: string, lookup: Record<string, string>) {
+    return reply.code(404).send({
+      metadata: registryMetadata(),
+      error: {
+        code: "NOT_FOUND",
+        entity,
+        lookup,
+        message: `${entity} not found`
+      }
+    });
+  }
 
   async function readProducts() {
     const products = await prisma.productDefinition.findMany({
@@ -265,6 +288,7 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
         .sort((left, right) => `${left.productCode}:${left.id}`.localeCompare(`${right.productCode}:${right.id}`))
         .map((installation) => ({
           id: installation.id,
+          productId: installation.productId,
           productCode: installation.productCode,
           productName: installation.product.name,
           lifecycle: installation.lifecycle,
@@ -320,6 +344,172 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
       projects,
       modules,
       installations
+    };
+  }
+
+  type RegistrySnapshot = Awaited<ReturnType<typeof readRegistry>>;
+  type ProductRegistryEntity = RegistrySnapshot["products"][number];
+
+  function buildProductDetail(registry: RegistrySnapshot, product: ProductRegistryEntity) {
+    const projects = uniqueById(
+      product.installations
+        .map((installation) => registry.projects.find((project) => project.id === installation.projectId))
+        .filter((project): project is NonNullable<typeof project> => Boolean(project))
+    );
+    const workspaces = uniqueById(
+      product.installations
+        .map((installation) => registry.workspaces.find((workspace) => workspace.id === installation.workspaceId))
+        .filter((workspace): workspace is NonNullable<typeof workspace> => Boolean(workspace))
+    );
+
+    return {
+      ...product,
+      relationships: {
+        modules: product.modules,
+        installations: product.installations,
+        projects,
+        workspaces
+      }
+    };
+  }
+
+  async function readProductDetailById(id: string) {
+    const registry = await readRegistry();
+    const product = registry.products.find((item) => item.id === id);
+
+    if (!product) {
+      return { registry, product: null };
+    }
+
+    return {
+      registry,
+      product: buildProductDetail(registry, product)
+    };
+  }
+
+  async function readProductDetailByCode(code: string) {
+    const registry = await readRegistry();
+    const product = registry.products.find((item) => item.code === code);
+
+    if (!product) {
+      return { registry, product: null };
+    }
+
+    return {
+      registry,
+      product: buildProductDetail(registry, product)
+    };
+  }
+
+  async function readWorkspaceDetailById(id: string) {
+    const registry = await readRegistry();
+    const workspace = registry.workspaces.find((item) => item.id === id);
+
+    if (!workspace) {
+      return { registry, workspace: null };
+    }
+
+    const products = uniqueById(
+      workspace.installations
+        .map((installation) => registry.products.find((product) => product.code === installation.productCode))
+        .filter((product): product is NonNullable<typeof product> => Boolean(product))
+    );
+    const productCodes = new Set(products.map((product) => product.code));
+    const modules = registry.modules.filter((module) => productCodes.has(module.productCode));
+
+    return {
+      registry,
+      workspace: {
+        ...workspace,
+        relationships: {
+          organization: workspace.organization,
+          projects: workspace.projects,
+          products,
+          modules,
+          installations: workspace.installations
+        }
+      }
+    };
+  }
+
+  async function readProjectDetailById(id: string) {
+    const registry = await readRegistry();
+    const project = registry.projects.find((item) => item.id === id);
+
+    if (!project) {
+      return { registry, project: null };
+    }
+
+    const products = uniqueById(
+      project.installations
+        .map((installation) => registry.products.find((product) => product.code === installation.productCode))
+        .filter((product): product is NonNullable<typeof product> => Boolean(product))
+    );
+    const productCodes = new Set(products.map((product) => product.code));
+    const modules = registry.modules.filter((module) => productCodes.has(module.productCode));
+
+    return {
+      registry,
+      project: {
+        ...project,
+        relationships: {
+          workspace: project.workspace,
+          organization: project.organization,
+          products,
+          modules,
+          installations: project.installations
+        }
+      }
+    };
+  }
+
+  async function readModuleDetailById(id: string) {
+    const registry = await readRegistry();
+    const module = registry.modules.find((item) => item.id === id);
+
+    if (!module) {
+      return { registry, module: null };
+    }
+
+    const product = registry.products.find((item) => item.code === module.productCode) ?? null;
+    const installations = registry.installations.filter((installation) => installation.productCode === module.productCode);
+
+    return {
+      registry,
+      module: {
+        ...module,
+        relationships: {
+          product,
+          installations
+        }
+      }
+    };
+  }
+
+  async function readInstallationDetailById(id: string) {
+    const registry = await readRegistry();
+    const installation = registry.installations.find((item) => item.id === id);
+
+    if (!installation) {
+      return { registry, installation: null };
+    }
+
+    const product = registry.products.find((item) => item.id === installation.productId || item.code === installation.productCode) ?? null;
+    const project = registry.projects.find((item) => item.id === installation.projectId) ?? null;
+    const workspace = registry.workspaces.find((item) => item.id === installation.workspaceId) ?? null;
+    const modules = registry.modules.filter((module) => module.productCode === installation.productCode);
+
+    return {
+      registry,
+      installation: {
+        ...installation,
+        relationships: {
+          product,
+          project,
+          workspace,
+          modules
+        }
+      }
     };
   }
 
@@ -531,6 +721,90 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
   }));
 
   app.get("/platform/registry", async () => readRegistry());
+
+  app.get("/platform/products/code/:code", async (request, reply) => {
+    const params = request.params as { code: string };
+    const { registry, product } = await readProductDetailByCode(params.code);
+
+    if (!product) {
+      return registryNotFound(reply, "product", { code: params.code });
+    }
+
+    return {
+      metadata: registry.metadata,
+      product
+    };
+  });
+
+  app.get("/platform/products/:id", async (request, reply) => {
+    const params = request.params as { id: string };
+    const { registry, product } = await readProductDetailById(params.id);
+
+    if (!product) {
+      return registryNotFound(reply, "product", { id: params.id });
+    }
+
+    return {
+      metadata: registry.metadata,
+      product
+    };
+  });
+
+  app.get("/platform/workspaces/:id", async (request, reply) => {
+    const params = request.params as { id: string };
+    const { registry, workspace } = await readWorkspaceDetailById(params.id);
+
+    if (!workspace) {
+      return registryNotFound(reply, "workspace", { id: params.id });
+    }
+
+    return {
+      metadata: registry.metadata,
+      workspace
+    };
+  });
+
+  app.get("/platform/projects/:id", async (request, reply) => {
+    const params = request.params as { id: string };
+    const { registry, project } = await readProjectDetailById(params.id);
+
+    if (!project) {
+      return registryNotFound(reply, "project", { id: params.id });
+    }
+
+    return {
+      metadata: registry.metadata,
+      project
+    };
+  });
+
+  app.get("/platform/modules/:id", async (request, reply) => {
+    const params = request.params as { id: string };
+    const { registry, module } = await readModuleDetailById(params.id);
+
+    if (!module) {
+      return registryNotFound(reply, "module", { id: params.id });
+    }
+
+    return {
+      metadata: registry.metadata,
+      module
+    };
+  });
+
+  app.get("/platform/installations/:id", async (request, reply) => {
+    const params = request.params as { id: string };
+    const { registry, installation } = await readInstallationDetailById(params.id);
+
+    if (!installation) {
+      return registryNotFound(reply, "installation", { id: params.id });
+    }
+
+    return {
+      metadata: registry.metadata,
+      installation
+    };
+  });
 
   app.get("/projects/:projectId/product-installations/:productCode", async (request, reply) => {
     const params = request.params as { projectId: string; productCode: string };

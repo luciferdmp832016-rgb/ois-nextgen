@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import {
   kernelFields,
   type KernelField,
+  type RegistryDetailSnapshot,
   type PlatformRegistrySnapshot,
   type PlatformSnapshot
 } from "@ois/shared-ui";
@@ -190,6 +191,106 @@ export function RegistryStatusPanel({ snapshot }: { snapshot: PlatformRegistrySn
           <dd>{snapshot.registry.status ?? snapshot.registry.error ?? "unavailable"}</dd>
         </div>
       </dl>
+    </section>
+  );
+}
+
+export function DetailStatusPanel<T>({ detail, label }: { detail: RegistryDetailSnapshot<T>; label: string }) {
+  return (
+    <section className="panel">
+      <div className="panel-heading">
+        <div>
+          <h3>{label} Source</h3>
+          <p className="muted">Read-only detail data from Core API.</p>
+        </div>
+        <StatusBadge ok={detail.detail.ok} label={detail.detail.ok ? "Detail ready" : detail.notFound ? "Not found" : "Detail fallback"} />
+      </div>
+      <dl className="facts">
+        <div>
+          <dt>Source</dt>
+          <dd>{detail.metadata?.source ?? "unavailable"}</dd>
+        </div>
+        <div>
+          <dt>Mode</dt>
+          <dd>{detail.metadata?.mode ?? "read-only"}</dd>
+        </div>
+        <div>
+          <dt>HTTP</dt>
+          <dd>{detail.detail.status ?? detail.errorMessage ?? "unavailable"}</dd>
+        </div>
+        <div>
+          <dt>Core API</dt>
+          <dd>{detail.coreApiUrl}</dd>
+        </div>
+      </dl>
+    </section>
+  );
+}
+
+export function DetailFallbackPanel({ title, message }: { title: string; message: string }) {
+  return (
+    <section className="panel">
+      <span className="eyebrow">Read-only fallback</span>
+      <h3>{title}</h3>
+      <p className="muted">{message}</p>
+    </section>
+  );
+}
+
+export function DetailFacts({ facts }: { facts: Array<[string, string | number | null | undefined]> }) {
+  return (
+    <dl className="facts">
+      {facts.map(([label, value]) => (
+        <div key={label}>
+          <dt>{label}</dt>
+          <dd>{value ?? "unavailable"}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+export function RelatedLinksPanel({
+  title,
+  description,
+  links
+}: {
+  title: string;
+  description: string;
+  links: Array<{ href: string | null; label: string; detail?: string | undefined; external?: boolean }>;
+}) {
+  const availableLinks = links.filter((link) => link.href);
+
+  return (
+    <section>
+      <div className="panel-heading">
+        <div>
+          <h3>{title}</h3>
+          <p className="muted">{description}</p>
+        </div>
+        <span className="pill">{availableLinks.length} link(s)</span>
+      </div>
+      <div className="list-grid">
+        {availableLinks.length > 0 ? (
+          availableLinks.map((link) => (
+            <article className="panel compact-panel" key={`${link.href}-${link.label}`}>
+              <span className="eyebrow">{link.external ? "Cross-product" : "OIS Console"}</span>
+              {link.external ? (
+                <a href={link.href ?? "#"}>{link.label}</a>
+              ) : (
+                <Link href={link.href ?? "#"}>{link.label}</Link>
+              )}
+              {link.detail ? <p className="muted">{link.detail}</p> : null}
+            </article>
+          ))
+        ) : (
+          <article className="panel compact-panel">
+            <span className="eyebrow">Not linked yet</span>
+            <h3>No registry relationship link</h3>
+            <p className="muted">This entity has no related registry link in the current read-only payload.</p>
+          </article>
+        )}
+      </div>
     </section>
   );
 }

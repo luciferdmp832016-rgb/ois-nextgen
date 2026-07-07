@@ -24,9 +24,9 @@ bash ops/abacus/status.sh
 | `install-ui-shell-systemd-services.sh` | Installs and starts durable systemd services for OIS Console and PITS Shell public staging shells. | Yes, UI systemd units only. |
 | `uninstall-ui-shell-systemd-services.sh` | Stops, disables and removes only the OIS Console/PITS Shell public staging systemd units. Requires `--confirm`. | Yes, UI systemd units only. |
 | `restart-public-staging-runtime.sh` | Restarts Core API, stops OIS/PITS UI services, stops legacy temporary UI demo processes, removes only orphan listeners on `3000/tcp` and `3001/tcp`, starts UI services, then verifies local/public staging endpoints. Does not restart `cloudflared` unless `--include-cloudflared` is passed. | Yes, service restart and UI port cleanup only. |
-| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs, public staging URLs and Stage 1B registry endpoints. | No. Read-only. |
+| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs, public staging URLs, Stage 1B registry endpoints and Stage 1C registry detail routes. | No. Read-only. |
 | `check-public-staging-endpoints.sh` | Checks public Core API, registry, OIS and PITS staging endpoints for HTTP 200, product markers, Core API URL and seeded counts. | No. Read-only. |
-| `verify-ui-route-manifests.sh` | Checks production `.next` route manifests and server entries for every Stage 1A OIS/PITS route. | No. Read-only build artifact check. |
+| `verify-ui-route-manifests.sh` | Checks production `.next` route manifests and server entries for every Stage 1A route plus Stage 1C dynamic detail routes. | No. Read-only build artifact check. |
 | `enable-product-subdomain-demo-routes.sh` | Adds a dedicated nginx host-routing config for `ois-ng.dmp247.com` -> port 3000 and `pits-ng.dmp247.com` -> port 3001. | Yes, nginx config only. |
 | `status-product-subdomain-demo-routes.sh` | Checks local Host-header product subdomain routing and optional public DNS/TLS routes. | No. Read-only. |
 | `disable-product-subdomain-demo-routes.sh` | Removes only the Stage 0U-A managed nginx product-subdomain config. | Yes, nginx config only. |
@@ -278,6 +278,22 @@ Stage 1B read-only Platform Registry checks:
 - UI shells still use Core API only and do not set or read `DATABASE_URL`.
 
 Verify Stage 1B after source sync:
+
+```sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
+Stage 1C read-only Product Registry detail checks:
+
+- Core API adds read-only detail endpoints for product IDs, product codes, workspaces, projects, modules and installations.
+- OIS Console adds `/products/[id]`, `/workspaces/[id]`, `/modules/[id]` and `/installations/[id]`.
+- PITS Shell adds `/projects/[id]`.
+- Cross-product links use staging defaults `https://ois-ng.dmp247.com` and `https://pits-ng.dmp247.com`.
+- `status-public-staging-runtime.sh` and `check-public-staging-endpoints.sh` discover seeded IDs from `/platform/registry` before checking detail routes.
+- Detail checks must remain read-only and must not call `/auth/demo-login`, write endpoints, legacy domains or direct DB connections.
+
+Verify Stage 1C after source sync:
 
 ```sh
 bash ops/abacus/status-public-staging-runtime.sh

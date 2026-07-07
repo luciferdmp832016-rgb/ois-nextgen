@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getPlatformRegistrySnapshot } from "@ois/shared-ui";
 import { CountGrid, DataBoundaryPanel, OisConsoleShell, PageHeading, RegistryStatusPanel, RuntimeStatusCard } from "../shell";
 
@@ -33,7 +34,9 @@ export default async function WorkspacesPage() {
         {snapshot.workspaces.map((workspace) => (
           <article className="panel compact-panel" key={workspace.id}>
             <span className="eyebrow">{workspace.organization.code}</span>
-            <h3>{workspace.name}</h3>
+            <h3>
+              <Link href={`/workspaces/${workspace.id}`}>{workspace.name}</Link>
+            </h3>
             <p className="muted">
               {workspace.projects.length} project(s), {workspace.installations.length} installation(s).
             </p>

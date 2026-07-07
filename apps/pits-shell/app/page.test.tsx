@@ -4,9 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import Page from "./page";
 import ProjectsPage from "./projects/page";
+import ProjectDetailPage from "./projects/[id]/page";
 import RuntimePage from "./runtime/page";
 
 const coreApiUrl = "https://ois-nextgen.abacusai.cloud";
+const oisPublicBaseUrl = "https://ois-ng.dmp247.com";
 const dbEnvKey = ["DATABASE", "URL"].join("_");
 
 const healthPayload = {
@@ -39,10 +41,45 @@ const registryPayload = {
     environment: "staging",
     generatedAt: "2026-07-08T00:00:00.000Z"
   },
-  products: [],
+  products: [
+    {
+      id: "prod_pits",
+      code: "PITS",
+      name: "PITS",
+      lifecycle: "ACTIVE",
+      version: 1,
+      modules: [
+        {
+          id: "module_pits_runtime_shell",
+          code: "PITS_RUNTIME_SHELL",
+          productCode: "PITS",
+          layerCode: "L0_OPERATIONAL_DATA",
+          scope: "PROJECT",
+          realmCode: "PITS_PROJECT_USER",
+          moduleType: "PRODUCT_RUNTIME_VIEW",
+          lifecycle: "ACTIVE",
+          version: 1
+        }
+      ],
+      installations: []
+    }
+  ],
   organizations: [],
   workspaces: [],
-  modules: [],
+  modules: [
+    {
+      id: "module_pits_runtime_shell",
+      code: "PITS_RUNTIME_SHELL",
+      productCode: "PITS",
+      layerCode: "L0_OPERATIONAL_DATA",
+      scope: "PROJECT",
+      realmCode: "PITS_PROJECT_USER",
+      moduleType: "PRODUCT_RUNTIME_VIEW",
+      lifecycle: "ACTIVE",
+      version: 1,
+      product: { code: "PITS", name: "PITS" }
+    }
+  ],
   projects: [
     {
       id: "prj_emerald_precinct_demo",
@@ -53,7 +90,16 @@ const registryPayload = {
       version: 1,
       workspace: { code: "PMC_ORG_DEMO", name: "PMC Org Demo" },
       organization: { code: "PMC_DEMO", name: "PMC Demo" },
-      installations: [{ id: "inst_pits_emerald", productCode: "PITS", productName: "PITS", lifecycle: "ACTIVE", version: 1 }]
+      installations: [
+        {
+          id: "inst_pits_emerald",
+          productId: "prod_pits",
+          productCode: "PITS",
+          productName: "PITS",
+          lifecycle: "ACTIVE",
+          version: 1
+        }
+      ]
     },
     {
       id: "prj_second_project_demo",
@@ -85,6 +131,22 @@ const registryPayload = {
   ]
 };
 
+const projectRegistryItem = registryPayload.projects[0]!;
+
+const projectDetailPayload = {
+  metadata: registryPayload.metadata,
+  project: {
+    ...projectRegistryItem,
+    relationships: {
+      workspace: projectRegistryItem.workspace,
+      organization: projectRegistryItem.organization,
+      products: registryPayload.products,
+      modules: registryPayload.modules,
+      installations: projectRegistryItem.installations
+    }
+  }
+};
+
 type RouteComponent = () => Promise<ReactElement>;
 
 function jsonResponse(payload: unknown, status = 200) {
@@ -110,6 +172,14 @@ function mockCoreApiFetch() {
       return jsonResponse(registryPayload);
     }
 
+    if (url === `${coreApiUrl}/platform/projects/prj_emerald_precinct_demo`) {
+      return jsonResponse(projectDetailPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/projects/missing`) {
+      return jsonResponse({ metadata: registryPayload.metadata, error: { code: "NOT_FOUND", message: "project not found" } }, 404);
+    }
+
     return jsonResponse({ error: "unexpected URL", url }, 404);
   });
 
@@ -133,10 +203,12 @@ function restoreEnv(name: string, value: string | undefined) {
 describe("PITS Shell product shell", () => {
   const previousCoreApiUrl = process.env.CORE_API_URL;
   const previousNextPublicCoreApiUrl = process.env.NEXT_PUBLIC_CORE_API_URL;
+  const previousOisPublicBaseUrl = process.env.OIS_PUBLIC_BASE_URL;
   const previousDbEnv = process.env[dbEnvKey];
 
   beforeEach(() => {
     process.env.CORE_API_URL = coreApiUrl;
+    process.env.OIS_PUBLIC_BASE_URL = oisPublicBaseUrl;
     delete process.env.NEXT_PUBLIC_CORE_API_URL;
     delete process.env[dbEnvKey];
   });
@@ -145,6 +217,7 @@ describe("PITS Shell product shell", () => {
     vi.unstubAllGlobals();
     restoreEnv("CORE_API_URL", previousCoreApiUrl);
     restoreEnv("NEXT_PUBLIC_CORE_API_URL", previousNextPublicCoreApiUrl);
+    restoreEnv("OIS_PUBLIC_BASE_URL", previousOisPublicBaseUrl);
     restoreEnv(dbEnvKey, previousDbEnv);
   });
 
@@ -159,6 +232,7 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("Project Selector");
     expect(html).toContain("Runtime");
     expect(html).toContain("Emerald Precinct Demo");
+    expect(html).toContain("/projects/prj_emerald_precinct_demo");
     expect(html).toContain("Second Project Demo");
     expect(html).toContain(coreApiUrl);
     expect(html).toContain("Core API healthy");
@@ -178,7 +252,7 @@ describe("PITS Shell product shell", () => {
   });
 
   it.each([
-    ["projects", ProjectsPage, ["Project Selector", "EMERALD_PRECINCT_DEMO", "Project Installation Registry"]],
+    ["projects", ProjectsPage, ["Project Selector", "EMERALD_PRECINCT_DEMO", "/projects/prj_emerald_precinct_demo", "Project Installation Registry"]],
     ["runtime", RuntimePage, ["Runtime Status", "Health ready", "Project Installation Registry"]]
   ] satisfies Array<[string, RouteComponent, string[]]>)("renders the %s route shell", async (_name, Component, markers) => {
     mockCoreApiFetch();
@@ -200,5 +274,30 @@ describe("PITS Shell product shell", () => {
 
     await expect(renderRouteHtml(Page)).resolves.toContain("PITS Shell");
     expect(process.env[dbEnvKey]).toBeUndefined();
+  });
+
+  it("renders project detail with OIS Console cross-links", async () => {
+    const fetchMock = mockCoreApiFetch();
+
+    const html = renderToStaticMarkup(await ProjectDetailPage({ params: Promise.resolve({ id: "prj_emerald_precinct_demo" }) }));
+
+    expect(html).toContain("Project Detail Source");
+    expect(html).toContain("PITS_RUNTIME_SHELL");
+    expect(html).toContain(`${oisPublicBaseUrl}/products/prod_pits`);
+    expect(html).toContain(`${oisPublicBaseUrl}/workspaces/ws_pmc_org_demo`);
+    expect(html).toContain("Cross-product staging link");
+    expect(html).not.toContain(dbEnvKey);
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/projects/prj_emerald_precinct_demo`, { cache: "no-store" });
+  });
+
+  it("renders project detail fallback for a controlled Core API 404", async () => {
+    mockCoreApiFetch();
+
+    const html = renderToStaticMarkup(await ProjectDetailPage({ params: Promise.resolve({ id: "missing" }) }));
+
+    expect(html).toContain("Project Not Found");
+    expect(html).toContain("Project not linked yet");
+    expect(html).toContain("Not found");
+    expect(html).not.toContain(dbEnvKey);
   });
 });
