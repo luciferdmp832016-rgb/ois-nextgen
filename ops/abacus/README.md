@@ -21,6 +21,7 @@ bash ops/abacus/status.sh
 | `status-ui-demo-shells.sh` | Checks temporary OIS Console/PITS demo PIDs, local HTTP 200 pages, expected shell markers and seeded Core API data; checks preview URLs when `PREVIEW_URL` or `APP_ORIGIN` is available. | No. Read-only. |
 | `stop-ui-demo-shells.sh` | Stops only the temporary OIS Console and PITS Shell demo processes recorded by PID files. | Yes, stops UI demo processes only. |
 | `restart-ui-demo-shells.sh` | Stops, starts and verifies both temporary UI demo shell processes. | Yes, temporary UI demo processes only. |
+| `package-pits-shell-upload-bundle.sh` | Creates `artifacts/abacus/pits-shell-abacus-upload-bundle.zip` for direct PITS Shell App Shell source upload. | No. Local packaging only. |
 | `rollback-core-api-nginx-poc.sh` | Prints the Stage 0O rollback plan by default. Requires `--confirm-rollback` to stop/disable service and remove nginx/systemd POC files. | Yes, destructive only with explicit confirmation. |
 | `lib-core-api-checks.sh` | Shared helper for health/overview validation and restart readiness retry logic. | No direct use; sourced by scripts. |
 | `lib-ui-demo-shells.sh` | Shared helper for temporary UI demo shell start/stop/status, preview URL inference and page marker/count validation. | No direct use; sourced by scripts. |
@@ -82,6 +83,24 @@ Expected Abacus preview URLs, when `PREVIEW_URL` or `APP_ORIGIN` is available:
 - `<preview-base>-3001.../` for PITS Shell.
 
 The status script verifies HTTP 200, product markers and seeded Platform Kernel counts in each UI page. It does not probe legacy endpoints.
+
+## PITS Shell Upload Bundle
+
+Stage 0T-D-R1 adds a direct source upload bundle path for PITS Shell because Abacus App Shell deployment reported that external GitHub clone is blocked.
+
+Create the bundle from the repo root:
+
+```sh
+bash ops/abacus/package-pits-shell-upload-bundle.sh
+```
+
+Output:
+
+```text
+artifacts/abacus/pits-shell-abacus-upload-bundle.zip
+```
+
+The script packages only `apps/pits-shell`, `packages/shared-ui`, root package/lock/workspace metadata and `tsconfig.base.json`. It refuses env files and excludes generated output, `.git`, secrets, runtime files and unrelated apps/domains/Prisma assets. Do not commit the generated ZIP.
 
 ## Restart Grace Window
 

@@ -14,6 +14,7 @@ Stage 0T-A corrected the UI deployment model:
 - Abacus CLI is not currently available for this project because API metering must be enabled first.
 - Stage 0T-B adds local/Codex UI demo test harness coverage before any owner-assisted App Shell deployment.
 - Stage 0T-C deployed OIS Console only as an Abacus App Shell at `https://161acd4ff8.na116.preview.abacusai.app`; PITS Shell remains undeployed.
+- Stage 0T-D-R1 prepares a direct upload bundle for PITS Shell because Abacus reported external GitHub clone is blocked in the App Shell environment.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -90,6 +91,8 @@ Stage 0T-A App Shell deployment contract result: owner evidence from Apps Manage
 Stage 0T-B UI demo test harness result: local/Codex Vitest coverage now renders the OIS Console and PITS Shell demo pages with mocked Core API `/health` and `/platform/overview` responses. Tests verify shell names, product codes, Core API URL, demo banner, health OK state, seeded counts and that UI packages avoid direct DB and legacy/production references. Final result is `UI_DEMO_TEST_HARNESS_READY`.
 
 Stage 0T-C OIS Console App Shell deploy result: owner/Abacus App Shell evidence confirms `OIS NextGen Console Demo` deployed as a Next.js App Shell at `https://161acd4ff8.na116.preview.abacusai.app`. The page shows `OIS_CONSOLE`, shared Core API URL `https://ois-nextgen.abacusai.cloud`, Core API health OK, demo banner, canonical seeded counts and the Core API-only DB access boundary. PITS was not deployed, Core API was not modified, and no production/legacy resources were touched. Final result is `OIS_CONSOLE_APP_SHELL_DEPLOYED`.
+
+Stage 0T-D-R1 PITS Shell upload bundle result: Abacus reported the PITS Shell App Shell environment cannot clone the external GitHub repo directly. Stage 0T-D-R1 rejects spec-build for now and prepares `artifacts/abacus/pits-shell-abacus-upload-bundle.zip` from source-of-truth repo paths: `apps/pits-shell`, `packages/shared-ui`, root package/lock/workspace metadata and `tsconfig.base.json`. Final result is `PITS_SHELL_UPLOAD_BUNDLE_READY`.
 
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
@@ -193,7 +196,9 @@ Stage 0T-A result: canonical UI deployment should use Apps Management Console Ap
 
 Stage 0T-B result: local/Codex UI demo page harness is ready.
 
-Stage 0T-C result: OIS Console App Shell is deployed at `https://161acd4ff8.na116.preview.abacusai.app`. Recommended next stage: Stage 0T-D - PITS Shell App Shell Deploy.
+Stage 0T-C result: OIS Console App Shell is deployed at `https://161acd4ff8.na116.preview.abacusai.app`.
+
+Stage 0T-D-R1 result: PITS Shell direct source upload bundle is ready after GitHub clone was blocked. Recommended next stage: Stage 0T-D-R2 - PITS Shell App Shell Upload Deploy Evidence.
 
 ## Stage 0N Resource Boundaries
 
@@ -777,6 +782,90 @@ Stage 0T-C safety:
 - No `dmp247.com` custom domain attached.
 - OIS Phase 1 domains `https://oisys.abacusai.app` and `https://ois.dmp247.com` remain untouched.
 
+## Stage 0T-D-R1 PITS Shell Upload Bundle
+
+Stage 0T-D attempted to deploy PITS Shell from GitHub. Abacus reported that the App Shell deployment environment does not allow cloning external GitHub repositories. Stage 0T-D-R1 chooses direct source upload and rejects spec-build for now because the App Shell must come from the OIS NextGen source-of-truth repo.
+
+Bundle manifest:
+
+```text
+docs/deployment/PITS_SHELL_ABACUS_UPLOAD_BUNDLE.md
+```
+
+Packaging script:
+
+```sh
+bash ops/abacus/package-pits-shell-upload-bundle.sh
+```
+
+Default artifact:
+
+```text
+artifacts/abacus/pits-shell-abacus-upload-bundle.zip
+```
+
+The generated artifact is ignored by git and must not be committed.
+
+Bundle allowlist:
+
+| Path | Reason |
+|---|---|
+| `apps/pits-shell/**` | PITS Shell Next.js source and config. |
+| `packages/shared-ui/**` | Only workspace package imported by PITS Shell. |
+| `package.json` | Root package manager and dependency metadata. |
+| `pnpm-lock.yaml` | Reproducible dependency lock. |
+| `pnpm-workspace.yaml` | Workspace discovery. |
+| `tsconfig.base.json` | TypeScript base config required by PITS Shell. |
+
+Excluded:
+
+- `node_modules`
+- `.next`
+- `dist` and build output
+- `.env` and `.env.*`
+- secrets
+- `.git`
+- `.abacus-*` runtime files
+- backups
+- prior generated artifacts
+- unrelated apps, packages, domains, Prisma schema, migrations and seeds
+
+Upload deployment contract:
+
+| Field | Value |
+|---|---|
+| App name | `PITS NextGen Shell Demo` |
+| App type | `nextjs` |
+| Source method | Direct source ZIP upload. |
+| Package | `@ois/pits-shell` |
+| Build command | `corepack enable || true && pnpm install --frozen-lockfile && pnpm --filter @ois/pits-shell build` |
+| Start command | `pnpm --filter @ois/pits-shell start` |
+| Expected port | `3001` |
+| Core API URL | `https://ois-nextgen.abacusai.cloud` |
+
+Safe environment:
+
+| Key | Value |
+|---|---|
+| `CORE_API_URL` | `https://ois-nextgen.abacusai.cloud` |
+| `NEXT_PUBLIC_CORE_API_URL` | `https://ois-nextgen.abacusai.cloud` |
+| `NEXT_TELEMETRY_DISABLED` | `1` |
+| `DATABASE_URL` | Do not set. |
+| `ABACUS_DATABASE_URL` | Do not set. |
+
+Stage 0T-D-R1 safety:
+
+- No deploy.
+- No Abacus runtime modification.
+- No migrations.
+- No seed.
+- No `prisma db push`.
+- No write endpoints.
+- No `/auth/demo-login`.
+- No production DB/storage/OpenRouter credentials.
+- No `dmp247.com` custom domain change.
+- No OIS Phase 1 or Emerald/BQL touch.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -839,6 +928,7 @@ Stage 0S-B added temporary UI demo shell ops scripts plus documentation only. It
 Stage 0T-A corrected UI deployment documentation only. It did not deploy, modify Abacus runtime, migrate, seed, call live endpoints, create App Shells, modify nginx/systemd or touch legacy resources.
 Stage 0T-B added local/Codex UI demo tests and documentation only. It did not deploy, modify Abacus runtime, migrate, seed, call live endpoints, create App Shells, modify nginx/systemd or touch legacy resources.
 Stage 0T-C records owner/Abacus App Shell deployment evidence for OIS Console only. PITS was not deployed; Core API was not modified; no migrations, seed, `prisma db push`, write endpoints, `/auth/demo-login`, production credentials, legacy domains or `dmp247.com` custom domains were used.
+Stage 0T-D-R1 prepares a PITS Shell direct upload source bundle only. It did not deploy, modify Abacus runtime, migrate, seed, call endpoints, create App Shells, modify nginx/systemd or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -875,6 +965,7 @@ Stage 0S-B did not change active endpoints. It added scripts for planned Abacus 
 Stage 0T-A did not change active endpoints. It marks SuperComputer preview UI URLs as deprecated for App Shell proof and adds planned OIS Console/PITS Shell App Shell managed deployment URLs.
 Stage 0T-B did not change active endpoints. It adds local/Codex mocked UI demo tests and keeps OIS Console/PITS Shell App Shell URLs `PLANNED_NOT_CREATED`.
 Stage 0T-C adds OIS Console App Shell public preview endpoint `https://161acd4ff8.na116.preview.abacusai.app`. PITS Shell remains `PLANNED_NOT_CREATED`; Core API `/health` and `/platform/overview` remain unchanged.
+Stage 0T-D-R1 does not add endpoints. PITS Shell moves from `PLANNED_NOT_CREATED` to `SOURCE_ACCESS_BLOCKED` with direct upload bundle ready; OIS Console and Core API endpoints remain unchanged.
 
 ## Stop Conditions
 
