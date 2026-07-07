@@ -23,7 +23,7 @@ bash ops/abacus/status.sh
 | `restart-ui-demo-shells.sh` | Stops, starts and verifies both temporary UI demo shell processes. | Yes, temporary UI demo processes only. |
 | `install-ui-shell-systemd-services.sh` | Installs and starts durable systemd services for OIS Console and PITS Shell public staging shells. | Yes, UI systemd units only. |
 | `uninstall-ui-shell-systemd-services.sh` | Stops, disables and removes only the OIS Console/PITS Shell public staging systemd units. Requires `--confirm`. | Yes, UI systemd units only. |
-| `restart-public-staging-runtime.sh` | Stops legacy temporary UI demo processes, restarts Core API plus OIS/PITS UI shell services, prints safe port diagnostics and verifies local/public staging endpoints. Does not restart `cloudflared` unless `--include-cloudflared` is passed. | Yes, service restart only. |
+| `restart-public-staging-runtime.sh` | Restarts Core API, stops OIS/PITS UI services, stops legacy temporary UI demo processes, removes only orphan listeners on `3000/tcp` and `3001/tcp`, starts UI services, then verifies local/public staging endpoints. Does not restart `cloudflared` unless `--include-cloudflared` is passed. | Yes, service restart and UI port cleanup only. |
 | `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs and public staging URLs. | No. Read-only. |
 | `check-public-staging-endpoints.sh` | Checks public Core API, OIS and PITS staging endpoints for HTTP 200, product markers, Core API URL and seeded counts. | No. Read-only. |
 | `verify-ui-route-manifests.sh` | Checks production `.next` route manifests and server entries for every Stage 1A OIS/PITS route. | No. Read-only build artifact check. |
@@ -251,6 +251,21 @@ Run the guard directly after a build:
 
 ```sh
 bash ops/abacus/verify-ui-route-manifests.sh
+```
+
+Stage 1A-R2 UI orphan port cleanup:
+
+- Owner/manual Abacus recovery showed Stage 1A-R1 route artifacts were correct, but orphan Next.js processes held ports `3000` and `3001`.
+- `restart-public-staging-runtime.sh` now stops `ois-nextgen-ois-console` and `ois-nextgen-pits-shell` before UI start.
+- It prints listeners before cleanup, after cleanup and after systemd start.
+- If a listener remains while the service is inactive, it prints `ORPHAN_UI_PROCESS_SUSPECTED`.
+- It runs `sudo fuser -k 3000/tcp 3001/tcp` only for UI ports `3000` and `3001`.
+- It does not kill Core API on port `4000`, does not kill `cloudflared`, and does not print secrets or process command lines.
+
+Restart and verify public staging runtime:
+
+```sh
+bash ops/abacus/restart-public-staging-runtime.sh
 ```
 
 ## PITS Shell Upload Bundle
