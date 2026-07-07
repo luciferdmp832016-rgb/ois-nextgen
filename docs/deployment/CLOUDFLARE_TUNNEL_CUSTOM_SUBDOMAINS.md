@@ -8,6 +8,7 @@ Runtime labels:
 
 - `CLOUDFLARE_TUNNEL_CONNECTOR_HEALTHY`
 - `CLOUDFLARE_TUNNEL_PRODUCT_SUBDOMAINS_VERIFIED`
+- `PUBLIC_STAGING_RUNTIME_HARDENING_READY`
 
 ## Purpose
 
@@ -104,6 +105,39 @@ UI shells do not use `DATABASE_URL`. DB-backed demo data is accessed only throug
 
 Direct CNAME to the Abacus SuperComputer remains unsupported. Cloudflare Tunnel is now the accepted custom subdomain path for SuperComputer-hosted OIS/PITS UI shells.
 
+## Stage 0W-A Durable Runtime Hardening
+
+Stage 0W-A adds owner-run systemd operations so Cloudflare Tunnel routes can target durable UI shell services instead of temporary `nohup` demo processes.
+
+Durable service target:
+
+| Public hostname | Tunnel target | Durable service |
+|---|---|---|
+| `https://ois-ng.dmp247.com` | `http://127.0.0.1:3000` | `ois-nextgen-ois-console` |
+| `https://pits-ng.dmp247.com` | `http://127.0.0.1:3001` | `ois-nextgen-pits-shell` |
+
+Stage 0W-A scripts:
+
+| Script | Purpose |
+|---|---|
+| `ops/abacus/install-ui-shell-systemd-services.sh` | Installs/enables/starts durable OIS/PITS UI shell services. |
+| `ops/abacus/uninstall-ui-shell-systemd-services.sh` | Removes only the durable OIS/PITS UI shell services after `--confirm`. |
+| `ops/abacus/restart-public-staging-runtime.sh` | Restarts Core API plus OIS/PITS services and verifies endpoints; does not restart cloudflared unless `--include-cloudflared` is passed. |
+| `ops/abacus/status-public-staging-runtime.sh` | Read-only status for Core API, OIS/PITS services, cloudflared and public endpoints. |
+| `ops/abacus/check-public-staging-endpoints.sh` | Read-only public endpoint marker/count verification. |
+
+Owner install sequence:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+bash ops/abacus/stop-ui-demo-shells.sh
+bash ops/abacus/install-ui-shell-systemd-services.sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
+Do not modify Cloudflare public hostname routes for Stage 0W-A. The existing tunnel routes remain valid because the durable services use the same local ports.
+
 ## Cloudflare Dashboard Reference Steps
 
 These steps are retained as the reference path. Stage 0V-B/C owner execution completed the OIS and PITS routes; do not repeat unless restoring or recreating the tunnel.
@@ -189,6 +223,8 @@ Public validation:
 | OIS dashboard | `curl -i https://ois-ng.dmp247.com/dashboard` | HTTP 200 OIS Console dashboard route. |
 | PITS root | `curl -i https://pits-ng.dmp247.com` | HTTP 200 PITS Shell. |
 | PITS projects | `curl -i https://pits-ng.dmp247.com/projects` | HTTP 200 PITS Shell projects route. |
+| Full public staging status | `bash ops/abacus/status-public-staging-runtime.sh` | Core API, OIS/PITS systemd services, cloudflared and endpoint checks pass. |
+| Public staging endpoint smoke | `bash ops/abacus/check-public-staging-endpoints.sh` | Core API, OIS and PITS public marker/count checks pass. |
 
 Legacy do-not-touch:
 
@@ -222,12 +258,22 @@ If later tunnel execution causes a problem:
 
 Expected rollback result: `ois-ng.dmp247.com` and `pits-ng.dmp247.com` stop serving through Cloudflare Tunnel while `https://ois-nextgen.abacusai.cloud/health` and `/platform/overview` remain available.
 
+For Stage 0W-A systemd rollback only:
+
+```sh
+bash ops/abacus/uninstall-ui-shell-systemd-services.sh --confirm
+```
+
+This removes only `ois-nextgen-ois-console` and `ois-nextgen-pits-shell`; it does not remove Cloudflare Tunnel routes, cloudflared, Core API, nginx, DB schema or seed data.
+
 ## Safety Rules
 
 - Never commit a Cloudflare tunnel token.
 - Never print a Cloudflare tunnel token in logs.
 - Never paste a Cloudflare tunnel token into Markdown docs.
 - Never add `.cloudflared/`, tunnel credentials JSON, cert files or token files to git.
+- Do not set `DATABASE_URL` or `ABACUS_DATABASE_URL` in UI shell services.
+- Do not restart cloudflared unless explicitly requested by the owner.
 - Do not run `prisma db push`.
 - Do not run migrations.
 - Do not run seed.

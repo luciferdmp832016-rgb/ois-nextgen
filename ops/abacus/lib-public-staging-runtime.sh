@@ -1,0 +1,197 @@
+#!/usr/bin/env bash
+
+REPO_DIR="${REPO_DIR:-/home/ubuntu/ois-nextgen}"
+CORE_API_SERVICE="${CORE_API_SERVICE:-ois-nextgen-core-api}"
+OIS_CONSOLE_SERVICE="${OIS_CONSOLE_SERVICE:-ois-nextgen-ois-console}"
+PITS_SHELL_SERVICE="${PITS_SHELL_SERVICE:-ois-nextgen-pits-shell}"
+CLOUDFLARED_SERVICE="${CLOUDFLARED_SERVICE:-cloudflared}"
+
+CORE_API_URL="${CORE_API_URL:-https://ois-nextgen.abacusai.cloud}"
+NEXT_PUBLIC_CORE_API_URL="${NEXT_PUBLIC_CORE_API_URL:-$CORE_API_URL}"
+NEXT_TELEMETRY_DISABLED="${NEXT_TELEMETRY_DISABLED:-1}"
+CURL_TIMEOUT="${CURL_TIMEOUT:-20}"
+UI_DEMO_READY_TIMEOUT="${UI_DEMO_READY_TIMEOUT:-30}"
+UI_DEMO_READY_INTERVAL="${UI_DEMO_READY_INTERVAL:-2}"
+
+CORE_API_LOCAL_BASE="${CORE_API_LOCAL_BASE:-http://127.0.0.1:4000}"
+OIS_CONSOLE_LOCAL_URL="${OIS_CONSOLE_LOCAL_URL:-http://127.0.0.1:3000}"
+PITS_SHELL_LOCAL_URL="${PITS_SHELL_LOCAL_URL:-http://127.0.0.1:3001}"
+OIS_CONSOLE_PUBLIC_URL="${OIS_CONSOLE_PUBLIC_URL:-https://ois-ng.dmp247.com}"
+PITS_SHELL_PUBLIC_URL="${PITS_SHELL_PUBLIC_URL:-https://pits-ng.dmp247.com}"
+
+PUBLIC_STAGING_DETAIL=""
+
+public_staging_print_safety() {
+  printf '%s\n' "Safety: public staging runtime checks/ops only."
+  printf '%s\n' "Safety: no migrations, no seed, no prisma db push."
+  printf '%s\n' "Safety: no .env, DATABASE_URL, Cloudflare token or secret printing."
+  printf '%s\n' "Safety: does not touch ois.dmp247.com, oisys.abacusai.app, legacy DBs or legacy storage."
+}
+
+public_staging_require_repo() {
+  if [ ! -f "$REPO_DIR/package.json" ] || [ ! -d "$REPO_DIR/apps/ois-console" ] || [ ! -d "$REPO_DIR/apps/pits-shell" ]; then
+    printf 'STOP: REPO_DIR does not look like OIS NextGen repo: %s\n' "$REPO_DIR" >&2
+    return 1
+  fi
+}
+
+public_staging_systemctl_active() {
+  local service_name="$1"
+
+  systemctl is-active --quiet "$service_name"
+}
+
+public_staging_report_service() {
+  local service_name="$1"
+  local label="$2"
+
+  if ! command -v systemctl >/dev/null 2>&1; then
+    PUBLIC_STAGING_DETAIL="$label systemctl not found"
+    return 1
+  fi
+
+  systemctl status "$service_name" --no-pager --lines=0 || true
+  if public_staging_systemctl_active "$service_name"; then
+    PUBLIC_STAGING_DETAIL="$label active"
+    return 0
+  fi
+
+  PUBLIC_STAGING_DETAIL="$label not active"
+  return 1
+}
+
+public_staging_http_get_body() {
+  local body_var="$1"
+  local code_var="$2"
+  local url="$3"
+  local body_file
+  local err_file
+  local response_code=""
+  local response_body=""
+  local curl_exit=0
+  local err_text=""
+  local errexit_was_set=false
+
+  body_file="$(mktemp)"
+  err_file="$(mktemp)"
+
+  case "$-" in
+    *e*)
+      errexit_was_set=true
+      set +e
+      ;;
+  esac
+
+  response_code="$(curl -sS --max-time "$CURL_TIMEOUT" -o "$body_file" -w "%{http_code}" "$url" 2>"$err_file")"
+  curl_exit=$?
+
+  if [ "$errexit_was_set" = true ]; then
+    set -e
+  fi
+
+  if [ -f "$body_file" ]; then
+    response_body="$(cat "$body_file")"
+  fi
+
+  if [ "$curl_exit" -ne 0 ] && [ -f "$err_file" ]; then
+    err_text="$(tr '\n' ' ' < "$err_file" | sed 's/[[:space:]]*$//')"
+  fi
+
+  rm -f "$body_file" "$err_file"
+
+  printf -v "$body_var" '%s' "$response_body"
+  printf -v "$code_var" '%s' "${response_code:-000}"
+
+  if [ "$curl_exit" -ne 0 ]; then
+    PUBLIC_STAGING_DETAIL="curl_exit=$curl_exit ${err_text}"
+    return 1
+  fi
+}
+
+public_staging_check_markers_once() {
+  local label="$1"
+  local url="$2"
+  shift 2
+  local body=""
+  local code=""
+  local marker
+
+  if ! public_staging_http_get_body body code "$url"; then
+    PUBLIC_STAGING_DETAIL="$label request failed ($PUBLIC_STAGING_DETAIL)"
+    return 1
+  fi
+
+  if [ "$code" != "200" ]; then
+    PUBLIC_STAGING_DETAIL="$label HTTP $code"
+    return 1
+  fi
+
+  for marker in "$@"; do
+    if [[ "$body" != *"$marker"* ]]; then
+      PUBLIC_STAGING_DETAIL="$label missing marker: $marker"
+      return 1
+    fi
+  done
+
+  PUBLIC_STAGING_DETAIL="$label HTTP 200 markers=verified"
+}
+
+public_staging_check_root_shell_once() {
+  local label="$1"
+  local url="$2"
+  local product_code="$3"
+  local app_name="$4"
+
+  if ui_demo_check_once "$label" "$url" "$product_code" "$app_name"; then
+    PUBLIC_STAGING_DETAIL="$UI_CHECK_DETAIL"
+    return 0
+  fi
+
+  PUBLIC_STAGING_DETAIL="$UI_CHECK_DETAIL"
+  return 1
+}
+
+public_staging_wait_for_root_shell() {
+  local ready_label="$1"
+  local label="$2"
+  local url="$3"
+  local product_code="$4"
+  local app_name="$5"
+  local attempt=1
+  local start_seconds="$SECONDS"
+  local elapsed=0
+  local remaining
+  local sleep_for
+
+  while true; do
+    if public_staging_check_root_shell_once "$label" "$url" "$product_code" "$app_name"; then
+      printf '%s %s\n' "$ready_label" "$PUBLIC_STAGING_DETAIL"
+      return 0
+    fi
+
+    elapsed=$((SECONDS - start_seconds))
+    if [ "$elapsed" -ge "$UI_DEMO_READY_TIMEOUT" ]; then
+      printf 'PUBLIC_STAGING_READY_TIMEOUT %s after %ss: %s\n' "$label" "$UI_DEMO_READY_TIMEOUT" "$PUBLIC_STAGING_DETAIL" >&2
+      return 1
+    fi
+
+    printf 'PUBLIC_STAGING_WARMING_UP %s attempt=%s elapsed=%ss detail=%s\n' "$label" "$attempt" "$elapsed" "$PUBLIC_STAGING_DETAIL"
+    remaining=$((UI_DEMO_READY_TIMEOUT - elapsed))
+    sleep_for="$UI_DEMO_READY_INTERVAL"
+    if [ "$sleep_for" -gt "$remaining" ]; then
+      sleep_for="$remaining"
+    fi
+    if [ "$sleep_for" -gt 0 ]; then
+      sleep "$sleep_for"
+    fi
+    attempt=$((attempt + 1))
+  done
+}
+
+public_staging_check_route_once() {
+  local label="$1"
+  local url="$2"
+  shift 2
+
+  public_staging_check_markers_once "$label" "$url" "$@"
+}

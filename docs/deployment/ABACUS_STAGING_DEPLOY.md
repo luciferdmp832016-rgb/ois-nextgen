@@ -20,6 +20,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 0U-A prepares safe SuperComputer nginx host-routing scripts for `ois-ng.dmp247.com` and `pits-ng.dmp247.com`, then owner runtime evidence confirmed DNS CNAME propagation and local Host-header routing. Public custom subdomain HTTPS is still blocked by Abacus edge/TLS registration.
 - Stage 0V-A documents the owner-selected Cloudflare Tunnel plan to solve the SuperComputer custom-hostname HTTPS blocker without changing GitHub/Codex source-of-truth or Abacus SuperComputer runtime ownership.
 - Stage 0V-B/C verifies Cloudflare Tunnel `ois-nextgen-abacus` is healthy and public HTTPS works for `https://ois-ng.dmp247.com` and `https://pits-ng.dmp247.com`.
+- Stage 0W-A adds safe systemd service install/restart/status/check scripts so OIS Console and PITS Shell public staging can move from temporary `nohup` demo processes to durable services.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -108,6 +109,8 @@ Stage 0U-A product subdomain routing demo result: safe owner-run scripts are rea
 Stage 0V-A Cloudflare Tunnel plan result: Abacus confirmed `CUSTOM_HOSTNAME_NOT_SUPPORTED_FOR_SUPERCOMPUTER` and `CUSTOM_HOSTNAME_ONLY_SUPPORTED_FOR_MANAGED_APP_SHELLS`. Stage 0V-A records Cloudflare Tunnel as the planned custom HTTPS transport: `ois-ng.dmp247.com` -> `127.0.0.1:3000`, `pits-ng.dmp247.com` -> `127.0.0.1:3001`, with optional later `api-ng.dmp247.com` -> `127.0.0.1:4000`. No `cloudflared` install, DNS change, deploy, migration, seed, `prisma db push`, production credential or Cloudflare token commit occurred. Final result is `CLOUDFLARE_TUNNEL_CUSTOM_SUBDOMAIN_PLAN_READY`.
 
 Stage 0V-B/C Cloudflare Tunnel runtime result: owner configured Cloudflare DNS and tunnel `ois-nextgen-abacus`; Cloudflare reports Healthy, 1 active replica, 2 routes and `cloudflared` version `2026.6.1`. Public HTTPS now verifies: `https://ois-ng.dmp247.com` opens OIS Console, `/dashboard` opens OIS Platform Overview, `https://pits-ng.dmp247.com` opens PITS Shell and `/projects` opens PITS Project Selector. Both shells show Core API `https://ois-nextgen.abacusai.cloud`, healthy Core API HTTP 200 and seeded counts through Core API only. No Cloudflare tunnel token or connector credential is documented or committed. Final labels are `CLOUDFLARE_TUNNEL_CONNECTOR_HEALTHY` and `CLOUDFLARE_TUNNEL_PRODUCT_SUBDOMAINS_VERIFIED`.
+
+Stage 0W-A public staging runtime hardening result: safe owner-run scripts now install/uninstall durable systemd services `ois-nextgen-ois-console` and `ois-nextgen-pits-shell`, restart/status-check Core API plus OIS/PITS public staging runtime, and verify public Cloudflare Tunnel endpoints. UI services use ports 3000/3001, Core API `https://ois-nextgen.abacusai.cloud`, `NEXT_TELEMETRY_DISABLED=1` and no `DATABASE_URL`. `runtime-sync.sh` defaults to Core API-only restart and supports `PUBLIC_STAGING_RESTART_SCOPE=all` for Core API plus OIS/PITS restart; cloudflared is never restarted unless explicitly requested. Final result is `PUBLIC_STAGING_RUNTIME_HARDENING_READY`.
 
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
@@ -224,6 +227,8 @@ Stage 0U-A runtime result: SuperComputer product subdomain local Host-header rou
 Stage 0V-A result: Cloudflare Tunnel custom subdomain plan is ready. Recommended next stage: Stage 0V-B - Owner-Assisted Cloudflare Tunnel Connector Setup.
 
 Stage 0V-B/C result: Cloudflare Tunnel public product subdomains are verified. Recommended next stage: Stage 0W-A - Public Staging UI Smoke Stabilization / Owner Acceptance Checklist.
+
+Stage 0W-A result: public staging runtime hardening scripts are ready. Recommended next stage: Stage 0W-B - Owner-Executed Systemd UI Shell Install Evidence.
 
 ## Stage 0N Resource Boundaries
 
@@ -1242,6 +1247,57 @@ Stage 0V-B/C safety:
 - No `oisys.abacusai.app` modification.
 - No OIS Phase 1 or Emerald/BQL DB/storage touch.
 
+## Stage 0W-A Public Staging Runtime Hardening
+
+Stage 0W-A prepares durable systemd operations for the public OIS/PITS staging UI shells. It does not execute the install from Codex.
+
+Systemd service contract:
+
+| Service | Working directory | Port | Env |
+|---|---|---:|---|
+| `ois-nextgen-ois-console` | `/home/ubuntu/ois-nextgen/apps/ois-console` | 3000 | `CORE_API_URL=https://ois-nextgen.abacusai.cloud`, `NEXT_PUBLIC_CORE_API_URL=https://ois-nextgen.abacusai.cloud`, `NEXT_TELEMETRY_DISABLED=1` |
+| `ois-nextgen-pits-shell` | `/home/ubuntu/ois-nextgen/apps/pits-shell` | 3001 | `CORE_API_URL=https://ois-nextgen.abacusai.cloud`, `NEXT_PUBLIC_CORE_API_URL=https://ois-nextgen.abacusai.cloud`, `NEXT_TELEMETRY_DISABLED=1` |
+
+Scripts:
+
+| Script | Purpose |
+|---|---|
+| `ops/abacus/install-ui-shell-systemd-services.sh` | Builds OIS/PITS UI shells, writes units, daemon-reloads and enables/starts the two UI services. |
+| `ops/abacus/uninstall-ui-shell-systemd-services.sh` | Removes only the two Stage 0W-A UI systemd units after `--confirm`. |
+| `ops/abacus/restart-public-staging-runtime.sh` | Restarts Core API, OIS Console and PITS Shell, then verifies local/public runtime. `cloudflared` restart requires `--include-cloudflared`. |
+| `ops/abacus/status-public-staging-runtime.sh` | Read-only status for Core API, OIS, PITS, cloudflared and local/public endpoints. |
+| `ops/abacus/check-public-staging-endpoints.sh` | Read-only public endpoint marker/count checks. |
+
+Owner install sequence after a safe branch pull:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+bash ops/abacus/stop-ui-demo-shells.sh
+bash ops/abacus/install-ui-shell-systemd-services.sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
+Runtime sync restart options:
+
+```sh
+PUBLIC_STAGING_RESTART_SCOPE=core bash ops/abacus/runtime-sync.sh
+PUBLIC_STAGING_RESTART_SCOPE=all bash ops/abacus/runtime-sync.sh
+PUBLIC_STAGING_RESTART_SCOPE=all RESTART_CLOUDFLARED=true bash ops/abacus/runtime-sync.sh
+```
+
+Stage 0W-A safety:
+
+- UI systemd units do not set `DATABASE_URL` or `ABACUS_DATABASE_URL`.
+- Installer does not modify Core API service, cloudflared service/token, nginx, Cloudflare dashboard or DNS.
+- No Codex deploy.
+- No migrations.
+- No seed.
+- No `prisma db push`.
+- No credentials committed.
+- No `ois.dmp247.com` or `oisys.abacusai.app` modification.
+- No OIS Phase 1 or Emerald/BQL DB/storage touch.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -1310,6 +1366,7 @@ Stage 0T-E-A-R1 prepares an OIS Console direct upload source bundle only. It did
 Stage 0U-A adds safe owner-run nginx product subdomain demo scripts and records owner runtime evidence. DNS CNAME propagation and local Host-header routing passed, but public custom HTTPS is blocked by Abacus edge/TLS registration. Codex did not deploy, modify Abacus runtime, modify DNS, migrate, seed, call endpoints, start UI shells, modify production domains or touch legacy resources.
 Stage 0V-A creates the Cloudflare Tunnel custom subdomain plan/runbook only. It did not install `cloudflared`, create a tunnel, modify DNS, deploy, migrate, seed, run `prisma db push`, use production credentials, print/commit Cloudflare tokens or touch legacy resources.
 Stage 0V-B/C records owner-executed Cloudflare Tunnel runtime verification only. It did not document or commit Cloudflare tokens, run migrations, run seed, run `prisma db push`, use production credentials, call write endpoints, modify Core API DB/runtime logic or touch legacy resources.
+Stage 0W-A adds safe systemd public staging runtime scripts and documentation only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, modify Core API/cloudflared units from Codex or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -1352,6 +1409,7 @@ Stage 0T-E-A-R1 does not add or change endpoints. OIS Console remains `OIS_CONSO
 Stage 0U-A changes product subdomain endpoints `https://ois-ng.dmp247.com`, `https://pits-ng.dmp247.com`, `https://ois-ng.dmp247.com/dashboard` and `https://pits-ng.dmp247.com/projects` to `CUSTOM_SUBDOMAIN_TLS_BLOCKED`. DNS CNAME setup and local Host-header routing succeeded, but public HTTPS failed with SSL handshake errors and public HTTP roots returned HTTP 409.
 Stage 0V-A changes product subdomain endpoints `https://ois-ng.dmp247.com`, `https://pits-ng.dmp247.com`, `https://ois-ng.dmp247.com/dashboard` and `https://pits-ng.dmp247.com/projects` to `PLANNED_CLOUDFLARE_TUNNEL`. No public tunnel execution occurred in Stage 0V-A.
 Stage 0V-B/C changes product subdomain endpoints `https://ois-ng.dmp247.com`, `https://pits-ng.dmp247.com`, `https://ois-ng.dmp247.com/dashboard` and `https://pits-ng.dmp247.com/projects` to `CLOUDFLARE_TUNNEL_PUBLIC_VERIFIED`. Cloudflare Tunnel `ois-nextgen-abacus` is healthy and public HTTPS routes open the expected OIS/PITS pages.
+Stage 0W-A does not add or change published endpoints. It adds durable systemd operations and endpoint checks for the already verified Cloudflare Tunnel public staging endpoints.
 
 ## Stop Conditions
 
@@ -1373,6 +1431,8 @@ Stage 0V-B/C changes product subdomain endpoints `https://ois-ng.dmp247.com`, `h
 - Product subdomain public DNS/TLS checks return `CUSTOM_SUBDOMAIN_HTTP_OK_TLS_BLOCKED`, `CUSTOM_SUBDOMAIN_TLS_BLOCKED` or `CUSTOM_SUBDOMAIN_BLOCKED_BY_ABACUS_EDGE`; document the blocker and stop before claiming public demo verification.
 - Cloudflare Tunnel setup would require committing, printing or storing the tunnel token in the repo, shared logs, screenshots or docs.
 - Cloudflare Tunnel setup would modify `ois.dmp247.com`, `oisys.abacusai.app`, Phase 1 resources or legacy DNS records.
+- UI shell systemd installation would set `DATABASE_URL` or `ABACUS_DATABASE_URL`, modify Core API/cloudflared service units, print secrets, or require Cloudflare token access.
+- Public staging runtime restart would restart cloudflared without explicit owner request.
 - OIS Console or PITS Shell deployment is attempted outside Apps Management Console App Shells without owner approval.
 - Any additional seed execution, `/auth/demo-login`, write endpoint or row-data inspection is attempted without later owner approval.
 - A workflow tries to use hosted-app service registration or external custom-domain publication instead of the verified SuperComputer nginx/systemd path without owner approval.
