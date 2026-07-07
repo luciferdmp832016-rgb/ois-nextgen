@@ -16,6 +16,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 0T-C deployed OIS Console only as an Abacus App Shell at `https://161acd4ff8.na116.preview.abacusai.app`; Stage 0T-D-R2 later found that preview URL currently returns HTTP 404 and must be restored or redeployed.
 - Stage 0T-D-R1 prepared a direct upload bundle for PITS Shell because Abacus reported external GitHub clone is blocked in the App Shell environment.
 - Stage 0T-D-R2 deployed PITS Shell from that upload bundle at `https://113d93f4db-3001.na116.preview.abacusai.app`.
+- Stage 0T-E-A-R1 prepares a direct upload bundle for restoring/redeploying OIS Console with the same upload strategy.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -96,6 +97,8 @@ Stage 0T-C OIS Console App Shell deploy result: owner/Abacus App Shell evidence 
 Stage 0T-D-R1 PITS Shell upload bundle result: Abacus reported the PITS Shell App Shell environment cannot clone the external GitHub repo directly. Stage 0T-D-R1 rejects spec-build for now and prepares `artifacts/abacus/pits-shell-abacus-upload-bundle.zip` from source-of-truth repo paths: `apps/pits-shell`, `packages/shared-ui`, root package/lock/workspace metadata and `tsconfig.base.json`. Final result is `PITS_SHELL_UPLOAD_BUNDLE_READY`.
 
 Stage 0T-D-R2 PITS Shell upload deploy result: owner/Abacus evidence confirms `pits-shell-abacus-upload-bundle.zip` deployed successfully from `/home/ubuntu/pits_shell_bundle` as a PITS Shell App Shell at `https://113d93f4db-3001.na116.preview.abacusai.app`. The page returned HTTP 200, displayed `PITS_SHELL`, shared Core API `https://ois-nextgen.abacusai.cloud`, health OK, demo banner and seeded counts. The combined two-shell verification remains blocked only because the previous OIS Console preview `https://161acd4ff8.na116.preview.abacusai.app` currently returns HTTP 404. Final result is `PITS_SHELL_APP_SHELL_DEPLOYED_FROM_BUNDLE`; two-shell status is `TWO_APP_SHELL_VERIFICATION_BLOCKED_BY_OIS_CONSOLE_PREVIEW_404`.
+
+Stage 0T-E-A-R1 OIS Console upload bundle result: the OIS Console direct source upload bundle is ready for owner-assisted restore/redeploy. The bundle packages `apps/ois-console`, `packages/shared-ui`, root package/lock/workspace metadata and `tsconfig.base.json`, excluding env files, generated output, `.git`, secrets, runtime files and unrelated apps/domains/Prisma assets. Final result is `OIS_CONSOLE_UPLOAD_BUNDLE_READY`.
 
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
@@ -204,6 +207,8 @@ Stage 0T-C result: OIS Console App Shell was deployed at `https://161acd4ff8.na1
 Stage 0T-D-R1 result: PITS Shell direct source upload bundle is ready after GitHub clone was blocked. Recommended next stage: Stage 0T-D-R2 - PITS Shell App Shell Upload Deploy Evidence.
 
 Stage 0T-D-R2 result: PITS Shell App Shell is deployed from the upload bundle at `https://113d93f4db-3001.na116.preview.abacusai.app`. The previous OIS Console App Shell preview currently returns HTTP 404, so restore/redeploy OIS Console before two-App-Shell verification. Recommended next stages: Stage 0T-E-A - Restore or Redeploy OIS Console App Shell Preview, then Stage 0T-E-B - Two App Shell Verification.
+
+Stage 0T-E-A-R1 result: OIS Console direct source upload bundle is ready. Recommended next stage: Stage 0T-E-A-R2 - OIS Console App Shell Redeploy From Bundle.
 
 ## Stage 0N Resource Boundaries
 
@@ -930,6 +935,90 @@ Stage 0T-D-R2 safety:
 - No `dmp247.com` custom domain change.
 - No OIS Phase 1 or Emerald/BQL touch.
 
+## Stage 0T-E-A-R1 OIS Console Upload Bundle
+
+Stage 0T-E-A-R1 prepares a direct source upload bundle for restoring or redeploying OIS Console after the previous App Shell preview URL began returning HTTP 404.
+
+Bundle manifest:
+
+```text
+docs/deployment/OIS_CONSOLE_ABACUS_UPLOAD_BUNDLE.md
+```
+
+Packaging script:
+
+```sh
+bash ops/abacus/package-ois-console-upload-bundle.sh
+```
+
+Default artifact:
+
+```text
+artifacts/abacus/ois-console-abacus-upload-bundle.zip
+```
+
+The generated artifact is ignored by git and must not be committed.
+
+Bundle allowlist:
+
+| Path | Reason |
+|---|---|
+| `apps/ois-console/**` | OIS Console Next.js source and config. |
+| `packages/shared-ui/**` | Only workspace package imported by OIS Console. |
+| `package.json` | Root package manager and dependency metadata. |
+| `pnpm-lock.yaml` | Reproducible dependency lock. |
+| `pnpm-workspace.yaml` | Workspace discovery. |
+| `tsconfig.base.json` | TypeScript base config required by OIS Console. |
+
+Excluded:
+
+- `node_modules`
+- `.next`
+- `dist` and build output
+- `.env` and `.env.*`
+- secrets
+- `.git`
+- `.abacus-*` runtime files
+- backups
+- prior generated artifacts
+- unrelated apps, packages, domains, Prisma schema, migrations and seeds
+
+Upload deployment contract:
+
+| Field | Value |
+|---|---|
+| App name | `OIS NextGen Console Demo` |
+| App type | `nextjs` |
+| Source method | Direct source ZIP upload. |
+| Package | `@ois/ois-console` |
+| Build command | `corepack enable || true && pnpm install --frozen-lockfile && pnpm --filter @ois/ois-console build` |
+| Start command | `pnpm --filter @ois/ois-console start` |
+| Expected port | `3000` |
+| Core API URL | `https://ois-nextgen.abacusai.cloud` |
+
+Safe environment:
+
+| Key | Value |
+|---|---|
+| `CORE_API_URL` | `https://ois-nextgen.abacusai.cloud` |
+| `NEXT_PUBLIC_CORE_API_URL` | `https://ois-nextgen.abacusai.cloud` |
+| `NEXT_TELEMETRY_DISABLED` | `1` |
+| `DATABASE_URL` | Do not set. |
+| `ABACUS_DATABASE_URL` | Do not set. |
+
+Stage 0T-E-A-R1 safety:
+
+- No deploy.
+- No Abacus runtime modification.
+- No migrations.
+- No seed.
+- No `prisma db push`.
+- No write endpoints.
+- No `/auth/demo-login`.
+- No production DB/storage/OpenRouter credentials.
+- No `dmp247.com` custom domain change.
+- No OIS Phase 1 or Emerald/BQL touch.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -994,6 +1083,7 @@ Stage 0T-B added local/Codex UI demo tests and documentation only. It did not de
 Stage 0T-C records owner/Abacus App Shell deployment evidence for OIS Console only. PITS was not deployed; Core API was not modified; no migrations, seed, `prisma db push`, write endpoints, `/auth/demo-login`, production credentials, legacy domains or `dmp247.com` custom domains were used.
 Stage 0T-D-R1 prepares a PITS Shell direct upload source bundle only. It did not deploy, modify Abacus runtime, migrate, seed, call endpoints, create App Shells, modify nginx/systemd or touch legacy resources.
 Stage 0T-D-R2 records owner/Abacus evidence that PITS Shell deployed from the upload bundle. It did not modify Core API, migrate, seed, call write endpoints, call `/auth/demo-login`, use production credentials, modify custom domains or touch legacy resources. Two-App-Shell verification remains blocked by the OIS Console preview HTTP 404.
+Stage 0T-E-A-R1 prepares an OIS Console direct upload source bundle only. It did not deploy, modify Abacus runtime, migrate, seed, call endpoints, create App Shells, modify nginx/systemd or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -1032,6 +1122,7 @@ Stage 0T-B did not change active endpoints. It adds local/Codex mocked UI demo t
 Stage 0T-C adds OIS Console App Shell public preview endpoint `https://161acd4ff8.na116.preview.abacusai.app`. PITS Shell remains `PLANNED_NOT_CREATED`; Core API `/health` and `/platform/overview` remain unchanged.
 Stage 0T-D-R1 does not add endpoints. PITS Shell moves from `PLANNED_NOT_CREATED` to `SOURCE_ACCESS_BLOCKED` with direct upload bundle ready; OIS Console and Core API endpoints remain unchanged.
 Stage 0T-D-R2 adds PITS Shell App Shell public preview endpoint `https://113d93f4db-3001.na116.preview.abacusai.app` with HTTP 200 evidence. The previous OIS Console App Shell preview `https://161acd4ff8.na116.preview.abacusai.app` changes to `OIS_CONSOLE_APP_SHELL_PREVIEW_UNAVAILABLE_404`; Core API `/health` and `/platform/overview` remain unchanged.
+Stage 0T-E-A-R1 does not add or change endpoints. OIS Console remains `OIS_CONSOLE_APP_SHELL_PREVIEW_UNAVAILABLE_404` until the upload bundle is used in a later redeploy stage; PITS Shell, Core API `/health` and Core API `/platform/overview` remain unchanged.
 
 ## Stop Conditions
 
