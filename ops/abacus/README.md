@@ -144,7 +144,9 @@ These scripts do not modify DNS, `ois.dmp247.com`, `oisys.abacusai.app`, Core AP
 
 Stage 0V-A documents the Cloudflare Tunnel path for public custom staging subdomains after Abacus confirmed SuperComputer custom hostnames are not supported directly.
 
-Planned routes:
+Stage 0V-B/C verifies tunnel `ois-nextgen-abacus` is healthy with 1 active replica, 2 routes and `cloudflared` version `2026.6.1`.
+
+Verified routes:
 
 | Public hostname | Tunnel target |
 |---|---|
@@ -152,7 +154,9 @@ Planned routes:
 | `https://pits-ng.dmp247.com` | `http://127.0.0.1:3001` |
 | `https://api-ng.dmp247.com` | Optional later `http://127.0.0.1:4000` route. |
 
-Do not install `cloudflared`, paste tunnel tokens, create DNS records or start a connector from this README. Use `docs/deployment/CLOUDFLARE_TUNNEL_CUSTOM_SUBDOMAINS.md` in a later owner-approved execution stage.
+`https://ois-ng.dmp247.com/dashboard` opens OIS Platform Overview, and `https://pits-ng.dmp247.com/projects` opens PITS Project Selector.
+
+Do not paste tunnel tokens, print tunnel tokens, commit connector credentials or recreate DNS records from this README. Cloudflare connector/runtime state lives on the Abacus VM and Cloudflare dashboard only. Use `docs/deployment/CLOUDFLARE_TUNNEL_CUSTOM_SUBDOMAINS.md` for verification and rollback notes.
 
 ## PITS Shell Upload Bundle
 
