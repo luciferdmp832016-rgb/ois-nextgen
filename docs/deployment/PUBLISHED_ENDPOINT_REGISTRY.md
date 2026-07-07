@@ -22,6 +22,7 @@ Do not probe or mutate legacy production endpoints during NextGen staging work u
 | `ABACUS_VM_LOCAL` | Abacus SuperComputer loopback endpoint inside the VM; not public. |
 | `ABACUS_PREVIEW_PUBLIC` | Abacus VM preview proxy URL; public but tied to VM/process lifecycle and not final staging. |
 | `ABACUS_APP_SHELL_PREVIEW_PUBLIC` | Abacus Apps Management Console App Shell preview URL; public staging/proof endpoint for a specific App Shell. |
+| `OIS_CONSOLE_APP_SHELL_PREVIEW_UNAVAILABLE_404` | Previously deployed OIS Console App Shell preview URL is currently returning HTTP 404 and must be restored or redeployed before two-shell verification. |
 | `ABACUS_MANAGED_PUBLIC_STAGING` | Abacus-managed public staging domain for OIS NextGen. |
 | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Existing OIS Phase 1 or legacy production-equivalent surface; do not touch. |
 | `PLANNED_NOT_CREATED` | Planned future endpoint that does not exist yet. |
@@ -35,11 +36,12 @@ Do not probe or mutate legacy production endpoints during NextGen staging work u
 |---|---|---|---|---|
 | OIS NextGen Core API staging health | `https://ois-nextgen.abacusai.cloud/health` | `ABACUS_MANAGED_PUBLIC_STAGING` | HTTP 200 with `{"status":"ok","service":"core-api","stage":"bootstrap-stage-a"}` | Primary current NextGen staging health check. |
 | OIS NextGen platform overview | `https://ois-nextgen.abacusai.cloud/platform/overview` | `ABACUS_MANAGED_PUBLIC_STAGING` | HTTP 200, DB-backed read-only platform overview with seeded Platform Kernel counts. | Primary current DB-backed staging smoke check. |
-| OIS Console App Shell preview | `https://161acd4ff8.na116.preview.abacusai.app` | `ABACUS_APP_SHELL_PREVIEW_PUBLIC` | HTTP 200 OIS Console demo/status page with `OIS_CONSOLE`, shared Core API URL, demo banner and seeded counts. | Primary current OIS Console App Shell preview check. |
+| PITS Shell App Shell preview | `https://113d93f4db-3001.na116.preview.abacusai.app` | `ABACUS_APP_SHELL_PREVIEW_PUBLIC` | HTTP 200 PITS Shell demo/status page with `PITS_SHELL`, shared Core API URL, demo banner and seeded counts. | Primary current PITS Shell App Shell preview check. |
+| OIS Console App Shell preview | `https://161acd4ff8.na116.preview.abacusai.app` | `OIS_CONSOLE_APP_SHELL_PREVIEW_UNAVAILABLE_404` | Currently HTTP 404. Stage 0T-C screenshot evidence remains historical; Stage 0T-D-R2 records current preview unavailability. | Restore or redeploy before two-App-Shell verification. |
 | OIS Phase 1 App Shell | `https://oisys.abacusai.app` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Existing live OIS Phase 1 app shell. | Do not touch during NextGen staging. |
 | OIS Phase 1 custom domain | `https://ois.dmp247.com` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Same OIS Phase 1 backend/custom domain. | Do not touch during NextGen staging. |
 
-Current NextGen live scope is Core API `/health`, DB-backed read-only `/platform/overview`, and the OIS Console App Shell preview only. Platform Kernel seed data is demo/staging data marked `DEMO DATA - NOT PRODUCTION`. Stage 0T-A corrects the UI deployment path: OIS Console and PITS Shell must be separate Apps Management Console App Shells with Abacus-managed deployment URLs. Stage 0T-B adds local/Codex mocked UI demo tests before App Shell deployment. Stage 0T-C deploys OIS Console only as an App Shell preview. Stage 0T-D-R1 records PITS Shell as source-access blocked for GitHub clone and prepares a direct upload bundle. SuperComputer preview URLs on ports `3000` and `3001` are deprecated for App Shell proof. PITS Shell, worker, `/auth/demo-login`, write endpoints and custom `dmp247.com` domains are not live on the Abacus-managed public staging domain yet.
+Current NextGen live scope is Core API `/health`, DB-backed read-only `/platform/overview`, and the PITS Shell App Shell preview. Platform Kernel seed data is demo/staging data marked `DEMO DATA - NOT PRODUCTION`. Stage 0T-A corrects the UI deployment path: OIS Console and PITS Shell must be separate Apps Management Console App Shells with Abacus-managed deployment URLs. Stage 0T-B adds local/Codex mocked UI demo tests before App Shell deployment. Stage 0T-C deployed OIS Console only as an App Shell preview. Stage 0T-D-R1 recorded PITS Shell as source-access blocked for GitHub clone and prepared a direct upload bundle. Stage 0T-D-R2 deployed PITS Shell from that bundle at `https://113d93f4db-3001.na116.preview.abacusai.app`; the previously deployed OIS Console preview URL now returns HTTP 404, so two-App-Shell simultaneous verification is blocked until OIS Console is restored or redeployed. SuperComputer preview URLs on ports `3000` and `3001` are deprecated for App Shell proof. Worker, `/auth/demo-login`, write endpoints and custom `dmp247.com` domains are not live on the Abacus-managed public staging domain yet.
 
 ## 2. Local/Loopback Endpoints
 
@@ -82,8 +84,8 @@ The Abacus preview proxy is public and useful for temporary proof, but it is tie
 | OIS NextGen Core API root | `https://ois-nextgen.abacusai.cloud/` | `BLOCKED` | Stage 0O did not verify public root as a staging contract. | Do not claim until verified in a future stage. |
 | OIS NextGen Core API docs | `https://ois-nextgen.abacusai.cloud/docs` | `BLOCKED` | Not verified on the managed staging domain. | Do not claim until verified in a future stage. |
 | OIS NextGen additional DB-backed API routes | `https://ois-nextgen.abacusai.cloud/api/<db-backed-route>` | `BLOCKED` | Stages 0P and 0Q verified only read-only `/platform/overview`. | Blocked until later route-specific gates. |
-| OIS Console App Shell preview | `https://161acd4ff8.na116.preview.abacusai.app` | `ABACUS_APP_SHELL_PREVIEW_PUBLIC` | Stage 0T-C owner/Abacus App Shell screenshot evidence. | Shows OIS Console shell name, product code `OIS_CONSOLE`, shared Core API URL, health, overview counts and Core API-only DB access note. |
-| PITS Shell App Shell deployment URL | `https://<pits-shell-app-shell>.abacusai.app/` or Apps Management Console managed URL | `SOURCE_ACCESS_BLOCKED` | Stage 0T-D reported external GitHub clone blocked; Stage 0T-D-R1 upload bundle ready. | Expected after upload deploy: PITS Shell name, product code `PITS_SHELL`, shared Core API URL, health, overview counts and Core API-only DB access note. |
+| PITS Shell App Shell preview | `https://113d93f4db-3001.na116.preview.abacusai.app` | `ABACUS_APP_SHELL_PREVIEW_PUBLIC` | Stage 0T-D-R2 owner/Abacus upload-bundle deploy evidence. | Shows PITS Shell name, product code `PITS_SHELL`, shared Core API URL, health, overview counts and Core API-only DB access note. |
+| OIS Console App Shell preview | `https://161acd4ff8.na116.preview.abacusai.app` | `OIS_CONSOLE_APP_SHELL_PREVIEW_UNAVAILABLE_404` | Stage 0T-C owner/Abacus screenshot evidence confirmed prior HTTP 200; Stage 0T-D-R2 verification reported current HTTP 404. | Restore or redeploy before two-App-Shell simultaneous verification. |
 
 ## 6. Existing Production/Legacy Endpoints - Do Not Touch
 
@@ -100,7 +102,7 @@ Known OIS Phase 1 production-equivalent resources include database `ois_phase1_d
 |---|---|---|---|
 | OIS NextGen custom branded domain | `https://ois-nextgen.dmp247.com` or owner-approved equivalent | `PLANNED_NOT_CREATED` | NextGen staging validation, owner domain approval and publication plan. |
 | Future OIS NextGen `dmp247.com` publication | Owner-approved future `dmp247.com` hostname; not the current Phase 1 endpoint unless a production cutover gate approves it. | `PLANNED_NOT_CREATED` | Production cutover gate. Current `https://ois.dmp247.com` remains `LEGACY_PRODUCTION_DO_NOT_TOUCH`. |
-| PITS Shell App Shell public staging | Apps Management Console Abacus-managed deployment URL for `PITS NextGen Shell Demo` | `SOURCE_ACCESS_BLOCKED` | GitHub clone blocked in Abacus App Shell environment; use Stage 0T-D-R1 direct upload bundle. |
+| OIS Console App Shell restoration | Existing preview `https://161acd4ff8.na116.preview.abacusai.app` or a new owner-approved Apps Management Console URL | `PLANNED_NOT_CREATED` | Stage 0T-D-R2 found current OIS Console preview HTTP 404; restore or redeploy before two-App-Shell verification. |
 | OIS Console custom staging domain | `ois-ng.dmp247.com` or `ois-staging.dmp247.com` | `PLANNED_NOT_CREATED` | Only after App Shell deployment URLs pass; do not touch `ois.dmp247.com`. |
 | PITS Shell custom staging domain | `pits-ng.dmp247.com` or `pits-staging.dmp247.com` | `PLANNED_NOT_CREATED` | Only after App Shell deployment URLs pass. |
 | OIS Console port preview | `https://<abacus-preview-base>-3000.../` | `DEPRECATED` | Stage 0T-A marks SuperComputer preview as non-canonical for App Shell proof. |
@@ -141,6 +143,8 @@ Known OIS Phase 1 production-equivalent resources include database `ois_phase1_d
 | Stage 0T-C | `https://161acd4ff8.na116.preview.abacusai.app` | `ABACUS_APP_SHELL_PREVIEW_PUBLIC` | OIS Console App Shell preview deployed through Abacus App Shell flow. | HTTP 200 OIS Console demo/status page with `OIS_CONSOLE`, shared Core API URL, demo banner, Core API health and canonical seeded counts. |
 | Stage 0T-C | PITS Shell Apps Management Console deployment URL | `PLANNED_NOT_CREATED` | Unchanged; PITS Shell was not deployed in Stage 0T-C. | Later PITS App Shell URL should render PITS Shell demo/status page and verify seeded Core API counts. |
 | Stage 0T-D-R1 | PITS Shell Apps Management Console deployment URL | `SOURCE_ACCESS_BLOCKED` | Abacus App Shell GitHub clone path blocked; direct upload bundle prepared. | Use `artifacts/abacus/pits-shell-abacus-upload-bundle.zip` in a later upload deploy stage. |
+| Stage 0T-D-R2 | `https://113d93f4db-3001.na116.preview.abacusai.app` | `ABACUS_APP_SHELL_PREVIEW_PUBLIC` | PITS Shell App Shell deployed successfully from `pits-shell-abacus-upload-bundle.zip`. | HTTP 200 PITS Shell demo/status page with `PITS_SHELL`, shared Core API URL, demo banner, Core API health and seeded counts. |
+| Stage 0T-D-R2 | `https://161acd4ff8.na116.preview.abacusai.app` | `OIS_CONSOLE_APP_SHELL_PREVIEW_UNAVAILABLE_404` | Previously deployed OIS Console preview returned HTTP 404 during two-shell verification. | Blocks two-App-Shell simultaneous verification until restored or redeployed. |
 | Stage 0N audit | `https://oisys.abacusai.app` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Existing live Phase 1 app shell. | Do not touch. |
 | Stage 0N audit | `https://ois.dmp247.com` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Existing live Phase 1 custom domain. | Do not touch. |
 
@@ -201,7 +205,8 @@ Use these commands only on endpoints allowed by the current stage. Do not probe 
 |---|---|---|
 | OIS NextGen Core API staging health | `curl -i https://ois-nextgen.abacusai.cloud/health` | HTTP/2 200 and `{"status":"ok","service":"core-api","stage":"bootstrap-stage-a"}` |
 | OIS NextGen platform overview | `curl -i https://ois-nextgen.abacusai.cloud/platform/overview` | HTTP 200, `DEMO DATA - NOT PRODUCTION` banner, and seeded counts: industries 1, organizations 1, workspaces 1, projects 2, products 5, installations 2, modules 3, auditRecords 1. |
-| OIS Console App Shell preview | `curl -i https://161acd4ff8.na116.preview.abacusai.app` | HTTP 200 and OIS Console demo/status page with `OIS_CONSOLE`, shared Core API URL, demo banner and seeded counts. |
+| PITS Shell App Shell preview | `curl -i https://113d93f4db-3001.na116.preview.abacusai.app` | HTTP 200 and PITS Shell demo/status page with `PITS_SHELL`, shared Core API URL, demo banner and seeded counts. |
+| OIS Console App Shell preview restoration check | `curl -i https://161acd4ff8.na116.preview.abacusai.app` | Currently HTTP 404 per Stage 0T-D-R2; restore or redeploy before two-App-Shell verification. |
 
 ### Local/Codex Loopback Commands
 
@@ -219,8 +224,8 @@ Use these commands only on endpoints allowed by the current stage. Do not probe 
 | Check | Command | Expected response |
 |---|---|---|
 | Preview Core API health | `curl -i https://7a162f29d-4000.na116.preview.abacusai.app/health` | HTTP 200 when the Core API process is running and preview proxy is active. |
-| OIS Console App Shell preview | `curl -i https://161acd4ff8.na116.preview.abacusai.app` | Stage 0T-C App Shell preview check; HTTP 200 and OIS Console demo/status page. |
-| PITS Shell App Shell deployment URL | `curl -i https://<pits-shell-app-shell-managed-url>/` | Blocked until Stage 0T-D-R1 upload bundle is deployed; then expect HTTP 200 and PITS Shell demo/status page. |
+| PITS Shell App Shell preview | `curl -i https://113d93f4db-3001.na116.preview.abacusai.app` | Stage 0T-D-R2 App Shell preview check; HTTP 200 and PITS Shell demo/status page. |
+| OIS Console App Shell preview | `curl -i https://161acd4ff8.na116.preview.abacusai.app` | Stage 0T-D-R2 current state is HTTP 404; Stage 0T-C HTTP 200 evidence remains historical only. |
 
 ### Blocked/Planned Checks
 
@@ -233,7 +238,7 @@ Use these commands only on endpoints allowed by the current stage. Do not probe 
 | Write endpoints | Owner-approved future URLs | `BLOCKED` | Not called through Stage 0Q; requires later write-path gate. |
 | SuperComputer OIS Console preview | `https://<abacus-preview-base>-3000.../` | `DEPRECATED` | Not canonical App Shell proof after Stage 0T-A. |
 | SuperComputer PITS Shell preview | `https://<abacus-preview-base>-3001.../` | `DEPRECATED` | Not canonical App Shell proof after Stage 0T-A. |
-| Console App Shell custom/branded staging | Owner-approved future custom URL | `PLANNED_NOT_CREATED` | OIS Console App Shell preview exists from Stage 0T-C; custom/branded staging remains future and must not use `ois.dmp247.com`. |
-| PITS App Shell public staging | Apps Management Console managed URL | `SOURCE_ACCESS_BLOCKED` | Requires future upload-bundle deployment gate because external GitHub clone is blocked. |
+| Console App Shell custom/branded staging | Owner-approved future custom URL | `PLANNED_NOT_CREATED` | Stage 0T-C confirmed historical OIS Console preview deployment, but Stage 0T-D-R2 found the current preview URL unavailable; custom/branded staging remains future and must not use `ois.dmp247.com`. |
+| OIS Console App Shell current preview | `https://161acd4ff8.na116.preview.abacusai.app` | `OIS_CONSOLE_APP_SHELL_PREVIEW_UNAVAILABLE_404` | Restore or redeploy before two-App-Shell verification. |
 | OIS Phase 1 live app shell | `https://oisys.abacusai.app` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Do not test or mutate without owner approval. |
 | OIS Phase 1 custom domain | `https://ois.dmp247.com` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Do not test or mutate without owner approval. |
