@@ -1,8 +1,13 @@
 # Cloudflare Tunnel Custom Subdomains
 
-Stage 0V-A plan/runbook for OIS NextGen SuperComputer-hosted product subdomains.
+Stage 0V-A plan/runbook and Stage 0V-B/C runtime verification record for OIS NextGen SuperComputer-hosted product subdomains.
 
 Decision label: `CLOUDFLARE_TUNNEL_CUSTOM_SUBDOMAIN_PLAN_READY`.
+
+Runtime labels:
+
+- `CLOUDFLARE_TUNNEL_CONNECTOR_HEALTHY`
+- `CLOUDFLARE_TUNNEL_PRODUCT_SUBDOMAINS_VERIFIED`
 
 ## Purpose
 
@@ -29,9 +34,9 @@ CUSTOM_HOSTNAME_NOT_SUPPORTED_FOR_SUPERCOMPUTER
 CUSTOM_HOSTNAME_ONLY_SUPPORTED_FOR_MANAGED_APP_SHELLS
 ```
 
-Cloudflare Tunnel is the selected workaround because it terminates public TLS in Cloudflare and forwards requests over an outbound connector to local services on the Abacus SuperComputer.
+Cloudflare Tunnel is the selected and now verified workaround because it terminates public TLS in Cloudflare and forwards requests over an outbound connector to local services on the Abacus SuperComputer.
 
-## Non-Goals
+## Stage 0V-A Non-Goals
 
 Stage 0V-A does not:
 
@@ -62,9 +67,46 @@ https://ois-nextgen.abacusai.cloud
 
 OIS Console and PITS Shell continue to fetch DB-backed data through Core API only.
 
-## Required Cloudflare Dashboard Steps
+## Stage 0V-B/C Runtime Verification
 
-Owner-run only, in a later execution stage:
+Owner configured Cloudflare DNS for `dmp247.com`, created tunnel `ois-nextgen-abacus`, installed/ran the connector on the Abacus VM and verified public HTTPS routes.
+
+Connector evidence:
+
+| Item | Result |
+|---|---|
+| Tunnel name | `ois-nextgen-abacus` |
+| Cloudflare Tunnel status | Healthy |
+| Active replicas | 1 |
+| Routes | 2 |
+| `cloudflared` version | `2026.6.1` |
+| Token handling | Token not documented, printed, stored or committed. |
+
+Verified tunnel routes:
+
+| Public hostname | Tunnel target | Result |
+|---|---|---|
+| `https://ois-ng.dmp247.com` | `http://127.0.0.1:3000` | Opens OIS Console. |
+| `https://pits-ng.dmp247.com` | `http://127.0.0.1:3001` | Opens PITS Shell. |
+
+Verified public pages:
+
+| Endpoint | Result |
+|---|---|
+| `https://ois-ng.dmp247.com` | OIS Console, product code `OIS_CONSOLE`. |
+| `https://ois-ng.dmp247.com/dashboard` | OIS Platform Overview. |
+| `https://pits-ng.dmp247.com` | PITS Shell, product code `PITS_SHELL`. |
+| `https://pits-ng.dmp247.com/projects` | PITS Project Selector. |
+
+Both shells show Core API URL `https://ois-nextgen.abacusai.cloud`, Core API healthy HTTP 200 and seeded demo counts: industries 1, organizations 1, workspaces 1, projects 2, products 5, installations 2, modules 3 and auditRecords 1.
+
+UI shells do not use `DATABASE_URL`. DB-backed demo data is accessed only through Core API.
+
+Direct CNAME to the Abacus SuperComputer remains unsupported. Cloudflare Tunnel is now the accepted custom subdomain path for SuperComputer-hosted OIS/PITS UI shells.
+
+## Cloudflare Dashboard Reference Steps
+
+These steps are retained as the reference path. Stage 0V-B/C owner execution completed the OIS and PITS routes; do not repeat unless restoring or recreating the tunnel.
 
 1. Confirm the owner has access to the Cloudflare account and `dmp247.com` zone.
 2. Open Cloudflare Zero Trust / dashboard tunnel management.
@@ -98,9 +140,9 @@ Owner-run only, in a later execution stage:
 9. Let Cloudflare create or manage the tunnel DNS records, or follow the dashboard's exact DNS instruction for tunnel hostnames.
 10. Save changes and wait for connector/route health in Cloudflare before public validation.
 
-## Abacus Web Terminal Execution Outline
+## Abacus Web Terminal Reference Outline
 
-For a later owner-approved execution stage only:
+For restoration/recreation only:
 
 1. Preflight the repo and runtime:
 
@@ -139,7 +181,7 @@ Local preflight:
 | OIS local route | `curl -H "Host: ois-ng.dmp247.com" http://127.0.0.1/` | HTTP 200 with `OIS_CONSOLE`. |
 | PITS local route | `curl -H "Host: pits-ng.dmp247.com" http://127.0.0.1/` | HTTP 200 with `PITS_SHELL`. |
 
-Public post-tunnel validation:
+Public validation:
 
 | Check | Command | Expected |
 |---|---|---|
@@ -177,6 +219,8 @@ If later tunnel execution causes a problem:
    ```sh
    bash ops/abacus/disable-product-subdomain-demo-routes.sh
    ```
+
+Expected rollback result: `ois-ng.dmp247.com` and `pits-ng.dmp247.com` stop serving through Cloudflare Tunnel while `https://ois-nextgen.abacusai.cloud/health` and `/platform/overview` remain available.
 
 ## Safety Rules
 

@@ -19,6 +19,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 0T-E-A-R1 prepares a direct upload bundle for restoring/redeploying OIS Console with the same upload strategy.
 - Stage 0U-A prepares safe SuperComputer nginx host-routing scripts for `ois-ng.dmp247.com` and `pits-ng.dmp247.com`, then owner runtime evidence confirmed DNS CNAME propagation and local Host-header routing. Public custom subdomain HTTPS is still blocked by Abacus edge/TLS registration.
 - Stage 0V-A documents the owner-selected Cloudflare Tunnel plan to solve the SuperComputer custom-hostname HTTPS blocker without changing GitHub/Codex source-of-truth or Abacus SuperComputer runtime ownership.
+- Stage 0V-B/C verifies Cloudflare Tunnel `ois-nextgen-abacus` is healthy and public HTTPS works for `https://ois-ng.dmp247.com` and `https://pits-ng.dmp247.com`.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -105,6 +106,8 @@ Stage 0T-E-A-R1 OIS Console upload bundle result: the OIS Console direct source 
 Stage 0U-A product subdomain routing demo result: safe owner-run scripts are ready for a SuperComputer nginx host-based routing demo. Owner runtime evidence confirmed `ois-ng.dmp247.com` and `pits-ng.dmp247.com` CNAME to `ois-nextgen.abacusai.cloud`, and local nginx Host-header routing returned HTTP 200 for OIS Console and PITS Shell with seeded counts through Core API. Public custom HTTPS checks failed with SSL handshake errors and public HTTP roots returned HTTP 409, so the public custom subdomains remain blocked at the Abacus edge/TLS registration layer. Final labels are `SUPERCOMPUTER_PRODUCT_SUBDOMAIN_LOCAL_ROUTING_READY` and `CUSTOM_SUBDOMAIN_TLS_BLOCKED`.
 
 Stage 0V-A Cloudflare Tunnel plan result: Abacus confirmed `CUSTOM_HOSTNAME_NOT_SUPPORTED_FOR_SUPERCOMPUTER` and `CUSTOM_HOSTNAME_ONLY_SUPPORTED_FOR_MANAGED_APP_SHELLS`. Stage 0V-A records Cloudflare Tunnel as the planned custom HTTPS transport: `ois-ng.dmp247.com` -> `127.0.0.1:3000`, `pits-ng.dmp247.com` -> `127.0.0.1:3001`, with optional later `api-ng.dmp247.com` -> `127.0.0.1:4000`. No `cloudflared` install, DNS change, deploy, migration, seed, `prisma db push`, production credential or Cloudflare token commit occurred. Final result is `CLOUDFLARE_TUNNEL_CUSTOM_SUBDOMAIN_PLAN_READY`.
+
+Stage 0V-B/C Cloudflare Tunnel runtime result: owner configured Cloudflare DNS and tunnel `ois-nextgen-abacus`; Cloudflare reports Healthy, 1 active replica, 2 routes and `cloudflared` version `2026.6.1`. Public HTTPS now verifies: `https://ois-ng.dmp247.com` opens OIS Console, `/dashboard` opens OIS Platform Overview, `https://pits-ng.dmp247.com` opens PITS Shell and `/projects` opens PITS Project Selector. Both shells show Core API `https://ois-nextgen.abacusai.cloud`, healthy Core API HTTP 200 and seeded counts through Core API only. No Cloudflare tunnel token or connector credential is documented or committed. Final labels are `CLOUDFLARE_TUNNEL_CONNECTOR_HEALTHY` and `CLOUDFLARE_TUNNEL_PRODUCT_SUBDOMAINS_VERIFIED`.
 
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
@@ -219,6 +222,8 @@ Stage 0T-E-A-R1 result: OIS Console direct source upload bundle is ready. Recomm
 Stage 0U-A runtime result: SuperComputer product subdomain local Host-header routing is ready, but public custom subdomain TLS is blocked at the Abacus edge. Recommended next stage: Stage 0U-B - Abacus Custom Hostname / TLS Registration Check.
 
 Stage 0V-A result: Cloudflare Tunnel custom subdomain plan is ready. Recommended next stage: Stage 0V-B - Owner-Assisted Cloudflare Tunnel Connector Setup.
+
+Stage 0V-B/C result: Cloudflare Tunnel public product subdomains are verified. Recommended next stage: Stage 0W-A - Public Staging UI Smoke Stabilization / Owner Acceptance Checklist.
 
 ## Stage 0N Resource Boundaries
 
@@ -1186,6 +1191,57 @@ Stage 0V-A safety:
 - No production credentials.
 - No `ois.dmp247.com` or `oisys.abacusai.app` modification.
 
+## Stage 0V-B/C Cloudflare Tunnel Public Verification
+
+Stage 0V-B/C records owner-executed runtime verification. Cloudflare Tunnel solved the Abacus SuperComputer custom hostname/TLS blocker for OIS/PITS public staging subdomains.
+
+Tunnel state:
+
+| Item | Result |
+|---|---|
+| Tunnel name | `ois-nextgen-abacus` |
+| Status | Healthy |
+| Active replicas | 1 |
+| Routes | 2 |
+| `cloudflared` version | `2026.6.1` |
+
+Verified routes:
+
+| Public endpoint | Runtime target | Result |
+|---|---|---|
+| `https://ois-ng.dmp247.com` | `http://127.0.0.1:3000` | Opens OIS Console. |
+| `https://ois-ng.dmp247.com/dashboard` | OIS Console route | Opens OIS Platform Overview. |
+| `https://pits-ng.dmp247.com` | `http://127.0.0.1:3001` | Opens PITS Shell. |
+| `https://pits-ng.dmp247.com/projects` | PITS Shell route | Opens PITS Project Selector. |
+
+Verified UI evidence:
+
+- OIS page shows product code `OIS_CONSOLE`.
+- PITS page shows product code `PITS_SHELL`.
+- Both show Core API URL `https://ois-nextgen.abacusai.cloud`.
+- Both show Core API healthy HTTP 200.
+- Both show seeded demo counts: industries 1, organizations 1, workspaces 1, projects 2, products 5, installations 2, modules 3 and auditRecords 1.
+- UI shells do not use `DATABASE_URL`.
+- DB-backed demo data is accessed only through Core API.
+
+Architecture result:
+
+- Direct CNAME to Abacus SuperComputer remains unsupported for custom HTTPS.
+- Cloudflare Tunnel is now the accepted custom subdomain path for SuperComputer-hosted UI shells.
+- Cloudflare connector/runtime state lives on the Abacus VM and Cloudflare dashboard only.
+- Cloudflare tunnel token must never be documented, printed, stored in repo or committed.
+
+Stage 0V-B/C safety:
+
+- No Cloudflare tunnel token documented or committed.
+- No migrations.
+- No seed.
+- No `prisma db push`.
+- No production DB/storage/OpenRouter credentials.
+- No `ois.dmp247.com` modification.
+- No `oisys.abacusai.app` modification.
+- No OIS Phase 1 or Emerald/BQL DB/storage touch.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -1253,6 +1309,7 @@ Stage 0T-D-R2 records owner/Abacus evidence that PITS Shell deployed from the up
 Stage 0T-E-A-R1 prepares an OIS Console direct upload source bundle only. It did not deploy, modify Abacus runtime, migrate, seed, call endpoints, create App Shells, modify nginx/systemd or touch legacy resources.
 Stage 0U-A adds safe owner-run nginx product subdomain demo scripts and records owner runtime evidence. DNS CNAME propagation and local Host-header routing passed, but public custom HTTPS is blocked by Abacus edge/TLS registration. Codex did not deploy, modify Abacus runtime, modify DNS, migrate, seed, call endpoints, start UI shells, modify production domains or touch legacy resources.
 Stage 0V-A creates the Cloudflare Tunnel custom subdomain plan/runbook only. It did not install `cloudflared`, create a tunnel, modify DNS, deploy, migrate, seed, run `prisma db push`, use production credentials, print/commit Cloudflare tokens or touch legacy resources.
+Stage 0V-B/C records owner-executed Cloudflare Tunnel runtime verification only. It did not document or commit Cloudflare tokens, run migrations, run seed, run `prisma db push`, use production credentials, call write endpoints, modify Core API DB/runtime logic or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -1294,6 +1351,7 @@ Stage 0T-D-R2 adds PITS Shell App Shell public preview endpoint `https://113d93f
 Stage 0T-E-A-R1 does not add or change endpoints. OIS Console remains `OIS_CONSOLE_APP_SHELL_PREVIEW_UNAVAILABLE_404` until the upload bundle is used in a later redeploy stage; PITS Shell, Core API `/health` and Core API `/platform/overview` remain unchanged.
 Stage 0U-A changes product subdomain endpoints `https://ois-ng.dmp247.com`, `https://pits-ng.dmp247.com`, `https://ois-ng.dmp247.com/dashboard` and `https://pits-ng.dmp247.com/projects` to `CUSTOM_SUBDOMAIN_TLS_BLOCKED`. DNS CNAME setup and local Host-header routing succeeded, but public HTTPS failed with SSL handshake errors and public HTTP roots returned HTTP 409.
 Stage 0V-A changes product subdomain endpoints `https://ois-ng.dmp247.com`, `https://pits-ng.dmp247.com`, `https://ois-ng.dmp247.com/dashboard` and `https://pits-ng.dmp247.com/projects` to `PLANNED_CLOUDFLARE_TUNNEL`. No public tunnel execution occurred in Stage 0V-A.
+Stage 0V-B/C changes product subdomain endpoints `https://ois-ng.dmp247.com`, `https://pits-ng.dmp247.com`, `https://ois-ng.dmp247.com/dashboard` and `https://pits-ng.dmp247.com/projects` to `CLOUDFLARE_TUNNEL_PUBLIC_VERIFIED`. Cloudflare Tunnel `ois-nextgen-abacus` is healthy and public HTTPS routes open the expected OIS/PITS pages.
 
 ## Stop Conditions
 
