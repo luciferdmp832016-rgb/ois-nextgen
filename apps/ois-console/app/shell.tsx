@@ -1,6 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { kernelFields, type KernelField, type PlatformSnapshot } from "@ois/shared-ui";
+import {
+  kernelFields,
+  type KernelField,
+  type PlatformRegistrySnapshot,
+  type PlatformSnapshot
+} from "@ois/shared-ui";
 
 const navItems = [
   { id: "overview", href: "/", label: "Overview" },
@@ -153,6 +158,38 @@ export function DataBoundaryPanel() {
       <p className="muted">
         UI shell reads product status through Core API only. DB-backed demo data is accessed only through the Core API.
       </p>
+    </section>
+  );
+}
+
+export function RegistryStatusPanel({ snapshot }: { snapshot: PlatformRegistrySnapshot }) {
+  return (
+    <section className="panel">
+      <div className="panel-heading">
+        <div>
+          <h3>Platform Registry Source</h3>
+          <p className="muted">Read-only registry data from Core API /platform/registry.</p>
+        </div>
+        <StatusBadge ok={snapshot.registry.ok} label={snapshot.registry.ok ? "Registry ready" : "Registry fallback"} />
+      </div>
+      <dl className="facts">
+        <div>
+          <dt>Source</dt>
+          <dd>{snapshot.registryMetadata?.source ?? "unavailable"}</dd>
+        </div>
+        <div>
+          <dt>Mode</dt>
+          <dd>{snapshot.registryMetadata?.mode ?? "read-only"}</dd>
+        </div>
+        <div>
+          <dt>Environment</dt>
+          <dd>{snapshot.registryMetadata?.environment ?? "staging"}</dd>
+        </div>
+        <div>
+          <dt>HTTP</dt>
+          <dd>{snapshot.registry.status ?? snapshot.registry.error ?? "unavailable"}</dd>
+        </div>
+      </dl>
     </section>
   );
 }

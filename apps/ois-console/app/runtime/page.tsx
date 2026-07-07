@@ -1,10 +1,17 @@
-import { getPlatformSnapshot } from "@ois/shared-ui";
-import { DataBoundaryPanel, OisConsoleShell, PageHeading, PlatformOverviewCard, RuntimeStatusCard } from "../shell";
+import { getPlatformRegistrySnapshot } from "@ois/shared-ui";
+import {
+  DataBoundaryPanel,
+  OisConsoleShell,
+  PageHeading,
+  PlatformOverviewCard,
+  RegistryStatusPanel,
+  RuntimeStatusCard
+} from "../shell";
 
 export const dynamic = "force-dynamic";
 
 export default async function RuntimePage() {
-  const snapshot = await getPlatformSnapshot();
+  const snapshot = await getPlatformRegistrySnapshot();
 
   return (
     <OisConsoleShell active="runtime" snapshot={snapshot}>
@@ -13,6 +20,7 @@ export default async function RuntimePage() {
       </PageHeading>
       <section className="dashboard-grid">
         <RuntimeStatusCard snapshot={snapshot} />
+        <RegistryStatusPanel snapshot={snapshot} />
         <PlatformOverviewCard snapshot={snapshot} />
         <DataBoundaryPanel />
       </section>

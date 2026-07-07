@@ -1,27 +1,17 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { kernelFields, type KernelField, type PlatformSnapshot } from "@ois/shared-ui";
+import {
+  kernelFields,
+  type KernelField,
+  type PlatformRegistrySnapshot,
+  type PlatformSnapshot
+} from "@ois/shared-ui";
 
 const navItems = [
   { id: "overview", href: "/", label: "Overview" },
   { id: "projects", href: "/projects", label: "Projects" },
   { id: "runtime", href: "/runtime", label: "Runtime" }
 ];
-
-const projects = [
-  {
-    name: "Emerald Precinct Demo",
-    code: "PITS-EMERALD",
-    status: "PITS installation active",
-    summary: "Seeded project workspace for field-report runtime navigation."
-  },
-  {
-    name: "Second Project Demo",
-    code: "PITS-SECOND",
-    status: "PITS installation active",
-    summary: "Secondary project baseline for multi-project selector behavior."
-  }
-] as const;
 
 const countLabels: Record<KernelField, string> = {
   industries: "Industries",
@@ -84,7 +74,7 @@ export function StatusBadge({ ok, label }: { ok: boolean; label: string }) {
   return <span className={ok ? "status status-ok" : "status status-warn"}>{label}</span>;
 }
 
-export function ProjectSelector({ snapshot }: { snapshot: PlatformSnapshot }) {
+export function ProjectSelector({ snapshot }: { snapshot: PlatformRegistrySnapshot }) {
   return (
     <section className="panel">
       <div className="panel-heading">
@@ -95,14 +85,25 @@ export function ProjectSelector({ snapshot }: { snapshot: PlatformSnapshot }) {
         <span className="pill">Installations: {snapshot.counts.installations ?? "-"}</span>
       </div>
       <div className="project-grid">
-        {projects.map((project) => (
-          <article className="project-card" key={project.code}>
-            <span className="eyebrow">{project.code}</span>
-            <h3>{project.name}</h3>
-            <p className="muted">{project.summary}</p>
-            <strong>{project.status}</strong>
+        {snapshot.projects.length > 0 ? (
+          snapshot.projects.map((project) => (
+            <article className="project-card" key={project.id}>
+              <span className="eyebrow">{project.code}</span>
+              <h3>{project.name}</h3>
+              <p className="muted">
+                {project.organization?.name ?? "Unknown organization"} / {project.workspace?.name ?? "Unknown workspace"}
+              </p>
+              <strong>{project.installations.length} installation(s)</strong>
+            </article>
+          ))
+        ) : (
+          <article className="project-card">
+            <span className="eyebrow">Registry fallback</span>
+            <h3>No projects returned</h3>
+            <p className="muted">Core API returned an empty project registry array.</p>
+            <strong>Read-only</strong>
           </article>
-        ))}
+        )}
       </div>
     </section>
   );
@@ -154,6 +155,41 @@ export function ProjectOverviewCards({ snapshot }: { snapshot: PlatformSnapshot 
       <Metric label="Products" value={snapshot.counts.products} />
       <Metric label="Installations" value={snapshot.counts.installations} />
       <Metric label="Modules" value={snapshot.counts.modules} />
+    </section>
+  );
+}
+
+export function InstallationRegistryPanel({ snapshot }: { snapshot: PlatformRegistrySnapshot }) {
+  return (
+    <section className="panel">
+      <div className="panel-heading">
+        <div>
+          <h3>Project Installation Registry</h3>
+          <p className="muted">PITS installation mapping read from Core API /platform/registry.</p>
+        </div>
+        <span className="pill">Installations: {snapshot.installations.length}</span>
+      </div>
+      <div className="project-grid">
+        {snapshot.installations.length > 0 ? (
+          snapshot.installations.map((installation) => (
+            <article className="project-card" key={installation.id}>
+              <span className="eyebrow">{installation.productCode}</span>
+              <h3>{installation.project?.name ?? installation.projectId}</h3>
+              <p className="muted">
+                {installation.workspace?.name ?? "Unknown workspace"} / {installation.organization?.name ?? "Unknown organization"}
+              </p>
+              <strong>{installation.lifecycle}</strong>
+            </article>
+          ))
+        ) : (
+          <article className="project-card">
+            <span className="eyebrow">Registry fallback</span>
+            <h3>No installations returned</h3>
+            <p className="muted">Core API returned an empty installation registry array.</p>
+            <strong>Read-only</strong>
+          </article>
+        )}
+      </div>
     </section>
   );
 }
