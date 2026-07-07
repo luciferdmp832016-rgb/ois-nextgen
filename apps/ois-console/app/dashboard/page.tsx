@@ -1,10 +1,11 @@
-import { getPlatformSnapshot } from "@ois/shared-ui";
+import { getPlatformRegistrySnapshot } from "@ois/shared-ui";
 import {
   DataBoundaryPanel,
   OisConsoleShell,
   PageHeading,
   PlatformOverviewCard,
   ProductModuleOverview,
+  RegistryStatusPanel,
   RuntimeStatusCard
 } from "../shell";
 
@@ -19,7 +20,7 @@ const controlAreas = [
 ] as const;
 
 export default async function DashboardPage() {
-  const snapshot = await getPlatformSnapshot();
+  const snapshot = await getPlatformRegistrySnapshot();
 
   return (
     <OisConsoleShell active="dashboard" snapshot={snapshot}>
@@ -29,6 +30,7 @@ export default async function DashboardPage() {
       <section className="dashboard-grid">
         <PlatformOverviewCard snapshot={snapshot} />
         <ProductModuleOverview snapshot={snapshot} />
+        <RegistryStatusPanel snapshot={snapshot} />
         <RuntimeStatusCard snapshot={snapshot} />
         <DataBoundaryPanel />
       </section>

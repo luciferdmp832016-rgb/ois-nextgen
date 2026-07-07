@@ -34,6 +34,122 @@ const overviewPayload = {
   }
 };
 
+const registryPayload = {
+  metadata: {
+    source: "default-db",
+    mode: "read-only",
+    environment: "staging",
+    generatedAt: "2026-07-08T00:00:00.000Z"
+  },
+  products: [
+    {
+      id: "prod_pits",
+      code: "PITS",
+      name: "PITS",
+      lifecycle: "ACTIVE",
+      version: 1,
+      modules: [
+        {
+          id: "module_pits_runtime_shell",
+          code: "PITS_RUNTIME_SHELL",
+          productCode: "PITS",
+          layerCode: "L0_OPERATIONAL_DATA",
+          scope: "PROJECT",
+          realmCode: "PITS_PROJECT_USER",
+          moduleType: "PRODUCT_RUNTIME_VIEW",
+          lifecycle: "ACTIVE",
+          version: 1
+        }
+      ],
+      installations: [
+        {
+          id: "inst_pits_emerald",
+          productCode: "PITS",
+          project: { code: "EMERALD_PRECINCT_DEMO", name: "Emerald Precinct Demo" },
+          lifecycle: "ACTIVE",
+          version: 1
+        }
+      ]
+    }
+  ],
+  organizations: [
+    {
+      id: "org_pmc_demo",
+      code: "PMC_DEMO",
+      name: "PMC Demo",
+      lifecycle: "ACTIVE",
+      version: 1,
+      industry: { code: "BUILDING_MANAGEMENT", name: "Building Management" }
+    }
+  ],
+  workspaces: [
+    {
+      id: "ws_pmc_org_demo",
+      code: "PMC_ORG_DEMO",
+      name: "PMC Org Demo",
+      organizationId: "org_pmc_demo",
+      lifecycle: "ACTIVE",
+      version: 1,
+      organization: { code: "PMC_DEMO", name: "PMC Demo" },
+      projects: [
+        {
+          id: "prj_emerald_precinct_demo",
+          code: "EMERALD_PRECINCT_DEMO",
+          name: "Emerald Precinct Demo",
+          workspaceId: "ws_pmc_org_demo",
+          lifecycle: "ACTIVE",
+          version: 1,
+          installations: []
+        }
+      ],
+      installations: [{ id: "inst_pits_emerald", productCode: "PITS", projectId: "prj_emerald_precinct_demo", lifecycle: "ACTIVE" }]
+    }
+  ],
+  projects: [
+    {
+      id: "prj_emerald_precinct_demo",
+      code: "EMERALD_PRECINCT_DEMO",
+      name: "Emerald Precinct Demo",
+      workspaceId: "ws_pmc_org_demo",
+      lifecycle: "ACTIVE",
+      version: 1,
+      workspace: { code: "PMC_ORG_DEMO", name: "PMC Org Demo" },
+      organization: { code: "PMC_DEMO", name: "PMC Demo" },
+      installations: [{ id: "inst_pits_emerald", productCode: "PITS", productName: "PITS", lifecycle: "ACTIVE", version: 1 }]
+    }
+  ],
+  modules: [
+    {
+      id: "module_pits_runtime_shell",
+      code: "PITS_RUNTIME_SHELL",
+      productCode: "PITS",
+      layerCode: "L0_OPERATIONAL_DATA",
+      scope: "PROJECT",
+      realmCode: "PITS_PROJECT_USER",
+      moduleType: "PRODUCT_RUNTIME_VIEW",
+      lifecycle: "ACTIVE",
+      version: 1,
+      product: { code: "PITS", name: "PITS" }
+    }
+  ],
+  installations: [
+    {
+      id: "inst_pits_emerald",
+      productCode: "PITS",
+      productId: "prod_pits",
+      organizationId: "org_pmc_demo",
+      workspaceId: "ws_pmc_org_demo",
+      projectId: "prj_emerald_precinct_demo",
+      lifecycle: "ACTIVE",
+      version: 1,
+      product: { code: "PITS", name: "PITS" },
+      organization: { code: "PMC_DEMO", name: "PMC Demo" },
+      workspace: { code: "PMC_ORG_DEMO", name: "PMC Org Demo" },
+      project: { code: "EMERALD_PRECINCT_DEMO", name: "Emerald Precinct Demo" }
+    }
+  ]
+};
+
 type RouteComponent = () => Promise<ReactElement>;
 
 function jsonResponse(payload: unknown, status = 200) {
@@ -53,6 +169,10 @@ function mockCoreApiFetch() {
 
     if (url === `${coreApiUrl}/platform/overview`) {
       return jsonResponse(overviewPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/registry`) {
+      return jsonResponse(registryPayload);
     }
 
     return jsonResponse({ error: "unexpected URL", url }, 404);
@@ -126,10 +246,10 @@ describe("OIS Console product shell", () => {
   });
 
   it.each([
-    ["dashboard", DashboardPage, ["Platform Overview", "Control plane areas"]],
-    ["products", ProductsPage, ["Products &amp; Modules", "Product &amp; Module Overview"]],
-    ["workspaces", WorkspacesPage, ["Organizations, Workspaces &amp; Projects", "Workspace Overview"]],
-    ["runtime", RuntimePage, ["Runtime Status", "Health ready"]]
+    ["dashboard", DashboardPage, ["Platform Overview", "Control plane areas", "Registry ready"]],
+    ["products", ProductsPage, ["Products &amp; Modules", "Product &amp; Module Overview", "PITS_RUNTIME_SHELL"]],
+    ["workspaces", WorkspacesPage, ["Organizations, Workspaces &amp; Projects", "Workspace Overview", "PMC Org Demo", "Emerald Precinct Demo"]],
+    ["runtime", RuntimePage, ["Runtime Status", "Health ready", "Registry ready"]]
   ] satisfies Array<[string, RouteComponent, string[]]>)("renders the %s route shell", async (_name, Component, markers) => {
     mockCoreApiFetch();
 

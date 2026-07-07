@@ -15,6 +15,149 @@ const overviewCounts = {
   auditRecords: 18
 } as const;
 
+const registryRows = {
+  industry: {
+    id: "ind_building_management",
+    code: "BUILDING_MANAGEMENT",
+    name: "Building Management"
+  },
+  organization: {
+    id: "org_pmc_demo",
+    code: "PMC_DEMO",
+    name: "PMC Demo",
+    lifecycle: "ACTIVE",
+    version: 1,
+    industry: {
+      id: "ind_building_management",
+      code: "BUILDING_MANAGEMENT",
+      name: "Building Management"
+    }
+  },
+  workspace: {
+    id: "ws_pmc_org_demo",
+    code: "PMC_ORG_DEMO",
+    name: "PMC Org Demo",
+    organizationId: "org_pmc_demo",
+    lifecycle: "ACTIVE",
+    version: 1,
+    organization: {
+      id: "org_pmc_demo",
+      code: "PMC_DEMO",
+      name: "PMC Demo"
+    },
+    projects: [
+      {
+        id: "prj_emerald_precinct_demo",
+        code: "EMERALD_PRECINCT_DEMO",
+        name: "Emerald Precinct Demo",
+        workspaceId: "ws_pmc_org_demo",
+        lifecycle: "ACTIVE",
+        version: 1
+      }
+    ],
+    installations: [
+      {
+        id: "inst_pits_emerald",
+        productCode: "PITS",
+        projectId: "prj_emerald_precinct_demo",
+        lifecycle: "ACTIVE"
+      }
+    ]
+  },
+  project: {
+    id: "prj_emerald_precinct_demo",
+    code: "EMERALD_PRECINCT_DEMO",
+    name: "Emerald Precinct Demo",
+    workspaceId: "ws_pmc_org_demo",
+    lifecycle: "ACTIVE",
+    version: 1,
+    workspace: {
+      id: "ws_pmc_org_demo",
+      code: "PMC_ORG_DEMO",
+      name: "PMC Org Demo",
+      organization: {
+        id: "org_pmc_demo",
+        code: "PMC_DEMO",
+        name: "PMC Demo"
+      }
+    },
+    installations: [
+      {
+        id: "inst_pits_emerald",
+        productCode: "PITS",
+        product: { name: "PITS" },
+        lifecycle: "ACTIVE",
+        version: 1
+      }
+    ]
+  },
+  product: {
+    id: "prod_pits",
+    code: "PITS",
+    name: "PITS",
+    lifecycle: "ACTIVE",
+    version: 1,
+    modules: [
+      {
+        id: "module_pits_runtime_shell",
+        code: "PITS_RUNTIME_SHELL",
+        productCode: "PITS",
+        layerCode: "L0_OPERATIONAL_DATA",
+        scope: "PROJECT",
+        realmCode: "PITS_PROJECT_USER",
+        moduleType: "PRODUCT_RUNTIME_VIEW",
+        lifecycle: "ACTIVE",
+        version: 1
+      }
+    ],
+    installations: [
+      {
+        id: "inst_pits_emerald",
+        productCode: "PITS",
+        productId: "prod_pits",
+        organizationId: "org_pmc_demo",
+        workspaceId: "ws_pmc_org_demo",
+        projectId: "prj_emerald_precinct_demo",
+        lifecycle: "ACTIVE",
+        version: 1,
+        organization: { code: "PMC_DEMO", name: "PMC Demo" },
+        workspace: { code: "PMC_ORG_DEMO", name: "PMC Org Demo" },
+        project: { code: "EMERALD_PRECINCT_DEMO", name: "Emerald Precinct Demo" }
+      }
+    ]
+  },
+  module: {
+    id: "module_pits_runtime_shell",
+    code: "PITS_RUNTIME_SHELL",
+    productCode: "PITS",
+    layerCode: "L0_OPERATIONAL_DATA",
+    scope: "PROJECT",
+    realmCode: "PITS_PROJECT_USER",
+    moduleType: "PRODUCT_RUNTIME_VIEW",
+    lifecycle: "ACTIVE",
+    version: 1,
+    product: {
+      id: "prod_pits",
+      code: "PITS",
+      name: "PITS"
+    }
+  },
+  installation: {
+    id: "inst_pits_emerald",
+    productCode: "PITS",
+    productId: "prod_pits",
+    organizationId: "org_pmc_demo",
+    workspaceId: "ws_pmc_org_demo",
+    projectId: "prj_emerald_precinct_demo",
+    lifecycle: "ACTIVE",
+    version: 1,
+    product: { code: "PITS", name: "PITS" },
+    organization: { code: "PMC_DEMO", name: "PMC Demo" },
+    workspace: { code: "PMC_ORG_DEMO", name: "PMC Org Demo" },
+    project: { code: "EMERALD_PRECINCT_DEMO", name: "Emerald Precinct Demo" }
+  }
+} as const;
+
 function createWriteGuard(name: string, writeCalls: string[]) {
   return vi.fn(() => {
     writeCalls.push(name);
@@ -22,11 +165,15 @@ function createWriteGuard(name: string, writeCalls: string[]) {
   });
 }
 
-function createCountDelegate(name: string, count: number, readCalls: string[], writeCalls: string[]) {
+function createCountDelegate(name: string, count: number, readCalls: string[], writeCalls: string[], findManyRows: unknown[] = []) {
   return {
     count: vi.fn(async () => {
       readCalls.push(`${name}.count`);
       return count;
+    }),
+    findMany: vi.fn(async () => {
+      readCalls.push(`${name}.findMany`);
+      return findManyRows;
     }),
     create: createWriteGuard(`${name}.create`, writeCalls),
     createMany: createWriteGuard(`${name}.createMany`, writeCalls),
@@ -44,15 +191,15 @@ function createMockPrisma(counts = overviewCounts) {
 
   const delegates = {
     industry: createCountDelegate("industry", counts.industries, readCalls, writeCalls),
-    organization: createCountDelegate("organization", counts.organizations, readCalls, writeCalls),
-    workspace: createCountDelegate("workspace", counts.workspaces, readCalls, writeCalls),
-    project: createCountDelegate("project", counts.projects, readCalls, writeCalls),
-    productDefinition: createCountDelegate("productDefinition", counts.products, readCalls, writeCalls),
+    organization: createCountDelegate("organization", counts.organizations, readCalls, writeCalls, [registryRows.organization]),
+    workspace: createCountDelegate("workspace", counts.workspaces, readCalls, writeCalls, [registryRows.workspace]),
+    project: createCountDelegate("project", counts.projects, readCalls, writeCalls, [registryRows.project]),
+    productDefinition: createCountDelegate("productDefinition", counts.products, readCalls, writeCalls, [registryRows.product]),
     productInstallation: {
-      ...createCountDelegate("productInstallation", counts.installations, readCalls, writeCalls),
+      ...createCountDelegate("productInstallation", counts.installations, readCalls, writeCalls, [registryRows.installation]),
       findUnique: vi.fn(async () => null)
     },
-    moduleDefinition: createCountDelegate("moduleDefinition", counts.modules, readCalls, writeCalls),
+    moduleDefinition: createCountDelegate("moduleDefinition", counts.modules, readCalls, writeCalls, [registryRows.module]),
     auditRecord: createCountDelegate("auditRecord", counts.auditRecords, readCalls, writeCalls)
   };
 
@@ -192,6 +339,114 @@ describe("platform overview contract", () => {
       const response = await app.inject({ method: "GET", url: "/platform/overview" });
 
       expect(response.statusCode).toBe(500);
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+describe("platform registry read-only endpoints", () => {
+  it.each([
+    ["/platform/products", "productDefinition.findMany", "products", "PITS"],
+    ["/platform/workspaces", "workspace.findMany", "workspaces", "PMC_ORG_DEMO"],
+    ["/platform/projects", "project.findMany", "projects", "EMERALD_PRECINCT_DEMO"],
+    ["/platform/modules", "moduleDefinition.findMany", "modules", "PITS_RUNTIME_SHELL"],
+    ["/platform/installations", "productInstallation.findMany", "installations", "inst_pits_emerald"]
+  ] satisfies Array<[string, string, string, string]>)(
+    "returns %s as read-only registry data",
+    async (url, expectedReadCall, collectionKey, expectedMarker) => {
+      const mock = createMockPrisma();
+      const app = buildCoreApi({ prisma: mock.prisma });
+
+      try {
+        const response = await app.inject({ method: "GET", url });
+        const body = response.json() as Record<string, unknown>;
+
+        expect(response.statusCode).toBe(200);
+        expect(body.metadata).toMatchObject({
+          source: "default-db",
+          mode: "read-only",
+          environment: "staging"
+        });
+        expect(typeof (body.metadata as Record<string, unknown>).generatedAt).toBe("string");
+        expect(JSON.stringify(body[collectionKey])).toContain(expectedMarker);
+        expect(mock.readCalls).toContain(expectedReadCall);
+        expect(mock.writeCalls).toEqual([]);
+      } finally {
+        await app.close();
+      }
+    }
+  );
+
+  it("returns aggregate platform registry data with stable relationship fields", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/registry" });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body).toMatchObject({
+        metadata: {
+          source: "default-db",
+          mode: "read-only",
+          environment: "staging"
+        },
+        products: [
+          {
+            id: "prod_pits",
+            code: "PITS",
+            name: "PITS",
+            lifecycle: "ACTIVE",
+            modules: [{ code: "PITS_RUNTIME_SHELL" }],
+            installations: [{ project: { code: "EMERALD_PRECINCT_DEMO" } }]
+          }
+        ],
+        organizations: [{ code: "PMC_DEMO", industry: { code: "BUILDING_MANAGEMENT" } }],
+        workspaces: [{ code: "PMC_ORG_DEMO", projects: [{ code: "EMERALD_PRECINCT_DEMO" }] }],
+        projects: [{ code: "EMERALD_PRECINCT_DEMO", installations: [{ productCode: "PITS" }] }],
+        modules: [{ code: "PITS_RUNTIME_SHELL", product: { code: "PITS" } }],
+        installations: [{ id: "inst_pits_emerald", productCode: "PITS", project: { code: "EMERALD_PRECINCT_DEMO" } }]
+      });
+      expect(typeof body.metadata.generatedAt).toBe("string");
+      expect(mock.readCalls).toEqual([
+        "productDefinition.findMany",
+        "organization.findMany",
+        "workspace.findMany",
+        "project.findMany",
+        "moduleDefinition.findMany",
+        "productInstallation.findMany"
+      ]);
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns empty arrays when registry tables are empty", async () => {
+    const mock = createMockPrisma();
+    mock.delegates.organization.findMany.mockResolvedValue([]);
+    mock.delegates.workspace.findMany.mockResolvedValue([]);
+    mock.delegates.project.findMany.mockResolvedValue([]);
+    mock.delegates.productDefinition.findMany.mockResolvedValue([]);
+    mock.delegates.moduleDefinition.findMany.mockResolvedValue([]);
+    mock.delegates.productInstallation.findMany.mockResolvedValue([]);
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/registry" });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toMatchObject({
+        products: [],
+        organizations: [],
+        workspaces: [],
+        projects: [],
+        modules: [],
+        installations: []
+      });
       expect(mock.writeCalls).toEqual([]);
     } finally {
       await app.close();

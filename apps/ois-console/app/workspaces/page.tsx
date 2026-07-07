@@ -1,17 +1,10 @@
-import { getPlatformSnapshot } from "@ois/shared-ui";
-import { CountGrid, DataBoundaryPanel, OisConsoleShell, PageHeading, RuntimeStatusCard } from "../shell";
+import { getPlatformRegistrySnapshot } from "@ois/shared-ui";
+import { CountGrid, DataBoundaryPanel, OisConsoleShell, PageHeading, RegistryStatusPanel, RuntimeStatusCard } from "../shell";
 
 export const dynamic = "force-dynamic";
 
-const workspaceAreas = [
-  ["PMC Org Demo", "Primary staging organization", "organizations"],
-  ["Default Workspace", "Control-plane workspace baseline", "workspaces"],
-  ["Emerald Precinct Demo", "PITS-enabled project", "projects"],
-  ["Second Project Demo", "Secondary seeded project", "projects"]
-] as const;
-
 export default async function WorkspacesPage() {
-  const snapshot = await getPlatformSnapshot();
+  const snapshot = await getPlatformRegistrySnapshot();
 
   return (
     <OisConsoleShell active="workspaces" snapshot={snapshot}>
@@ -29,15 +22,54 @@ export default async function WorkspacesPage() {
         <CountGrid snapshot={snapshot} fields={["industries", "organizations", "workspaces", "projects"]} />
       </section>
       <section className="list-grid" aria-label="Workspace areas">
-        {workspaceAreas.map(([name, description, field], index) => (
-          <article className="panel compact-panel" key={`${name}-${index}`}>
-            <span className="eyebrow">{field}</span>
-            <h3>{name}</h3>
-            <p className="muted">{description}</p>
+        {snapshot.organizations.map((organization) => (
+          <article className="panel compact-panel" key={organization.id}>
+            <span className="eyebrow">{organization.code}</span>
+            <h3>{organization.name}</h3>
+            <p className="muted">Industry: {organization.industry.name}</p>
+            <strong>{organization.lifecycle}</strong>
           </article>
         ))}
+        {snapshot.workspaces.map((workspace) => (
+          <article className="panel compact-panel" key={workspace.id}>
+            <span className="eyebrow">{workspace.organization.code}</span>
+            <h3>{workspace.name}</h3>
+            <p className="muted">
+              {workspace.projects.length} project(s), {workspace.installations.length} installation(s).
+            </p>
+            <strong>{workspace.lifecycle}</strong>
+          </article>
+        ))}
+        {snapshot.workspaces.length === 0 && snapshot.organizations.length === 0 ? (
+          <article className="panel compact-panel">
+            <span className="eyebrow">Registry fallback</span>
+            <h3>No workspaces returned</h3>
+            <p className="muted">Core API returned empty organization and workspace registry arrays.</p>
+          </article>
+        ) : null}
+      </section>
+      <section className="list-grid" aria-label="Project registry">
+        {snapshot.projects.length > 0 ? (
+          snapshot.projects.map((project) => (
+            <article className="panel compact-panel" key={project.id}>
+              <span className="eyebrow">{project.workspace?.code ?? project.workspaceId}</span>
+              <h3>{project.name}</h3>
+              <p className="muted">
+                {project.installations.length} installation(s) in {project.organization?.name ?? "unknown organization"}.
+              </p>
+              <strong>{project.lifecycle}</strong>
+            </article>
+          ))
+        ) : (
+          <article className="panel compact-panel">
+            <span className="eyebrow">Registry fallback</span>
+            <h3>No projects returned</h3>
+            <p className="muted">Core API returned an empty project registry array.</p>
+          </article>
+        )}
       </section>
       <section className="dashboard-grid">
+        <RegistryStatusPanel snapshot={snapshot} />
         <RuntimeStatusCard snapshot={snapshot} />
         <DataBoundaryPanel />
       </section>

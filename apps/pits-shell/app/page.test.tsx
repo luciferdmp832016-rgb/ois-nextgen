@@ -32,6 +32,59 @@ const overviewPayload = {
   }
 };
 
+const registryPayload = {
+  metadata: {
+    source: "default-db",
+    mode: "read-only",
+    environment: "staging",
+    generatedAt: "2026-07-08T00:00:00.000Z"
+  },
+  products: [],
+  organizations: [],
+  workspaces: [],
+  modules: [],
+  projects: [
+    {
+      id: "prj_emerald_precinct_demo",
+      code: "EMERALD_PRECINCT_DEMO",
+      name: "Emerald Precinct Demo",
+      workspaceId: "ws_pmc_org_demo",
+      lifecycle: "ACTIVE",
+      version: 1,
+      workspace: { code: "PMC_ORG_DEMO", name: "PMC Org Demo" },
+      organization: { code: "PMC_DEMO", name: "PMC Demo" },
+      installations: [{ id: "inst_pits_emerald", productCode: "PITS", productName: "PITS", lifecycle: "ACTIVE", version: 1 }]
+    },
+    {
+      id: "prj_second_project_demo",
+      code: "SECOND_PROJECT_DEMO",
+      name: "Second Project Demo",
+      workspaceId: "ws_pmc_org_demo",
+      lifecycle: "ACTIVE",
+      version: 1,
+      workspace: { code: "PMC_ORG_DEMO", name: "PMC Org Demo" },
+      organization: { code: "PMC_DEMO", name: "PMC Demo" },
+      installations: [{ id: "inst_pits_second", productCode: "PITS", productName: "PITS", lifecycle: "ACTIVE", version: 1 }]
+    }
+  ],
+  installations: [
+    {
+      id: "inst_pits_emerald",
+      productCode: "PITS",
+      productId: "prod_pits",
+      organizationId: "org_pmc_demo",
+      workspaceId: "ws_pmc_org_demo",
+      projectId: "prj_emerald_precinct_demo",
+      lifecycle: "ACTIVE",
+      version: 1,
+      product: { code: "PITS", name: "PITS" },
+      organization: { code: "PMC_DEMO", name: "PMC Demo" },
+      workspace: { code: "PMC_ORG_DEMO", name: "PMC Org Demo" },
+      project: { code: "EMERALD_PRECINCT_DEMO", name: "Emerald Precinct Demo" }
+    }
+  ]
+};
+
 type RouteComponent = () => Promise<ReactElement>;
 
 function jsonResponse(payload: unknown, status = 200) {
@@ -51,6 +104,10 @@ function mockCoreApiFetch() {
 
     if (url === `${coreApiUrl}/platform/overview`) {
       return jsonResponse(overviewPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/registry`) {
+      return jsonResponse(registryPayload);
     }
 
     return jsonResponse({ error: "unexpected URL", url }, 404);
@@ -117,11 +174,12 @@ describe("PITS Shell product shell", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/health`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/overview`, { cache: "no-store" });
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry`, { cache: "no-store" });
   });
 
   it.each([
-    ["projects", ProjectsPage, ["Project Selector", "PITS-EMERALD"]],
-    ["runtime", RuntimePage, ["Runtime Status", "Health ready"]]
+    ["projects", ProjectsPage, ["Project Selector", "EMERALD_PRECINCT_DEMO", "Project Installation Registry"]],
+    ["runtime", RuntimePage, ["Runtime Status", "Health ready", "Project Installation Registry"]]
   ] satisfies Array<[string, RouteComponent, string[]]>)("renders the %s route shell", async (_name, Component, markers) => {
     mockCoreApiFetch();
 

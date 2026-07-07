@@ -25,6 +25,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 1A adds the first real OIS Console and PITS Shell product navigation baselines and expands public endpoint checks for the new routes.
 - Stage 1A-R1 fixes the route 404 verification gap by cleaning generated UI `.next` build artifacts before Abacus builds and verifying Next production route manifests before UI service restart.
 - Stage 1A-R2 makes the manual orphan UI port cleanup permanent so OIS/PITS systemd restarts can recover when stale Next.js listeners hold ports 3000/3001.
+- Stage 1B adds read-only Platform Registry Core API endpoints and binds OIS/PITS product shell pages to Core API registry data instead of hardcoded cards.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -249,6 +250,8 @@ Stage 1A result: product shell navigation baseline is ready. Recommended next st
 Stage 1A-R1 result: product shell route 404 hotfix is ready. Recommended next stage: Stage 1A-R2 - Owner Runtime Sync And Route 200 Verification.
 
 Stage 1A-R2 result: UI orphan port cleanup is ready. Recommended next stage: Stage 1B - Product Shell Owner Acceptance And Navigation Baseline Expansion.
+
+Stage 1B result: read-only Platform Registry API data binding is ready. Recommended next stage: Stage 1B-R1 - Owner Runtime Sync And Registry Endpoint Verification.
 
 ## Stage 0N Resource Boundaries
 
@@ -1520,6 +1523,78 @@ Stage 1A-R2 safety:
 - No `prisma db push`.
 - No legacy resources touched.
 
+## Stage 1B Read-Only Platform Registry API Data Binding
+
+Stage 1B adds source-ready read-only Platform Registry endpoints and product shell data binding. It does not deploy from Codex. Owner runtime sync is required before claiming public HTTP 200 for the new Core API registry endpoints.
+
+Core API registry endpoints added:
+
+| Endpoint | Contract |
+|---|---|
+| `/platform/products` | Read-only product definitions with related module and installation summaries. |
+| `/platform/workspaces` | Read-only organizations and workspaces with project/installation summaries. |
+| `/platform/projects` | Read-only project registry with workspace, organization and installation summaries. |
+| `/platform/modules` | Read-only module definitions with product relationship. |
+| `/platform/installations` | Read-only product installation registry with product, organization, workspace and project relationships. |
+| `/platform/registry` | Aggregate registry snapshot for OIS/PITS UI shells. |
+
+Response metadata:
+
+```json
+{
+  "source": "default-db",
+  "mode": "read-only",
+  "environment": "staging"
+}
+```
+
+UI binding:
+
+- OIS Console `/dashboard`, `/products`, `/workspaces` and `/runtime` use Core API registry data.
+- PITS Shell `/`, `/projects` and `/runtime` use Core API registry projects/installations.
+- UI shells still call Core API only.
+- UI shells do not import Prisma or read `DATABASE_URL`.
+- Empty registry arrays render fallback panels instead of failing the page.
+
+Owner runtime sync after Stage 1B merge:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+git fetch origin
+git checkout stage-0b-complete-handoff-ingestion
+git pull --ff-only
+PUBLIC_STAGING_RESTART_SCOPE=all bash ops/abacus/runtime-sync.sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
+Expected public Core API checks after owner runtime sync:
+
+```sh
+curl -i https://ois-nextgen.abacusai.cloud/platform/products
+curl -i https://ois-nextgen.abacusai.cloud/platform/workspaces
+curl -i https://ois-nextgen.abacusai.cloud/platform/projects
+curl -i https://ois-nextgen.abacusai.cloud/platform/modules
+curl -i https://ois-nextgen.abacusai.cloud/platform/installations
+curl -i https://ois-nextgen.abacusai.cloud/platform/registry
+```
+
+Each response should return HTTP 200 with `source=default-db` and `mode=read-only`. Stage 1B public staging scripts also verify registry-aware UI markers such as `PITS_RUNTIME_SHELL`, `PMC Org Demo` and `EMERALD_PRECINCT_DEMO`.
+
+Stage 1B safety:
+
+- No Cloudflare dashboard change.
+- No DNS change.
+- No migrations.
+- No seed.
+- No `prisma db push`.
+- No credentials committed.
+- No UI `DATABASE_URL`.
+- No Prisma import in UI shells.
+- No write/mutation endpoints.
+- No `/auth/demo-login` change.
+- No legacy resources touched.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -1593,6 +1668,7 @@ Stage 0W-B records owner runtime evidence and adds a secret-safe ops hotfix only
 Stage 1A adds product shell UI code, route tests, endpoint checks and documentation only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL` or touch legacy resources.
 Stage 1A-R1 adds ops/test/docs hotfixes only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL` or touch legacy resources.
 Stage 1A-R2 adds safe UI orphan port cleanup ops/docs only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, kill Core API/cloudflared or touch legacy resources.
+Stage 1B adds read-only Platform Registry API endpoints, Core API-backed UI data binding, tests, ops checks and documentation only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, add write endpoints or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -1640,6 +1716,7 @@ Stage 0W-B does not add or change published endpoints. It records public staging
 Stage 1A adds planned public route checks for `https://ois-ng.dmp247.com/products`, `https://ois-ng.dmp247.com/workspaces`, `https://ois-ng.dmp247.com/runtime` and `https://pits-ng.dmp247.com/runtime`. It changes OIS/PITS root and existing secondary route behavior in code, but public verification is pending owner runtime sync.
 Stage 1A-R1 changes the Stage 1A new-route status to blocked pending owner re-sync because Abacus runtime verification returned HTTP 404 locally and publicly. It adds no new endpoints.
 Stage 1A-R2 changes the Stage 1A new routes to verified based on owner/manual Abacus evidence after orphan UI port cleanup. It adds no new endpoints.
+Stage 1B adds planned read-only Core API registry endpoints `/platform/products`, `/platform/workspaces`, `/platform/projects`, `/platform/modules`, `/platform/installations` and `/platform/registry`. It changes OIS/PITS product shell pages in source to use registry data, but public verification is pending owner runtime sync.
 
 ## Stop Conditions
 
@@ -1667,6 +1744,7 @@ Stage 1A-R2 changes the Stage 1A new routes to verified based on owner/manual Ab
 - OIS Console or PITS Shell deployment is attempted outside Apps Management Console App Shells without owner approval.
 - UI production route manifest verification fails before public staging service restart.
 - UI orphan cleanup would kill anything outside `3000/tcp` and `3001/tcp`, or would target Core API port `4000` or `cloudflared`.
+- A Platform Registry endpoint adds writes, side effects, direct legacy DB references, production resource references or a mutation-style route.
 - Any additional seed execution, `/auth/demo-login`, write endpoint or row-data inspection is attempted without later owner approval.
 - A workflow tries to use hosted-app service registration or external custom-domain publication instead of the verified SuperComputer nginx/systemd path without owner approval.
 - Direct external SSH is required while the Abacus SSH relay still times out before authentication; use Web Terminal fallback instead.

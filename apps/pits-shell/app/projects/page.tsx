@@ -1,6 +1,7 @@
-import { getPlatformSnapshot } from "@ois/shared-ui";
+import { getPlatformRegistrySnapshot } from "@ois/shared-ui";
 import {
   DataBoundaryPanel,
+  InstallationRegistryPanel,
   PageHeading,
   PitsShell,
   PlatformCountsPanel,
@@ -12,7 +13,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
-  const snapshot = await getPlatformSnapshot();
+  const snapshot = await getPlatformRegistrySnapshot();
 
   return (
     <PitsShell active="projects" snapshot={snapshot}>
@@ -20,6 +21,7 @@ export default async function ProjectsPage() {
         Select from seeded staging projects that read shared platform state through Core API.
       </PageHeading>
       <ProjectSelector snapshot={snapshot} />
+      <InstallationRegistryPanel snapshot={snapshot} />
       <ProjectOverviewCards snapshot={snapshot} />
       <section className="content-grid">
         <RuntimeStatusCard snapshot={snapshot} />

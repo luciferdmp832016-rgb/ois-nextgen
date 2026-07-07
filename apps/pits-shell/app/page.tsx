@@ -1,6 +1,7 @@
-import { getPlatformSnapshot } from "@ois/shared-ui";
+import { getPlatformRegistrySnapshot } from "@ois/shared-ui";
 import {
   DataBoundaryPanel,
+  InstallationRegistryPanel,
   PageHeading,
   PitsShell,
   PlatformCountsPanel,
@@ -12,7 +13,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
-  const snapshot = await getPlatformSnapshot();
+  const snapshot = await getPlatformRegistrySnapshot();
 
   return (
     <PitsShell active="overview" snapshot={snapshot}>
@@ -25,6 +26,7 @@ export default async function Page() {
         <RuntimeStatusCard snapshot={snapshot} />
         <DataBoundaryPanel />
       </section>
+      <InstallationRegistryPanel snapshot={snapshot} />
       <PlatformCountsPanel snapshot={snapshot} />
     </PitsShell>
   );
