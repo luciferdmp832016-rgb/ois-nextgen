@@ -110,10 +110,21 @@ check_service "$OIS_CONSOLE_SERVICE" "OIS_CONSOLE"
 check_service "$PITS_SHELL_SERVICE" "PITS_SHELL"
 check_cloudflared_service "$CLOUDFLARED_SERVICE" "CLOUDFLARED"
 
+section "UI Route Manifests"
+if ! bash "$SCRIPT_DIR/verify-ui-route-manifests.sh"; then
+  record_failure "UI production route manifest verification failed"
+fi
+
 section "Local Runtime Endpoints"
 check_health "local" "$CORE_API_LOCAL_BASE/health"
 check_root_shell "OIS_CONSOLE_LOCAL" "$OIS_CONSOLE_LOCAL_URL" "OIS_CONSOLE" "OIS Console"
+check_route "OIS_CONSOLE_LOCAL_DASHBOARD" "$OIS_CONSOLE_LOCAL_URL/dashboard" "Platform Overview" "DEMO DATA - NOT PRODUCTION"
+check_route "OIS_CONSOLE_LOCAL_PRODUCTS" "$OIS_CONSOLE_LOCAL_URL/products" "Products &amp; Modules" "Product &amp; Module Overview" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_LOCAL_WORKSPACES" "$OIS_CONSOLE_LOCAL_URL/workspaces" "Organizations, Workspaces &amp; Projects" "Workspace Overview" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_LOCAL_RUNTIME" "$OIS_CONSOLE_LOCAL_URL/runtime" "Runtime Status" "Core API source:" "OIS_CONSOLE"
 check_root_shell "PITS_SHELL_LOCAL" "$PITS_SHELL_LOCAL_URL" "PITS_SHELL" "PITS Shell"
+check_route "PITS_SHELL_LOCAL_PROJECTS" "$PITS_SHELL_LOCAL_URL/projects" "Project Selector" "DEMO DATA - NOT PRODUCTION"
+check_route "PITS_SHELL_LOCAL_RUNTIME" "$PITS_SHELL_LOCAL_URL/runtime" "Runtime Status" "Core API source:" "PITS_SHELL"
 
 section "Public Core API Endpoints"
 check_health "public" "$CORE_API_URL/health"

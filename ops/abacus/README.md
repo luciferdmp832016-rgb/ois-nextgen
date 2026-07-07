@@ -16,7 +16,7 @@ bash ops/abacus/status.sh
 | `status.sh` | Shows repo branch/commit/status, Core API systemd status, local/public health, local/public platform overview and seeded counts. | No. Read-only. |
 | `check-live-endpoints.sh` | Checks active OIS NextGen public staging endpoints only. Legacy probes require `--include-legacy-readonly`. | No. Read-only. |
 | `safe-restart-core-api.sh` | Restarts `ois-nextgen-core-api`, waits for local `/health`, then verifies public `/health` and local/public `/platform/overview`. | Yes, service restart only. |
-| `runtime-sync.sh` | Fetches/pulls the integration branch, runs install/lint/typecheck/test/build, then restarts Core API through `safe-restart-core-api.sh` with the restart grace window. | Yes, source sync and service restart only. |
+| `runtime-sync.sh` | Fetches/pulls the integration branch, runs install/lint/typecheck/test, cleans generated OIS/PITS `.next` folders before build, verifies UI route manifests, then restarts Core API or all public staging services. | Yes, source sync and service restart only. |
 | `start-ui-demo-shells.sh` | Builds and starts OIS Console on port 3000 and PITS Shell on port 3001 as temporary `nohup` demo processes. | Yes, temporary UI demo processes only. |
 | `status-ui-demo-shells.sh` | Checks temporary OIS Console/PITS demo PIDs, local HTTP 200 pages, expected shell markers and seeded Core API data; checks preview URLs when `PREVIEW_URL` or `APP_ORIGIN` is available. | No. Read-only. |
 | `stop-ui-demo-shells.sh` | Stops only the temporary OIS Console and PITS Shell demo processes recorded by PID files. | Yes, stops UI demo processes only. |
@@ -26,6 +26,7 @@ bash ops/abacus/status.sh
 | `restart-public-staging-runtime.sh` | Stops legacy temporary UI demo processes, restarts Core API plus OIS/PITS UI shell services, prints safe port diagnostics and verifies local/public staging endpoints. Does not restart `cloudflared` unless `--include-cloudflared` is passed. | Yes, service restart only. |
 | `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs and public staging URLs. | No. Read-only. |
 | `check-public-staging-endpoints.sh` | Checks public Core API, OIS and PITS staging endpoints for HTTP 200, product markers, Core API URL and seeded counts. | No. Read-only. |
+| `verify-ui-route-manifests.sh` | Checks production `.next` route manifests and server entries for every Stage 1A OIS/PITS route. | No. Read-only build artifact check. |
 | `enable-product-subdomain-demo-routes.sh` | Adds a dedicated nginx host-routing config for `ois-ng.dmp247.com` -> port 3000 and `pits-ng.dmp247.com` -> port 3001. | Yes, nginx config only. |
 | `status-product-subdomain-demo-routes.sh` | Checks local Host-header product subdomain routing and optional public DNS/TLS routes. | No. Read-only. |
 | `disable-product-subdomain-demo-routes.sh` | Removes only the Stage 0U-A managed nginx product-subdomain config. | Yes, nginx config only. |
@@ -238,6 +239,19 @@ Stage 1A product shell route checks:
 - OIS Console root, `/dashboard`, `/products`, `/workspaces` and `/runtime`.
 - PITS Shell root, `/projects` and `/runtime`.
 - New Stage 1A routes are expected to pass after the owner pulls the Stage 1A branch and restarts the public staging runtime.
+
+Stage 1A-R1 route 404 hotfix:
+
+- Stage 1A Abacus verification found HTTP 404 on OIS `/products`, `/workspaces`, `/runtime` and PITS `/runtime` even though root/dashboard/projects passed.
+- `runtime-sync.sh` and `install-ui-shell-systemd-services.sh` clean only generated UI `.next` folders before production builds by default.
+- `verify-ui-route-manifests.sh` proves the Stage 1A routes exist in `.next/routes-manifest.json` and `.next/server/app/**/page.js`.
+- `restart-public-staging-runtime.sh` blocks service restart if route manifest verification fails.
+
+Run the guard directly after a build:
+
+```sh
+bash ops/abacus/verify-ui-route-manifests.sh
+```
 
 ## PITS Shell Upload Bundle
 

@@ -3,6 +3,7 @@ set -euo pipefail
 
 REPO_DIR="${REPO_DIR:-/home/ubuntu/ois-nextgen}"
 BUILD_UI_SHELLS="${BUILD_UI_SHELLS:-true}"
+CLEAN_UI_BUILDS="${CLEAN_UI_BUILDS:-true}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=ops/abacus/lib-public-staging-runtime.sh
@@ -72,6 +73,14 @@ fi
 cd "$REPO_DIR"
 
 if [ "$BUILD_UI_SHELLS" = "true" ]; then
+  if [ "$CLEAN_UI_BUILDS" = "true" ]; then
+    printf '%s\n' "UI_SYSTEMD_BUILD_CLEAN_START removing generated OIS/PITS .next folders"
+    rm -rf "$REPO_DIR/apps/ois-console/.next" "$REPO_DIR/apps/pits-shell/.next"
+    printf '%s\n' "UI_SYSTEMD_BUILD_CLEAN_PASSED"
+  else
+    printf '%s\n' "UI_SYSTEMD_BUILD_CLEAN_SKIPPED CLEAN_UI_BUILDS=false"
+  fi
+
   printf '%s\n' "UI_SYSTEMD_BUILD_START OIS Console and PITS Shell"
   env -u DATABASE_URL -u ABACUS_DATABASE_URL \
     CORE_API_URL="$CORE_API_URL" \
@@ -83,6 +92,7 @@ if [ "$BUILD_UI_SHELLS" = "true" ]; then
     NEXT_PUBLIC_CORE_API_URL="$NEXT_PUBLIC_CORE_API_URL" \
     NEXT_TELEMETRY_DISABLED="$NEXT_TELEMETRY_DISABLED" \
     pnpm --filter @ois/pits-shell build
+  bash "$SCRIPT_DIR/verify-ui-route-manifests.sh"
   printf '%s\n' "UI_SYSTEMD_BUILD_PASSED"
 else
   printf '%s\n' "UI_SYSTEMD_BUILD_SKIPPED BUILD_UI_SHELLS=false"

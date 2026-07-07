@@ -23,6 +23,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 0W-A adds safe systemd service install/restart/status/check scripts so OIS Console and PITS Shell public staging can move from temporary `nohup` demo processes to durable services.
 - Stage 0W-B records public staging as operational and hotfixes the ops scripts so cloudflared status is token-safe and legacy temporary UI demo processes are stopped before OIS/PITS systemd restarts.
 - Stage 1A adds the first real OIS Console and PITS Shell product navigation baselines and expands public endpoint checks for the new routes.
+- Stage 1A-R1 fixes the route 404 verification gap by cleaning generated UI `.next` build artifacts before Abacus builds and verifying Next production route manifests before UI service restart.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -117,6 +118,8 @@ Stage 0W-A public staging runtime hardening result: safe owner-run scripts now i
 Stage 0W-B public staging runtime result: owner/Abacus execution confirms public staging is operational. Core API, OIS Console, PITS Shell and cloudflared were active; `https://ois-ng.dmp247.com`, `/dashboard`, `https://pits-ng.dmp247.com` and `/projects` passed; `check-public-staging-endpoints.sh` passed. Stage 0W-B hotfixes the ops scripts so `status-public-staging-runtime.sh` no longer prints full `systemctl status cloudflared`, and `restart-public-staging-runtime.sh` stops legacy temporary UI demo processes before restarting OIS/PITS systemd services. Final labels are `PUBLIC_STAGING_RUNTIME_OPERATIONAL` and `PUBLIC_STAGING_RUNTIME_SECRET_SAFE_HOTFIX_READY`.
 
 Stage 1A product shell navigation result: OIS Console now has `/`, `/dashboard`, `/products`, `/workspaces` and `/runtime` shell routes; PITS Shell now has `/`, `/projects` and `/runtime` shell routes. Both shells use shared Core API snapshot helpers, show staging/demo banners, Core API source indicators, runtime cards and seeded Platform Kernel counts through Core API only. Public endpoint scripts now check the expanded route set after owner runtime sync. Final result is `PRODUCT_SHELL_NAVIGATION_BASELINE_READY`.
+
+Stage 1A-R1 product shell route 404 hotfix result: owner Abacus verification after Stage 1A found local/public HTTP 404 on OIS `/products`, `/workspaces`, `/runtime` and PITS `/runtime` while root/dashboard/projects and Core API stayed healthy. Stage 1A-R1 confirms source route files and local production build manifests exist, then updates Abacus ops so generated UI `.next` folders are cleaned before build and `verify-ui-route-manifests.sh` blocks service restart if expected route artifacts are missing. Final result is `PRODUCT_SHELL_ROUTE_404_HOTFIX_READY`; public HTTP 200 verification requires owner runtime re-sync.
 
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
@@ -239,6 +242,8 @@ Stage 0W-A result: public staging runtime hardening scripts are ready. Recommend
 Stage 0W-B result: public staging runtime is operational and the secret-safe hotfix is ready. Recommended next stage: Stage 0W-C - Owner Pull Hotfix And Verify Token-Safe Status.
 
 Stage 1A result: product shell navigation baseline is ready. Recommended next stage: Stage 1B - Owner Runtime Sync And Public Product Shell Verification.
+
+Stage 1A-R1 result: product shell route 404 hotfix is ready. Recommended next stage: Stage 1A-R2 - Owner Runtime Sync And Route 200 Verification.
 
 ## Stage 0N Resource Boundaries
 
@@ -519,7 +524,8 @@ Stage 0R-D adds owner-run SSH scripts under `ops/abacus/`:
 | `status.sh` | Repo/service/health/overview status and seeded counts. | Read-only. |
 | `check-live-endpoints.sh` | Active OIS NextGen public staging endpoint checks. | Read-only. |
 | `safe-restart-core-api.sh` | Restart Core API service and verify health/overview. | Service restart only. |
-| `runtime-sync.sh` | Fetch/pull integration, run validation, restart Core API and verify health/overview. | Source sync and service restart only. |
+| `runtime-sync.sh` | Fetch/pull integration, run validation, clean generated UI `.next` folders before build, verify UI route manifests, restart Core API or all public staging services and verify health/overview. | Source sync and service restart only. |
+| `verify-ui-route-manifests.sh` | Verifies OIS/PITS production `.next/routes-manifest.json` and `.next/server/app/**/page.js` entries for Stage 1A routes. | No. Read-only build artifact check. |
 | `rollback-core-api-nginx-poc.sh` | Print rollback plan; execute only with `--confirm-rollback`. | Destructive only with explicit confirmation. |
 
 Stage 0R-D scripts and docs do not add, change or deprecate endpoints. They reduce Abacus Agent credit use by letting the owner run repeatable operations through SSH when the relay works, or through Abacus Web Terminal while the relay is blocked.
@@ -1402,6 +1408,49 @@ Stage 1A safety:
 - No `prisma db push`.
 - No legacy resources touched.
 
+## Stage 1A-R1 Product Shell Route 404 Hotfix
+
+Stage 1A Abacus verification found HTTP 404 on the new product routes even though source builds had advertised them:
+
+- OIS Console: `/products`, `/workspaces`, `/runtime`.
+- PITS Shell: `/runtime`.
+
+Local loopback returned the same 404s, so the issue was not Cloudflare, DNS or the tunnel. Stage 1A-R1 confirms the App Router page files and local production build manifests exist, then hardens Abacus runtime ops against stale generated UI builds.
+
+Hotfix behavior:
+
+- `runtime-sync.sh` removes only generated `apps/ois-console/.next` and `apps/pits-shell/.next` before the recursive production build by default.
+- `install-ui-shell-systemd-services.sh` performs the same generated build cleanup before UI systemd install builds.
+- `verify-ui-route-manifests.sh` checks `.next/routes-manifest.json` plus `.next/server/app/**/page.js` for every Stage 1A public route.
+- `restart-public-staging-runtime.sh` runs the manifest guard before restarting services and stops if route artifacts are missing.
+
+Owner runtime sync after Stage 1A-R1 merge:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+PUBLIC_STAGING_RESTART_SCOPE=all bash ops/abacus/runtime-sync.sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
+Expected guard label:
+
+```text
+UI_ROUTE_MANIFEST_CHECK_PASSED
+```
+
+Stage 1A-R1 safety:
+
+- Generated `.next` cleanup only; no source, env, DB or Cloudflare state is deleted.
+- No Cloudflare dashboard change.
+- No DNS change.
+- No migrations.
+- No seed.
+- No `prisma db push`.
+- No credentials committed.
+- No UI `DATABASE_URL`.
+- No legacy resources touched.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -1473,6 +1522,7 @@ Stage 0V-B/C records owner-executed Cloudflare Tunnel runtime verification only.
 Stage 0W-A adds safe systemd public staging runtime scripts and documentation only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, modify Core API/cloudflared units from Codex or touch legacy resources.
 Stage 0W-B records owner runtime evidence and adds a secret-safe ops hotfix only. It did not commit Cloudflare tokens, print tokens in docs, run migrations, run seed, run `prisma db push`, modify DNS, modify the Cloudflare dashboard, use production credentials or touch legacy resources.
 Stage 1A adds product shell UI code, route tests, endpoint checks and documentation only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL` or touch legacy resources.
+Stage 1A-R1 adds ops/test/docs hotfixes only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL` or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -1518,6 +1568,7 @@ Stage 0V-B/C changes product subdomain endpoints `https://ois-ng.dmp247.com`, `h
 Stage 0W-A does not add or change published endpoints. It adds durable systemd operations and endpoint checks for the already verified Cloudflare Tunnel public staging endpoints.
 Stage 0W-B does not add or change published endpoints. It records public staging as operational and updates ops scripts for token-safe cloudflared status plus legacy UI demo cleanup before OIS/PITS systemd restart.
 Stage 1A adds planned public route checks for `https://ois-ng.dmp247.com/products`, `https://ois-ng.dmp247.com/workspaces`, `https://ois-ng.dmp247.com/runtime` and `https://pits-ng.dmp247.com/runtime`. It changes OIS/PITS root and existing secondary route behavior in code, but public verification is pending owner runtime sync.
+Stage 1A-R1 changes the Stage 1A new-route status to blocked pending owner re-sync because Abacus runtime verification returned HTTP 404 locally and publicly. It adds no new endpoints.
 
 ## Stop Conditions
 
@@ -1543,6 +1594,7 @@ Stage 1A adds planned public route checks for `https://ois-ng.dmp247.com/product
 - Public staging runtime restart would restart cloudflared without explicit owner request.
 - Shared status output would require full `systemctl status cloudflared`, `ExecStart`, a process command line, a Cloudflare tunnel token or any cloudflared environment values.
 - OIS Console or PITS Shell deployment is attempted outside Apps Management Console App Shells without owner approval.
+- UI production route manifest verification fails before public staging service restart.
 - Any additional seed execution, `/auth/demo-login`, write endpoint or row-data inspection is attempted without later owner approval.
 - A workflow tries to use hosted-app service registration or external custom-domain publication instead of the verified SuperComputer nginx/systemd path without owner approval.
 - Direct external SSH is required while the Abacus SSH relay still times out before authentication; use Web Terminal fallback instead.

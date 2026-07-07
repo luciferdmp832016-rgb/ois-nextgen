@@ -5,11 +5,13 @@ REPO_DIR="${REPO_DIR:-/home/ubuntu/ois-nextgen}"
 INTEGRATION_BRANCH="${INTEGRATION_BRANCH:-stage-0b-complete-handoff-ingestion}"
 PUBLIC_STAGING_RESTART_SCOPE="${PUBLIC_STAGING_RESTART_SCOPE:-core}"
 RESTART_CLOUDFLARED="${RESTART_CLOUDFLARED:-false}"
+CLEAN_UI_BUILDS="${CLEAN_UI_BUILDS:-true}"
 
 printf '%s\n' "Runtime sync starting."
 printf '%s\n' "Safety: no migrations, no seed, no prisma db push, no .env printing."
 printf '%s\n' "Safety: stops if Prisma schema, migration or seed files changed in pulled commits."
 printf '%s\n' "Safety: cloudflared is not restarted unless RESTART_CLOUDFLARED=true and PUBLIC_STAGING_RESTART_SCOPE=all."
+printf '%s\n' "Safety: UI build cleanup removes only generated .next folders for OIS Console and PITS Shell."
 
 cd "$REPO_DIR"
 
@@ -46,7 +48,17 @@ pnpm install --frozen-lockfile
 pnpm lint
 pnpm typecheck
 pnpm test
+
+if [ "$CLEAN_UI_BUILDS" = "true" ]; then
+  printf '%s\n' "UI_BUILD_CLEAN_START removing generated OIS/PITS .next folders before production build"
+  rm -rf "$REPO_DIR/apps/ois-console/.next" "$REPO_DIR/apps/pits-shell/.next"
+  printf '%s\n' "UI_BUILD_CLEAN_PASSED"
+else
+  printf '%s\n' "UI_BUILD_CLEAN_SKIPPED CLEAN_UI_BUILDS=false"
+fi
+
 pnpm -r --if-present build
+bash ops/abacus/verify-ui-route-manifests.sh
 
 printf '%s\n' "Restart verification uses a grace window so transient post-restart 502/connection failures are treated as WARMING_UP until timeout."
 case "$PUBLIC_STAGING_RESTART_SCOPE" in

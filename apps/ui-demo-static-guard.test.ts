@@ -1,4 +1,4 @@
-import { Dirent, readdirSync, readFileSync } from "node:fs";
+import { Dirent, existsSync, readdirSync, readFileSync } from "node:fs";
 import { extname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -16,6 +16,16 @@ const forbiddenReferences = [
   "emerald_bql_web_dev",
   "ois.dmp247.com",
   "oisys.abacusai.app"
+];
+const expectedRouteFiles = [
+  "ois-console/app/page.tsx",
+  "ois-console/app/dashboard/page.tsx",
+  "ois-console/app/products/page.tsx",
+  "ois-console/app/workspaces/page.tsx",
+  "ois-console/app/runtime/page.tsx",
+  "pits-shell/app/page.tsx",
+  "pits-shell/app/projects/page.tsx",
+  "pits-shell/app/runtime/page.tsx"
 ];
 
 function collectScannedFiles(root: string): string[] {
@@ -61,5 +71,12 @@ describe("UI demo package static guard", () => {
     }
 
     expect(violations).toEqual([]);
+  });
+
+  it("keeps every Stage 1A public route backed by an App Router page file", () => {
+    const appsRoot = fileURLToPath(new URL(".", import.meta.url));
+    const missingRoutes = expectedRouteFiles.filter((routeFile) => !existsSync(join(appsRoot, routeFile)));
+
+    expect(missingRoutes).toEqual([]);
   });
 });
