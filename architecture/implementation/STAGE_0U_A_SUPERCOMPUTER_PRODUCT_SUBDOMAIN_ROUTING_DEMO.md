@@ -2,7 +2,9 @@
 
 Stage 0U-A local result: `PRODUCT_SUBDOMAIN_ROUTING_DEMO_OPS_READY`.
 
-Owner-run success label after Abacus local Host-header verification: `SUPERCOMPUTER_PRODUCT_SUBDOMAIN_LOCAL_ROUTING_READY`.
+Owner-run local Host-header result: `SUPERCOMPUTER_PRODUCT_SUBDOMAIN_LOCAL_ROUTING_READY`.
+
+Public custom subdomain result: `CUSTOM_SUBDOMAIN_TLS_BLOCKED`.
 
 ## Baseline
 
@@ -111,6 +113,33 @@ Possible public outcomes:
 | `CUSTOM_SUBDOMAIN_TLS_BLOCKED` | HTTPS fails before a valid product shell response and HTTP did not validate either. |
 | `CUSTOM_SUBDOMAIN_BLOCKED_BY_ABACUS_EDGE` | Abacus edge returns blocking/non-product responses for the custom host. |
 
+## Runtime Verification Evidence
+
+Owner/Abacus runtime verification confirms:
+
+| Check | Result |
+|---|---|
+| DNS for `ois-ng.dmp247.com` | Propagated; resolves as CNAME to `ois-nextgen.abacusai.cloud`. |
+| DNS for `pits-ng.dmp247.com` | Propagated; resolves as CNAME to `ois-nextgen.abacusai.cloud`. |
+| Local Host-header OIS route | PASS; `Host: ois-ng.dmp247.com` routed to OIS Console with HTTP 200, `OIS_CONSOLE`, Core API URL and seeded counts verified. |
+| Local Host-header PITS route | PASS; `Host: pits-ng.dmp247.com` routed to PITS Shell with HTTP 200, `PITS_SHELL`, Core API URL and seeded counts verified. |
+| Core API URL shown by both shells | `https://ois-nextgen.abacusai.cloud`. |
+| Public HTTPS OIS root | Failed with SSL handshake failure. |
+| Public HTTPS PITS root | Failed with SSL handshake failure. |
+| Public HTTP OIS root | HTTP 409. |
+| Public HTTP PITS root | HTTP 409. |
+| Public HTTPS OIS dashboard | Failed with SSL handshake failure. |
+| Public HTTPS PITS projects | Failed with SSL handshake failure. |
+
+Interpretation:
+
+- DNS propagation succeeded.
+- nginx/app host routing succeeded locally.
+- Public custom hostname routing is blocked at the Abacus edge/TLS registration layer.
+- This is not an OIS/PITS app issue.
+- This is not a Core API issue.
+- This is not a local nginx routing issue.
+
 Rollback/disable:
 
 ```sh
@@ -120,20 +149,20 @@ bash ops/abacus/stop-ui-demo-shells.sh
 
 ## Published Endpoint Delta
 
-### Added Planned
+### Added
 
 | Endpoint | Status | Expected result | Evidence |
 |---|---|---|---|
-| `https://ois-ng.dmp247.com` | `PLANNED_NOT_CREATED` | OIS Console product shell, `OIS_CONSOLE`, shared Core API URL and seeded counts after owner DNS/nginx checks. | Stage 0U-A scripts/docs only; no DNS or public route configured locally. |
-| `https://pits-ng.dmp247.com` | `PLANNED_NOT_CREATED` | PITS Shell product shell, `PITS_SHELL`, shared Core API URL and seeded counts after owner DNS/nginx checks. | Stage 0U-A scripts/docs only; no DNS or public route configured locally. |
-| `https://ois-ng.dmp247.com/dashboard` | `PLANNED_NOT_CREATED` | OIS Console dashboard HTTP 200 after owner DNS/nginx checks. | Stage 0U-A scripts/docs only. |
-| `https://pits-ng.dmp247.com/projects` | `PLANNED_NOT_CREATED` | PITS Shell projects HTTP 200 after owner DNS/nginx checks. | Stage 0U-A scripts/docs only. |
+| None | N/A | N/A | Stage 0U-A runtime verification did not add new endpoints beyond the planned endpoints documented by the ops package. |
 
 ### Changed
 
 | Endpoint | Previous status/result | New status/result | Evidence |
 |---|---|---|---|
-| None | N/A | N/A | Stage 0U-A does not alter existing endpoints. |
+| `https://ois-ng.dmp247.com` | `PLANNED_NOT_CREATED`; Stage 0U-A scripts ready, DNS/TLS not verified. | `CUSTOM_SUBDOMAIN_TLS_BLOCKED`; DNS CNAME propagated, local Host-header route passed, public HTTPS SSL handshake failed and HTTP returned 409. | Owner/Abacus runtime verification. |
+| `https://pits-ng.dmp247.com` | `PLANNED_NOT_CREATED`; Stage 0U-A scripts ready, DNS/TLS not verified. | `CUSTOM_SUBDOMAIN_TLS_BLOCKED`; DNS CNAME propagated, local Host-header route passed, public HTTPS SSL handshake failed and HTTP returned 409. | Owner/Abacus runtime verification. |
+| `https://ois-ng.dmp247.com/dashboard` | `PLANNED_NOT_CREATED`; public path not verified. | `CUSTOM_SUBDOMAIN_TLS_BLOCKED`; public HTTPS check failed with SSL handshake failure. | Owner/Abacus runtime verification. |
+| `https://pits-ng.dmp247.com/projects` | `PLANNED_NOT_CREATED`; public path not verified. | `CUSTOM_SUBDOMAIN_TLS_BLOCKED`; public HTTPS check failed with SSL handshake failure. | Owner/Abacus runtime verification. |
 
 ### Unchanged
 
@@ -168,10 +197,10 @@ bash ops/abacus/stop-ui-demo-shells.sh
 |---|---|---|
 | Local OIS Host-header route | `curl -H "Host: ois-ng.dmp247.com" http://127.0.0.1/` | HTTP 200 OIS Console root demo page with `OIS_CONSOLE`, Core API URL and seeded counts. |
 | Local PITS Host-header route | `curl -H "Host: pits-ng.dmp247.com" http://127.0.0.1/` | HTTP 200 PITS Shell root demo page with `PITS_SHELL`, Core API URL and seeded counts. |
-| Public OIS root after DNS | `curl -i https://ois-ng.dmp247.com` | HTTP 200 after owner DNS/TLS/routing succeeds. |
-| Public PITS root after DNS | `curl -i https://pits-ng.dmp247.com` | HTTP 200 after owner DNS/TLS/routing succeeds. |
-| Public OIS dashboard after DNS | `curl -i https://ois-ng.dmp247.com/dashboard` | HTTP 200 after owner DNS/TLS/routing succeeds. |
-| Public PITS projects after DNS | `curl -i https://pits-ng.dmp247.com/projects` | HTTP 200 after owner DNS/TLS/routing succeeds. |
+| Public OIS root after DNS | `curl -i https://ois-ng.dmp247.com` | Currently `CUSTOM_SUBDOMAIN_TLS_BLOCKED`; HTTPS SSL handshake failure. |
+| Public PITS root after DNS | `curl -i https://pits-ng.dmp247.com` | Currently `CUSTOM_SUBDOMAIN_TLS_BLOCKED`; HTTPS SSL handshake failure. |
+| Public OIS dashboard after DNS | `curl -i https://ois-ng.dmp247.com/dashboard` | Currently `CUSTOM_SUBDOMAIN_TLS_BLOCKED`; HTTPS SSL handshake failure. |
+| Public PITS projects after DNS | `curl -i https://pits-ng.dmp247.com/projects` | Currently `CUSTOM_SUBDOMAIN_TLS_BLOCKED`; HTTPS SSL handshake failure. |
 
 ## Safety Statement
 
@@ -196,9 +225,11 @@ Stage 0U-A preserves these rules:
 
 Stage 0U-A local Codex work is marked `PRODUCT_SUBDOMAIN_ROUTING_DEMO_OPS_READY`.
 
-Do not mark `SUPERCOMPUTER_PRODUCT_SUBDOMAIN_LOCAL_ROUTING_READY` until `status-product-subdomain-demo-routes.sh` passes on the Abacus SuperComputer after UI shells and nginx routes are enabled.
+Owner/Abacus local Host-header runtime verification is marked `SUPERCOMPUTER_PRODUCT_SUBDOMAIN_LOCAL_ROUTING_READY`.
 
-Recommended next stage: Stage 0U-A-R1 - Owner Web Terminal Local Host-Header Product Subdomain Routing Evidence.
+Public custom subdomain verification is marked `CUSTOM_SUBDOMAIN_TLS_BLOCKED`.
+
+Recommended next stage: Stage 0U-B - Abacus Custom Hostname / TLS Registration Check.
 
 ## Validation
 
@@ -209,4 +240,4 @@ Recommended next stage: Stage 0U-A-R1 - Owner Web Terminal Local Host-Header Pro
 | `pnpm typecheck` | PASS; `tsc -p tsconfig.check.json --noEmit`. |
 | `pnpm test` | PASS; 5 files, 25 tests. Expected mocked HTTP 500 log line came from deliberate Core API DB-error-path test. |
 | `pnpm -r --if-present build` | PASS; Core API TypeScript build and OIS Console/PITS Shell Next builds completed. |
-| `git status -sb` | PASS; Stage 0U-A safe ops/docs changes pending commit only, generated `artifacts/` ignored. |
+| `git status -sb` | PASS; Stage 0U-A runtime verification documentation changes pending commit only. |

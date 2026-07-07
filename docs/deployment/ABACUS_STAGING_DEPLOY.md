@@ -17,7 +17,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 0T-D-R1 prepared a direct upload bundle for PITS Shell because Abacus reported external GitHub clone is blocked in the App Shell environment.
 - Stage 0T-D-R2 deployed PITS Shell from that upload bundle at `https://113d93f4db-3001.na116.preview.abacusai.app`.
 - Stage 0T-E-A-R1 prepares a direct upload bundle for restoring/redeploying OIS Console with the same upload strategy.
-- Stage 0U-A prepares safe SuperComputer nginx host-routing scripts for planned `ois-ng.dmp247.com` and `pits-ng.dmp247.com` staging subdomains; it does not change DNS or public endpoints.
+- Stage 0U-A prepares safe SuperComputer nginx host-routing scripts for `ois-ng.dmp247.com` and `pits-ng.dmp247.com`, then owner runtime evidence confirmed DNS CNAME propagation and local Host-header routing. Public custom subdomain HTTPS is still blocked by Abacus edge/TLS registration.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -101,7 +101,7 @@ Stage 0T-D-R2 PITS Shell upload deploy result: owner/Abacus evidence confirms `p
 
 Stage 0T-E-A-R1 OIS Console upload bundle result: the OIS Console direct source upload bundle is ready for owner-assisted restore/redeploy. The bundle packages `apps/ois-console`, `packages/shared-ui`, root package/lock/workspace metadata and `tsconfig.base.json`, excluding env files, generated output, `.git`, secrets, runtime files and unrelated apps/domains/Prisma assets. Final result is `OIS_CONSOLE_UPLOAD_BUNDLE_READY`.
 
-Stage 0U-A product subdomain routing demo ops result: safe owner-run scripts are ready for a SuperComputer nginx host-based routing demo. The planned routes are `ois-ng.dmp247.com` to OIS Console on local port 3000 and `pits-ng.dmp247.com` to PITS Shell on local port 3001. Stage 0U-A does not modify DNS, nginx or Abacus runtime from this workspace. Final local result is `PRODUCT_SUBDOMAIN_ROUTING_DEMO_OPS_READY`; owner-run local Host-header success should be recorded later as `SUPERCOMPUTER_PRODUCT_SUBDOMAIN_LOCAL_ROUTING_READY`.
+Stage 0U-A product subdomain routing demo result: safe owner-run scripts are ready for a SuperComputer nginx host-based routing demo. Owner runtime evidence confirmed `ois-ng.dmp247.com` and `pits-ng.dmp247.com` CNAME to `ois-nextgen.abacusai.cloud`, and local nginx Host-header routing returned HTTP 200 for OIS Console and PITS Shell with seeded counts through Core API. Public custom HTTPS checks failed with SSL handshake errors and public HTTP roots returned HTTP 409, so the public custom subdomains remain blocked at the Abacus edge/TLS registration layer. Final labels are `SUPERCOMPUTER_PRODUCT_SUBDOMAIN_LOCAL_ROUTING_READY` and `CUSTOM_SUBDOMAIN_TLS_BLOCKED`.
 
 Published endpoint registry: use `docs/deployment/PUBLISHED_ENDPOINT_REGISTRY.md` as the persistent source of truth for local, Codex Cloud, Abacus VM local, preview proxy, Abacus-managed public staging, legacy production/do-not-touch and future planned endpoints. Every future stage report must include a Published Endpoint Delta section covering added, changed, unchanged, deprecated/stopped, do-not-touch and current test checklist entries.
 
@@ -213,7 +213,7 @@ Stage 0T-D-R2 result: PITS Shell App Shell is deployed from the upload bundle at
 
 Stage 0T-E-A-R1 result: OIS Console direct source upload bundle is ready. Recommended next stage: Stage 0T-E-A-R2 - OIS Console App Shell Redeploy From Bundle.
 
-Stage 0U-A result: SuperComputer product subdomain routing demo ops are ready. Recommended next stage: Stage 0U-A-R1 - Owner Web Terminal Local Host-Header Product Subdomain Routing Evidence.
+Stage 0U-A runtime result: SuperComputer product subdomain local Host-header routing is ready, but public custom subdomain TLS is blocked at the Abacus edge. Recommended next stage: Stage 0U-B - Abacus Custom Hostname / TLS Registration Check.
 
 ## Stage 0N Resource Boundaries
 
@@ -1094,6 +1094,19 @@ Possible public labels:
 | `CUSTOM_SUBDOMAIN_TLS_BLOCKED` | HTTPS fails and HTTP did not validate either. |
 | `CUSTOM_SUBDOMAIN_BLOCKED_BY_ABACUS_EDGE` | Abacus edge blocks or misroutes the custom Host header. |
 
+Runtime verification result:
+
+| Check | Result |
+|---|---|
+| DNS CNAME propagation | `ois-ng.dmp247.com` and `pits-ng.dmp247.com` resolve as CNAMEs to `ois-nextgen.abacusai.cloud`. |
+| Local OIS Host-header route | `Host: ois-ng.dmp247.com` returned HTTP 200, `OIS_CONSOLE`, Core API `https://ois-nextgen.abacusai.cloud` and seeded counts. |
+| Local PITS Host-header route | `Host: pits-ng.dmp247.com` returned HTTP 200, `PITS_SHELL`, Core API `https://ois-nextgen.abacusai.cloud` and seeded counts. |
+| Public HTTPS root checks | `https://ois-ng.dmp247.com` and `https://pits-ng.dmp247.com` failed with SSL handshake failure. |
+| Public HTTP root checks | `http://ois-ng.dmp247.com` and `http://pits-ng.dmp247.com` returned HTTP 409. |
+| Public HTTPS app paths | `/dashboard` and `/projects` checks failed with SSL handshake failure. |
+
+Interpretation: DNS propagation and local nginx/app routing succeeded. Public custom hostname routing is blocked at the Abacus edge/TLS registration layer, not by OIS Console, PITS Shell, Core API or local nginx routing. Recommended next stage is Stage 0U-B - Abacus Custom Hostname / TLS Registration Check.
+
 Stage 0U-A safety:
 
 - No DNS changes from Codex.
@@ -1172,7 +1185,7 @@ Stage 0T-C records owner/Abacus App Shell deployment evidence for OIS Console on
 Stage 0T-D-R1 prepares a PITS Shell direct upload source bundle only. It did not deploy, modify Abacus runtime, migrate, seed, call endpoints, create App Shells, modify nginx/systemd or touch legacy resources.
 Stage 0T-D-R2 records owner/Abacus evidence that PITS Shell deployed from the upload bundle. It did not modify Core API, migrate, seed, call write endpoints, call `/auth/demo-login`, use production credentials, modify custom domains or touch legacy resources. Two-App-Shell verification remains blocked by the OIS Console preview HTTP 404.
 Stage 0T-E-A-R1 prepares an OIS Console direct upload source bundle only. It did not deploy, modify Abacus runtime, migrate, seed, call endpoints, create App Shells, modify nginx/systemd or touch legacy resources.
-Stage 0U-A adds safe owner-run nginx product subdomain demo scripts and documentation only. It did not deploy, modify Abacus runtime from Codex, modify DNS, migrate, seed, call endpoints, start UI shells, modify production domains or touch legacy resources.
+Stage 0U-A adds safe owner-run nginx product subdomain demo scripts and records owner runtime evidence. DNS CNAME propagation and local Host-header routing passed, but public custom HTTPS is blocked by Abacus edge/TLS registration. Codex did not deploy, modify Abacus runtime, modify DNS, migrate, seed, call endpoints, start UI shells, modify production domains or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -1212,7 +1225,7 @@ Stage 0T-C adds OIS Console App Shell public preview endpoint `https://161acd4ff
 Stage 0T-D-R1 does not add endpoints. PITS Shell moves from `PLANNED_NOT_CREATED` to `SOURCE_ACCESS_BLOCKED` with direct upload bundle ready; OIS Console and Core API endpoints remain unchanged.
 Stage 0T-D-R2 adds PITS Shell App Shell public preview endpoint `https://113d93f4db-3001.na116.preview.abacusai.app` with HTTP 200 evidence. The previous OIS Console App Shell preview `https://161acd4ff8.na116.preview.abacusai.app` changes to `OIS_CONSOLE_APP_SHELL_PREVIEW_UNAVAILABLE_404`; Core API `/health` and `/platform/overview` remain unchanged.
 Stage 0T-E-A-R1 does not add or change endpoints. OIS Console remains `OIS_CONSOLE_APP_SHELL_PREVIEW_UNAVAILABLE_404` until the upload bundle is used in a later redeploy stage; PITS Shell, Core API `/health` and Core API `/platform/overview` remain unchanged.
-Stage 0U-A adds planned product subdomain endpoints `https://ois-ng.dmp247.com`, `https://pits-ng.dmp247.com`, `https://ois-ng.dmp247.com/dashboard` and `https://pits-ng.dmp247.com/projects`. They remain `PLANNED_NOT_CREATED` until owner-run nginx Host-header checks, DNS CNAME setup and TLS/edge verification succeed.
+Stage 0U-A changes product subdomain endpoints `https://ois-ng.dmp247.com`, `https://pits-ng.dmp247.com`, `https://ois-ng.dmp247.com/dashboard` and `https://pits-ng.dmp247.com/projects` to `CUSTOM_SUBDOMAIN_TLS_BLOCKED`. DNS CNAME setup and local Host-header routing succeeded, but public HTTPS failed with SSL handshake errors and public HTTP roots returned HTTP 409.
 
 ## Stop Conditions
 
