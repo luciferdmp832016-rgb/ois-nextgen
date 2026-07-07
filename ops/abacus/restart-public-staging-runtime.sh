@@ -70,6 +70,18 @@ if ! wait_for_core_api_restart_ready "$CORE_API_LOCAL_BASE" "$CORE_API_URL"; the
   record_failure "Core API restart readiness timeout"
 fi
 
+printf '%s\n' "LEGACY_UI_DEMO_CLEANUP_START stopping temporary nohup UI demo processes before systemd UI restart"
+if [ -f "$SCRIPT_DIR/stop-ui-demo-shells.sh" ]; then
+  if ! bash "$SCRIPT_DIR/stop-ui-demo-shells.sh"; then
+    record_failure "legacy UI demo process cleanup failed"
+  fi
+else
+  printf '%s\n' "LEGACY_UI_DEMO_CLEANUP_SKIPPED reason=stop-ui-demo-shells.sh_missing"
+fi
+
+public_staging_report_port_listener "3000" "OIS_CONSOLE_BEFORE_SYSTEMD_RESTART"
+public_staging_report_port_listener "3001" "PITS_SHELL_BEFORE_SYSTEMD_RESTART"
+
 printf 'SYSTEMD_RESTART %s\n' "$OIS_CONSOLE_SERVICE"
 sudo systemctl restart "$OIS_CONSOLE_SERVICE"
 sudo systemctl is-active --quiet "$OIS_CONSOLE_SERVICE" || record_failure "$OIS_CONSOLE_SERVICE is not active after restart"
@@ -77,6 +89,9 @@ sudo systemctl is-active --quiet "$OIS_CONSOLE_SERVICE" || record_failure "$OIS_
 printf 'SYSTEMD_RESTART %s\n' "$PITS_SHELL_SERVICE"
 sudo systemctl restart "$PITS_SHELL_SERVICE"
 sudo systemctl is-active --quiet "$PITS_SHELL_SERVICE" || record_failure "$PITS_SHELL_SERVICE is not active after restart"
+
+public_staging_report_port_listener "3000" "OIS_CONSOLE_AFTER_SYSTEMD_RESTART"
+public_staging_report_port_listener "3001" "PITS_SHELL_AFTER_SYSTEMD_RESTART"
 
 if ! public_staging_systemctl_active "$CLOUDFLARED_SERVICE"; then
   record_failure "$CLOUDFLARED_SERVICE is not active"

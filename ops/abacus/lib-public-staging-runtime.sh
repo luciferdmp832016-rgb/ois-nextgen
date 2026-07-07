@@ -60,6 +60,59 @@ public_staging_report_service() {
   return 1
 }
 
+public_staging_report_cloudflared_service() {
+  local service_name="$1"
+  local label="$2"
+  local active_state=""
+
+  if ! command -v systemctl >/dev/null 2>&1; then
+    PUBLIC_STAGING_DETAIL="$label systemctl not found"
+    return 1
+  fi
+
+  active_state="$(systemctl is-active "$service_name" 2>/dev/null || true)"
+  printf '%s_is_active=%s\n' "$label" "${active_state:-unknown}"
+  systemctl show "$service_name" --property=ActiveState,SubState,MainPID,NRestarts --no-pager || true
+
+  if [ "$active_state" = "active" ]; then
+    PUBLIC_STAGING_DETAIL="$label active token_safe_status=verified"
+    return 0
+  fi
+
+  PUBLIC_STAGING_DETAIL="$label not active token_safe_status=verified"
+  return 1
+}
+
+public_staging_report_port_listener() {
+  local port="$1"
+  local label="$2"
+  local output=""
+
+  printf 'PORT_DIAGNOSTIC %s port=%s\n' "$label" "$port"
+
+  if command -v ss >/dev/null 2>&1; then
+    output="$(ss -H -ltn "sport = :$port" 2>/dev/null || true)"
+    if [ -n "$output" ]; then
+      printf '%s\n' "$output" | sed "s/^/PORT_LISTENER $label /"
+      return 0
+    fi
+    printf 'PORT_LISTENER %s none\n' "$label"
+    return 0
+  fi
+
+  if command -v netstat >/dev/null 2>&1; then
+    output="$(netstat -ltn 2>/dev/null | awk -v p=":$port" '$4 ~ p "$" {print}' || true)"
+    if [ -n "$output" ]; then
+      printf '%s\n' "$output" | sed "s/^/PORT_LISTENER $label /"
+      return 0
+    fi
+    printf 'PORT_LISTENER %s none\n' "$label"
+    return 0
+  fi
+
+  printf 'PORT_LISTENER %s unavailable reason=no_ss_or_netstat\n' "$label"
+}
+
 public_staging_http_get_body() {
   local body_var="$1"
   local code_var="$2"

@@ -33,6 +33,17 @@ check_service() {
   fi
 }
 
+check_cloudflared_service() {
+  local service_name="$1"
+  local label="$2"
+
+  if public_staging_report_cloudflared_service "$service_name" "$label"; then
+    printf 'SERVICE_READY %s\n' "$PUBLIC_STAGING_DETAIL"
+  else
+    record_failure "$PUBLIC_STAGING_DETAIL"
+  fi
+}
+
 check_health() {
   local label="$1"
   local url="$2"
@@ -97,7 +108,7 @@ section "Systemd"
 check_service "$CORE_API_SERVICE" "CORE_API"
 check_service "$OIS_CONSOLE_SERVICE" "OIS_CONSOLE"
 check_service "$PITS_SHELL_SERVICE" "PITS_SHELL"
-check_service "$CLOUDFLARED_SERVICE" "CLOUDFLARED"
+check_cloudflared_service "$CLOUDFLARED_SERVICE" "CLOUDFLARED"
 
 section "Local Runtime Endpoints"
 check_health "local" "$CORE_API_LOCAL_BASE/health"
