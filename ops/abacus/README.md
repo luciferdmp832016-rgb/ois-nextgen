@@ -21,6 +21,11 @@ bash ops/abacus/status.sh
 | `status-ui-demo-shells.sh` | Checks temporary OIS Console/PITS demo PIDs, local HTTP 200 pages, expected shell markers and seeded Core API data; checks preview URLs when `PREVIEW_URL` or `APP_ORIGIN` is available. | No. Read-only. |
 | `stop-ui-demo-shells.sh` | Stops only the temporary OIS Console and PITS Shell demo processes recorded by PID files. | Yes, stops UI demo processes only. |
 | `restart-ui-demo-shells.sh` | Stops, starts and verifies both temporary UI demo shell processes. | Yes, temporary UI demo processes only. |
+| `install-ui-shell-systemd-services.sh` | Installs and starts durable systemd services for OIS Console and PITS Shell public staging shells. | Yes, UI systemd units only. |
+| `uninstall-ui-shell-systemd-services.sh` | Stops, disables and removes only the OIS Console/PITS Shell public staging systemd units. Requires `--confirm`. | Yes, UI systemd units only. |
+| `restart-public-staging-runtime.sh` | Restarts Core API plus OIS/PITS UI shell services and verifies local/public staging endpoints. Does not restart `cloudflared` unless `--include-cloudflared` is passed. | Yes, service restart only. |
+| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, `cloudflared`, local loopback URLs and public staging URLs. | No. Read-only. |
+| `check-public-staging-endpoints.sh` | Checks public Core API, OIS and PITS staging endpoints for HTTP 200, product markers, Core API URL and seeded counts. | No. Read-only. |
 | `enable-product-subdomain-demo-routes.sh` | Adds a dedicated nginx host-routing config for `ois-ng.dmp247.com` -> port 3000 and `pits-ng.dmp247.com` -> port 3001. | Yes, nginx config only. |
 | `status-product-subdomain-demo-routes.sh` | Checks local Host-header product subdomain routing and optional public DNS/TLS routes. | No. Read-only. |
 | `disable-product-subdomain-demo-routes.sh` | Removes only the Stage 0U-A managed nginx product-subdomain config. | Yes, nginx config only. |
@@ -28,6 +33,7 @@ bash ops/abacus/status.sh
 | `rollback-core-api-nginx-poc.sh` | Prints the Stage 0O rollback plan by default. Requires `--confirm-rollback` to stop/disable service and remove nginx/systemd POC files. | Yes, destructive only with explicit confirmation. |
 | `lib-core-api-checks.sh` | Shared helper for health/overview validation and restart readiness retry logic. | No direct use; sourced by scripts. |
 | `lib-ui-demo-shells.sh` | Shared helper for temporary UI demo shell start/stop/status, preview URL inference and page marker/count validation. | No direct use; sourced by scripts. |
+| `lib-public-staging-runtime.sh` | Shared helper for durable public staging runtime service and endpoint checks. | No direct use; sourced by scripts. |
 | `self-test-core-api-checks.sh` | No-network self-test for `lib-core-api-checks.sh` response parsing under `set -u`. | No. Local parser test only. |
 
 ## UI Demo Shells
@@ -158,6 +164,68 @@ Verified routes:
 
 Do not paste tunnel tokens, print tunnel tokens, commit connector credentials or recreate DNS records from this README. Cloudflare connector/runtime state lives on the Abacus VM and Cloudflare dashboard only. Use `docs/deployment/CLOUDFLARE_TUNNEL_CUSTOM_SUBDOMAINS.md` for verification and rollback notes.
 
+## Public Staging Runtime Hardening
+
+Stage 0W-A promotes the OIS Console and PITS Shell public staging shells from temporary `nohup` demo processes into durable systemd services. This keeps the already verified Cloudflare Tunnel topology intact while making the app processes restartable and observable.
+
+| Service | Working directory | Port | Public route |
+|---|---|---:|---|
+| `ois-nextgen-core-api` | Existing Core API service | 4000 | `https://ois-nextgen.abacusai.cloud` |
+| `ois-nextgen-ois-console` | `/home/ubuntu/ois-nextgen/apps/ois-console` | 3000 | `https://ois-ng.dmp247.com` |
+| `ois-nextgen-pits-shell` | `/home/ubuntu/ois-nextgen/apps/pits-shell` | 3001 | `https://pits-ng.dmp247.com` |
+| `cloudflared` | Existing Cloudflare connector | n/a | Tunnel for OIS/PITS public hostnames |
+
+Safe UI service environment:
+
+- `CORE_API_URL=https://ois-nextgen.abacusai.cloud`
+- `NEXT_PUBLIC_CORE_API_URL=https://ois-nextgen.abacusai.cloud`
+- `NEXT_TELEMETRY_DISABLED=1`
+- `PORT=3000` for OIS Console.
+- `PORT=3001` for PITS Shell.
+
+The UI systemd units intentionally do not set `DATABASE_URL` or `ABACUS_DATABASE_URL`. They do not modify the Core API service, nginx, DNS or Cloudflare tunnel credentials.
+
+Install and verify durable UI shell services:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+bash ops/abacus/install-ui-shell-systemd-services.sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
+Restart the public staging runtime after a safe source sync:
+
+```sh
+bash ops/abacus/restart-public-staging-runtime.sh
+```
+
+This restarts Core API, OIS Console and PITS Shell. It does not restart `cloudflared`.
+
+Restart `cloudflared` only when the owner explicitly asks for it:
+
+```sh
+bash ops/abacus/restart-public-staging-runtime.sh --include-cloudflared
+```
+
+Remove only the OIS/PITS UI systemd services:
+
+```sh
+bash ops/abacus/uninstall-ui-shell-systemd-services.sh --confirm
+```
+
+`runtime-sync.sh` remains Core API only by default. To restart all three app services after a pull/build, set:
+
+```sh
+PUBLIC_STAGING_RESTART_SCOPE=all bash ops/abacus/runtime-sync.sh
+```
+
+To include `cloudflared`, both an all-service restart and the explicit cloudflared flag are required:
+
+```sh
+PUBLIC_STAGING_RESTART_SCOPE=all RESTART_CLOUDFLARED=true bash ops/abacus/runtime-sync.sh
+```
+
 ## PITS Shell Upload Bundle
 
 Stage 0T-D-R1 adds a direct source upload bundle path for PITS Shell because Abacus App Shell deployment reported that external GitHub clone is blocked.
@@ -284,6 +352,36 @@ Stop temporary UI demo shells:
 
 ```sh
 bash ops/abacus/stop-ui-demo-shells.sh
+```
+
+Install durable OIS/PITS public staging services:
+
+```sh
+bash ops/abacus/install-ui-shell-systemd-services.sh
+```
+
+Read-only public staging runtime status:
+
+```sh
+bash ops/abacus/status-public-staging-runtime.sh
+```
+
+Read-only public staging endpoint check:
+
+```sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
+Restart Core API plus OIS/PITS public staging services:
+
+```sh
+bash ops/abacus/restart-public-staging-runtime.sh
+```
+
+Uninstall only the OIS/PITS public staging services:
+
+```sh
+bash ops/abacus/uninstall-ui-shell-systemd-services.sh --confirm
 ```
 
 Rollback plan only:

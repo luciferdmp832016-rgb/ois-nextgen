@@ -3,10 +3,13 @@ set -euo pipefail
 
 REPO_DIR="${REPO_DIR:-/home/ubuntu/ois-nextgen}"
 INTEGRATION_BRANCH="${INTEGRATION_BRANCH:-stage-0b-complete-handoff-ingestion}"
+PUBLIC_STAGING_RESTART_SCOPE="${PUBLIC_STAGING_RESTART_SCOPE:-core}"
+RESTART_CLOUDFLARED="${RESTART_CLOUDFLARED:-false}"
 
 printf '%s\n' "Runtime sync starting."
 printf '%s\n' "Safety: no migrations, no seed, no prisma db push, no .env printing."
 printf '%s\n' "Safety: stops if Prisma schema, migration or seed files changed in pulled commits."
+printf '%s\n' "Safety: cloudflared is not restarted unless RESTART_CLOUDFLARED=true and PUBLIC_STAGING_RESTART_SCOPE=all."
 
 cd "$REPO_DIR"
 
@@ -46,6 +49,21 @@ pnpm test
 pnpm -r --if-present build
 
 printf '%s\n' "Restart verification uses a grace window so transient post-restart 502/connection failures are treated as WARMING_UP until timeout."
-bash ops/abacus/safe-restart-core-api.sh
+case "$PUBLIC_STAGING_RESTART_SCOPE" in
+  core)
+    bash ops/abacus/safe-restart-core-api.sh
+    ;;
+  all)
+    restart_args=()
+    if [ "$RESTART_CLOUDFLARED" = "true" ]; then
+      restart_args+=(--include-cloudflared)
+    fi
+    bash ops/abacus/restart-public-staging-runtime.sh "${restart_args[@]}"
+    ;;
+  *)
+    printf 'STOP: unsupported PUBLIC_STAGING_RESTART_SCOPE=%s. Use core or all.\n' "$PUBLIC_STAGING_RESTART_SCOPE" >&2
+    exit 2
+    ;;
+esac
 
 printf '\nRuntime sync completed with no behavior regression detected by scripted checks.\n'
