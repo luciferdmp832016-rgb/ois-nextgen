@@ -229,6 +229,14 @@ export function DetailStatusPanel<T>({ detail, label }: { detail: RegistryDetail
   );
 }
 
+export function DetailSourceMarker({ label }: { label: string }) {
+  return (
+    <p className="muted detail-source-marker" data-detail-source={label}>
+      {label}
+    </p>
+  );
+}
+
 export function DetailFallbackPanel({ title, message }: { title: string; message: string }) {
   return (
     <section className="panel">

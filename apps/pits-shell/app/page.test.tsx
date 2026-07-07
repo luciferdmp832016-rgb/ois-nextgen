@@ -282,6 +282,7 @@ describe("PITS Shell product shell", () => {
     const html = renderToStaticMarkup(await ProjectDetailPage({ params: Promise.resolve({ id: "prj_emerald_precinct_demo" }) }));
 
     expect(html).toContain("Project Detail Source");
+    expect(html).toContain('data-detail-source="Project Detail Source"');
     expect(html).toContain("PITS_RUNTIME_SHELL");
     expect(html).toContain(`${oisPublicBaseUrl}/products/prod_pits`);
     expect(html).toContain(`${oisPublicBaseUrl}/workspaces/ws_pmc_org_demo`);

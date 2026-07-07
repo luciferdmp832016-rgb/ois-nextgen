@@ -8,6 +8,7 @@ import {
   DataBoundaryPanel,
   DetailFacts,
   DetailFallbackPanel,
+  DetailSourceMarker,
   DetailStatusPanel,
   OisConsoleShell,
   PageHeading,
@@ -32,6 +33,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         <PageHeading title="Product Not Found" eyebrow="Product Registry Detail">
           The requested product was not returned by the read-only Core API registry.
         </PageHeading>
+        <DetailSourceMarker label="Product Detail Source" />
         <section className="dashboard-grid">
           <DetailStatusPanel detail={detail} label="Product Detail" />
           <DetailFallbackPanel title="Product not linked yet" message={detail.errorMessage ?? "Core API returned no product detail."} />
@@ -46,6 +48,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       <PageHeading title={product.name} eyebrow={product.code}>
         Read-only product detail with module, installation, workspace and PITS project relationships.
       </PageHeading>
+      <DetailSourceMarker label="Product Detail Source" />
 
       <section className="panel">
         <DetailFacts

@@ -300,6 +300,18 @@ bash ops/abacus/status-public-staging-runtime.sh
 bash ops/abacus/check-public-staging-endpoints.sh
 ```
 
+Stage 1C-R1 detail UI marker hotfix:
+
+- Abacus runtime verification found Stage 1C Core API detail endpoints and route manifests passing, but detail UI checks failed because HTML responses did not include the marker strings expected by the ops scripts.
+- Detail routes now render explicit server-rendered marker text plus `data-detail-source`.
+- Required markers:
+  - OIS `/products/[id]`: `Product Detail Source`
+  - OIS `/workspaces/[id]`: `Workspace Detail Source`
+  - OIS `/modules/[id]`: `Module Detail Source`
+  - OIS `/installations/[id]`: `Installation Detail Source`
+  - PITS `/projects/[id]`: `Project Detail Source`
+- `status-public-staging-runtime.sh` and `check-public-staging-endpoints.sh` continue to use those exact marker strings.
+
 ## PITS Shell Upload Bundle
 
 Stage 0T-D-R1 adds a direct source upload bundle path for PITS Shell because Abacus App Shell deployment reported that external GitHub clone is blocked.

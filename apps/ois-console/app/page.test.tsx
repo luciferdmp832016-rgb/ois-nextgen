@@ -380,6 +380,7 @@ describe("OIS Console product shell", () => {
     const html = renderToStaticMarkup(await ProductDetailPage({ params: Promise.resolve({ id: "prod_pits" }) }));
 
     expect(html).toContain("Product Detail Source");
+    expect(html).toContain('data-detail-source="Product Detail Source"');
     expect(html).toContain("PITS_RUNTIME_SHELL");
     expect(html).toContain("/modules/module_pits_runtime_shell");
     expect(html).toContain(`${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`);
@@ -413,6 +414,7 @@ describe("OIS Console product shell", () => {
       for (const marker of markers) {
         expect(html).toContain(marker);
       }
+      expect(html).toContain(`data-detail-source="${markers[0]}"`);
       expect(html).toContain("Detail ready");
       expect(html).not.toContain(dbEnvKey);
     }

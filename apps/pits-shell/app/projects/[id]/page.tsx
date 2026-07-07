@@ -7,6 +7,7 @@ import {
   DataBoundaryPanel,
   DetailFacts,
   DetailFallbackPanel,
+  DetailSourceMarker,
   DetailStatusPanel,
   PageHeading,
   PitsShell,
@@ -32,6 +33,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
         <PageHeading title="Project Not Found" eyebrow="Project Registry Detail">
           The requested project was not returned by the read-only Core API registry.
         </PageHeading>
+        <DetailSourceMarker label="Project Detail Source" />
         <section className="dashboard-grid">
           <DetailStatusPanel detail={detail} label="Project Detail" />
           <DetailFallbackPanel title="Project not linked yet" message={detail.errorMessage ?? "Core API returned no project detail."} />
@@ -46,6 +48,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
       <PageHeading title={project.name} eyebrow={project.code}>
         Read-only PITS project detail with related platform products, installations and OIS Console links.
       </PageHeading>
+      <DetailSourceMarker label="Project Detail Source" />
 
       <section className="panel">
         <DetailFacts
