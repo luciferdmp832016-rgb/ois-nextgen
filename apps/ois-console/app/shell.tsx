@@ -7,6 +7,7 @@ import {
   getOwnerReadinessLabel,
   getReadinessGaps,
   kernelFields,
+  ModernProductShell,
   type KernelField,
   type RegistryDetailSnapshot,
   type RegistryHealthItem,
@@ -18,11 +19,11 @@ import {
 } from "@ois/shared-ui";
 
 const navItems = [
-  { id: "overview", href: "/", label: "Overview" },
-  { id: "dashboard", href: "/dashboard", label: "Dashboard" },
-  { id: "products", href: "/products", label: "Products" },
-  { id: "workspaces", href: "/workspaces", label: "Workspaces" },
-  { id: "runtime", href: "/runtime", label: "Runtime" }
+  { id: "overview", href: "/", label: "Overview", shortLabel: "Ov" },
+  { id: "dashboard", href: "/dashboard", label: "Dashboard", shortLabel: "Db" },
+  { id: "products", href: "/products", label: "Products", shortLabel: "Pr" },
+  { id: "workspaces", href: "/workspaces", label: "Workspaces", shortLabel: "Ws" },
+  { id: "runtime", href: "/runtime", label: "Runtime", shortLabel: "Rt" }
 ];
 
 const countLabels: Record<KernelField, string> = {
@@ -48,33 +49,20 @@ export function OisConsoleShell({
   const healthOk = snapshot.health.ok && snapshot.healthStatus === "ok";
 
   return (
-    <main className="product-shell">
-      <aside className="product-sidebar" aria-label="OIS Console navigation">
-        <div className="brand-block">
-          <span className="eyebrow">Product Administration</span>
-          <h1>OIS Console</h1>
-          <p>OIS_CONSOLE</p>
-        </div>
-        <nav className="product-nav">
-          {navItems.map((item) => (
-            <Link className={active === item.id ? "active" : ""} href={item.href} key={item.id}>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </aside>
-
-      <section className="product-main">
-        <header className="product-header">
-          <div>
-            <div className="demo">{snapshot.overviewBanner}</div>
-            <p className="source-line">Core API source: {snapshot.coreApiUrl}</p>
-          </div>
-          <StatusBadge ok={healthOk} label={healthOk ? "Core API healthy" : "Core API unavailable"} />
-        </header>
-        {children}
-      </section>
-    </main>
+    <ModernProductShell
+      active={active}
+      coreApiUrl={snapshot.coreApiUrl}
+      demoBanner={snapshot.overviewBanner}
+      healthLabel={healthOk ? "Core API healthy" : "Core API unavailable"}
+      healthOk={healthOk}
+      navAriaLabel="OIS Console navigation"
+      navItems={navItems}
+      productCode="OIS_CONSOLE"
+      productContext="Product Administration"
+      productName="OIS Console"
+    >
+      {children}
+    </ModernProductShell>
   );
 }
 

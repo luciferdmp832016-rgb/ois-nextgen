@@ -7,6 +7,7 @@ import {
   getOwnerReadinessLabel,
   getReadinessGaps,
   kernelFields,
+  ModernProductShell,
   type KernelField,
   type PlatformRegistrySnapshot,
   type PlatformSnapshot,
@@ -18,9 +19,9 @@ import {
 } from "@ois/shared-ui";
 
 const navItems = [
-  { id: "overview", href: "/", label: "Overview" },
-  { id: "projects", href: "/projects", label: "Projects" },
-  { id: "runtime", href: "/runtime", label: "Runtime" }
+  { id: "overview", href: "/", label: "Overview", shortLabel: "Ov" },
+  { id: "projects", href: "/projects", label: "Projects", shortLabel: "Pr" },
+  { id: "runtime", href: "/runtime", label: "Runtime", shortLabel: "Rt" }
 ];
 
 const countLabels: Record<KernelField, string> = {
@@ -46,27 +47,20 @@ export function PitsShell({
   const healthOk = snapshot.health.ok && snapshot.healthStatus === "ok";
 
   return (
-    <main className="runtime-shell">
-      <header className="runtime-header">
-        <div>
-          <div className="demo">{snapshot.overviewBanner}</div>
-          <h1>PITS Shell</h1>
-          <p>PITS_SHELL</p>
-        </div>
-        <div className="header-status">
-          <span className="source-line">Core API source: {snapshot.coreApiUrl}</span>
-          <StatusBadge ok={healthOk} label={healthOk ? "Core API healthy" : "Core API unavailable"} />
-        </div>
-      </header>
-      <nav className="runtime-nav" aria-label="PITS Shell navigation">
-        {navItems.map((item) => (
-          <Link className={active === item.id ? "active" : ""} href={item.href} key={item.id}>
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-      <section className="runtime-content">{children}</section>
-    </main>
+    <ModernProductShell
+      active={active}
+      coreApiUrl={snapshot.coreApiUrl}
+      demoBanner={snapshot.overviewBanner}
+      healthLabel={healthOk ? "Core API healthy" : "Core API unavailable"}
+      healthOk={healthOk}
+      navAriaLabel="PITS Shell navigation"
+      navItems={navItems}
+      productCode="PITS_SHELL"
+      productContext="Product Runtime"
+      productName="PITS Shell"
+    >
+      {children}
+    </ModernProductShell>
   );
 }
 

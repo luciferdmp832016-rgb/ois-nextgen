@@ -32,6 +32,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 1E adds read-only Platform Registry governance/readiness through Core API and owner-verifiable readiness panels in OIS Console and PITS Shell.
 - Stage 1F adds read-only owner cockpit and visual UAT navigation surfaces in OIS Console and PITS Shell without adding a Core API endpoint.
 - Stage 1F-R1 fixes the OIS Console root cockpit marker contract by rendering deterministic `Ready to operate` text on `/`.
+- Stage 1G standardizes OIS Console and PITS Shell around a modern responsive shell with fixed navigation/header, independent content scrolling and hide/show navigation controls.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -140,6 +141,8 @@ Stage 1E registry governance readiness result: Core API now exposes source-ready
 Stage 1F owner registry cockpit visual UAT result: OIS Console and PITS Shell now render source-ready owner cockpit surfaces that summarize existing registry counts, health, readiness, missing link/runtime URL guard status, forbidden link guard status and cross-product detail links. Final result is `OWNER_REGISTRY_COCKPIT_VISUAL_UAT_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
 
 Stage 1F-R1 OIS Console root cockpit marker hotfix result: OIS Console root `/` now renders deterministic server-side `Ready to operate` text while preserving the real cockpit status. Final result is `OWNER_REGISTRY_COCKPIT_ROOT_MARKER_HOTFIX_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
+
+Stage 1G modern responsive shell layout result: OIS Console and PITS Shell now share a source-ready modern product shell standard with fixed navigation/header, independent content scrolling, responsive drawer behavior, hide/show navigation controls and deterministic shell markers. Final result is `MODERN_RESPONSIVE_SHELL_NAVIGATION_STANDARD_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
 
 Stage 1C Product Registry detail cross-linking result: Core API now exposes source-ready read-only detail endpoints for products, product code lookup, workspaces, projects, modules and installations. OIS Console adds product/workspace/module/installation detail routes, PITS Shell adds project detail routes, and shared UI helpers build staging-only links between `https://ois-ng.dmp247.com` and `https://pits-ng.dmp247.com`. Final result is `PRODUCT_REGISTRY_DETAIL_CROSS_LINKING_READY`; public HTTP 200 verification requires owner runtime sync.
 
@@ -1966,6 +1969,64 @@ Expected owner runtime label after Abacus pass and browser/UAT remains: `OWNER_R
 Stage 1F-R1 safety:
 
 - No new Core API endpoint.
+- No Cloudflare dashboard change.
+- No DNS change.
+- No migrations.
+- No seed.
+- No `prisma db push`.
+- No credentials committed.
+- No UI `DATABASE_URL`.
+- No Prisma import in UI shells.
+- No write/mutation endpoints.
+- No `/auth/demo-login` change.
+- No `ois.dmp247.com` or `oisys.abacusai.app` change.
+- No legacy resources touched.
+
+## Stage 1G Modern Responsive Shell Layout Navigation Standard
+
+Stage 1G standardizes the OIS Console and PITS Shell layout before additional UI surfaces are added.
+
+The source-ready shell standard provides:
+
+- Fixed desktop sidebar navigation.
+- Fixed top header/top bar.
+- Independent main-content scrolling.
+- Desktop navigation hide/show control.
+- Responsive mobile drawer/menu control.
+- Lightweight non-blocking bottom shell status bar.
+- Active route highlighting.
+- Product-specific visual tokens while preserving one shared shell behavior.
+
+Stage 1G deterministic UI markers:
+
+- `Modern Shell Layout`
+- `Shell Navigation Toggle`
+- `Fixed Navigation Shell`
+- `Responsive Product Shell`
+
+Stage 1G keeps existing Stage 1B/1C/1D/1E/1F behavior intact:
+
+- OIS root still renders `Owner Registry Cockpit / Registry Runtime Summary`, `Ready to operate` and `Forbidden link guard`.
+- OIS dashboard/products/workspaces/runtime and detail routes still render owner cockpit, health, readiness and UAT markers.
+- PITS root/projects/runtime and project detail routes still render cockpit, project readiness, health and UAT markers.
+- OIS/PITS cross-links still use `https://ois-ng.dmp247.com` and `https://pits-ng.dmp247.com`.
+
+Owner runtime sync after Stage 1G merge:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+git fetch origin
+git checkout stage-0b-complete-handoff-ingestion
+git pull --ff-only
+PUBLIC_STAGING_RESTART_SCOPE=all bash ops/abacus/runtime-sync.sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
+Stage 1G safety:
+
+- No new Core API endpoint.
+- No registry data behavior change.
 - No Cloudflare dashboard change.
 - No DNS change.
 - No migrations.

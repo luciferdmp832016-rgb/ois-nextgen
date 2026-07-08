@@ -1,5 +1,7 @@
 export const demoBannerText = "DEMO DATA - NOT PRODUCTION";
 
+export { ModernProductShell, type ProductShellNavItem, type ProductShellProps } from "./product-shell";
+
 export const defaultCoreApiUrl = "https://ois-nextgen.abacusai.cloud";
 export const defaultOisPublicBaseUrl = "https://ois-ng.dmp247.com";
 export const defaultPitsPublicBaseUrl = "https://pits-ng.dmp247.com";
