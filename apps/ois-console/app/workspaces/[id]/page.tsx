@@ -14,6 +14,7 @@ import {
   DetailStatusPanel,
   OisConsoleShell,
   OwnerEntityUatSummary,
+  OwnerReviewQueuePanel,
   PageHeading,
   RegistryHealthItemPanel,
   RegistryReadinessItemPanel,
@@ -96,6 +97,8 @@ export default async function WorkspaceDetailPage({ params }: WorkspaceDetailPag
         ]}
         links={ownerLinks}
       />
+
+      <OwnerReviewQueuePanel snapshot={snapshot} entityType="workspace" entityId={workspace.id} />
 
       <RegistryReadinessItemPanel title="Workspace Governance / Readiness" item={workspaceReadiness} />
 

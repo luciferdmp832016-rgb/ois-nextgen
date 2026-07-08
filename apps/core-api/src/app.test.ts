@@ -610,6 +610,103 @@ describe("platform registry read-only endpoints", () => {
     }
   });
 
+  it("returns deterministic read-only owner review safe action boundary", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/owner-review" });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body).toMatchObject({
+        metadata: {
+          source: "default-db",
+          mode: "read-only",
+          environment: "staging"
+        },
+        runtime: {
+          coreApiBaseUrl: "https://ois-nextgen.abacusai.cloud",
+          oisConsoleBaseUrl: "https://ois-ng.dmp247.com",
+          pitsShellBaseUrl: "https://pits-ng.dmp247.com",
+          reviewMode: "read-only-owner-review",
+          stage: "Stage 1I"
+        },
+        actionBoundary: {
+          stage: "Stage 1I",
+          enabledAdminActions: 0,
+          mutationEndpointsAdded: false,
+          writePermission: "NOT_ALLOWED_IN_STAGE_1I",
+          markers: expect.arrayContaining(["Owner Review Queue", "Safe Action Boundary", "Read-only preview", "Future admin action requires audit"])
+        },
+        summary: {
+          total: 5,
+          review: 5,
+          readOnlyPreview: 5
+        },
+        items: expect.arrayContaining([
+          expect.objectContaining({
+            id: "product:prod_pits:readiness:owner-uat-required",
+            title: "PITS - Owner UAT",
+            entityType: "product",
+            entityId: "prod_pits",
+            entityName: "PITS",
+            severity: "REVIEW",
+            currentStatus: "INCOMPLETE",
+            actionPermission: "READ_ONLY_PREVIEW",
+            actionCurrentlyAllowed: false,
+            source: "registry-readiness",
+            requiredSafetyGates: expect.arrayContaining([
+              "Sensitive write audit trail",
+              "Owner confirmation before execution",
+              "Rollback plan before enabling action"
+            ])
+          }),
+          expect.objectContaining({
+            entityType: "project",
+            entityId: "prj_emerald_precinct_demo",
+            actionCurrentlyAllowed: false
+          }),
+          expect.objectContaining({
+            entityType: "installation",
+            entityId: "inst_pits_emerald",
+            actionCurrentlyAllowed: false
+          })
+        ])
+      });
+      expect(body.items.every((item: { actionCurrentlyAllowed: boolean }) => item.actionCurrentlyAllowed === false)).toBe(true);
+      expect(JSON.stringify(body)).toContain("suggestedOwnerAction");
+      expect(JSON.stringify(body)).toContain("Future admin action requires audit");
+      expect(JSON.stringify(body)).toContain("rollback");
+      expect(JSON.stringify(body)).toContain("Stage 1I Owner Browser/UAT checklist");
+      expect(JSON.stringify(body)).not.toContain("Stage 1E Owner Browser/UAT checklist");
+      expect(JSON.stringify(body)).not.toContain("localhost");
+      expect(JSON.stringify(body)).not.toContain("127.0.0.1");
+      expect(JSON.stringify(body)).not.toContain("ois.dmp247.com");
+      expect(JSON.stringify(body)).not.toContain("oisys.abacusai.app");
+      expect(mock.readCalls).toEqual([
+        "productDefinition.findMany",
+        "organization.findMany",
+        "workspace.findMany",
+        "project.findMany",
+        "moduleDefinition.findMany",
+        "productInstallation.findMany"
+      ]);
+      expect(mock.writeCalls).toEqual([]);
+      expect(mock.userAccount.findUnique).not.toHaveBeenCalled();
+      expect(mock.delegates.productInstallation.findUnique).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("does not add owner review mutation endpoints", () => {
+    const source = readFileSync(new URL("./app.ts", import.meta.url), "utf8");
+
+    expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/owner-review/);
+    expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/registry\/action-boundary/);
+  });
+
   it.each([
     ["/platform/products/prod_pits", "product", "PITS_RUNTIME_SHELL", "productDefinition.findMany"],
     ["/platform/products/code/PITS", "product", "EMERALD_PRECINCT_DEMO", "productDefinition.findMany"],

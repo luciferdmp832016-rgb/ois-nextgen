@@ -279,13 +279,76 @@ export type RegistryReadinessPayload = {
   };
 };
 
+export type OwnerReviewSeverity = "INFO" | "REVIEW" | "WARNING" | "BLOCKED";
+
+export type OwnerActionPermission =
+  | "READ_ONLY_PREVIEW"
+  | "OWNER_REVIEW_REQUIRED"
+  | "FUTURE_ADMIN_ACTION"
+  | "BLOCKED_UNTIL_AUDIT"
+  | "NOT_ALLOWED_IN_STAGE_1I";
+
+export type OwnerReviewItem = {
+  id: string;
+  title: string;
+  entityType: RegistryHealthItem["kind"];
+  entityId: string;
+  entityName: string;
+  severity: OwnerReviewSeverity;
+  currentStatus: RegistryReadinessStatus | RegistryHealthStatus;
+  reason: string;
+  suggestedOwnerAction: string;
+  actionPermission: OwnerActionPermission;
+  actionCurrentlyAllowed: boolean;
+  requiredSafetyGates: string[];
+  auditRequirement: string;
+  rollbackRequirement: string;
+  confirmationRequirement: string;
+  source: "registry-readiness" | "registry-health";
+  evidenceUrl: string | null;
+};
+
+export type OwnerReviewPayload = {
+  metadata: RegistryMetadata;
+  runtime: {
+    coreApiBaseUrl: string;
+    oisConsoleBaseUrl: string;
+    pitsShellBaseUrl: string;
+    reviewMode: string;
+    stage: string;
+    note: string;
+  };
+  actionBoundary: {
+    stage: string;
+    enabledAdminActions: number;
+    mutationEndpointsAdded: boolean;
+    writePermission: OwnerActionPermission;
+    markers: string[];
+  };
+  summary: {
+    total: number;
+    info: number;
+    review: number;
+    warning: number;
+    blocked: number;
+    readOnlyPreview: number;
+    ownerReviewRequired: number;
+    futureAdminAction: number;
+    blockedUntilAudit: number;
+    notAllowedInStage1I: number;
+  };
+  items: OwnerReviewItem[];
+};
+
 export type PlatformRegistrySnapshot = PlatformSnapshot & {
   registry: ApiResult;
   registryHealth: ApiResult;
   registryReadiness: ApiResult;
+  ownerReview: ApiResult;
   registryMetadata: RegistryMetadata | null;
   registryHealthPayload: RegistryHealthPayload | null;
   registryReadinessPayload: RegistryReadinessPayload | null;
+  ownerReviewPayload: OwnerReviewPayload | null;
   registryHealthEntities: RegistryHealthPayload["entities"];
   registryReadinessEntities: RegistryReadinessPayload["entities"];
   products: ProductRegistryItem[];
@@ -514,6 +577,27 @@ export function getRegistryReadinessPayload(source: unknown): RegistryReadinessP
   };
 }
 
+export function getOwnerReviewPayload(source: unknown): OwnerReviewPayload | null {
+  if (!isRecord(source) || !isRecord(source.summary) || !Array.isArray(source.items) || !isRecord(source.actionBoundary)) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+  const runtime = isRecord(source.runtime) ? source.runtime : null;
+
+  if (!metadata || !runtime) {
+    return null;
+  }
+
+  return {
+    metadata,
+    runtime: runtime as OwnerReviewPayload["runtime"],
+    actionBoundary: source.actionBoundary as OwnerReviewPayload["actionBoundary"],
+    summary: source.summary as OwnerReviewPayload["summary"],
+    items: source.items as OwnerReviewItem[]
+  };
+}
+
 function getRegistryErrorMessage(source: unknown) {
   if (!isRecord(source) || !isRecord(source.error)) {
     return null;
@@ -592,25 +676,29 @@ export async function getPlatformSnapshot(): Promise<PlatformSnapshot> {
 
 export async function getPlatformRegistrySnapshot(): Promise<PlatformRegistrySnapshot> {
   const coreApiUrl = getCoreApiUrl();
-  const [health, overview, registry, registryHealth, registryReadiness] = await Promise.all([
+  const [health, overview, registry, registryHealth, registryReadiness, ownerReview] = await Promise.all([
     fetchCoreApi("/health", coreApiUrl),
     fetchCoreApi("/platform/overview", coreApiUrl),
     fetchCoreApi("/platform/registry", coreApiUrl),
     fetchCoreApi("/platform/registry/health", coreApiUrl),
-    fetchCoreApi("/platform/registry/readiness", coreApiUrl)
+    fetchCoreApi("/platform/registry/readiness", coreApiUrl),
+    fetchCoreApi("/platform/owner-review", coreApiUrl)
   ]);
   const platform = createPlatformSnapshot(coreApiUrl, health, overview);
   const registryHealthPayload = getRegistryHealthPayload(registryHealth.data);
   const registryReadinessPayload = getRegistryReadinessPayload(registryReadiness.data);
+  const ownerReviewPayload = getOwnerReviewPayload(ownerReview.data);
 
   return {
     ...platform,
     registry,
     registryHealth,
     registryReadiness,
+    ownerReview,
     registryMetadata: getRegistryMetadata(registry.data),
     registryHealthPayload,
     registryReadinessPayload,
+    ownerReviewPayload,
     registryHealthEntities: registryHealthPayload?.entities ?? emptyRegistryHealthEntities(),
     registryReadinessEntities: registryReadinessPayload?.entities ?? emptyRegistryReadinessEntities(),
     products: getArray<ProductRegistryItem>(registry.data, "products"),
@@ -765,4 +853,16 @@ export function getOwnerForbiddenLinkIssueCount(snapshot: PlatformRegistrySnapsh
       const text = readinessCheckText(check);
       return !check.ok && (text.includes("forbidden") || text.includes("legacy") || text.includes("localhost"));
     }).length;
+}
+
+export function getOwnerReviewItemsFor(
+  snapshot: PlatformRegistrySnapshot,
+  entityType: OwnerReviewItem["entityType"],
+  entityId: string
+) {
+  return snapshot.ownerReviewPayload?.items.filter((item) => item.entityType === entityType && item.entityId === entityId) ?? [];
+}
+
+export function getOwnerReviewPreviewItems(snapshot: PlatformRegistrySnapshot, limit = 6) {
+  return snapshot.ownerReviewPayload?.items.slice(0, limit) ?? [];
 }

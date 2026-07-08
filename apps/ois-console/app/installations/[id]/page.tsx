@@ -13,6 +13,7 @@ import {
   DetailStatusPanel,
   OisConsoleShell,
   OwnerEntityUatSummary,
+  OwnerReviewQueuePanel,
   PageHeading,
   RegistryHealthItemPanel,
   RegistryReadinessItemPanel,
@@ -109,6 +110,8 @@ export default async function InstallationDetailPage({ params }: InstallationDet
           }
         ]}
       />
+
+      <OwnerReviewQueuePanel snapshot={snapshot} entityType="installation" entityId={installation.id} />
 
       <RegistryReadinessItemPanel title="Installation Governance / Readiness" item={installationReadiness} />
 

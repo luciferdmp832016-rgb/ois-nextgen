@@ -646,6 +646,74 @@ p {
   font-weight: 800;
 }
 
+.owner-review-panel {
+  border-left: 4px solid var(--green);
+}
+
+.owner-review-marker-row,
+.owner-action-boundary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.owner-review-marker-row span,
+.disabled-action-preview {
+  background: #eef2f5;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: #344554;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  padding: 7px 9px;
+}
+
+.disabled-action-preview {
+  background: #f8fafc;
+  color: var(--muted);
+}
+
+.owner-review-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.owner-review-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.owner-review-card h4,
+.owner-review-card h5 {
+  margin: 0;
+}
+
+.suggested-actions {
+  border-left: 3px solid var(--blue);
+  display: grid;
+  gap: 6px;
+  padding-left: 10px;
+}
+
+.safety-gate-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.action-boundary-facts {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
 .missing-list {
   border: 1px solid var(--line);
   border-radius: 8px;

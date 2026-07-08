@@ -358,6 +358,73 @@ const registryReadinessPayload = {
   }
 };
 
+const ownerReviewGates = [
+  "ADR or stage approval for write behavior",
+  "Versioned Prisma migration if schema changes are required",
+  "Sensitive write audit trail",
+  "Owner confirmation before execution",
+  "Rollback plan before enabling action"
+];
+
+function ownerReviewItem(entityType: string, entityId: string, entityName: string) {
+  return {
+    id: `${entityType}:${entityId}:readiness:owner-uat-required`,
+    title: `${entityName} - Owner UAT`,
+    entityType,
+    entityId,
+    entityName,
+    severity: "REVIEW",
+    currentStatus: "INCOMPLETE",
+    reason: "Owner Browser/UAT is required before closing the runtime verified label.",
+    suggestedOwnerAction: "Run the owner Browser/UAT checklist after Abacus runtime sync.",
+    actionPermission: "READ_ONLY_PREVIEW",
+    actionCurrentlyAllowed: false,
+    requiredSafetyGates: ownerReviewGates,
+    auditRequirement: "Future admin action requires audit before execution.",
+    rollbackRequirement: "Future admin action requires rollback plan before execution.",
+    confirmationRequirement: "Future admin action requires owner confirmation before execution.",
+    source: "registry-readiness",
+    evidenceUrl: null
+  };
+}
+
+const ownerReviewPayload = {
+  metadata: registryPayload.metadata,
+  runtime: {
+    coreApiBaseUrl: coreApiUrl,
+    oisConsoleBaseUrl: "https://ois-ng.dmp247.com",
+    pitsShellBaseUrl: pitsPublicBaseUrl,
+    reviewMode: "read-only-owner-review",
+    stage: "Stage 1I",
+    note: "Owner review derives from registry readiness/health. No admin action is executable in Stage 1I."
+  },
+  actionBoundary: {
+    stage: "Stage 1I",
+    enabledAdminActions: 0,
+    mutationEndpointsAdded: false,
+    writePermission: "NOT_ALLOWED_IN_STAGE_1I",
+    markers: ["Owner Review Queue", "Safe Action Boundary", "Read-only preview", "Future admin action requires audit"]
+  },
+  summary: {
+    total: 4,
+    info: 0,
+    review: 4,
+    warning: 0,
+    blocked: 0,
+    readOnlyPreview: 4,
+    ownerReviewRequired: 0,
+    futureAdminAction: 0,
+    blockedUntilAudit: 0,
+    notAllowedInStage1I: 0
+  },
+  items: [
+    ownerReviewItem("product", "prod_pits", "PITS"),
+    ownerReviewItem("workspace", "ws_pmc_org_demo", "PMC Org Demo"),
+    ownerReviewItem("project", "prj_emerald_precinct_demo", "Emerald Precinct Demo"),
+    ownerReviewItem("installation", "inst_pits_emerald", "PITS installation")
+  ]
+};
+
 const productDetailPayload = {
   metadata: registryPayload.metadata,
   product: {
@@ -418,7 +485,7 @@ function jsonResponse(payload: unknown, status = 200) {
   });
 }
 
-function mockCoreApiFetch(overrides?: { registryHealth?: unknown; registryReadiness?: unknown }) {
+function mockCoreApiFetch(overrides?: { registryHealth?: unknown; registryReadiness?: unknown; ownerReview?: unknown }) {
   const fetchMock = vi.fn(async (input: Parameters<typeof fetch>[0]) => {
     const url = input instanceof Request ? input.url : String(input);
 
@@ -440,6 +507,10 @@ function mockCoreApiFetch(overrides?: { registryHealth?: unknown; registryReadin
 
     if (url === `${coreApiUrl}/platform/registry/readiness`) {
       return jsonResponse(overrides?.registryReadiness ?? registryReadinessPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/owner-review`) {
+      return jsonResponse(overrides?.ownerReview ?? ownerReviewPayload);
     }
 
     if (url === `${coreApiUrl}/platform/products/prod_pits`) {
@@ -555,6 +626,7 @@ describe("OIS Console product shell", () => {
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry/health`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry/readiness`, { cache: "no-store" });
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/owner-review`, { cache: "no-store" });
   });
 
   it("keeps the root Ready to operate marker when the cockpit needs owner review", async () => {
@@ -595,6 +667,12 @@ describe("OIS Console product shell", () => {
       [
         "Platform Overview",
         "Owner Registry Cockpit / Registry Runtime Summary",
+        "Owner Review Queue",
+        "Safe Action Boundary",
+        "Read-only preview",
+        "Future admin action requires audit",
+        "Action is read-only preview only",
+        "Suggested next actions",
         "Missing runtime URL",
         "Forbidden link guard",
         "Control plane areas",
@@ -643,6 +721,10 @@ describe("OIS Console product shell", () => {
       [
         "Runtime Status",
         "Owner Registry Cockpit / Registry Runtime Summary",
+        "Owner Review Queue",
+        "Safe Action Boundary",
+        "Read-only preview",
+        "Future admin action requires audit",
         "Health ready",
         "Registry Governance / Readiness",
         "Registry Runtime Health",
@@ -688,6 +770,10 @@ describe("OIS Console product shell", () => {
     expect(html).toContain("Modern Shell Layout");
     expect(html).toContain("Shell Navigation Toggle");
     expect(html).toContain("Owner-facing UAT summary");
+    expect(html).toContain("Owner Review Queue");
+    expect(html).toContain("Safe Action Boundary");
+    expect(html).toContain("Action is read-only preview only");
+    expect(html).toContain("Future admin action requires audit");
     expect(html).toContain("Runtime health");
     expect(html).toContain("Readiness");
     expect(html).toContain("No issue detected");
@@ -724,6 +810,9 @@ describe("OIS Console product shell", () => {
       [
         "Workspace Detail Source",
         "Owner-facing UAT summary",
+        "Owner Review Queue",
+        "Safe Action Boundary",
+        "Action is read-only preview only",
         "Workspace Governance / Readiness",
         "Workspace Runtime Health",
         "https://pits-ng.dmp247.com/projects/prj_emerald_precinct_demo"
@@ -749,6 +838,9 @@ describe("OIS Console product shell", () => {
       [
         "Installation Detail Source",
         "Owner-facing UAT summary",
+        "Owner Review Queue",
+        "Safe Action Boundary",
+        "Action is read-only preview only",
         "Installation Governance / Readiness",
         "Installation Runtime Health",
         "/products/prod_pits",

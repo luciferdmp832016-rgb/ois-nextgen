@@ -4,11 +4,16 @@ import {
   getOwnerForbiddenLinkIssueCount,
   getOwnerHealthLabel,
   getOwnerMissingLinkCount,
+  getOwnerReviewItemsFor,
+  getOwnerReviewPreviewItems,
   getOwnerReadinessLabel,
   getReadinessGaps,
   kernelFields,
   ModernProductShell,
   type KernelField,
+  type OwnerActionPermission,
+  type OwnerReviewItem,
+  type OwnerReviewSeverity,
   type PlatformRegistrySnapshot,
   type PlatformSnapshot,
   type RegistryDetailSnapshot,
@@ -364,6 +369,162 @@ export function PitsOwnerEntityUatSummary({
         <h4>Owner UAT links</h4>
         <OwnerLinkList links={links} />
       </div>
+    </section>
+  );
+}
+
+function ownerReviewSeverityLabel(severity: OwnerReviewSeverity) {
+  const labels: Record<OwnerReviewSeverity, string> = {
+    INFO: "Read-only preview",
+    REVIEW: "Owner review required",
+    WARNING: "Future admin action",
+    BLOCKED: "Blocked"
+  };
+
+  return labels[severity];
+}
+
+function ownerActionPermissionLabel(permission: OwnerActionPermission) {
+  const labels: Record<OwnerActionPermission, string> = {
+    READ_ONLY_PREVIEW: "Read-only preview",
+    OWNER_REVIEW_REQUIRED: "Owner review required",
+    FUTURE_ADMIN_ACTION: "Future admin action",
+    BLOCKED_UNTIL_AUDIT: "Blocked until audit",
+    NOT_ALLOWED_IN_STAGE_1I: "Not allowed in Stage 1I"
+  };
+
+  return labels[permission];
+}
+
+function ownerReviewOk(severity: OwnerReviewSeverity) {
+  return severity === "INFO" || severity === "REVIEW";
+}
+
+function ActionBoundaryBadge({ permission }: { permission: OwnerActionPermission }) {
+  return <StatusBadge ok={permission === "READ_ONLY_PREVIEW"} label={ownerActionPermissionLabel(permission)} />;
+}
+
+function DisabledActionPreview() {
+  return (
+    <span className="disabled-action-preview" aria-disabled="true" data-action-preview="Read-only preview">
+      Action is read-only preview only
+    </span>
+  );
+}
+
+function SafetyGateList({ gates }: { gates: string[] }) {
+  return (
+    <ul className="safety-gate-list" aria-label="Future admin action safety gates">
+      {gates.map((gate) => (
+        <li key={gate}>{gate}</li>
+      ))}
+    </ul>
+  );
+}
+
+function PitsOwnerReviewItemCard({ item }: { item: OwnerReviewItem }) {
+  return (
+    <article className="owner-review-card" data-owner-review-item={item.id}>
+      <div className="panel-heading">
+        <div>
+          <span className="eyebrow">{item.entityType}</span>
+          <h4>{item.title}</h4>
+        </div>
+        <StatusBadge ok={ownerReviewOk(item.severity)} label={ownerReviewSeverityLabel(item.severity)} />
+      </div>
+      <p className="muted">{item.reason}</p>
+      <div className="owner-action-boundary-row">
+        <ActionBoundaryBadge permission={item.actionPermission} />
+        <DisabledActionPreview />
+      </div>
+      <section className="suggested-actions" aria-label="Suggested next actions">
+        <h5>Suggested next actions</h5>
+        <p>{item.suggestedOwnerAction}</p>
+        <p className="muted">Future admin action requires audit / confirmation / rollback.</p>
+      </section>
+      <SafetyGateList gates={item.requiredSafetyGates} />
+      <dl className="facts action-boundary-facts">
+        <div>
+          <dt>Audit</dt>
+          <dd>{item.auditRequirement}</dd>
+        </div>
+        <div>
+          <dt>Confirmation</dt>
+          <dd>{item.confirmationRequirement}</dd>
+        </div>
+        <div>
+          <dt>Rollback</dt>
+          <dd>{item.rollbackRequirement}</dd>
+        </div>
+      </dl>
+    </article>
+  );
+}
+
+export function PitsOwnerReviewQueuePanel({
+  snapshot,
+  entityType,
+  entityId,
+  title = "Owner Review Queue"
+}: {
+  snapshot: PlatformRegistrySnapshot;
+  entityType?: OwnerReviewItem["entityType"] | undefined;
+  entityId?: string | undefined;
+  title?: string | undefined;
+}) {
+  const payload = snapshot.ownerReviewPayload;
+  const items = entityType && entityId ? getOwnerReviewItemsFor(snapshot, entityType, entityId) : getOwnerReviewPreviewItems(snapshot);
+  const markers = payload?.actionBoundary.markers ?? ["Owner Review Queue", "Safe Action Boundary", "Read-only preview", "Future admin action requires audit"];
+
+  return (
+    <section className="panel owner-review-panel" data-owner-review="Owner Review Queue" data-action-boundary="Safe Action Boundary">
+      <div className="panel-heading">
+        <div>
+          <h3>{title}</h3>
+          <p className="muted">Safe Action Boundary for project review. Current PITS stage is preview-only and read-only.</p>
+        </div>
+        <StatusBadge ok={Boolean(payload)} label="Read-only preview" />
+      </div>
+      <div className="owner-review-marker-row" aria-label="Safe action boundary markers">
+        {markers.map((marker) => (
+          <span key={marker}>{marker}</span>
+        ))}
+        <span>Action is read-only preview only</span>
+        <span>Future admin action requires audit / confirmation / rollback</span>
+      </div>
+      <dl className="owner-fact-grid" aria-label="Project owner review summary">
+        <div>
+          <dt>Review items</dt>
+          <dd>{payload?.summary.total ?? 0}</dd>
+        </div>
+        <div>
+          <dt>Owner review</dt>
+          <dd>{payload?.summary.review ?? 0}</dd>
+        </div>
+        <div>
+          <dt>Future admin action</dt>
+          <dd>{payload?.summary.futureAdminAction ?? 0}</dd>
+        </div>
+        <div>
+          <dt>Blocked until audit</dt>
+          <dd>{payload?.summary.blockedUntilAudit ?? 0}</dd>
+        </div>
+      </dl>
+      {items.length > 0 ? (
+        <div className="owner-review-grid">
+          {items.map((item) => (
+            <PitsOwnerReviewItemCard item={item} key={item.id} />
+          ))}
+        </div>
+      ) : (
+        <article className="owner-review-card owner-empty-state">
+          <span className="eyebrow">No review needed</span>
+          <h4>No review needed</h4>
+          <p className="muted">No owner review item is currently derived for this project.</p>
+          <DisabledActionPreview />
+        </article>
+      )}
+      <p className="muted health-note">{payload?.runtime.note ?? "Owner review payload unavailable. No action is executable from this UI."}</p>
     </section>
   );
 }

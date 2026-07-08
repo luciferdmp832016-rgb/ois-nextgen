@@ -3,6 +3,7 @@ import {
   DataBoundaryPanel,
   OisConsoleShell,
   OwnerRegistryCockpit,
+  OwnerReviewQueuePanel,
   PageHeading,
   PlatformOverviewCard,
   RegistryGovernancePanel,
@@ -22,6 +23,7 @@ export default async function RuntimePage() {
         Public staging runtime baseline for OIS Console, Core API and Platform Kernel reads.
       </PageHeading>
       <OwnerRegistryCockpit snapshot={snapshot} />
+      <OwnerReviewQueuePanel snapshot={snapshot} title="Safe Action Boundary" />
       <section className="dashboard-grid">
         <RuntimeStatusCard snapshot={snapshot} />
         <RegistryGovernancePanel snapshot={snapshot} />
