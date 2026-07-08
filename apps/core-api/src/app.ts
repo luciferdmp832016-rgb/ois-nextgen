@@ -373,6 +373,24 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
     detail: string;
     url: string | null;
   };
+  type RegistryReadinessStatus = "READY" | "INCOMPLETE" | "BLOCKED" | "NOT_APPLICABLE" | "UNKNOWN";
+  type RegistryReadinessCheck = {
+    dimension: string;
+    label: string;
+    status: RegistryReadinessStatus;
+    ok: boolean;
+    required: boolean;
+    reason: string;
+    ownerAction: string | null;
+    evidenceUrl: string | null;
+  };
+
+  const forbiddenRuntimeUrlFragments = ["localhost", "127.0.0.1", ["ois", "dmp247", "com"].join("."), ["oisys", "abacusai", "app"].join(".")];
+  const approvedRuntimeBaseUrls = [
+    publicRuntimeConfig.coreApiBaseUrl,
+    publicRuntimeConfig.oisConsoleBaseUrl,
+    publicRuntimeConfig.pitsShellBaseUrl
+  ];
 
   function publicRuntimeUrl(baseUrl: string, path: string) {
     const normalizedBase = baseUrl.replace(/\/+$/, "");
@@ -456,6 +474,111 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
       status,
       badges: healthBadges(status, checks),
       checks,
+      links
+    };
+  }
+
+  function readinessCheck({
+    dimension,
+    label,
+    status,
+    ok,
+    required,
+    reason,
+    ownerAction = null,
+    evidenceUrl = null
+  }: {
+    dimension: string;
+    label: string;
+    status: RegistryReadinessStatus;
+    ok: boolean;
+    required: boolean;
+    reason: string;
+    ownerAction?: string | null;
+    evidenceUrl?: string | null;
+  }): RegistryReadinessCheck {
+    return {
+      dimension,
+      label,
+      status,
+      ok,
+      required,
+      reason,
+      ownerAction,
+      evidenceUrl
+    };
+  }
+
+  function hasForbiddenRuntimeUrl(urls: Array<string | null | undefined>) {
+    return urls
+      .filter((url): url is string => Boolean(url))
+      .some((url) => forbiddenRuntimeUrlFragments.some((fragment) => url.includes(fragment)));
+  }
+
+  function allUrlsAreStagingSafe(urls: Array<string | null | undefined>) {
+    return urls
+      .filter((url): url is string => Boolean(url))
+      .every((url) => approvedRuntimeBaseUrls.some((baseUrl) => url === baseUrl || url.startsWith(`${baseUrl}/`)));
+  }
+
+  function deriveReadinessStatus(checks: RegistryReadinessCheck[]): RegistryReadinessStatus {
+    const requiredChecks = checks.filter((check) => check.required);
+
+    if (requiredChecks.some((check) => check.status === "BLOCKED")) {
+      return "BLOCKED";
+    }
+
+    if (requiredChecks.some((check) => check.status === "UNKNOWN")) {
+      return "UNKNOWN";
+    }
+
+    if (requiredChecks.some((check) => !check.ok || check.status === "INCOMPLETE")) {
+      return "INCOMPLETE";
+    }
+
+    if (requiredChecks.length === 0) {
+      return "NOT_APPLICABLE";
+    }
+
+    return "READY";
+  }
+
+  function buildReadinessEntity({
+    kind,
+    id,
+    code,
+    name,
+    lifecycle,
+    checks,
+    links
+  }: {
+    kind: RegistryHealthEntityKind;
+    id: string;
+    code: string;
+    name: string;
+    lifecycle: string;
+    checks: RegistryReadinessCheck[];
+    links: Record<string, string | null>;
+  }) {
+    const status = deriveReadinessStatus(checks);
+    const missing = checks.filter((check) => check.required && !check.ok).map((check) => check.reason);
+    const blockedReasons = checks.filter((check) => check.status === "BLOCKED").map((check) => check.reason);
+    const ownerActions = Array.from(
+      new Set(checks.map((check) => check.ownerAction).filter((ownerAction): ownerAction is string => Boolean(ownerAction)))
+    );
+
+    return {
+      kind,
+      id,
+      code,
+      name,
+      lifecycle,
+      status,
+      badges: Array.from(new Set<RegistryReadinessStatus>([status, ...checks.map((check) => check.status)])),
+      checks,
+      missing,
+      blockedReasons,
+      ownerActions,
       links
     };
   }
@@ -853,6 +976,453 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
     };
   }
 
+  function buildRegistryReadiness(registry: RegistrySnapshot) {
+    const health = buildRegistryHealth(registry);
+    const findHealthLinks = (collection: keyof typeof health.entities, id: string) =>
+      health.entities[collection].find((item) => item.id === id)?.links ?? {};
+    const linkBoundaryChecks = (links: Record<string, string | null>) => {
+      const urls = Object.values(links);
+      const forbiddenDetected = hasForbiddenRuntimeUrl(urls);
+      const stagingSafe = allUrlsAreStagingSafe(urls);
+
+      return [
+        readinessCheck({
+          dimension: "forbidden_legacy_or_local_links_absent",
+          label: "Forbidden links absent",
+          status: forbiddenDetected ? "BLOCKED" : "READY",
+          ok: !forbiddenDetected,
+          required: true,
+          reason: forbiddenDetected ? "Forbidden legacy or local-development URL detected." : "No forbidden legacy or local-development URLs were detected.",
+          ownerAction: forbiddenDetected ? "Remove forbidden legacy or local-development links before runtime verification." : null
+        }),
+        readinessCheck({
+          dimension: "staging_url_safe",
+          label: "Staging URLs safe",
+          status: stagingSafe ? "READY" : "BLOCKED",
+          ok: stagingSafe,
+          required: true,
+          reason: stagingSafe ? "All configured URLs use approved staging hosts." : "A configured URL does not use an approved staging host.",
+          ownerAction: stagingSafe ? null : "Replace non-staging links with approved OIS, PITS or Core API staging URLs."
+        })
+      ];
+    };
+    const ownerUatCheck = () =>
+      readinessCheck({
+        dimension: "owner_uat_required",
+        label: "Owner UAT",
+        status: "INCOMPLETE",
+        ok: true,
+        required: false,
+        reason: "Owner Browser/UAT is required before closing the runtime verified label.",
+        ownerAction: "Run the Stage 1E Owner Browser/UAT checklist after Abacus runtime sync."
+      });
+
+    const productReadiness = registry.products.map((product) => {
+      const links = findHealthLinks("products", product.id);
+      const productRuntimeUrl = links.productRuntime ?? null;
+      const pitsProjectUrl = links.pitsProject ?? null;
+      const runtimeRequired = product.code === "OIS" || product.code === "PITS";
+      const runtimeReady = runtimeRequired ? Boolean(productRuntimeUrl || pitsProjectUrl) : true;
+
+      return buildReadinessEntity({
+        kind: "product",
+        id: product.id,
+        code: product.code,
+        name: product.name,
+        lifecycle: product.lifecycle,
+        links,
+        checks: [
+          readinessCheck({
+            dimension: "product_configured",
+            label: "Product configured",
+            status: product.id && product.code ? "READY" : "UNKNOWN",
+            ok: Boolean(product.id && product.code),
+            required: true,
+            reason: product.id && product.code ? "Product registry row is configured." : "Product registry row is missing an id or code.",
+            ownerAction: product.id && product.code ? null : "Confirm product registry seed/configuration."
+          }),
+          readinessCheck({
+            dimension: "lifecycle_active",
+            label: "Lifecycle active",
+            status: product.lifecycle === "ACTIVE" ? "READY" : "INCOMPLETE",
+            ok: product.lifecycle === "ACTIVE",
+            required: true,
+            reason: `Product lifecycle is ${product.lifecycle}.`,
+            ownerAction: product.lifecycle === "ACTIVE" ? null : "Confirm whether this product should be active before operation."
+          }),
+          readinessCheck({
+            dimension: "module_linked",
+            label: "Module linked",
+            status: product.modules.length > 0 ? "READY" : "INCOMPLETE",
+            ok: product.modules.length > 0,
+            required: true,
+            reason: product.modules.length > 0 ? `${product.modules.length} module link(s) are present.` : "No module bound to product.",
+            ownerAction: product.modules.length > 0 ? null : "Add/verify product module binding in a later approved admin stage."
+          }),
+          readinessCheck({
+            dimension: "installation_linked",
+            label: "Installation linked",
+            status: product.installations.length > 0 ? "READY" : "INCOMPLETE",
+            ok: product.installations.length > 0,
+            required: true,
+            reason:
+              product.installations.length > 0
+                ? `${product.installations.length} installation link(s) are present.`
+                : "Missing installation link.",
+            ownerAction: product.installations.length > 0 ? null : "Verify installation coverage before claiming operational readiness."
+          }),
+          readinessCheck({
+            dimension: "runtime_url_present",
+            label: "Runtime URL present",
+            status: runtimeRequired ? (runtimeReady ? "READY" : "INCOMPLETE") : "NOT_APPLICABLE",
+            ok: runtimeReady,
+            required: runtimeRequired,
+            reason: runtimeReady
+              ? runtimeRequired
+                ? "Runtime URL or project runtime link is present."
+                : "No dedicated runtime URL is required for this product in Stage 1E."
+              : "Missing runtime URL.",
+            ownerAction: runtimeReady ? null : "Confirm product runtime publication or installation/project link."
+          }),
+          readinessCheck({
+            dimension: "cross_product_links_present",
+            label: "Cross-product links present",
+            status: product.code === "PITS" ? (pitsProjectUrl ? "READY" : "INCOMPLETE") : "NOT_APPLICABLE",
+            ok: product.code !== "PITS" || Boolean(pitsProjectUrl),
+            required: product.code === "PITS",
+            reason:
+              product.code === "PITS"
+                ? pitsProjectUrl
+                  ? "PITS project cross-link is present."
+                  : "Cross-product link unavailable."
+                : "Cross-product PITS project link is not required for this product.",
+            ownerAction: product.code === "PITS" && !pitsProjectUrl ? "Verify PITS project installation link." : null
+          }),
+          ...linkBoundaryChecks(links),
+          ownerUatCheck()
+        ]
+      });
+    });
+
+    const workspaceReadiness = registry.workspaces.map((workspace) => {
+      const links = findHealthLinks("workspaces", workspace.id);
+
+      return buildReadinessEntity({
+        kind: "workspace",
+        id: workspace.id,
+        code: workspace.code,
+        name: workspace.name,
+        lifecycle: workspace.lifecycle,
+        links,
+        checks: [
+          readinessCheck({
+            dimension: "workspace_linked",
+            label: "Workspace configured",
+            status: workspace.id && workspace.organization?.code ? "READY" : "INCOMPLETE",
+            ok: Boolean(workspace.id && workspace.organization?.code),
+            required: true,
+            reason: workspace.organization?.code ? "Workspace is linked to an organization." : "Workspace organization link is missing.",
+            ownerAction: workspace.organization?.code ? null : "Verify workspace organization relationship."
+          }),
+          readinessCheck({
+            dimension: "project_linked",
+            label: "Project linked",
+            status: workspace.projects.length > 0 ? "READY" : "INCOMPLETE",
+            ok: workspace.projects.length > 0,
+            required: true,
+            reason: workspace.projects.length > 0 ? `${workspace.projects.length} project link(s) are present.` : "Missing project link.",
+            ownerAction: workspace.projects.length > 0 ? null : "Verify at least one project is linked to this workspace."
+          }),
+          readinessCheck({
+            dimension: "installation_linked",
+            label: "Installation linked",
+            status: workspace.installations.length > 0 ? "READY" : "INCOMPLETE",
+            ok: workspace.installations.length > 0,
+            required: true,
+            reason:
+              workspace.installations.length > 0
+                ? `${workspace.installations.length} installation link(s) are present.`
+                : "Missing installation link.",
+            ownerAction: workspace.installations.length > 0 ? null : "Verify workspace installation coverage."
+          }),
+          readinessCheck({
+            dimension: "runtime_url_present",
+            label: "Project runtime URL present",
+            status: links.pitsProject ? "READY" : "INCOMPLETE",
+            ok: Boolean(links.pitsProject),
+            required: true,
+            reason: links.pitsProject ? "At least one PITS project runtime link is present." : "Missing runtime URL.",
+            ownerAction: links.pitsProject ? null : "Verify project link before owner runtime verification."
+          }),
+          ...linkBoundaryChecks(links),
+          ownerUatCheck()
+        ]
+      });
+    });
+
+    const projectReadiness = registry.projects.map((project) => {
+      const links = findHealthLinks("projects", project.id);
+      const hasProductLink = project.installations.some((installation) => installation.productId);
+
+      return buildReadinessEntity({
+        kind: "project",
+        id: project.id,
+        code: project.code,
+        name: project.name,
+        lifecycle: project.lifecycle,
+        links,
+        checks: [
+          readinessCheck({
+            dimension: "project_linked",
+            label: "Project configured",
+            status: project.id && project.workspaceId ? "READY" : "INCOMPLETE",
+            ok: Boolean(project.id && project.workspaceId),
+            required: true,
+            reason: project.workspaceId ? "Project is linked to a workspace." : "Missing workspace link.",
+            ownerAction: project.workspaceId ? null : "Verify project workspace relationship."
+          }),
+          readinessCheck({
+            dimension: "workspace_linked",
+            label: "Workspace link",
+            status: project.workspace?.code ? "READY" : "INCOMPLETE",
+            ok: Boolean(project.workspace?.code),
+            required: true,
+            reason: project.workspace?.code ? "Workspace link is present." : "Missing workspace link.",
+            ownerAction: project.workspace?.code ? null : "Verify workspace relationship for this project."
+          }),
+          readinessCheck({
+            dimension: "installation_linked",
+            label: "Installation link",
+            status: project.installations.length > 0 ? "READY" : "INCOMPLETE",
+            ok: project.installations.length > 0,
+            required: true,
+            reason:
+              project.installations.length > 0
+                ? `${project.installations.length} installation link(s) are present.`
+                : "Missing installation link.",
+            ownerAction: project.installations.length > 0 ? null : "Verify product installation for this project."
+          }),
+          readinessCheck({
+            dimension: "product_linked",
+            label: "Product link",
+            status: hasProductLink ? "READY" : "INCOMPLETE",
+            ok: hasProductLink,
+            required: true,
+            reason: hasProductLink ? "At least one installed product link is present." : "Missing product link.",
+            ownerAction: hasProductLink ? null : "Verify installation product relationship."
+          }),
+          readinessCheck({
+            dimension: "cross_product_links_present",
+            label: "OIS cross-links",
+            status: links.oisProduct && links.oisWorkspace ? "READY" : "INCOMPLETE",
+            ok: Boolean(links.oisProduct && links.oisWorkspace),
+            required: true,
+            reason: links.oisProduct && links.oisWorkspace ? "OIS product and workspace cross-links are present." : "Cross-product link unavailable.",
+            ownerAction: links.oisProduct && links.oisWorkspace ? null : "Verify OIS Console product/workspace link targets."
+          }),
+          readinessCheck({
+            dimension: "runtime_url_present",
+            label: "PITS runtime URL",
+            status: links.pitsProjectDetail ? "READY" : "INCOMPLETE",
+            ok: Boolean(links.pitsProjectDetail),
+            required: true,
+            reason: links.pitsProjectDetail ? "PITS project runtime detail URL is present." : "Missing runtime URL.",
+            ownerAction: links.pitsProjectDetail ? null : "Verify PITS project runtime route."
+          }),
+          ...linkBoundaryChecks(links),
+          ownerUatCheck()
+        ]
+      });
+    });
+
+    const moduleReadiness = registry.modules.map((module) => {
+      const links = findHealthLinks("modules", module.id);
+      const product = registry.products.find((item) => item.code === module.productCode) ?? null;
+      const productInstallations = product?.installations ?? [];
+
+      return buildReadinessEntity({
+        kind: "module",
+        id: module.id,
+        code: module.code,
+        name: module.code,
+        lifecycle: module.lifecycle,
+        links,
+        checks: [
+          readinessCheck({
+            dimension: "module_linked",
+            label: "Module configured",
+            status: module.id && module.productCode ? "READY" : "INCOMPLETE",
+            ok: Boolean(module.id && module.productCode),
+            required: true,
+            reason: module.productCode ? "Module is bound to a product code." : "Module product binding is missing.",
+            ownerAction: module.productCode ? null : "Verify module product binding."
+          }),
+          readinessCheck({
+            dimension: "product_linked",
+            label: "Product link",
+            status: product ? "READY" : "INCOMPLETE",
+            ok: Boolean(product),
+            required: true,
+            reason: product ? "Owning product is present." : "Missing product link.",
+            ownerAction: product ? null : "Verify owning product exists in registry."
+          }),
+          readinessCheck({
+            dimension: "installation_linked",
+            label: "Product installation coverage",
+            status: productInstallations.length > 0 ? "READY" : "INCOMPLETE",
+            ok: productInstallations.length > 0,
+            required: true,
+            reason:
+              productInstallations.length > 0
+                ? `${productInstallations.length} installation link(s) exist for this module's product.`
+                : "Missing installation link.",
+            ownerAction: productInstallations.length > 0 ? null : "Verify installation coverage for the owning product."
+          }),
+          readinessCheck({
+            dimension: "runtime_url_present",
+            label: "Standalone runtime URL",
+            status: "NOT_APPLICABLE",
+            ok: true,
+            required: false,
+            reason: "Modules do not expose standalone runtime URLs in Stage 1E.",
+            ownerAction: null
+          }),
+          ...linkBoundaryChecks(links),
+          ownerUatCheck()
+        ]
+      });
+    });
+
+    const installationReadiness = registry.installations.map((installation) => {
+      const links = findHealthLinks("installations", installation.id);
+      const modules = registry.modules.filter((module) => module.productCode === installation.productCode);
+
+      return buildReadinessEntity({
+        kind: "installation",
+        id: installation.id,
+        code: installation.productCode,
+        name: `${installation.productCode} installation`,
+        lifecycle: installation.lifecycle,
+        links,
+        checks: [
+          readinessCheck({
+            dimension: "installation_linked",
+            label: "Installation configured",
+            status: installation.id && installation.productCode ? "READY" : "INCOMPLETE",
+            ok: Boolean(installation.id && installation.productCode),
+            required: true,
+            reason: installation.productCode ? "Installation row is configured." : "Installation product code is missing.",
+            ownerAction: installation.productCode ? null : "Verify product installation registry row."
+          }),
+          readinessCheck({
+            dimension: "product_linked",
+            label: "Product link",
+            status: installation.product ? "READY" : "INCOMPLETE",
+            ok: Boolean(installation.product),
+            required: true,
+            reason: installation.product ? "Product link is present." : "Missing product link.",
+            ownerAction: installation.product ? null : "Verify product relationship for this installation."
+          }),
+          readinessCheck({
+            dimension: "workspace_linked",
+            label: "Workspace link",
+            status: installation.workspace ? "READY" : "INCOMPLETE",
+            ok: Boolean(installation.workspace),
+            required: true,
+            reason: installation.workspace ? "Workspace link is present." : "Missing workspace link.",
+            ownerAction: installation.workspace ? null : "Verify workspace relationship for this installation."
+          }),
+          readinessCheck({
+            dimension: "project_linked",
+            label: "Project link",
+            status: installation.project ? "READY" : "INCOMPLETE",
+            ok: Boolean(installation.project),
+            required: true,
+            reason: installation.project ? "Project link is present." : "Missing project link.",
+            ownerAction: installation.project ? null : "Verify project relationship for this installation."
+          }),
+          readinessCheck({
+            dimension: "module_linked",
+            label: "Module coverage",
+            status: modules.length > 0 ? "READY" : "INCOMPLETE",
+            ok: modules.length > 0,
+            required: true,
+            reason: modules.length > 0 ? `${modules.length} module link(s) are bound to this product.` : "No module bound to product.",
+            ownerAction: modules.length > 0 ? null : "Verify modules for this product before operation."
+          }),
+          readinessCheck({
+            dimension: "runtime_url_present",
+            label: "Runtime URL",
+            status: installation.productCode === "PITS" ? (links.pitsProject ? "READY" : "INCOMPLETE") : "NOT_APPLICABLE",
+            ok: installation.productCode !== "PITS" || Boolean(links.pitsProject),
+            required: installation.productCode === "PITS",
+            reason:
+              installation.productCode === "PITS"
+                ? links.pitsProject
+                  ? "PITS project runtime URL is present."
+                  : "Missing runtime URL."
+                : "Only PITS installations require a PITS project runtime URL in Stage 1E.",
+            ownerAction: installation.productCode === "PITS" && !links.pitsProject ? "Verify PITS project runtime link." : null
+          }),
+          readinessCheck({
+            dimension: "cross_product_links_present",
+            label: "Cross-product links",
+            status: links.oisProduct && links.oisWorkspace && (installation.productCode !== "PITS" || links.pitsProject) ? "READY" : "INCOMPLETE",
+            ok: Boolean(links.oisProduct && links.oisWorkspace && (installation.productCode !== "PITS" || links.pitsProject)),
+            required: true,
+            reason:
+              links.oisProduct && links.oisWorkspace && (installation.productCode !== "PITS" || links.pitsProject)
+                ? "Expected cross-product links are present."
+                : "Cross-product link unavailable.",
+            ownerAction:
+              links.oisProduct && links.oisWorkspace && (installation.productCode !== "PITS" || links.pitsProject)
+                ? null
+                : "Verify OIS/PITS cross-link targets before owner UAT."
+          }),
+          ...linkBoundaryChecks(links),
+          ownerUatCheck()
+        ]
+      });
+    });
+
+    const allEntities = [...productReadiness, ...workspaceReadiness, ...projectReadiness, ...moduleReadiness, ...installationReadiness];
+    const countByStatus = (status: RegistryReadinessStatus) => allEntities.filter((item) => item.status === status).length;
+    const summaryStatus =
+      countByStatus("BLOCKED") > 0
+        ? "BLOCKED"
+        : countByStatus("UNKNOWN") > 0
+          ? "UNKNOWN"
+          : countByStatus("INCOMPLETE") > 0
+            ? "INCOMPLETE"
+            : "READY";
+
+    return {
+      metadata: registry.metadata,
+      runtime: {
+        ...publicRuntimeConfig,
+        readinessMode: "deterministic-registry",
+        note:
+          "Readiness is derived from existing registry rows and staging-safe link configuration. Owner UAT remains required before runtime verification."
+      },
+      summary: {
+        status: summaryStatus,
+        total: allEntities.length,
+        ready: countByStatus("READY"),
+        incomplete: countByStatus("INCOMPLETE"),
+        blocked: countByStatus("BLOCKED"),
+        notApplicable: countByStatus("NOT_APPLICABLE"),
+        unknown: countByStatus("UNKNOWN")
+      },
+      entities: {
+        products: productReadiness,
+        workspaces: workspaceReadiness,
+        projects: projectReadiness,
+        modules: moduleReadiness,
+        installations: installationReadiness
+      }
+    };
+  }
+
   function buildProductDetail(registry: RegistrySnapshot, product: ProductRegistryEntity) {
     const projects = uniqueById(
       product.installations
@@ -1226,6 +1796,8 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
   app.get("/platform/registry", async () => readRegistry());
 
   app.get("/platform/registry/health", async () => buildRegistryHealth(await readRegistry()));
+
+  app.get("/platform/registry/readiness", async () => buildRegistryReadiness(await readRegistry()));
 
   app.get("/platform/products/code/:code", async (request, reply) => {
     const params = request.params as { code: string };

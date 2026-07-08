@@ -510,7 +510,90 @@ describe("platform registry read-only endpoints", () => {
       expect(JSON.stringify(body)).toContain("Core API detail source");
       expect(JSON.stringify(body)).toContain("PITS project runtime link");
       expect(JSON.stringify(body)).not.toContain("localhost");
+      expect(JSON.stringify(body)).not.toContain("127.0.0.1");
       expect(JSON.stringify(body)).not.toContain("ois.dmp247.com");
+      expect(JSON.stringify(body)).not.toContain("oisys.abacusai.app");
+      expect(mock.readCalls).toEqual([
+        "productDefinition.findMany",
+        "organization.findMany",
+        "workspace.findMany",
+        "project.findMany",
+        "moduleDefinition.findMany",
+        "productInstallation.findMany"
+      ]);
+      expect(mock.writeCalls).toEqual([]);
+      expect(mock.userAccount.findUnique).not.toHaveBeenCalled();
+      expect(mock.delegates.productInstallation.findUnique).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns deterministic read-only registry governance readiness", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/registry/readiness" });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body).toMatchObject({
+        metadata: {
+          source: "default-db",
+          mode: "read-only",
+          environment: "staging"
+        },
+        runtime: {
+          coreApiBaseUrl: "https://ois-nextgen.abacusai.cloud",
+          oisConsoleBaseUrl: "https://ois-ng.dmp247.com",
+          pitsShellBaseUrl: "https://pits-ng.dmp247.com",
+          readinessMode: "deterministic-registry"
+        },
+        summary: {
+          status: "READY",
+          total: 5,
+          ready: 5,
+          incomplete: 0,
+          blocked: 0,
+          notApplicable: 0,
+          unknown: 0
+        },
+        entities: {
+          products: [
+            {
+              kind: "product",
+              id: "prod_pits",
+              status: "READY",
+              missing: [],
+              blockedReasons: [],
+              checks: expect.arrayContaining([
+                expect.objectContaining({ dimension: "product_configured", status: "READY" }),
+                expect.objectContaining({ dimension: "module_linked", status: "READY" }),
+                expect.objectContaining({ dimension: "owner_uat_required", status: "INCOMPLETE", required: false })
+              ])
+            }
+          ],
+          installations: [
+            {
+              kind: "installation",
+              id: "inst_pits_emerald",
+              status: "READY",
+              links: {
+                oisProduct: "https://ois-ng.dmp247.com/products/prod_pits",
+                oisWorkspace: "https://ois-ng.dmp247.com/workspaces/ws_pmc_org_demo",
+                pitsProject: "https://pits-ng.dmp247.com/projects/prj_emerald_precinct_demo"
+              }
+            }
+          ]
+        }
+      });
+      expect(JSON.stringify(body)).toContain("Owner Browser/UAT");
+      expect(JSON.stringify(body)).toContain("Forbidden links absent");
+      expect(JSON.stringify(body)).not.toContain("localhost");
+      expect(JSON.stringify(body)).not.toContain("127.0.0.1");
+      expect(JSON.stringify(body)).not.toContain("ois.dmp247.com");
+      expect(JSON.stringify(body)).not.toContain("oisys.abacusai.app");
       expect(mock.readCalls).toEqual([
         "productDefinition.findMany",
         "organization.findMany",

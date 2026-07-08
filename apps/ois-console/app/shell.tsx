@@ -6,6 +6,8 @@ import {
   type RegistryDetailSnapshot,
   type RegistryHealthItem,
   type RegistryHealthStatus,
+  type RegistryReadinessItem,
+  type RegistryReadinessStatus,
   type PlatformRegistrySnapshot,
   type PlatformSnapshot
 } from "@ois/shared-ui";
@@ -225,6 +227,152 @@ export function RegistryHealthItemPanel({ title, item }: { title: string; item: 
         </>
       ) : (
         <p className="muted">Core API did not return a health item for this registry entity.</p>
+      )}
+    </section>
+  );
+}
+
+function readinessLabel(status: RegistryReadinessStatus) {
+  const labels: Record<RegistryReadinessStatus, string> = {
+    READY: "Ready",
+    INCOMPLETE: "Incomplete",
+    BLOCKED: "Blocked",
+    NOT_APPLICABLE: "Not applicable",
+    UNKNOWN: "Unknown"
+  };
+
+  return labels[status];
+}
+
+function ReadinessBadge({ status }: { status: RegistryReadinessStatus }) {
+  const className = status === "READY" ? "status status-ok" : status === "NOT_APPLICABLE" ? "status status-neutral" : "status status-warn";
+
+  return <span className={className}>{readinessLabel(status)}</span>;
+}
+
+function ReadinessBadgeRow({ badges }: { badges: RegistryReadinessStatus[] }) {
+  return (
+    <div className="badge-row">
+      {badges.map((badge) => (
+        <ReadinessBadge status={badge} key={badge} />
+      ))}
+    </div>
+  );
+}
+
+function ReadinessCheckList({ item }: { item: RegistryReadinessItem }) {
+  return (
+    <div className="health-check-list">
+      {item.checks.map((check) => (
+        <div className="health-check" key={`${check.dimension}-${check.label}`}>
+          <div>
+            <strong>{check.label}</strong>
+            <p className="muted">{check.reason}</p>
+          </div>
+          {check.evidenceUrl ? <a href={check.evidenceUrl}>Open</a> : <ReadinessBadge status={check.status} />}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MissingReadinessPanel({ item }: { item: RegistryReadinessItem }) {
+  const gaps = [...item.blockedReasons, ...item.missing];
+
+  return (
+    <section className="missing-list" aria-label="What is missing">
+      <h4>What is missing?</h4>
+      {gaps.length > 0 ? (
+        <ul>
+          {gaps.map((gap) => (
+            <li key={gap}>{gap}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="muted">No required registry readiness gaps were detected. Owner UAT is still required before runtime closure.</p>
+      )}
+      {item.ownerActions.length > 0 ? (
+        <>
+          <h4>Owner actions</h4>
+          <ul>
+            {item.ownerActions.map((action) => (
+              <li key={action}>{action}</li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+    </section>
+  );
+}
+
+export function RegistryGovernancePanel({ snapshot }: { snapshot: PlatformRegistrySnapshot }) {
+  const payload = snapshot.registryReadinessPayload;
+  const summary = payload?.summary;
+
+  return (
+    <section className="panel registry-readiness-panel" data-registry-readiness="Registry Governance / Readiness">
+      <div className="panel-heading">
+        <div>
+          <h3>Registry Governance / Readiness</h3>
+          <p className="muted">Owner-facing readiness from Core API /platform/registry/readiness.</p>
+        </div>
+        {summary ? <ReadinessBadge status={summary.status} /> : <StatusBadge ok={false} label="Readiness unavailable" />}
+      </div>
+      {payload ? (
+        <>
+          <dl className="facts">
+            <div>
+              <dt>Total</dt>
+              <dd>{summary?.total ?? 0}</dd>
+            </div>
+            <div>
+              <dt>Ready</dt>
+              <dd>{summary?.ready ?? 0}</dd>
+            </div>
+            <div>
+              <dt>Incomplete</dt>
+              <dd>{summary?.incomplete ?? 0}</dd>
+            </div>
+            <div>
+              <dt>Blocked</dt>
+              <dd>{summary?.blocked ?? 0}</dd>
+            </div>
+            <div>
+              <dt>Unknown</dt>
+              <dd>{summary?.unknown ?? 0}</dd>
+            </div>
+            <div>
+              <dt>Core API</dt>
+              <dd>{payload.runtime.coreApiBaseUrl}</dd>
+            </div>
+          </dl>
+          <p className="muted health-note">{payload.runtime.note}</p>
+        </>
+      ) : (
+        <p className="muted">{snapshot.registryReadiness.status ?? snapshot.registryReadiness.error ?? "Readiness endpoint unavailable"}.</p>
+      )}
+    </section>
+  );
+}
+
+export function RegistryReadinessItemPanel({ title, item }: { title: string; item: RegistryReadinessItem | null }) {
+  return (
+    <section className="panel registry-readiness-panel" data-registry-readiness={title}>
+      <div className="panel-heading">
+        <div>
+          <h3>{title}</h3>
+          <p className="muted">Readiness answers whether this registry item is ready to operate and what is missing.</p>
+        </div>
+        {item ? <ReadinessBadge status={item.status} /> : <StatusBadge ok={false} label="Readiness unavailable" />}
+      </div>
+      {item ? (
+        <>
+          <ReadinessBadgeRow badges={item.badges} />
+          <MissingReadinessPanel item={item} />
+          <ReadinessCheckList item={item} />
+        </>
+      ) : (
+        <p className="muted">Core API did not return a readiness item for this registry entity.</p>
       )}
     </section>
   );

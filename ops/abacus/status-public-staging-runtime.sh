@@ -91,6 +91,34 @@ check_route() {
   fi
 }
 
+check_absent_markers() {
+  local label="$1"
+  local url="$2"
+  shift 2
+  local body=""
+  local code=""
+  local marker
+
+  if ! public_staging_http_get_body body code "$url"; then
+    record_failure "$label request failed ($PUBLIC_STAGING_DETAIL)"
+    return
+  fi
+
+  if [ "$code" != "200" ]; then
+    record_failure "$label expected HTTP 200 got HTTP $code"
+    return
+  fi
+
+  for marker in "$@"; do
+    if [[ "$body" == *"$marker"* ]]; then
+      record_failure "$label contains forbidden marker: $marker"
+      return
+    fi
+  done
+
+  printf 'LINK_BOUNDARY_READY %s forbidden_markers=absent\n' "$label"
+}
+
 check_controlled_404() {
   local label="$1"
   local url="$2"
@@ -145,14 +173,17 @@ fi
 
 section "Local Runtime Endpoints"
 check_health "local" "$CORE_API_LOCAL_BASE/health"
+check_route "LOCAL_REGISTRY_HEALTH" "$CORE_API_LOCAL_BASE/platform/registry/health" '"source":"default-db"' '"mode":"read-only"' '"summary"' '"entities"' '"Reachable"'
+check_route "LOCAL_REGISTRY_READINESS" "$CORE_API_LOCAL_BASE/platform/registry/readiness" '"source":"default-db"' '"mode":"read-only"' '"summary"' '"entities"' '"READY"'
+check_absent_markers "LOCAL_REGISTRY_READINESS_LINK_BOUNDARY" "$CORE_API_LOCAL_BASE/platform/registry/readiness" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_root_shell "OIS_CONSOLE_LOCAL" "$OIS_CONSOLE_LOCAL_URL" "OIS_CONSOLE" "OIS Console"
-check_route "OIS_CONSOLE_LOCAL_DASHBOARD" "$OIS_CONSOLE_LOCAL_URL/dashboard" "Platform Overview" "Registry Runtime Health" "DEMO DATA - NOT PRODUCTION"
-check_route "OIS_CONSOLE_LOCAL_PRODUCTS" "$OIS_CONSOLE_LOCAL_URL/products" "Products &amp; Modules" "Product &amp; Module Overview" "Registry Runtime Health" "PITS_RUNTIME_SHELL" "OIS_CONSOLE"
-check_route "OIS_CONSOLE_LOCAL_WORKSPACES" "$OIS_CONSOLE_LOCAL_URL/workspaces" "Organizations, Workspaces &amp; Projects" "Workspace Overview" "Registry Runtime Health" "PMC Org Demo" "OIS_CONSOLE"
-check_route "OIS_CONSOLE_LOCAL_RUNTIME" "$OIS_CONSOLE_LOCAL_URL/runtime" "Runtime Status" "Registry Runtime Health" "Core API source:" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_LOCAL_DASHBOARD" "$OIS_CONSOLE_LOCAL_URL/dashboard" "Platform Overview" "Registry Governance / Readiness" "Registry Runtime Health" "DEMO DATA - NOT PRODUCTION"
+check_route "OIS_CONSOLE_LOCAL_PRODUCTS" "$OIS_CONSOLE_LOCAL_URL/products" "Products &amp; Modules" "Product &amp; Module Overview" "Registry Governance / Readiness" "Registry Runtime Health" "PITS_RUNTIME_SHELL" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_LOCAL_WORKSPACES" "$OIS_CONSOLE_LOCAL_URL/workspaces" "Organizations, Workspaces &amp; Projects" "Workspace Overview" "Registry Governance / Readiness" "Registry Runtime Health" "PMC Org Demo" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_LOCAL_RUNTIME" "$OIS_CONSOLE_LOCAL_URL/runtime" "Runtime Status" "Registry Governance / Readiness" "Registry Runtime Health" "Core API source:" "OIS_CONSOLE"
 check_root_shell "PITS_SHELL_LOCAL" "$PITS_SHELL_LOCAL_URL" "PITS_SHELL" "PITS Shell"
-check_route "PITS_SHELL_LOCAL_PROJECTS" "$PITS_SHELL_LOCAL_URL/projects" "Project Selector" "Registry Runtime Health" "EMERALD_PRECINCT_DEMO" "DEMO DATA - NOT PRODUCTION"
-check_route "PITS_SHELL_LOCAL_RUNTIME" "$PITS_SHELL_LOCAL_URL/runtime" "Runtime Status" "Registry Runtime Health" "Core API source:" "PITS_SHELL"
+check_route "PITS_SHELL_LOCAL_PROJECTS" "$PITS_SHELL_LOCAL_URL/projects" "Project Selector" "Registry Governance / Readiness" "Registry Runtime Health" "EMERALD_PRECINCT_DEMO" "DEMO DATA - NOT PRODUCTION"
+check_route "PITS_SHELL_LOCAL_RUNTIME" "$PITS_SHELL_LOCAL_URL/runtime" "Runtime Status" "Registry Governance / Readiness" "Registry Runtime Health" "Core API source:" "PITS_SHELL"
 
 section "Registry ID Discovery"
 if public_staging_discover_registry_ids "$CORE_API_LOCAL_BASE"; then
@@ -163,11 +194,11 @@ fi
 
 if [ -n "$REGISTRY_PRODUCT_ID" ] && [ -n "$REGISTRY_WORKSPACE_ID" ] && [ -n "$REGISTRY_PROJECT_ID" ] && [ -n "$REGISTRY_MODULE_ID" ] && [ -n "$REGISTRY_INSTALLATION_ID" ]; then
   section "Local Detail Routes"
-  check_route "OIS_CONSOLE_LOCAL_PRODUCT_DETAIL" "$OIS_CONSOLE_LOCAL_URL/products/$REGISTRY_PRODUCT_ID" "Product Detail Source" "Product Runtime Health" "PITS_RUNTIME_SHELL" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID"
-  check_route "OIS_CONSOLE_LOCAL_WORKSPACE_DETAIL" "$OIS_CONSOLE_LOCAL_URL/workspaces/$REGISTRY_WORKSPACE_ID" "Workspace Detail Source" "Workspace Runtime Health" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID"
-  check_route "OIS_CONSOLE_LOCAL_MODULE_DETAIL" "$OIS_CONSOLE_LOCAL_URL/modules/$REGISTRY_MODULE_ID" "Module Detail Source" "Module Runtime Health" "$REGISTRY_INSTALLATION_ID"
-  check_route "OIS_CONSOLE_LOCAL_INSTALLATION_DETAIL" "$OIS_CONSOLE_LOCAL_URL/installations/$REGISTRY_INSTALLATION_ID" "Installation Detail Source" "Installation Runtime Health" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID"
-  check_route "PITS_SHELL_LOCAL_PROJECT_DETAIL" "$PITS_SHELL_LOCAL_URL/projects/$REGISTRY_PROJECT_ID" "Project Detail Source" "Project Runtime Health" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID" "$OIS_CONSOLE_PUBLIC_URL/workspaces/$REGISTRY_WORKSPACE_ID"
+  check_route "OIS_CONSOLE_LOCAL_PRODUCT_DETAIL" "$OIS_CONSOLE_LOCAL_URL/products/$REGISTRY_PRODUCT_ID" "Product Detail Source" "Product Governance / Readiness" "What is missing?" "Product Runtime Health" "PITS_RUNTIME_SHELL" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID"
+  check_route "OIS_CONSOLE_LOCAL_WORKSPACE_DETAIL" "$OIS_CONSOLE_LOCAL_URL/workspaces/$REGISTRY_WORKSPACE_ID" "Workspace Detail Source" "Workspace Governance / Readiness" "What is missing?" "Workspace Runtime Health" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID"
+  check_route "OIS_CONSOLE_LOCAL_MODULE_DETAIL" "$OIS_CONSOLE_LOCAL_URL/modules/$REGISTRY_MODULE_ID" "Module Detail Source" "Module Governance / Readiness" "What is missing?" "Module Runtime Health" "$REGISTRY_INSTALLATION_ID"
+  check_route "OIS_CONSOLE_LOCAL_INSTALLATION_DETAIL" "$OIS_CONSOLE_LOCAL_URL/installations/$REGISTRY_INSTALLATION_ID" "Installation Detail Source" "Installation Governance / Readiness" "What is missing?" "Installation Runtime Health" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID"
+  check_route "PITS_SHELL_LOCAL_PROJECT_DETAIL" "$PITS_SHELL_LOCAL_URL/projects/$REGISTRY_PROJECT_ID" "Project Detail Source" "Project Governance / Readiness" "What is missing?" "Project Runtime Health" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID" "$OIS_CONSOLE_PUBLIC_URL/workspaces/$REGISTRY_WORKSPACE_ID"
 fi
 
 section "Public Core API Endpoints"
@@ -180,6 +211,8 @@ check_route "PUBLIC_STAGING_REGISTRY_MODULES" "$CORE_API_URL/platform/modules" '
 check_route "PUBLIC_STAGING_REGISTRY_INSTALLATIONS" "$CORE_API_URL/platform/installations" '"source":"default-db"' '"mode":"read-only"' '"installations"'
 check_route "PUBLIC_STAGING_REGISTRY_AGGREGATE" "$CORE_API_URL/platform/registry" '"source":"default-db"' '"mode":"read-only"' '"products"' '"projects"'
 check_route "PUBLIC_STAGING_REGISTRY_HEALTH" "$CORE_API_URL/platform/registry/health" '"source":"default-db"' '"mode":"read-only"' '"summary"' '"entities"' '"Reachable"'
+check_route "PUBLIC_STAGING_REGISTRY_READINESS" "$CORE_API_URL/platform/registry/readiness" '"source":"default-db"' '"mode":"read-only"' '"summary"' '"entities"' '"READY"'
+check_absent_markers "PUBLIC_STAGING_REGISTRY_READINESS_LINK_BOUNDARY" "$CORE_API_URL/platform/registry/readiness" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 if [ -n "$REGISTRY_PRODUCT_ID" ] && [ -n "$REGISTRY_WORKSPACE_ID" ] && [ -n "$REGISTRY_PROJECT_ID" ] && [ -n "$REGISTRY_MODULE_ID" ] && [ -n "$REGISTRY_INSTALLATION_ID" ]; then
   check_route "PUBLIC_STAGING_PRODUCT_DETAIL" "$CORE_API_URL/platform/products/$REGISTRY_PRODUCT_ID" '"source":"default-db"' '"mode":"read-only"' '"product"' '"relationships"'
   check_route "PUBLIC_STAGING_PRODUCT_CODE_DETAIL" "$CORE_API_URL/platform/products/code/$REGISTRY_PRODUCT_CODE" '"source":"default-db"' '"mode":"read-only"' '"product"' '"relationships"'
@@ -192,19 +225,19 @@ fi
 
 section "Public Cloudflare Tunnel Product Endpoints"
 check_root_shell "OIS_CONSOLE_PUBLIC_ROOT" "$OIS_CONSOLE_PUBLIC_URL" "OIS_CONSOLE" "OIS Console"
-check_route "OIS_CONSOLE_PUBLIC_DASHBOARD" "$OIS_CONSOLE_PUBLIC_URL/dashboard" "Platform Overview" "Registry Runtime Health" "DEMO DATA - NOT PRODUCTION"
-check_route "OIS_CONSOLE_PUBLIC_PRODUCTS" "$OIS_CONSOLE_PUBLIC_URL/products" "Products &amp; Modules" "Product &amp; Module Overview" "Registry Runtime Health" "PITS_RUNTIME_SHELL" "OIS_CONSOLE"
-check_route "OIS_CONSOLE_PUBLIC_WORKSPACES" "$OIS_CONSOLE_PUBLIC_URL/workspaces" "Organizations, Workspaces &amp; Projects" "Workspace Overview" "Registry Runtime Health" "PMC Org Demo" "OIS_CONSOLE"
-check_route "OIS_CONSOLE_PUBLIC_RUNTIME" "$OIS_CONSOLE_PUBLIC_URL/runtime" "Runtime Status" "Registry Runtime Health" "Core API source:" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_PUBLIC_DASHBOARD" "$OIS_CONSOLE_PUBLIC_URL/dashboard" "Platform Overview" "Registry Governance / Readiness" "Registry Runtime Health" "DEMO DATA - NOT PRODUCTION"
+check_route "OIS_CONSOLE_PUBLIC_PRODUCTS" "$OIS_CONSOLE_PUBLIC_URL/products" "Products &amp; Modules" "Product &amp; Module Overview" "Registry Governance / Readiness" "Registry Runtime Health" "PITS_RUNTIME_SHELL" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_PUBLIC_WORKSPACES" "$OIS_CONSOLE_PUBLIC_URL/workspaces" "Organizations, Workspaces &amp; Projects" "Workspace Overview" "Registry Governance / Readiness" "Registry Runtime Health" "PMC Org Demo" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_PUBLIC_RUNTIME" "$OIS_CONSOLE_PUBLIC_URL/runtime" "Runtime Status" "Registry Governance / Readiness" "Registry Runtime Health" "Core API source:" "OIS_CONSOLE"
 check_root_shell "PITS_SHELL_PUBLIC_ROOT" "$PITS_SHELL_PUBLIC_URL" "PITS_SHELL" "PITS Shell"
-check_route "PITS_SHELL_PUBLIC_PROJECTS" "$PITS_SHELL_PUBLIC_URL/projects" "Project Selector" "Registry Runtime Health" "EMERALD_PRECINCT_DEMO" "DEMO DATA - NOT PRODUCTION"
-check_route "PITS_SHELL_PUBLIC_RUNTIME" "$PITS_SHELL_PUBLIC_URL/runtime" "Runtime Status" "Registry Runtime Health" "Core API source:" "PITS_SHELL"
+check_route "PITS_SHELL_PUBLIC_PROJECTS" "$PITS_SHELL_PUBLIC_URL/projects" "Project Selector" "Registry Governance / Readiness" "Registry Runtime Health" "EMERALD_PRECINCT_DEMO" "DEMO DATA - NOT PRODUCTION"
+check_route "PITS_SHELL_PUBLIC_RUNTIME" "$PITS_SHELL_PUBLIC_URL/runtime" "Runtime Status" "Registry Governance / Readiness" "Registry Runtime Health" "Core API source:" "PITS_SHELL"
 if [ -n "$REGISTRY_PRODUCT_ID" ] && [ -n "$REGISTRY_WORKSPACE_ID" ] && [ -n "$REGISTRY_PROJECT_ID" ] && [ -n "$REGISTRY_MODULE_ID" ] && [ -n "$REGISTRY_INSTALLATION_ID" ]; then
-  check_route "OIS_CONSOLE_PUBLIC_PRODUCT_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID" "Product Detail Source" "Product Runtime Health" "PITS_RUNTIME_SHELL" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID"
-  check_route "OIS_CONSOLE_PUBLIC_WORKSPACE_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/workspaces/$REGISTRY_WORKSPACE_ID" "Workspace Detail Source" "Workspace Runtime Health" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID"
-  check_route "OIS_CONSOLE_PUBLIC_MODULE_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/modules/$REGISTRY_MODULE_ID" "Module Detail Source" "Module Runtime Health" "$REGISTRY_INSTALLATION_ID"
-  check_route "OIS_CONSOLE_PUBLIC_INSTALLATION_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/installations/$REGISTRY_INSTALLATION_ID" "Installation Detail Source" "Installation Runtime Health" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID"
-  check_route "PITS_SHELL_PUBLIC_PROJECT_DETAIL" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID" "Project Detail Source" "Project Runtime Health" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID" "$OIS_CONSOLE_PUBLIC_URL/workspaces/$REGISTRY_WORKSPACE_ID"
+  check_route "OIS_CONSOLE_PUBLIC_PRODUCT_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID" "Product Detail Source" "Product Governance / Readiness" "What is missing?" "Product Runtime Health" "PITS_RUNTIME_SHELL" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID"
+  check_route "OIS_CONSOLE_PUBLIC_WORKSPACE_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/workspaces/$REGISTRY_WORKSPACE_ID" "Workspace Detail Source" "Workspace Governance / Readiness" "What is missing?" "Workspace Runtime Health" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID"
+  check_route "OIS_CONSOLE_PUBLIC_MODULE_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/modules/$REGISTRY_MODULE_ID" "Module Detail Source" "Module Governance / Readiness" "What is missing?" "Module Runtime Health" "$REGISTRY_INSTALLATION_ID"
+  check_route "OIS_CONSOLE_PUBLIC_INSTALLATION_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/installations/$REGISTRY_INSTALLATION_ID" "Installation Detail Source" "Installation Governance / Readiness" "What is missing?" "Installation Runtime Health" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID"
+  check_route "PITS_SHELL_PUBLIC_PROJECT_DETAIL" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID" "Project Detail Source" "Project Governance / Readiness" "What is missing?" "Project Runtime Health" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID" "$OIS_CONSOLE_PUBLIC_URL/workspaces/$REGISTRY_WORKSPACE_ID"
 fi
 
 if [ "$failures" -gt 0 ]; then

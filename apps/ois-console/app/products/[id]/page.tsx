@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   buildCrossProductLinkTargets,
   findRegistryHealthItem,
+  findRegistryReadinessItem,
   getPlatformRegistrySnapshot,
   getProductRegistryDetail
 } from "@ois/shared-ui";
@@ -14,6 +15,7 @@ import {
   OisConsoleShell,
   PageHeading,
   RegistryHealthItemPanel,
+  RegistryReadinessItemPanel,
   RelatedLinksPanel
 } from "../../shell";
 
@@ -46,6 +48,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   }
 
   const productHealth = findRegistryHealthItem(snapshot, "products", product.id);
+  const productReadiness = findRegistryReadinessItem(snapshot, "products", product.id);
 
   return (
     <OisConsoleShell active="products" snapshot={snapshot}>
@@ -66,6 +69,8 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
           ]}
         />
       </section>
+
+      <RegistryReadinessItemPanel title="Product Governance / Readiness" item={productReadiness} />
 
       <RegistryHealthItemPanel title="Product Runtime Health" item={productHealth} />
 

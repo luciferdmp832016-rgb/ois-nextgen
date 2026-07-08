@@ -7,6 +7,7 @@ import {
   PlatformCountsPanel,
   ProjectOverviewCards,
   ProjectSelector,
+  RegistryGovernancePanel,
   RegistryHealthPanel,
   RuntimeStatusCard
 } from "./shell";
@@ -24,6 +25,7 @@ export default async function Page() {
       <ProjectOverviewCards snapshot={snapshot} />
       <section className="content-grid">
         <ProjectSelector snapshot={snapshot} />
+        <RegistryGovernancePanel snapshot={snapshot} />
         <RegistryHealthPanel snapshot={snapshot} />
         <RuntimeStatusCard snapshot={snapshot} />
         <DataBoundaryPanel />

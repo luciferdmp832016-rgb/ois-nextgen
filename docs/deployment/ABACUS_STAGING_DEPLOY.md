@@ -29,6 +29,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 1C adds read-only Platform Registry detail endpoints and cross-product links between OIS Console and PITS Shell.
 - Stage 1C-R1 hotfixes the detail route HTML marker contract after Abacus runtime verification found detail pages returning HTTP 200 without the expected grep-safe markers.
 - Stage 1D adds read-only Platform Registry runtime health through Core API and owner-verifiable health panels in OIS Console and PITS Shell.
+- Stage 1E adds read-only Platform Registry governance/readiness through Core API and owner-verifiable readiness panels in OIS Console and PITS Shell.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -131,6 +132,8 @@ Stage 1A-R2 UI orphan port cleanup result: owner/manual Abacus evidence confirms
 Stage 1B read-only Platform Registry result: Core API now exposes source-ready read-only registry list/aggregate endpoints for products, workspaces, projects, modules, installations and aggregate registry data. OIS Console and PITS Shell bind product shell pages to that registry through Core API only. Final result is `READONLY_PLATFORM_REGISTRY_API_DATA_BINDING_READY`; public HTTP 200 verification requires owner runtime sync.
 
 Stage 1D registry runtime health result: Core API now exposes source-ready read-only `/platform/registry/health`. OIS Console and PITS Shell render owner-facing `Registry Runtime Health` plus product/workspace/project/module/installation runtime health panels. Final result is `REGISTRY_RUNTIME_HEALTH_OWNER_UAT_READY`; public HTTP 200 verification requires owner runtime sync.
+
+Stage 1E registry governance readiness result: Core API now exposes source-ready read-only `/platform/registry/readiness`. OIS Console and PITS Shell render owner-facing `Registry Governance / Readiness` plus per-entity readiness panels with `What is missing?` sections. Final result is `REGISTRY_GOVERNANCE_INSTALLATION_LIFECYCLE_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
 
 Stage 1C Product Registry detail cross-linking result: Core API now exposes source-ready read-only detail endpoints for products, product code lookup, workspaces, projects, modules and installations. OIS Console adds product/workspace/module/installation detail routes, PITS Shell adds project detail routes, and shared UI helpers build staging-only links between `https://ois-ng.dmp247.com` and `https://pits-ng.dmp247.com`. Final result is `PRODUCT_REGISTRY_DETAIL_CROSS_LINKING_READY`; public HTTP 200 verification requires owner runtime sync.
 
@@ -267,6 +270,8 @@ Stage 1C result: Product Registry detail cross-linking is ready. Recommended nex
 Stage 1C-R1 result: Product Registry detail UI marker hotfix is ready. Recommended next stage: Stage 1C-R2 - Owner Runtime Sync And Marker Verification Evidence.
 
 Stage 1D result: Registry Runtime Health & Owner UAT Surface is ready. Recommended next stage: Stage 1D-R1 - Owner Runtime Sync And Browser/UAT Verification Evidence.
+
+Stage 1E result: Registry Governance & Installation Lifecycle Readiness is ready. Recommended next action: owner runtime sync and browser/UAT verification for `REGISTRY_GOVERNANCE_INSTALLATION_LIFECYCLE_RUNTIME_VERIFIED`; do not start Stage 1F before that pass.
 
 ## Stage 0N Resource Boundaries
 
@@ -1814,6 +1819,66 @@ Stage 1D safety:
 - No `ois.dmp247.com` or `oisys.abacusai.app` change.
 - No legacy resources touched.
 
+## Stage 1E Registry Governance Installation Lifecycle Readiness
+
+Stage 1E adds a read-only owner-verifiable governance/readiness layer over the existing Platform Registry.
+
+Core API adds:
+
+- `GET /platform/registry/readiness`
+
+The readiness payload is deterministic from the existing registry snapshot and staging-safe runtime config. It reports `READY`, `INCOMPLETE`, `BLOCKED`, `NOT_APPLICABLE` and `UNKNOWN` states with owner-readable reasons, missing items and owner actions. It does not use LLMs, migrations, seed data, write endpoints or external route probes.
+
+OIS Console markers:
+
+| Route | Required marker |
+|---|---|
+| `/dashboard` | `Registry Governance / Readiness` |
+| `/products` | `Registry Governance / Readiness` |
+| `/products/[id]` | `Product Governance / Readiness` and `What is missing?` |
+| `/workspaces` | `Registry Governance / Readiness` |
+| `/workspaces/[id]` | `Workspace Governance / Readiness` and `What is missing?` |
+| `/modules/[id]` | `Module Governance / Readiness` and `What is missing?` |
+| `/installations/[id]` | `Installation Governance / Readiness` and `What is missing?` |
+| `/runtime` | `Registry Governance / Readiness` |
+
+PITS Shell markers:
+
+| Route | Required marker |
+|---|---|
+| `/projects` | `Registry Governance / Readiness` |
+| `/projects/[id]` | `Project Governance / Readiness` and `What is missing?` |
+| `/runtime` | `Registry Governance / Readiness` |
+
+Owner runtime sync after Stage 1E merge:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+git fetch origin
+git checkout stage-0b-complete-handoff-ingestion
+git pull --ff-only
+PUBLIC_STAGING_RESTART_SCOPE=all bash ops/abacus/runtime-sync.sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
+Expected owner runtime label after Abacus pass and browser/UAT: `REGISTRY_GOVERNANCE_INSTALLATION_LIFECYCLE_RUNTIME_VERIFIED`.
+
+Stage 1E safety:
+
+- No Cloudflare dashboard change.
+- No DNS change.
+- No migrations.
+- No seed.
+- No `prisma db push`.
+- No credentials committed.
+- No UI `DATABASE_URL`.
+- No Prisma import in UI shells.
+- No write/mutation endpoints.
+- No `/auth/demo-login` change.
+- No `ois.dmp247.com` or `oisys.abacusai.app` change.
+- No legacy resources touched.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -1891,6 +1956,7 @@ Stage 1B adds read-only Platform Registry API endpoints, Core API-backed UI data
 Stage 1C adds read-only Product Registry detail APIs, OIS/PITS dynamic detail routes, cross-product staging links, tests, ops checks and documentation only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, add write endpoints, call `/auth/demo-login` or touch legacy resources.
 Stage 1C-R1 adds explicit UI detail route markers, tests and documentation only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, import Prisma into UI shells, add write endpoints, call `/auth/demo-login` or touch legacy resources.
 Stage 1D adds read-only registry runtime health API/UI surfaces, tests, ops checks and owner UAT documentation only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, import Prisma into UI shells, add write endpoints, call `/auth/demo-login` or touch legacy resources.
+Stage 1E adds read-only registry governance/readiness API/UI surfaces, tests, ops checks and owner UAT documentation only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, import Prisma into UI shells, add write endpoints, call `/auth/demo-login` or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -1905,6 +1971,7 @@ Stage 1D adds read-only registry runtime health API/UI surfaces, tests, ops chec
 - Core API `/health` returns `status=ok`.
 - Core API `/platform/overview` returns HTTP 200, `DEMO DATA - NOT PRODUCTION` banner and seeded Platform Kernel counts.
 - Core API `/platform/registry/health` returns HTTP 200, `source=default-db`, `mode=read-only`, `summary`, `entities` and staging-safe URLs after Stage 1D owner runtime sync.
+- Core API `/platform/registry/readiness` returns HTTP 200, `source=default-db`, `mode=read-only`, `summary`, `entities`, `READY` and no forbidden local/legacy links after Stage 1E owner runtime sync.
 - Core API `/docs` renders Swagger UI.
 - OIS Console `/` renders `OIS Console`.
 - PITS Shell `/` renders `PITS Shell`.
@@ -1943,6 +2010,7 @@ Stage 1B adds planned read-only Core API registry endpoints `/platform/products`
 Stage 1C adds planned read-only Core API registry detail endpoints `/platform/products/{id}`, `/platform/products/code/{code}`, `/platform/workspaces/{id}`, `/platform/projects/{id}`, `/platform/modules/{id}` and `/platform/installations/{id}`. It adds planned OIS detail routes `/products/{id}`, `/workspaces/{id}`, `/modules/{id}` and `/installations/{id}`, plus planned PITS detail route `/projects/{id}`. Public verification is pending owner runtime sync.
 Stage 1C-R1 adds no endpoints. It changes the expected Stage 1C detail UI route response body by rendering explicit marker text and `data-detail-source` attributes for the existing OIS/PITS detail route checks.
 Stage 1D adds planned read-only Core API registry health endpoint `/platform/registry/health`. It changes OIS/PITS pages to render owner-facing `Registry Runtime Health` and per-entity runtime health markers. Public verification is pending owner runtime sync and owner browser/UAT.
+Stage 1E adds planned read-only Core API registry readiness endpoint `/platform/registry/readiness`. It changes OIS/PITS pages to render owner-facing `Registry Governance / Readiness` and per-entity governance/readiness markers with `What is missing?` sections. Public verification is pending owner runtime sync and owner browser/UAT.
 
 ## Stop Conditions
 
@@ -1975,6 +2043,7 @@ Stage 1D adds planned read-only Core API registry health endpoint `/platform/reg
 - A product-shell cross-link points to `ois.dmp247.com`, `oisys.abacusai.app`, an unapproved production domain or any legacy resource.
 - Dynamic OIS/PITS detail route manifest verification fails before public staging service restart.
 - A Stage 1C detail UI route returns HTTP 200 but omits its required `Detail Source` marker.
+- A Stage 1E readiness endpoint or UI route contains localhost, legacy OIS domains, write/admin affordances or owner-hostile technical-only readiness text.
 - Any additional seed execution, `/auth/demo-login`, write endpoint or row-data inspection is attempted without later owner approval.
 - A workflow tries to use hosted-app service registration or external custom-domain publication instead of the verified SuperComputer nginx/systemd path without owner approval.
 - Direct external SSH is required while the Abacus SSH relay still times out before authentication; use Web Terminal fallback instead.

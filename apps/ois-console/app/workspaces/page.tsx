@@ -5,6 +5,7 @@ import {
   DataBoundaryPanel,
   OisConsoleShell,
   PageHeading,
+  RegistryGovernancePanel,
   RegistryHealthPanel,
   RegistryStatusPanel,
   RuntimeStatusCard
@@ -80,6 +81,7 @@ export default async function WorkspacesPage() {
         )}
       </section>
       <section className="dashboard-grid">
+        <RegistryGovernancePanel snapshot={snapshot} />
         <RegistryHealthPanel snapshot={snapshot} />
         <RegistryStatusPanel snapshot={snapshot} />
         <RuntimeStatusCard snapshot={snapshot} />
