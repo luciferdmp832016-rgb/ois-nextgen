@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { getPlatformRegistrySnapshot } from "@ois/shared-ui";
-import { CountGrid, DataBoundaryPanel, OisConsoleShell, PageHeading, RegistryStatusPanel, RuntimeStatusCard } from "../shell";
+import {
+  CountGrid,
+  DataBoundaryPanel,
+  OisConsoleShell,
+  PageHeading,
+  RegistryHealthPanel,
+  RegistryStatusPanel,
+  RuntimeStatusCard
+} from "../shell";
 
 export const dynamic = "force-dynamic";
 
@@ -72,6 +80,7 @@ export default async function WorkspacesPage() {
         )}
       </section>
       <section className="dashboard-grid">
+        <RegistryHealthPanel snapshot={snapshot} />
         <RegistryStatusPanel snapshot={snapshot} />
         <RuntimeStatusCard snapshot={snapshot} />
         <DataBoundaryPanel />

@@ -24,8 +24,8 @@ bash ops/abacus/status.sh
 | `install-ui-shell-systemd-services.sh` | Installs and starts durable systemd services for OIS Console and PITS Shell public staging shells. | Yes, UI systemd units only. |
 | `uninstall-ui-shell-systemd-services.sh` | Stops, disables and removes only the OIS Console/PITS Shell public staging systemd units. Requires `--confirm`. | Yes, UI systemd units only. |
 | `restart-public-staging-runtime.sh` | Restarts Core API, stops OIS/PITS UI services, stops legacy temporary UI demo processes, removes only orphan listeners on `3000/tcp` and `3001/tcp`, starts UI services, then verifies local/public staging endpoints. Does not restart `cloudflared` unless `--include-cloudflared` is passed. | Yes, service restart and UI port cleanup only. |
-| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs, public staging URLs, Stage 1B registry endpoints and Stage 1C registry detail routes. | No. Read-only. |
-| `check-public-staging-endpoints.sh` | Checks public Core API, registry, OIS and PITS staging endpoints for HTTP 200, product markers, Core API URL and seeded counts. | No. Read-only. |
+| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs, public staging URLs, Stage 1B registry endpoints, Stage 1C registry detail routes and Stage 1D health markers. | No. Read-only. |
+| `check-public-staging-endpoints.sh` | Checks public Core API, registry, registry health, OIS and PITS staging endpoints for HTTP 200, product markers, Core API URL, seeded counts and forbidden localhost/legacy links on Stage 1D surfaces. | No. Read-only. |
 | `verify-ui-route-manifests.sh` | Checks production `.next` route manifests and server entries for every Stage 1A route plus Stage 1C dynamic detail routes. | No. Read-only build artifact check. |
 | `enable-product-subdomain-demo-routes.sh` | Adds a dedicated nginx host-routing config for `ois-ng.dmp247.com` -> port 3000 and `pits-ng.dmp247.com` -> port 3001. | Yes, nginx config only. |
 | `status-product-subdomain-demo-routes.sh` | Checks local Host-header product subdomain routing and optional public DNS/TLS routes. | No. Read-only. |
@@ -309,8 +309,25 @@ Stage 1C-R1 detail UI marker hotfix:
   - OIS `/workspaces/[id]`: `Workspace Detail Source`
   - OIS `/modules/[id]`: `Module Detail Source`
   - OIS `/installations/[id]`: `Installation Detail Source`
-  - PITS `/projects/[id]`: `Project Detail Source`
+- PITS `/projects/[id]`: `Project Detail Source`
 - `status-public-staging-runtime.sh` and `check-public-staging-endpoints.sh` continue to use those exact marker strings.
+
+Stage 1D registry runtime health checks:
+
+- Core API adds read-only `/platform/registry/health`.
+- OIS Console shows `Registry Runtime Health` on dashboard/products/workspaces/runtime pages.
+- OIS Console detail pages show `Product Runtime Health`, `Workspace Runtime Health`, `Module Runtime Health` and `Installation Runtime Health`.
+- PITS Shell shows `Registry Runtime Health` on overview/projects/runtime pages.
+- PITS Shell project details show `Project Runtime Health`.
+- `check-public-staging-endpoints.sh` also verifies the Stage 1D public health surfaces do not contain `localhost`, `127.0.0.1`, `ois.dmp247.com` or `oisys.abacusai.app`.
+- Health status is deterministic from registry data. `Reachable` means a staging-safe public URL is configured; the Core API does not probe external UI routes while building the health payload.
+
+Verify Stage 1D after source sync:
+
+```sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
 
 ## PITS Shell Upload Bundle
 

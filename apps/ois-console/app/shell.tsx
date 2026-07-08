@@ -4,6 +4,8 @@ import {
   kernelFields,
   type KernelField,
   type RegistryDetailSnapshot,
+  type RegistryHealthItem,
+  type RegistryHealthStatus,
   type PlatformRegistrySnapshot,
   type PlatformSnapshot
 } from "@ois/shared-ui";
@@ -81,6 +83,151 @@ export function PageHeading({ title, eyebrow, children }: { title: string; eyebr
 
 export function StatusBadge({ ok, label }: { ok: boolean; label: string }) {
   return <span className={ok ? "status status-ok" : "status status-warn"}>{label}</span>;
+}
+
+function HealthBadge({ status }: { status: RegistryHealthStatus }) {
+  const className =
+    status === "Healthy" || status === "Configured" || status === "Linked" || status === "Reachable"
+      ? "status status-ok"
+      : status === "Not applicable"
+        ? "status status-neutral"
+        : "status status-warn";
+
+  return <span className={className}>{status}</span>;
+}
+
+function HealthBadgeRow({ badges }: { badges: RegistryHealthStatus[] }) {
+  return (
+    <div className="badge-row">
+      {badges.map((badge) => (
+        <HealthBadge status={badge} key={badge} />
+      ))}
+    </div>
+  );
+}
+
+const healthLinkLabels: Record<string, string> = {
+  coreApiDetail: "Core API detail",
+  oisConsoleDetail: "OIS Console detail",
+  pitsProjectDetail: "PITS Shell project",
+  oisProduct: "OIS product",
+  oisWorkspace: "OIS workspace",
+  productRuntime: "Product runtime",
+  pitsProject: "PITS project"
+};
+
+function HealthCheckList({ item }: { item: RegistryHealthItem }) {
+  return (
+    <div className="health-check-list">
+      {item.checks.map((check) => (
+        <div className="health-check" key={check.label}>
+          <div>
+            <strong>{check.label}</strong>
+            <p className="muted">{check.detail}</p>
+          </div>
+          {check.url ? <a href={check.url}>Open</a> : <HealthBadge status={check.status} />}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HealthLinks({ item }: { item: RegistryHealthItem }) {
+  const links = Object.entries(item.links).filter((entry): entry is [string, string] => Boolean(entry[1]));
+
+  if (links.length === 0) {
+    return <p className="muted">No staging-safe links are configured for this health item.</p>;
+  }
+
+  return (
+    <div className="link-list">
+      {links.map(([key, href]) => (
+        <a href={href} key={key}>
+          {healthLinkLabels[key] ?? key}
+        </a>
+      ))}
+    </div>
+  );
+}
+
+export function RegistryHealthPanel({ snapshot }: { snapshot: PlatformRegistrySnapshot }) {
+  const payload = snapshot.registryHealthPayload;
+  const summary = payload?.summary;
+
+  return (
+    <section className="panel registry-health-panel" data-registry-health="Registry Runtime Health">
+      <div className="panel-heading">
+        <div>
+          <h3>Registry Runtime Health</h3>
+          <p className="muted">Owner-facing configured, linked and staging URL status from Core API /platform/registry/health.</p>
+        </div>
+        <StatusBadge
+          ok={Boolean(payload && summary?.status === "Healthy")}
+          label={payload ? `Registry health ${summary?.status}` : "Registry health unavailable"}
+        />
+      </div>
+      {payload ? (
+        <>
+          <dl className="facts">
+            <div>
+              <dt>Total</dt>
+              <dd>{summary?.total ?? 0}</dd>
+            </div>
+            <div>
+              <dt>Healthy</dt>
+              <dd>{summary?.healthy ?? 0}</dd>
+            </div>
+            <div>
+              <dt>Degraded</dt>
+              <dd>{summary?.degraded ?? 0}</dd>
+            </div>
+            <div>
+              <dt>Missing URL</dt>
+              <dd>{summary?.missingUrl ?? 0}</dd>
+            </div>
+            <div>
+              <dt>OIS Console</dt>
+              <dd>{payload.runtime.oisConsoleBaseUrl}</dd>
+            </div>
+            <div>
+              <dt>PITS Shell</dt>
+              <dd>{payload.runtime.pitsShellBaseUrl}</dd>
+            </div>
+            <div>
+              <dt>Core API</dt>
+              <dd>{payload.runtime.coreApiBaseUrl}</dd>
+            </div>
+          </dl>
+          <p className="muted health-note">{payload.runtime.note}</p>
+        </>
+      ) : (
+        <p className="muted">{snapshot.registryHealth.status ?? snapshot.registryHealth.error ?? "Health endpoint unavailable"}.</p>
+      )}
+    </section>
+  );
+}
+
+export function RegistryHealthItemPanel({ title, item }: { title: string; item: RegistryHealthItem | null }) {
+  return (
+    <section className="panel registry-health-panel" data-registry-health={title}>
+      <div className="panel-heading">
+        <div>
+          <h3>{title}</h3>
+          <p className="muted">Configured, linked and runtime URL checks for this registry item.</p>
+        </div>
+        {item ? <HealthBadge status={item.status} /> : <StatusBadge ok={false} label="Health unavailable" />}
+      </div>
+      {item ? (
+        <>
+          <HealthBadgeRow badges={item.badges} />
+          <HealthCheckList item={item} />
+          <HealthLinks item={item} />
+        </>
+      ) : (
+        <p className="muted">Core API did not return a health item for this registry entity.</p>
+      )}
+    </section>
+  );
 }
 
 export function PlatformOverviewCard({ snapshot }: { snapshot: PlatformSnapshot }) {

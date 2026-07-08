@@ -17,6 +17,12 @@ const serviceIdentity = {
   docs: "/docs"
 } as const;
 
+const publicRuntimeConfig = {
+  coreApiBaseUrl: "https://ois-nextgen.abacusai.cloud",
+  oisConsoleBaseUrl: "https://ois-ng.dmp247.com",
+  pitsShellBaseUrl: "https://pits-ng.dmp247.com"
+} as const;
+
 function registryMetadata() {
   return {
     source: "default-db",
@@ -349,6 +355,503 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
 
   type RegistrySnapshot = Awaited<ReturnType<typeof readRegistry>>;
   type ProductRegistryEntity = RegistrySnapshot["products"][number];
+  type RegistryHealthStatus =
+    | "Healthy"
+    | "Configured"
+    | "Linked"
+    | "Reachable"
+    | "Missing URL"
+    | "Not applicable"
+    | "Degraded"
+    | "Unavailable";
+  type RegistryHealthEntityKind = "product" | "workspace" | "project" | "module" | "installation";
+  type RegistryHealthCheck = {
+    label: string;
+    status: RegistryHealthStatus;
+    ok: boolean;
+    required: boolean;
+    detail: string;
+    url: string | null;
+  };
+
+  function publicRuntimeUrl(baseUrl: string, path: string) {
+    const normalizedBase = baseUrl.replace(/\/+$/, "");
+    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+    return `${normalizedBase}${normalizedPath}`;
+  }
+
+  function coreApiUrl(path: string) {
+    return publicRuntimeUrl(publicRuntimeConfig.coreApiBaseUrl, path);
+  }
+
+  function oisConsoleUrl(path: string) {
+    return publicRuntimeUrl(publicRuntimeConfig.oisConsoleBaseUrl, path);
+  }
+
+  function pitsShellUrl(path: string) {
+    return publicRuntimeUrl(publicRuntimeConfig.pitsShellBaseUrl, path);
+  }
+
+  function healthCheck(
+    label: string,
+    status: RegistryHealthStatus,
+    ok: boolean,
+    required: boolean,
+    detail: string,
+    url: string | null = null
+  ): RegistryHealthCheck {
+    return {
+      label,
+      status,
+      ok,
+      required,
+      detail,
+      url
+    };
+  }
+
+  function deriveHealthStatus(checks: RegistryHealthCheck[]): "Healthy" | "Degraded" | "Unavailable" {
+    const requiredChecks = checks.filter((check) => check.required);
+
+    if (requiredChecks.some((check) => check.status === "Unavailable")) {
+      return "Unavailable";
+    }
+
+    if (requiredChecks.some((check) => !check.ok || check.status === "Missing URL")) {
+      return "Degraded";
+    }
+
+    return "Healthy";
+  }
+
+  function healthBadges(status: "Healthy" | "Degraded" | "Unavailable", checks: RegistryHealthCheck[]) {
+    return Array.from(new Set<RegistryHealthStatus>([status, ...checks.map((check) => check.status)]));
+  }
+
+  function buildHealthEntity({
+    kind,
+    id,
+    code,
+    name,
+    lifecycle,
+    checks,
+    links
+  }: {
+    kind: RegistryHealthEntityKind;
+    id: string;
+    code: string;
+    name: string;
+    lifecycle: string;
+    checks: RegistryHealthCheck[];
+    links: Record<string, string | null>;
+  }) {
+    const status = deriveHealthStatus(checks);
+
+    return {
+      kind,
+      id,
+      code,
+      name,
+      lifecycle,
+      status,
+      badges: healthBadges(status, checks),
+      checks,
+      links
+    };
+  }
+
+  function buildRegistryHealth(registry: RegistrySnapshot) {
+    const productHealth = registry.products.map((product) => {
+      const productPath = `/platform/products/${encodeURIComponent(product.id)}`;
+      const oisProductPath = `/products/${encodeURIComponent(product.id)}`;
+      const firstProjectId = product.installations[0]?.projectId;
+      const productRuntimeUrl =
+        product.code === "OIS"
+          ? publicRuntimeConfig.oisConsoleBaseUrl
+          : product.code === "PITS"
+            ? publicRuntimeConfig.pitsShellBaseUrl
+            : null;
+      const projectRuntimeUrl = firstProjectId ? pitsShellUrl(`/projects/${encodeURIComponent(firstProjectId)}`) : null;
+
+      return buildHealthEntity({
+        kind: "product",
+        id: product.id,
+        code: product.code,
+        name: product.name,
+        lifecycle: product.lifecycle,
+        links: {
+          coreApiDetail: coreApiUrl(productPath),
+          oisConsoleDetail: oisConsoleUrl(oisProductPath),
+          productRuntime: productRuntimeUrl,
+          pitsProject: projectRuntimeUrl
+        },
+        checks: [
+          healthCheck("Registry row", "Configured", Boolean(product.id && product.code), true, "Product registry row is present."),
+          healthCheck(
+            "Lifecycle",
+            product.lifecycle === "ACTIVE" ? "Configured" : "Unavailable",
+            product.lifecycle === "ACTIVE",
+            true,
+            `Lifecycle is ${product.lifecycle}.`
+          ),
+          healthCheck(
+            "Module links",
+            product.modules.length > 0 ? "Linked" : "Unavailable",
+            product.modules.length > 0,
+            true,
+            `${product.modules.length} module link(s) returned.`
+          ),
+          healthCheck(
+            "Installation links",
+            product.installations.length > 0 ? "Linked" : "Unavailable",
+            product.installations.length > 0,
+            true,
+            `${product.installations.length} installation link(s) returned.`
+          ),
+          healthCheck(
+            "Core API detail source",
+            "Reachable",
+            true,
+            true,
+            "Read-only Core API detail URL is configured for staging.",
+            coreApiUrl(productPath)
+          ),
+          healthCheck(
+            "OIS Console detail link",
+            "Reachable",
+            true,
+            true,
+            "OIS Console product detail URL is staging-safe.",
+            oisConsoleUrl(oisProductPath)
+          ),
+          productRuntimeUrl
+            ? healthCheck(
+                "Product runtime URL",
+                "Reachable",
+                true,
+                false,
+                "Product runtime base URL is configured for this Stage 1D product.",
+                productRuntimeUrl
+              )
+            : healthCheck(
+                "Product runtime URL",
+                "Not applicable",
+                true,
+                false,
+                "No dedicated public runtime URL is active for this product in Stage 1D."
+              ),
+          projectRuntimeUrl
+            ? healthCheck(
+                "PITS project runtime link",
+                "Reachable",
+                true,
+                false,
+                "At least one related PITS project URL is configured.",
+                projectRuntimeUrl
+              )
+            : healthCheck(
+                "PITS project runtime link",
+                product.code === "PITS" ? "Missing URL" : "Not applicable",
+                product.code !== "PITS",
+                product.code === "PITS",
+                product.code === "PITS"
+                  ? "PITS products require at least one project installation to build a runtime link."
+                  : "Only PITS product installations expose project runtime links in Stage 1D."
+              )
+        ]
+      });
+    });
+
+    const workspaceHealth = registry.workspaces.map((workspace) => {
+      const workspacePath = `/platform/workspaces/${encodeURIComponent(workspace.id)}`;
+      const oisWorkspacePath = `/workspaces/${encodeURIComponent(workspace.id)}`;
+      const firstProjectId = workspace.projects[0]?.id;
+      const firstPitsProjectUrl = firstProjectId ? pitsShellUrl(`/projects/${encodeURIComponent(firstProjectId)}`) : null;
+
+      return buildHealthEntity({
+        kind: "workspace",
+        id: workspace.id,
+        code: workspace.code,
+        name: workspace.name,
+        lifecycle: workspace.lifecycle,
+        links: {
+          coreApiDetail: coreApiUrl(workspacePath),
+          oisConsoleDetail: oisConsoleUrl(oisWorkspacePath),
+          pitsProject: firstPitsProjectUrl
+        },
+        checks: [
+          healthCheck("Registry row", "Configured", Boolean(workspace.id && workspace.code), true, "Workspace registry row is present."),
+          healthCheck(
+            "Lifecycle",
+            workspace.lifecycle === "ACTIVE" ? "Configured" : "Unavailable",
+            workspace.lifecycle === "ACTIVE",
+            true,
+            `Lifecycle is ${workspace.lifecycle}.`
+          ),
+          healthCheck("Organization link", "Linked", Boolean(workspace.organization?.code), true, "Workspace has an organization link."),
+          healthCheck(
+            "Project links",
+            workspace.projects.length > 0 ? "Linked" : "Unavailable",
+            workspace.projects.length > 0,
+            true,
+            `${workspace.projects.length} project link(s) returned.`
+          ),
+          healthCheck(
+            "Installation links",
+            workspace.installations.length > 0 ? "Linked" : "Unavailable",
+            workspace.installations.length > 0,
+            false,
+            `${workspace.installations.length} installation link(s) returned.`
+          ),
+          healthCheck(
+            "Core API detail source",
+            "Reachable",
+            true,
+            true,
+            "Read-only Core API workspace detail URL is configured for staging.",
+            coreApiUrl(workspacePath)
+          ),
+          healthCheck(
+            "OIS Console detail link",
+            "Reachable",
+            true,
+            true,
+            "OIS Console workspace detail URL is staging-safe.",
+            oisConsoleUrl(oisWorkspacePath)
+          ),
+          firstPitsProjectUrl
+            ? healthCheck(
+                "PITS project runtime link",
+                "Reachable",
+                true,
+                false,
+                "At least one workspace project URL is configured for PITS Shell.",
+                firstPitsProjectUrl
+              )
+            : healthCheck(
+                "PITS project runtime link",
+                "Missing URL",
+                false,
+                false,
+                "No project link is available to build a PITS Shell URL."
+              )
+        ]
+      });
+    });
+
+    const projectHealth = registry.projects.map((project) => {
+      const projectPath = `/platform/projects/${encodeURIComponent(project.id)}`;
+      const pitsProjectPath = `/projects/${encodeURIComponent(project.id)}`;
+      const firstInstallation = project.installations[0];
+      const productId = firstInstallation?.productId;
+      const oisProductUrl = productId ? oisConsoleUrl(`/products/${encodeURIComponent(productId)}`) : null;
+      const oisWorkspaceUrl = project.workspaceId ? oisConsoleUrl(`/workspaces/${encodeURIComponent(project.workspaceId)}`) : null;
+
+      return buildHealthEntity({
+        kind: "project",
+        id: project.id,
+        code: project.code,
+        name: project.name,
+        lifecycle: project.lifecycle,
+        links: {
+          coreApiDetail: coreApiUrl(projectPath),
+          pitsProjectDetail: pitsShellUrl(pitsProjectPath),
+          oisProduct: oisProductUrl,
+          oisWorkspace: oisWorkspaceUrl
+        },
+        checks: [
+          healthCheck("Registry row", "Configured", Boolean(project.id && project.code), true, "Project registry row is present."),
+          healthCheck(
+            "Lifecycle",
+            project.lifecycle === "ACTIVE" ? "Configured" : "Unavailable",
+            project.lifecycle === "ACTIVE",
+            true,
+            `Lifecycle is ${project.lifecycle}.`
+          ),
+          healthCheck("Workspace link", project.workspace?.code ? "Linked" : "Unavailable", Boolean(project.workspace?.code), true, "Project has a workspace link."),
+          healthCheck(
+            "Installation links",
+            project.installations.length > 0 ? "Linked" : "Unavailable",
+            project.installations.length > 0,
+            true,
+            `${project.installations.length} installation link(s) returned.`
+          ),
+          healthCheck(
+            "Core API detail source",
+            "Reachable",
+            true,
+            true,
+            "Read-only Core API project detail URL is configured for staging.",
+            coreApiUrl(projectPath)
+          ),
+          healthCheck(
+            "PITS Shell project detail",
+            "Reachable",
+            true,
+            true,
+            "PITS Shell project detail URL is staging-safe.",
+            pitsShellUrl(pitsProjectPath)
+          ),
+          oisWorkspaceUrl
+            ? healthCheck(
+                "OIS workspace link",
+                "Reachable",
+                true,
+                false,
+                "Related OIS Console workspace URL is configured.",
+                oisWorkspaceUrl
+              )
+            : healthCheck("OIS workspace link", "Missing URL", false, false, "Project has no workspace ID for an OIS Console link."),
+          oisProductUrl
+            ? healthCheck("OIS product link", "Reachable", true, false, "Related OIS Console product URL is configured.", oisProductUrl)
+            : healthCheck("OIS product link", "Missing URL", false, false, "Project has no product installation for an OIS Console link.")
+        ]
+      });
+    });
+
+    const moduleHealth = registry.modules.map((module) => {
+      const modulePath = `/platform/modules/${encodeURIComponent(module.id)}`;
+      const oisModulePath = `/modules/${encodeURIComponent(module.id)}`;
+      const product = registry.products.find((item) => item.code === module.productCode) ?? null;
+
+      return buildHealthEntity({
+        kind: "module",
+        id: module.id,
+        code: module.code,
+        name: module.code,
+        lifecycle: module.lifecycle,
+        links: {
+          coreApiDetail: coreApiUrl(modulePath),
+          oisConsoleDetail: oisConsoleUrl(oisModulePath),
+          oisProduct: product ? oisConsoleUrl(`/products/${encodeURIComponent(product.id)}`) : null
+        },
+        checks: [
+          healthCheck("Registry row", "Configured", Boolean(module.id && module.code), true, "Module registry row is present."),
+          healthCheck(
+            "Lifecycle",
+            module.lifecycle === "ACTIVE" ? "Configured" : "Unavailable",
+            module.lifecycle === "ACTIVE",
+            true,
+            `Lifecycle is ${module.lifecycle}.`
+          ),
+          healthCheck("Product link", product ? "Linked" : "Unavailable", Boolean(product), true, "Module has an owning product link."),
+          healthCheck(
+            "Core API detail source",
+            "Reachable",
+            true,
+            true,
+            "Read-only Core API module detail URL is configured for staging.",
+            coreApiUrl(modulePath)
+          ),
+          healthCheck(
+            "OIS Console detail link",
+            "Reachable",
+            true,
+            true,
+            "OIS Console module detail URL is staging-safe.",
+            oisConsoleUrl(oisModulePath)
+          ),
+          healthCheck(
+            "Product runtime URL",
+            "Not applicable",
+            true,
+            false,
+            "Modules do not expose standalone product runtime URLs in Stage 1D."
+          )
+        ]
+      });
+    });
+
+    const installationHealth = registry.installations.map((installation) => {
+      const installationPath = `/platform/installations/${encodeURIComponent(installation.id)}`;
+      const oisInstallationPath = `/installations/${encodeURIComponent(installation.id)}`;
+      const pitsProjectUrl = installation.projectId ? pitsShellUrl(`/projects/${encodeURIComponent(installation.projectId)}`) : null;
+
+      return buildHealthEntity({
+        kind: "installation",
+        id: installation.id,
+        code: installation.productCode,
+        name: `${installation.productCode} installation`,
+        lifecycle: installation.lifecycle,
+        links: {
+          coreApiDetail: coreApiUrl(installationPath),
+          oisConsoleDetail: oisConsoleUrl(oisInstallationPath),
+          oisProduct: installation.productId ? oisConsoleUrl(`/products/${encodeURIComponent(installation.productId)}`) : null,
+          oisWorkspace: installation.workspaceId ? oisConsoleUrl(`/workspaces/${encodeURIComponent(installation.workspaceId)}`) : null,
+          pitsProject: pitsProjectUrl
+        },
+        checks: [
+          healthCheck("Registry row", "Configured", Boolean(installation.id && installation.productCode), true, "Installation registry row is present."),
+          healthCheck(
+            "Lifecycle",
+            installation.lifecycle === "ACTIVE" ? "Configured" : "Unavailable",
+            installation.lifecycle === "ACTIVE",
+            true,
+            `Lifecycle is ${installation.lifecycle}.`
+          ),
+          healthCheck("Product link", installation.product ? "Linked" : "Unavailable", Boolean(installation.product), true, "Installation has a product link."),
+          healthCheck("Workspace link", installation.workspace ? "Linked" : "Unavailable", Boolean(installation.workspace), true, "Installation has a workspace link."),
+          healthCheck("Project link", installation.project ? "Linked" : "Unavailable", Boolean(installation.project), true, "Installation has a project link."),
+          healthCheck(
+            "Core API detail source",
+            "Reachable",
+            true,
+            true,
+            "Read-only Core API installation detail URL is configured for staging.",
+            coreApiUrl(installationPath)
+          ),
+          healthCheck(
+            "OIS Console detail link",
+            "Reachable",
+            true,
+            true,
+            "OIS Console installation detail URL is staging-safe.",
+            oisConsoleUrl(oisInstallationPath)
+          ),
+          installation.productCode === "PITS" && pitsProjectUrl
+            ? healthCheck("PITS project runtime link", "Reachable", true, true, "PITS project runtime URL is configured.", pitsProjectUrl)
+            : healthCheck(
+                "PITS project runtime link",
+                installation.productCode === "PITS" ? "Missing URL" : "Not applicable",
+                installation.productCode !== "PITS",
+                installation.productCode === "PITS",
+                installation.productCode === "PITS"
+                  ? "PITS installation has no project ID for a runtime URL."
+                  : "Only PITS installations expose a PITS Shell project runtime URL in Stage 1D."
+              )
+        ]
+      });
+    });
+
+    const allEntities = [...productHealth, ...workspaceHealth, ...projectHealth, ...moduleHealth, ...installationHealth];
+    const countByStatus = (status: "Healthy" | "Degraded" | "Unavailable") => allEntities.filter((item) => item.status === status).length;
+    const missingUrlCount = allEntities.filter((item) => item.checks.some((check) => check.status === "Missing URL")).length;
+    const summaryStatus = countByStatus("Unavailable") > 0 || countByStatus("Degraded") > 0 ? "Degraded" : "Healthy";
+
+    return {
+      metadata: registry.metadata,
+      runtime: {
+        ...publicRuntimeConfig,
+        reachabilityMode: "configured-url",
+        note: "Reachable means a staging-safe public URL is configured; this read-only API does not probe external UI routes."
+      },
+      summary: {
+        status: summaryStatus,
+        total: allEntities.length,
+        healthy: countByStatus("Healthy"),
+        degraded: countByStatus("Degraded"),
+        unavailable: countByStatus("Unavailable"),
+        missingUrl: missingUrlCount
+      },
+      entities: {
+        products: productHealth,
+        workspaces: workspaceHealth,
+        projects: projectHealth,
+        modules: moduleHealth,
+        installations: installationHealth
+      }
+    };
+  }
 
   function buildProductDetail(registry: RegistrySnapshot, product: ProductRegistryEntity) {
     const projects = uniqueById(
@@ -721,6 +1224,8 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
   }));
 
   app.get("/platform/registry", async () => readRegistry());
+
+  app.get("/platform/registry/health", async () => buildRegistryHealth(await readRegistry()));
 
   app.get("/platform/products/code/:code", async (request, reply) => {
     const params = request.params as { code: string };

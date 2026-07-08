@@ -9,6 +9,7 @@ import RuntimePage from "./runtime/page";
 
 const coreApiUrl = "https://ois-nextgen.abacusai.cloud";
 const oisPublicBaseUrl = "https://ois-ng.dmp247.com";
+const pitsPublicBaseUrl = "https://pits-ng.dmp247.com";
 const dbEnvKey = ["DATABASE", "URL"].join("_");
 
 const healthPayload = {
@@ -133,6 +134,94 @@ const registryPayload = {
 
 const projectRegistryItem = registryPayload.projects[0]!;
 
+function healthItem(kind: string, id: string, code: string, name: string, links: Record<string, string>) {
+  return {
+    kind,
+    id,
+    code,
+    name,
+    lifecycle: "ACTIVE",
+    status: "Healthy",
+    badges: ["Healthy", "Configured", "Linked", "Reachable"],
+    checks: [
+      {
+        label: "Registry row",
+        status: "Configured",
+        ok: true,
+        required: true,
+        detail: "Registry row is present.",
+        url: null
+      },
+      {
+        label: "Core API detail source",
+        status: "Reachable",
+        ok: true,
+        required: true,
+        detail: "Read-only Core API detail URL is configured for staging.",
+        url: links.coreApiDetail
+      }
+    ],
+    links
+  };
+}
+
+const registryHealthPayload = {
+  metadata: registryPayload.metadata,
+  runtime: {
+    coreApiBaseUrl: coreApiUrl,
+    oisConsoleBaseUrl: oisPublicBaseUrl,
+    pitsShellBaseUrl: pitsPublicBaseUrl,
+    reachabilityMode: "configured-url",
+    note: "Reachable means a staging-safe public URL is configured; this read-only API does not probe external UI routes."
+  },
+  summary: {
+    status: "Healthy",
+    total: 5,
+    healthy: 5,
+    degraded: 0,
+    unavailable: 0,
+    missingUrl: 0
+  },
+  entities: {
+    products: [
+      healthItem("product", "prod_pits", "PITS", "PITS", {
+        coreApiDetail: `${coreApiUrl}/platform/products/prod_pits`,
+        oisConsoleDetail: `${oisPublicBaseUrl}/products/prod_pits`,
+        pitsProject: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`
+      })
+    ],
+    workspaces: [
+      healthItem("workspace", "ws_pmc_org_demo", "PMC_ORG_DEMO", "PMC Org Demo", {
+        coreApiDetail: `${coreApiUrl}/platform/workspaces/ws_pmc_org_demo`,
+        oisConsoleDetail: `${oisPublicBaseUrl}/workspaces/ws_pmc_org_demo`,
+        pitsProject: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`
+      })
+    ],
+    projects: [
+      healthItem("project", "prj_emerald_precinct_demo", "EMERALD_PRECINCT_DEMO", "Emerald Precinct Demo", {
+        coreApiDetail: `${coreApiUrl}/platform/projects/prj_emerald_precinct_demo`,
+        pitsProjectDetail: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`,
+        oisProduct: `${oisPublicBaseUrl}/products/prod_pits`,
+        oisWorkspace: `${oisPublicBaseUrl}/workspaces/ws_pmc_org_demo`
+      })
+    ],
+    modules: [
+      healthItem("module", "module_pits_runtime_shell", "PITS_RUNTIME_SHELL", "PITS_RUNTIME_SHELL", {
+        coreApiDetail: `${coreApiUrl}/platform/modules/module_pits_runtime_shell`,
+        oisConsoleDetail: `${oisPublicBaseUrl}/modules/module_pits_runtime_shell`,
+        oisProduct: `${oisPublicBaseUrl}/products/prod_pits`
+      })
+    ],
+    installations: [
+      healthItem("installation", "inst_pits_emerald", "PITS", "PITS installation", {
+        coreApiDetail: `${coreApiUrl}/platform/installations/inst_pits_emerald`,
+        oisConsoleDetail: `${oisPublicBaseUrl}/installations/inst_pits_emerald`,
+        pitsProject: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`
+      })
+    ]
+  }
+};
+
 const projectDetailPayload = {
   metadata: registryPayload.metadata,
   project: {
@@ -170,6 +259,10 @@ function mockCoreApiFetch() {
 
     if (url === `${coreApiUrl}/platform/registry`) {
       return jsonResponse(registryPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/registry/health`) {
+      return jsonResponse(registryHealthPayload);
     }
 
     if (url === `${coreApiUrl}/platform/projects/prj_emerald_precinct_demo`) {
@@ -230,6 +323,7 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("PITS_SHELL");
     expect(html).toContain("Project Runtime Overview");
     expect(html).toContain("Project Selector");
+    expect(html).toContain("Registry Runtime Health");
     expect(html).toContain("Runtime");
     expect(html).toContain("Emerald Precinct Demo");
     expect(html).toContain("/projects/prj_emerald_precinct_demo");
@@ -249,11 +343,16 @@ describe("PITS Shell product shell", () => {
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/health`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/overview`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry`, { cache: "no-store" });
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry/health`, { cache: "no-store" });
   });
 
   it.each([
-    ["projects", ProjectsPage, ["Project Selector", "EMERALD_PRECINCT_DEMO", "/projects/prj_emerald_precinct_demo", "Project Installation Registry"]],
-    ["runtime", RuntimePage, ["Runtime Status", "Health ready", "Project Installation Registry"]]
+    [
+      "projects",
+      ProjectsPage,
+      ["Project Selector", "Registry Runtime Health", "EMERALD_PRECINCT_DEMO", "/projects/prj_emerald_precinct_demo", "Project Installation Registry"]
+    ],
+    ["runtime", RuntimePage, ["Runtime Status", "Health ready", "Registry Runtime Health", "Project Installation Registry"]]
   ] satisfies Array<[string, RouteComponent, string[]]>)("renders the %s route shell", async (_name, Component, markers) => {
     mockCoreApiFetch();
 
@@ -282,6 +381,7 @@ describe("PITS Shell product shell", () => {
     const html = renderToStaticMarkup(await ProjectDetailPage({ params: Promise.resolve({ id: "prj_emerald_precinct_demo" }) }));
 
     expect(html).toContain("Project Detail Source");
+    expect(html).toContain("Project Runtime Health");
     expect(html).toContain('data-detail-source="Project Detail Source"');
     expect(html).toContain("PITS_RUNTIME_SHELL");
     expect(html).toContain(`${oisPublicBaseUrl}/products/prod_pits`);

@@ -1,5 +1,6 @@
 import {
   buildCrossProductLinkTargets,
+  findRegistryHealthItem,
   getInstallationRegistryDetail,
   getPlatformRegistrySnapshot
 } from "@ois/shared-ui";
@@ -11,6 +12,7 @@ import {
   DetailStatusPanel,
   OisConsoleShell,
   PageHeading,
+  RegistryHealthItemPanel,
   RelatedLinksPanel
 } from "../../shell";
 
@@ -51,6 +53,7 @@ export default async function InstallationDetailPage({ params }: InstallationDet
     installationId: installation.id,
     projectId: installation.projectId
   });
+  const installationHealth = findRegistryHealthItem(snapshot, "installations", installation.id);
 
   return (
     <OisConsoleShell active="products" snapshot={snapshot}>
@@ -71,6 +74,8 @@ export default async function InstallationDetailPage({ params }: InstallationDet
           ]}
         />
       </section>
+
+      <RegistryHealthItemPanel title="Installation Runtime Health" item={installationHealth} />
 
       <RelatedLinksPanel
         title="Related Registry Links"
