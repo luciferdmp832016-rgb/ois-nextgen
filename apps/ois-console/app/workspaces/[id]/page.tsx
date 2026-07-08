@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   buildCrossProductLinkTargets,
   findRegistryHealthItem,
+  findRegistryReadinessItem,
   getPlatformRegistrySnapshot,
   getWorkspaceRegistryDetail
 } from "@ois/shared-ui";
@@ -14,6 +15,7 @@ import {
   OisConsoleShell,
   PageHeading,
   RegistryHealthItemPanel,
+  RegistryReadinessItemPanel,
   RelatedLinksPanel
 } from "../../shell";
 
@@ -48,6 +50,7 @@ export default async function WorkspaceDetailPage({ params }: WorkspaceDetailPag
   const products = workspace.relationships?.products ?? [];
   const projects = workspace.relationships?.projects ?? workspace.projects;
   const workspaceHealth = findRegistryHealthItem(snapshot, "workspaces", workspace.id);
+  const workspaceReadiness = findRegistryReadinessItem(snapshot, "workspaces", workspace.id);
 
   return (
     <OisConsoleShell active="workspaces" snapshot={snapshot}>
@@ -68,6 +71,8 @@ export default async function WorkspaceDetailPage({ params }: WorkspaceDetailPag
           ]}
         />
       </section>
+
+      <RegistryReadinessItemPanel title="Workspace Governance / Readiness" item={workspaceReadiness} />
 
       <RegistryHealthItemPanel title="Workspace Runtime Health" item={workspaceHealth} />
 

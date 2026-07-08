@@ -222,12 +222,70 @@ export type RegistryHealthPayload = {
   };
 };
 
+export type RegistryReadinessStatus = "READY" | "INCOMPLETE" | "BLOCKED" | "NOT_APPLICABLE" | "UNKNOWN";
+
+export type RegistryReadinessCheck = {
+  dimension: string;
+  label: string;
+  status: RegistryReadinessStatus;
+  ok: boolean;
+  required: boolean;
+  reason: string;
+  ownerAction: string | null;
+  evidenceUrl: string | null;
+};
+
+export type RegistryReadinessItem = {
+  kind: "product" | "workspace" | "project" | "module" | "installation";
+  id: string;
+  code: string;
+  name: string;
+  lifecycle: string;
+  status: RegistryReadinessStatus;
+  badges: RegistryReadinessStatus[];
+  checks: RegistryReadinessCheck[];
+  missing: string[];
+  blockedReasons: string[];
+  ownerActions: string[];
+  links: Record<string, string | null>;
+};
+
+export type RegistryReadinessPayload = {
+  metadata: RegistryMetadata;
+  runtime: {
+    coreApiBaseUrl: string;
+    oisConsoleBaseUrl: string;
+    pitsShellBaseUrl: string;
+    readinessMode: string;
+    note: string;
+  };
+  summary: {
+    status: RegistryReadinessStatus;
+    total: number;
+    ready: number;
+    incomplete: number;
+    blocked: number;
+    notApplicable: number;
+    unknown: number;
+  };
+  entities: {
+    products: RegistryReadinessItem[];
+    workspaces: RegistryReadinessItem[];
+    projects: RegistryReadinessItem[];
+    modules: RegistryReadinessItem[];
+    installations: RegistryReadinessItem[];
+  };
+};
+
 export type PlatformRegistrySnapshot = PlatformSnapshot & {
   registry: ApiResult;
   registryHealth: ApiResult;
+  registryReadiness: ApiResult;
   registryMetadata: RegistryMetadata | null;
   registryHealthPayload: RegistryHealthPayload | null;
+  registryReadinessPayload: RegistryReadinessPayload | null;
   registryHealthEntities: RegistryHealthPayload["entities"];
+  registryReadinessEntities: RegistryReadinessPayload["entities"];
   products: ProductRegistryItem[];
   organizations: OrganizationRegistryItem[];
   workspaces: WorkspaceRegistryItem[];
@@ -369,6 +427,16 @@ function emptyRegistryHealthEntities(): RegistryHealthPayload["entities"] {
   };
 }
 
+function emptyRegistryReadinessEntities(): RegistryReadinessPayload["entities"] {
+  return {
+    products: [],
+    workspaces: [],
+    projects: [],
+    modules: [],
+    installations: []
+  };
+}
+
 export function getRegistryMetadata(source: unknown): RegistryMetadata | null {
   if (!isRecord(source) || !isRecord(source.metadata)) {
     return null;
@@ -414,6 +482,32 @@ export function getRegistryHealthPayload(source: unknown): RegistryHealthPayload
       projects: getArray<RegistryHealthItem>(source.entities, "projects"),
       modules: getArray<RegistryHealthItem>(source.entities, "modules"),
       installations: getArray<RegistryHealthItem>(source.entities, "installations")
+    }
+  };
+}
+
+export function getRegistryReadinessPayload(source: unknown): RegistryReadinessPayload | null {
+  if (!isRecord(source) || !isRecord(source.summary) || !isRecord(source.entities)) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+  const runtime = isRecord(source.runtime) ? source.runtime : null;
+
+  if (!metadata || !runtime) {
+    return null;
+  }
+
+  return {
+    metadata,
+    runtime: runtime as RegistryReadinessPayload["runtime"],
+    summary: source.summary as RegistryReadinessPayload["summary"],
+    entities: {
+      products: getArray<RegistryReadinessItem>(source.entities, "products"),
+      workspaces: getArray<RegistryReadinessItem>(source.entities, "workspaces"),
+      projects: getArray<RegistryReadinessItem>(source.entities, "projects"),
+      modules: getArray<RegistryReadinessItem>(source.entities, "modules"),
+      installations: getArray<RegistryReadinessItem>(source.entities, "installations")
     }
   };
 }
@@ -496,22 +590,27 @@ export async function getPlatformSnapshot(): Promise<PlatformSnapshot> {
 
 export async function getPlatformRegistrySnapshot(): Promise<PlatformRegistrySnapshot> {
   const coreApiUrl = getCoreApiUrl();
-  const [health, overview, registry, registryHealth] = await Promise.all([
+  const [health, overview, registry, registryHealth, registryReadiness] = await Promise.all([
     fetchCoreApi("/health", coreApiUrl),
     fetchCoreApi("/platform/overview", coreApiUrl),
     fetchCoreApi("/platform/registry", coreApiUrl),
-    fetchCoreApi("/platform/registry/health", coreApiUrl)
+    fetchCoreApi("/platform/registry/health", coreApiUrl),
+    fetchCoreApi("/platform/registry/readiness", coreApiUrl)
   ]);
   const platform = createPlatformSnapshot(coreApiUrl, health, overview);
   const registryHealthPayload = getRegistryHealthPayload(registryHealth.data);
+  const registryReadinessPayload = getRegistryReadinessPayload(registryReadiness.data);
 
   return {
     ...platform,
     registry,
     registryHealth,
+    registryReadiness,
     registryMetadata: getRegistryMetadata(registry.data),
     registryHealthPayload,
+    registryReadinessPayload,
     registryHealthEntities: registryHealthPayload?.entities ?? emptyRegistryHealthEntities(),
+    registryReadinessEntities: registryReadinessPayload?.entities ?? emptyRegistryReadinessEntities(),
     products: getArray<ProductRegistryItem>(registry.data, "products"),
     organizations: getArray<OrganizationRegistryItem>(registry.data, "organizations"),
     workspaces: getArray<WorkspaceRegistryItem>(registry.data, "workspaces"),
@@ -586,4 +685,12 @@ export function findRegistryHealthItem(
   id: string
 ) {
   return snapshot.registryHealthEntities[collection].find((item) => item.id === id) ?? null;
+}
+
+export function findRegistryReadinessItem(
+  snapshot: PlatformRegistrySnapshot,
+  collection: keyof RegistryReadinessPayload["entities"],
+  id: string
+) {
+  return snapshot.registryReadinessEntities[collection].find((item) => item.id === id) ?? null;
 }

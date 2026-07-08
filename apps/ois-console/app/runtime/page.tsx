@@ -4,6 +4,7 @@ import {
   OisConsoleShell,
   PageHeading,
   PlatformOverviewCard,
+  RegistryGovernancePanel,
   RegistryHealthPanel,
   RegistryStatusPanel,
   RuntimeStatusCard
@@ -21,6 +22,7 @@ export default async function RuntimePage() {
       </PageHeading>
       <section className="dashboard-grid">
         <RuntimeStatusCard snapshot={snapshot} />
+        <RegistryGovernancePanel snapshot={snapshot} />
         <RegistryHealthPanel snapshot={snapshot} />
         <RegistryStatusPanel snapshot={snapshot} />
         <PlatformOverviewCard snapshot={snapshot} />
