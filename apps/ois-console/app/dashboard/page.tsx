@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getPlatformRegistrySnapshot } from "@ois/shared-ui";
 import {
+  AdminBoundaryPanel,
   DataBoundaryPanel,
   OisConsoleShell,
   OwnerRegistryCockpit,
@@ -50,6 +51,7 @@ export default async function DashboardPage() {
       </PageHeading>
       <OwnerRegistryCockpit snapshot={snapshot} />
       <OwnerReviewQueuePanel snapshot={snapshot} />
+      <AdminBoundaryPanel snapshot={snapshot} />
       <section className="dashboard-grid">
         <PlatformOverviewCard snapshot={snapshot} />
         <ProductModuleOverview snapshot={snapshot} />

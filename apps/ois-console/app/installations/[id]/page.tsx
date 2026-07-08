@@ -6,6 +6,7 @@ import {
   getPlatformRegistrySnapshot
 } from "@ois/shared-ui";
 import {
+  AdminBoundaryPanel,
   DataBoundaryPanel,
   DetailFacts,
   DetailFallbackPanel,
@@ -112,6 +113,8 @@ export default async function InstallationDetailPage({ params }: InstallationDet
       />
 
       <OwnerReviewQueuePanel snapshot={snapshot} entityType="installation" entityId={installation.id} />
+
+      <AdminBoundaryPanel snapshot={snapshot} entityType="installation" entityId={installation.id} />
 
       <RegistryReadinessItemPanel title="Installation Governance / Readiness" item={installationReadiness} />
 

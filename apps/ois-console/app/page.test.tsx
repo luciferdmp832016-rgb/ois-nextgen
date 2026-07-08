@@ -425,6 +425,98 @@ const ownerReviewPayload = {
   ]
 };
 
+const adminBoundaryGates = [
+  "Permission model approved for action category",
+  "Audit trail event schema and storage verified",
+  "Owner confirmation workflow verified",
+  "Rollback plan documented and rehearsed"
+];
+
+function adminBoundaryAction(entityType: string, entityId: string, entityName: string) {
+  return {
+    id: `${entityType}:${entityId}:admin-boundary:owner-uat`,
+    actionName: `${entityName} - Future admin action`,
+    category: "OWNER_REVIEW_RESOLVE",
+    requiredRole: "OWNER",
+    permissionState: "PREVIEW_ONLY",
+    auditRequired: true,
+    confirmationRequired: true,
+    rollbackRequired: true,
+    currentAvailability: "PREVIEW_ONLY",
+    unavailableReason: "Blocked in current stage until audit, confirmation and rollback gates are implemented.",
+    safetyGatesNeeded: adminBoundaryGates,
+    linkedReviewItemId: `${entityType}:${entityId}:readiness:owner-uat-required`,
+    entityType,
+    entityId,
+    entityName
+  };
+}
+
+const adminBoundaryPayload = {
+  metadata: registryPayload.metadata,
+  runtime: {
+    coreApiBaseUrl: coreApiUrl,
+    oisConsoleBaseUrl: "https://ois-ng.dmp247.com",
+    pitsShellBaseUrl: pitsPublicBaseUrl,
+    boundaryMode: "read-only-admin-permission-model",
+    stage: "Stage 1J",
+    note: "Admin Boundary is a read-only permission and audit model. No admin action is executable in Stage 1J."
+  },
+  adminBoundary: {
+    stage: "Stage 1J",
+    enabledAdminActions: 0,
+    mutationEndpointsAdded: false,
+    writePermission: "BLOCKED_IN_CURRENT_STAGE",
+    markers: ["Admin Boundary", "Audit Required", "Permission Model", "Preview only", "Blocked in current stage"]
+  },
+  summary: {
+    roles: 5,
+    permissionStates: 7,
+    actionCategories: 7,
+    safetyGates: 4,
+    futureAdminActions: 4,
+    previewOnlyActions: 4,
+    blockedActions: 7,
+    auditRequired: 4,
+    confirmationRequired: 4,
+    rollbackRequired: 4
+  },
+  roles: [
+    { code: "OWNER", label: "Owner", description: "Owner controlled approval role.", currentStageCapabilities: ["Read model"] },
+    { code: "ADMIN", label: "Admin", description: "Future delegated admin role.", currentStageCapabilities: ["Read model"] },
+    { code: "OPERATOR", label: "Operator", description: "Future operational support role.", currentStageCapabilities: ["Read model"] },
+    { code: "VIEWER", label: "Viewer", description: "Read-only observer role.", currentStageCapabilities: ["Read model"] },
+    { code: "SYSTEM", label: "System", description: "System provenance role.", currentStageCapabilities: ["Read model"] }
+  ],
+  permissions: [
+    { state: "ALLOWED_READ_ONLY", label: "Allowed read-only", description: "Read-only visibility is enabled." },
+    { state: "PREVIEW_ONLY", label: "Preview only", description: "Visible but not executable." },
+    { state: "REQUIRES_OWNER_CONFIRMATION", label: "Requires owner approval", description: "Owner confirmation is required." },
+    { state: "REQUIRES_ADMIN_PERMISSION", label: "Requires admin permission", description: "Admin permission is required." },
+    { state: "REQUIRES_AUDIT_TRAIL", label: "Requires audit trail", description: "Audit trail is required." },
+    { state: "REQUIRES_ROLLBACK_PLAN", label: "Requires rollback plan", description: "Rollback plan is required." },
+    { state: "BLOCKED_IN_CURRENT_STAGE", label: "Blocked in current stage", description: "Action is unavailable in Stage 1J." }
+  ],
+  actionCategories: [],
+  safetyGates: adminBoundaryGates.map((gate) => ({ code: gate, label: gate, required: true, description: gate })),
+  auditRequirements: [],
+  confirmationRequirements: [],
+  rollbackRequirements: [],
+  blockedActions: [],
+  previewOnlyActions: [
+    adminBoundaryAction("product", "prod_pits", "PITS"),
+    adminBoundaryAction("workspace", "ws_pmc_org_demo", "PMC Org Demo"),
+    adminBoundaryAction("project", "prj_emerald_precinct_demo", "Emerald Precinct Demo"),
+    adminBoundaryAction("installation", "inst_pits_emerald", "PITS installation")
+  ],
+  futureAdminActions: [
+    adminBoundaryAction("product", "prod_pits", "PITS"),
+    adminBoundaryAction("workspace", "ws_pmc_org_demo", "PMC Org Demo"),
+    adminBoundaryAction("project", "prj_emerald_precinct_demo", "Emerald Precinct Demo"),
+    adminBoundaryAction("installation", "inst_pits_emerald", "PITS installation")
+  ]
+};
+
 const productDetailPayload = {
   metadata: registryPayload.metadata,
   product: {
@@ -485,7 +577,12 @@ function jsonResponse(payload: unknown, status = 200) {
   });
 }
 
-function mockCoreApiFetch(overrides?: { registryHealth?: unknown; registryReadiness?: unknown; ownerReview?: unknown }) {
+function mockCoreApiFetch(overrides?: {
+  registryHealth?: unknown;
+  registryReadiness?: unknown;
+  ownerReview?: unknown;
+  adminBoundary?: unknown;
+}) {
   const fetchMock = vi.fn(async (input: Parameters<typeof fetch>[0]) => {
     const url = input instanceof Request ? input.url : String(input);
 
@@ -511,6 +608,10 @@ function mockCoreApiFetch(overrides?: { registryHealth?: unknown; registryReadin
 
     if (url === `${coreApiUrl}/platform/owner-review`) {
       return jsonResponse(overrides?.ownerReview ?? ownerReviewPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/admin-boundary`) {
+      return jsonResponse(overrides?.adminBoundary ?? adminBoundaryPayload);
     }
 
     if (url === `${coreApiUrl}/platform/products/prod_pits`) {
@@ -627,6 +728,7 @@ describe("OIS Console product shell", () => {
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry/health`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry/readiness`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/owner-review`, { cache: "no-store" });
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/admin-boundary`, { cache: "no-store" });
   });
 
   it("keeps the root Ready to operate marker when the cockpit needs owner review", async () => {
@@ -672,6 +774,13 @@ describe("OIS Console product shell", () => {
         "Read-only preview",
         "Future admin action requires audit",
         "Action is read-only preview only",
+        "Admin Boundary",
+        "Audit Required",
+        "Permission Model",
+        "Preview only",
+        "Blocked in current stage",
+        "Future admin action",
+        "Preview only - not executable yet",
         "Suggested next actions",
         "Missing runtime URL",
         "Forbidden link guard",
@@ -725,6 +834,12 @@ describe("OIS Console product shell", () => {
         "Safe Action Boundary",
         "Read-only preview",
         "Future admin action requires audit",
+        "Audit / Permission / Admin Boundary",
+        "Audit Required",
+        "Permission Model",
+        "Preview only",
+        "Blocked in current stage",
+        "Future admin action",
         "Health ready",
         "Registry Governance / Readiness",
         "Registry Runtime Health",
@@ -751,6 +866,9 @@ describe("OIS Console product shell", () => {
     for (const marker of markers) {
       expect(html).toContain(marker);
     }
+    expect(html).not.toContain("Execute admin action");
+    expect(html).not.toContain("Run admin action");
+    expect(html).not.toContain("Apply registry fix");
     expect(html).not.toContain(dbEnvKey);
   });
 
@@ -774,6 +892,11 @@ describe("OIS Console product shell", () => {
     expect(html).toContain("Safe Action Boundary");
     expect(html).toContain("Action is read-only preview only");
     expect(html).toContain("Future admin action requires audit");
+    expect(html).toContain("Admin Boundary");
+    expect(html).toContain("Audit Required");
+    expect(html).toContain("Permission Model");
+    expect(html).toContain("Preview only - not executable yet");
+    expect(html).toContain("Blocked in current stage");
     expect(html).toContain("Runtime health");
     expect(html).toContain("Readiness");
     expect(html).toContain("No issue detected");
@@ -785,6 +908,9 @@ describe("OIS Console product shell", () => {
     expect(html).toContain("/modules/module_pits_runtime_shell");
     expect(html).toContain(`${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`);
     expect(html).toContain("Cross-product staging link");
+    expect(html).not.toContain("Execute admin action");
+    expect(html).not.toContain("Run admin action");
+    expect(html).not.toContain("Apply registry fix");
     expect(html).not.toContain(dbEnvKey);
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/products/prod_pits`, { cache: "no-store" });
   });
@@ -813,6 +939,11 @@ describe("OIS Console product shell", () => {
         "Owner Review Queue",
         "Safe Action Boundary",
         "Action is read-only preview only",
+        "Admin Boundary",
+        "Audit Required",
+        "Permission Model",
+        "Preview only - not executable yet",
+        "Blocked in current stage",
         "Workspace Governance / Readiness",
         "Workspace Runtime Health",
         "https://pits-ng.dmp247.com/projects/prj_emerald_precinct_demo"
@@ -841,6 +972,11 @@ describe("OIS Console product shell", () => {
         "Owner Review Queue",
         "Safe Action Boundary",
         "Action is read-only preview only",
+        "Admin Boundary",
+        "Audit Required",
+        "Permission Model",
+        "Preview only - not executable yet",
+        "Blocked in current stage",
         "Installation Governance / Readiness",
         "Installation Runtime Health",
         "/products/prod_pits",
@@ -861,6 +997,9 @@ describe("OIS Console product shell", () => {
       expect(html).toContain("Shell Navigation Toggle");
       expect(html).toContain(`data-detail-source="${markers[0]}"`);
       expect(html).toContain("Detail ready");
+      expect(html).not.toContain("Execute admin action");
+      expect(html).not.toContain("Run admin action");
+      expect(html).not.toContain("Apply registry fix");
       expect(html).not.toContain(dbEnvKey);
     }
   );

@@ -3,6 +3,7 @@ import {
   DataBoundaryPanel,
   InstallationRegistryPanel,
   PageHeading,
+  PitsAdminBoundaryPanel,
   PitsRegistryCockpit,
   PitsOwnerReviewQueuePanel,
   PitsShell,
@@ -26,6 +27,7 @@ export default async function ProjectsPage() {
       </PageHeading>
       <PitsRegistryCockpit snapshot={snapshot} />
       <PitsOwnerReviewQueuePanel snapshot={snapshot} />
+      <PitsAdminBoundaryPanel snapshot={snapshot} />
       <ProjectSelector snapshot={snapshot} />
       <InstallationRegistryPanel snapshot={snapshot} />
       <ProjectOverviewCards snapshot={snapshot} />

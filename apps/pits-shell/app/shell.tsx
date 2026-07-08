@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import {
+  getAdminBoundaryActionsFor,
+  getAdminBoundaryPreviewActions,
   getOwnerForbiddenLinkIssueCount,
   getOwnerHealthLabel,
   getOwnerMissingLinkCount,
@@ -10,6 +12,8 @@ import {
   getReadinessGaps,
   kernelFields,
   ModernProductShell,
+  type AdminBoundaryAction,
+  type AdminPermissionState,
   type KernelField,
   type OwnerActionPermission,
   type OwnerReviewItem,
@@ -458,6 +462,137 @@ function PitsOwnerReviewItemCard({ item }: { item: OwnerReviewItem }) {
         </div>
       </dl>
     </article>
+  );
+}
+
+function adminPermissionLabel(state: AdminPermissionState) {
+  const labels: Record<AdminPermissionState, string> = {
+    ALLOWED_READ_ONLY: "Allowed read-only",
+    PREVIEW_ONLY: "Preview only",
+    REQUIRES_OWNER_CONFIRMATION: "Requires owner approval",
+    REQUIRES_ADMIN_PERMISSION: "Requires admin permission",
+    REQUIRES_AUDIT_TRAIL: "Requires audit trail",
+    REQUIRES_ROLLBACK_PLAN: "Requires rollback plan",
+    BLOCKED_IN_CURRENT_STAGE: "Blocked in current stage"
+  };
+
+  return labels[state];
+}
+
+function PermissionStateBadge({ state }: { state: AdminPermissionState }) {
+  return <StatusBadge ok={state === "ALLOWED_READ_ONLY" || state === "PREVIEW_ONLY"} label={adminPermissionLabel(state)} />;
+}
+
+function PreviewOnlyNotice() {
+  return (
+    <span className="disabled-action-preview" aria-disabled="true" data-admin-preview="Preview only">
+      Preview only - not executable yet
+    </span>
+  );
+}
+
+function PitsFutureActionCard({ action }: { action: AdminBoundaryAction }) {
+  return (
+    <article className="owner-review-card future-action-card" data-admin-boundary-action={action.id}>
+      <div className="panel-heading">
+        <div>
+          <span className="eyebrow">{action.category}</span>
+          <h4>{action.actionName}</h4>
+        </div>
+        <PermissionStateBadge state={action.permissionState} />
+      </div>
+      <div className="owner-action-boundary-row">
+        <span className="admin-requirement-badge">Audit Required</span>
+        <span className="admin-requirement-badge">Confirmation Required</span>
+        <span className="admin-requirement-badge">Rollback Required</span>
+        <PreviewOnlyNotice />
+      </div>
+      <p className="muted">{action.unavailableReason}</p>
+      <dl className="facts action-boundary-facts">
+        <div>
+          <dt>Required role</dt>
+          <dd>{action.requiredRole}</dd>
+        </div>
+        <div>
+          <dt>Current availability</dt>
+          <dd>{action.currentAvailability}</dd>
+        </div>
+        <div>
+          <dt>Entity</dt>
+          <dd>{action.entityName ?? action.entityType}</dd>
+        </div>
+      </dl>
+      <SafetyGateList gates={action.safetyGatesNeeded} />
+    </article>
+  );
+}
+
+export function PitsAdminBoundaryPanel({
+  snapshot,
+  entityType,
+  entityId,
+  title = "Admin Boundary"
+}: {
+  snapshot: PlatformRegistrySnapshot;
+  entityType?: AdminBoundaryAction["entityType"] | undefined;
+  entityId?: string | undefined;
+  title?: string | undefined;
+}) {
+  const payload = snapshot.adminBoundaryPayload;
+  const actions = entityType && entityId ? getAdminBoundaryActionsFor(snapshot, entityType, entityId) : getAdminBoundaryPreviewActions(snapshot);
+  const markers = payload?.adminBoundary.markers ?? ["Admin Boundary", "Audit Required", "Permission Model", "Preview only", "Blocked in current stage"];
+
+  return (
+    <section className="panel admin-boundary-panel" data-admin-boundary="Admin Boundary" data-permission-model="Permission Model">
+      <div className="panel-heading">
+        <div>
+          <h3>{title}</h3>
+          <p className="muted">Project-level Permission Model and audit-readiness layer. No project admin action is enabled.</p>
+        </div>
+        <StatusBadge ok={Boolean(payload)} label="Preview only" />
+      </div>
+      <div className="owner-review-marker-row" aria-label="Admin boundary markers">
+        {markers.map((marker) => (
+          <span key={marker}>{marker}</span>
+        ))}
+        <span>Future admin action</span>
+        <span>Requires owner approval</span>
+        <span>Requires audit trail</span>
+      </div>
+      <dl className="owner-fact-grid" aria-label="Project admin boundary summary">
+        <div>
+          <dt>Roles</dt>
+          <dd>{payload?.summary.roles ?? 0}</dd>
+        </div>
+        <div>
+          <dt>Permission states</dt>
+          <dd>{payload?.summary.permissionStates ?? 0}</dd>
+        </div>
+        <div>
+          <dt>Audit Required</dt>
+          <dd>{payload?.summary.auditRequired ?? 0}</dd>
+        </div>
+        <div>
+          <dt>Blocked in current stage</dt>
+          <dd>{payload?.summary.blockedActions ?? 0}</dd>
+        </div>
+      </dl>
+      {actions.length > 0 ? (
+        <div className="owner-review-grid">
+          {actions.map((action) => (
+            <PitsFutureActionCard action={action} key={action.id} />
+          ))}
+        </div>
+      ) : (
+        <article className="owner-review-card owner-empty-state">
+          <span className="eyebrow">Permission Model</span>
+          <h4>No future action mapped</h4>
+          <p className="muted">No project admin boundary action is currently mapped for this registry entity.</p>
+          <PreviewOnlyNotice />
+        </article>
+      )}
+      <p className="muted health-note">{payload?.runtime.note ?? "Admin boundary payload unavailable. No action is executable from this UI."}</p>
+    </section>
   );
 }
 

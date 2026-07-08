@@ -700,10 +700,114 @@ describe("platform registry read-only endpoints", () => {
     }
   });
 
+  it("returns deterministic read-only audit trail admin permission model", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/admin-boundary" });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body).toMatchObject({
+        metadata: {
+          source: "default-db",
+          mode: "read-only",
+          environment: "staging"
+        },
+        runtime: {
+          coreApiBaseUrl: "https://ois-nextgen.abacusai.cloud",
+          oisConsoleBaseUrl: "https://ois-ng.dmp247.com",
+          pitsShellBaseUrl: "https://pits-ng.dmp247.com",
+          boundaryMode: "read-only-admin-permission-model",
+          stage: "Stage 1J"
+        },
+        adminBoundary: {
+          stage: "Stage 1J",
+          enabledAdminActions: 0,
+          mutationEndpointsAdded: false,
+          writePermission: "BLOCKED_IN_CURRENT_STAGE",
+          markers: expect.arrayContaining(["Admin Boundary", "Audit Required", "Permission Model", "Preview only", "Blocked in current stage"])
+        },
+        summary: {
+          roles: 5,
+          permissionStates: 7,
+          actionCategories: 7,
+          safetyGates: 4,
+          futureAdminActions: 12,
+          previewOnlyActions: 5,
+          blockedActions: 7,
+          auditRequired: 12,
+          confirmationRequired: 12,
+          rollbackRequired: 12
+        },
+        roles: expect.arrayContaining([
+          expect.objectContaining({ code: "OWNER" }),
+          expect.objectContaining({ code: "ADMIN" }),
+          expect.objectContaining({ code: "OPERATOR" }),
+          expect.objectContaining({ code: "VIEWER" }),
+          expect.objectContaining({ code: "SYSTEM" })
+        ]),
+        permissions: expect.arrayContaining([
+          expect.objectContaining({ state: "ALLOWED_READ_ONLY" }),
+          expect.objectContaining({ state: "PREVIEW_ONLY" }),
+          expect.objectContaining({ state: "REQUIRES_OWNER_CONFIRMATION" }),
+          expect.objectContaining({ state: "REQUIRES_ADMIN_PERMISSION" }),
+          expect.objectContaining({ state: "REQUIRES_AUDIT_TRAIL" }),
+          expect.objectContaining({ state: "REQUIRES_ROLLBACK_PLAN" }),
+          expect.objectContaining({ state: "BLOCKED_IN_CURRENT_STAGE" })
+        ]),
+        blockedActions: expect.arrayContaining([
+          expect.objectContaining({
+            actionName: "Registry link fix",
+            category: "REGISTRY_LINK_FIX",
+            permissionState: "BLOCKED_IN_CURRENT_STAGE",
+            auditRequired: true,
+            confirmationRequired: true,
+            rollbackRequired: true,
+            currentAvailability: "BLOCKED_IN_CURRENT_STAGE"
+          })
+        ]),
+        previewOnlyActions: expect.arrayContaining([
+          expect.objectContaining({
+            actionName: "PITS - Owner UAT",
+            permissionState: "PREVIEW_ONLY",
+            currentAvailability: "PREVIEW_ONLY",
+            linkedReviewItemId: "product:prod_pits:readiness:owner-uat-required"
+          })
+        ])
+      });
+      expect(JSON.stringify(body)).toContain("Audit Required");
+      expect(JSON.stringify(body)).toContain("Permission Model");
+      expect(JSON.stringify(body)).toContain("Blocked in current stage");
+      expect(JSON.stringify(body)).toContain("Preview only");
+      expect(JSON.stringify(body)).not.toContain("localhost");
+      expect(JSON.stringify(body)).not.toContain("127.0.0.1");
+      expect(JSON.stringify(body)).not.toContain("ois.dmp247.com");
+      expect(JSON.stringify(body)).not.toContain("oisys.abacusai.app");
+      expect(mock.readCalls).toEqual([
+        "productDefinition.findMany",
+        "organization.findMany",
+        "workspace.findMany",
+        "project.findMany",
+        "moduleDefinition.findMany",
+        "productInstallation.findMany"
+      ]);
+      expect(mock.writeCalls).toEqual([]);
+      expect(mock.userAccount.findUnique).not.toHaveBeenCalled();
+      expect(mock.delegates.productInstallation.findUnique).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
   it("does not add owner review mutation endpoints", () => {
     const source = readFileSync(new URL("./app.ts", import.meta.url), "utf8");
 
     expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/owner-review/);
+    expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/admin-boundary/);
+    expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/audit-model/);
+    expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/permissions\/model/);
     expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/registry\/action-boundary/);
   });
 

@@ -3,6 +3,7 @@ import {
   DataBoundaryPanel,
   InstallationRegistryPanel,
   PageHeading,
+  PitsAdminBoundaryPanel,
   PitsRegistryCockpit,
   PitsOwnerReviewQueuePanel,
   PitsShell,
@@ -25,6 +26,7 @@ export default async function RuntimePage() {
       </PageHeading>
       <PitsRegistryCockpit snapshot={snapshot} />
       <PitsOwnerReviewQueuePanel snapshot={snapshot} title="Safe Action Boundary" />
+      <PitsAdminBoundaryPanel snapshot={snapshot} title="Audit / Permission / Admin Boundary" />
       <section className="content-grid">
         <RuntimeStatusCard snapshot={snapshot} />
         <RegistryGovernancePanel snapshot={snapshot} />
