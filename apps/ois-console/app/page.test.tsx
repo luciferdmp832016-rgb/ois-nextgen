@@ -418,7 +418,7 @@ function jsonResponse(payload: unknown, status = 200) {
   });
 }
 
-function mockCoreApiFetch() {
+function mockCoreApiFetch(overrides?: { registryHealth?: unknown; registryReadiness?: unknown }) {
   const fetchMock = vi.fn(async (input: Parameters<typeof fetch>[0]) => {
     const url = input instanceof Request ? input.url : String(input);
 
@@ -435,11 +435,11 @@ function mockCoreApiFetch() {
     }
 
     if (url === `${coreApiUrl}/platform/registry/health`) {
-      return jsonResponse(registryHealthPayload);
+      return jsonResponse(overrides?.registryHealth ?? registryHealthPayload);
     }
 
     if (url === `${coreApiUrl}/platform/registry/readiness`) {
-      return jsonResponse(registryReadinessPayload);
+      return jsonResponse(overrides?.registryReadiness ?? registryReadinessPayload);
     }
 
     if (url === `${coreApiUrl}/platform/products/prod_pits`) {
@@ -540,6 +540,37 @@ describe("OIS Console product shell", () => {
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry/health`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry/readiness`, { cache: "no-store" });
+  });
+
+  it("keeps the root Ready to operate marker when the cockpit needs owner review", async () => {
+    mockCoreApiFetch({
+      registryHealth: {
+        ...registryHealthPayload,
+        summary: {
+          ...registryHealthPayload.summary,
+          status: "Degraded",
+          healthy: 4,
+          degraded: 1,
+          missingUrl: 1
+        }
+      },
+      registryReadiness: {
+        ...registryReadinessPayload,
+        summary: {
+          ...registryReadinessPayload.summary,
+          status: "INCOMPLETE",
+          ready: 4,
+          incomplete: 1
+        }
+      }
+    });
+
+    const html = await renderRouteHtml(Page);
+
+    expect(html).toContain('data-root-cockpit-marker="Ready to operate"');
+    expect(html).toContain("Owner root check");
+    expect(html).toContain("Ready to operate");
+    expect(html).toContain("Needs owner review");
   });
 
   it.each([

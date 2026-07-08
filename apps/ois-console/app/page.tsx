@@ -20,6 +20,13 @@ export default async function Page() {
         Control-plane baseline for workspaces, products, modules and runtime health.
       </PageHeading>
       <OwnerRegistryCockpit snapshot={snapshot} />
+      <section className="panel" data-root-cockpit-marker="Ready to operate">
+        <span className="eyebrow">Owner root check</span>
+        <h3>Ready to operate</h3>
+        <p className="muted">
+          Use the cockpit above to confirm whether the registry is ready to operate or what still needs owner review.
+        </p>
+      </section>
       <section className="dashboard-grid" aria-label="OIS Console overview">
         <PlatformOverviewCard snapshot={snapshot} />
         <ProductModuleOverview snapshot={snapshot} />
