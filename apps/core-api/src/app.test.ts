@@ -832,10 +832,10 @@ describe("platform registry read-only endpoints", () => {
         },
         summary: {
           products: 2,
-          surfaces: 14,
-          visiblePages: 10,
-          testableNow: 9,
-          realProductFunctionsAvailable: 0,
+          surfaces: 15,
+          visiblePages: 11,
+          testableNow: 10,
+          realProductFunctionsAvailable: 1,
           controlPlaneOnly: 5
         }
       });
@@ -879,7 +879,7 @@ describe("platform registry read-only endpoints", () => {
       );
       expect(pitsProduct).toMatchObject({
         currentState: expect.stringContaining("Project registry shell and readiness shell"),
-        recommendedNextJourneys: expect.arrayContaining(["Define a read-only PITS issue/task list"])
+        recommendedNextJourneys: expect.arrayContaining(["Owner-test the PITS Project Workboard read-only functional slice"])
       });
       expect(pitsProduct?.surfaces).toEqual(
         expect.arrayContaining([
@@ -890,10 +890,18 @@ describe("platform registry read-only endpoints", () => {
             functionalGap: expect.stringContaining("project workflow execution")
           }),
           expect.objectContaining({
+            id: "pits:project-workboard",
+            category: "AVAILABLE_FOR_BROWSER_UAT",
+            testableNow: true,
+            realProductFunction: true,
+            currentReality: expect.stringContaining("read-only PITS workboard functional slice")
+          }),
+          expect.objectContaining({
             id: "pits:future-issue-task-workflow",
             category: "BLOCKED_BY_MISSING_DATA_MODEL",
             testableNow: false,
-            realProductFunction: true
+            realProductFunction: true,
+            nextUserLevelTestPath: "https://pits-ng.dmp247.com/projects/prj_emerald_precinct_demo/workboard"
           }),
           expect.objectContaining({
             id: "pits:future-project-status-write",
@@ -937,6 +945,77 @@ describe("platform registry read-only endpoints", () => {
     }
   });
 
+  it("returns deterministic read-only PITS project workboard data", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/pits/projects/prj_emerald_precinct_demo/workboard" });
+      const body = response.json();
+      const serialized = JSON.stringify(body);
+
+      expect(response.statusCode).toBe(200);
+      expect(body).toMatchObject({
+        metadata: {
+          source: "default-db",
+          mode: "read-only",
+          environment: "staging"
+        },
+        runtime: {
+          coreApiBaseUrl: "https://ois-nextgen.abacusai.cloud",
+          oisConsoleBaseUrl: "https://ois-ng.dmp247.com",
+          pitsShellBaseUrl: "https://pits-ng.dmp247.com",
+          workboardMode: "read-only-functional-slice",
+          stage: "Stage 2A",
+          note: "Read-only functional slice — editing is not enabled yet"
+        },
+        workboard: {
+          projectId: "prj_emerald_precinct_demo",
+          projectCode: "EMERALD_PRECINCT_DEMO",
+          projectName: "Emerald Precinct Demo",
+          readOnly: true,
+          markers: expect.arrayContaining(["PITS Project Workboard", "Read-only functional slice", "Work items", "Open", "In progress", "Blocked", "Done"])
+        },
+        summary: {
+          totalItems: 5,
+          openCount: 2,
+          inProgressCount: 1,
+          blockedCount: 1,
+          doneCount: 1,
+          highPriorityCount: 2,
+          overdueCount: 1
+        },
+        readOnlyBoundary: {
+          editingEnabled: false,
+          mutationEndpointsAdded: false,
+          writePermission: "NOT_ALLOWED_IN_STAGE_2A",
+          notice: "Read-only functional slice — editing is not enabled yet"
+        }
+      });
+      expect(body.statusGroups.map((group: { label: string }) => group.label)).toEqual(["Open", "In progress", "Blocked", "Done"]);
+      expect(serialized).toContain("Confirm site access package");
+      expect(serialized).toContain("Resolve fire door access risk");
+      expect(serialized).toContain("Requires Stage 2B/2C write boundary");
+      expect(serialized).not.toContain("localhost");
+      expect(serialized).not.toContain("127.0.0.1");
+      expect(serialized).not.toContain("ois.dmp247.com");
+      expect(serialized).not.toContain("oisys.abacusai.app");
+      expect(mock.readCalls).toEqual([
+        "productDefinition.findMany",
+        "organization.findMany",
+        "workspace.findMany",
+        "project.findMany",
+        "moduleDefinition.findMany",
+        "productInstallation.findMany"
+      ]);
+      expect(mock.writeCalls).toEqual([]);
+      expect(mock.userAccount.findUnique).not.toHaveBeenCalled();
+      expect(mock.delegates.productInstallation.findUnique).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
   it("does not add owner review, admin boundary or product UAT mutation endpoints", () => {
     const source = readFileSync(new URL("./app.ts", import.meta.url), "utf8");
 
@@ -948,6 +1027,8 @@ describe("platform registry read-only endpoints", () => {
     expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/product-uat/);
     expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/user-journeys/);
     expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/product-capabilities/);
+    expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/pits\/projects/);
+    expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/pits\/projects/);
   });
 
   it.each([
@@ -989,6 +1070,7 @@ describe("platform registry read-only endpoints", () => {
     ["/platform/products/code/MISSING", "product", "code"],
     ["/platform/workspaces/missing", "workspace", "id"],
     ["/platform/projects/missing", "project", "id"],
+    ["/platform/pits/projects/missing/workboard", "project", "id"],
     ["/platform/modules/missing", "module", "id"],
     ["/platform/installations/missing", "installation", "id"]
   ] satisfies Array<[string, string, string]>)("returns controlled 404 for %s", async (url, entity, lookupKey) => {

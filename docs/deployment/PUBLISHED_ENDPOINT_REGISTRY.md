@@ -454,6 +454,7 @@ Use these commands only on endpoints allowed by the current stage. Do not probe 
 | Owner review endpoint after Stage 1I sync | `curl -i https://ois-nextgen.abacusai.cloud/platform/owner-review` | HTTP 200 with `Owner Review Queue`, `Safe Action Boundary`, `Read-only preview`, `Future admin action requires audit` and `NOT_ALLOWED_IN_STAGE_1I`. |
 | Admin boundary endpoint after Stage 1J sync | `curl -i https://ois-nextgen.abacusai.cloud/platform/admin-boundary` | HTTP 200 with `Admin Boundary`, `Audit Required`, `Permission Model`, `Preview only`, `Blocked in current stage` and `BLOCKED_IN_CURRENT_STAGE`. |
 | Product UAT endpoint after Stage 1K sync | `curl -i https://ois-nextgen.abacusai.cloud/platform/product-uat` | HTTP 200 with `Product User Journey UAT`, `Testable now`, `Control-plane only`, `Functional gap map`, `Next product journey` and `NOT_ALLOWED_IN_STAGE_1K`. |
+| PITS Project Workboard endpoint after Stage 2A sync | `curl -i https://ois-nextgen.abacusai.cloud/platform/pits/projects/<project-id>/workboard` | HTTP 200 with `PITS Project Workboard`, `Read-only functional slice`, `Work items`, `Open`, `In progress`, `Blocked`, `Done` and `NOT_ALLOWED_IN_STAGE_2A`. |
 | OIS Console dashboard owner review after Stage 1I sync | `curl -i https://ois-ng.dmp247.com/dashboard` | HTTP 200 with `Owner Review Queue`, `Safe Action Boundary` and preview-only action copy. |
 | OIS Console dashboard admin boundary after Stage 1J sync | `curl -i https://ois-ng.dmp247.com/dashboard` | HTTP 200 with `Admin Boundary`, `Audit Required`, `Permission Model`, `Preview only` and no executable admin action. |
 | OIS Console root product UAT after Stage 1K sync | `curl -i https://ois-ng.dmp247.com` | HTTP 200 with `Product User Journey UAT Baseline`, `Functional gap map` and `Next product journey`. |
@@ -475,6 +476,7 @@ Use these commands only on endpoints allowed by the current stage. Do not probe 
 | PITS Shell project card UAT after Stage 1F sync | `curl -i https://pits-ng.dmp247.com/projects` | HTTP 200 with `Project readiness` and `Runtime health:`. |
 | PITS Shell project detail UAT after Stage 1F sync | `curl -i https://pits-ng.dmp247.com/projects/<project-id>` | HTTP 200 with `Owner-facing project UAT summary`. |
 | PITS Shell project detail product UAT after Stage 1K sync | `curl -i https://pits-ng.dmp247.com/projects/<project-id>` | HTTP 200 with `Project Product UAT Baseline`, `Functional gap map` and future issue/task workflow gaps. |
+| PITS Shell project workboard after Stage 2A sync | `curl -i https://pits-ng.dmp247.com/projects/<project-id>/workboard` | HTTP 200 with `PITS Project Workboard`, `Read-only functional slice`, status groups, work item cards and no enabled mutation action. |
 | PITS Shell runtime cockpit after Stage 1F sync | `curl -i https://pits-ng.dmp247.com/runtime` | HTTP 200 with `PITS Registry Cockpit / Project Runtime Summary`. |
 | Public staging runtime status | `bash ops/abacus/status-public-staging-runtime.sh` | Core API, OIS Console, PITS Shell, token-safe cloudflared status and public endpoint checks pass. |
 | Public staging endpoint smoke | `bash ops/abacus/check-public-staging-endpoints.sh` | Core API, OIS and PITS public marker/count checks pass. |
@@ -521,6 +523,7 @@ Use these commands only on endpoints allowed by the current stage. Do not probe 
 | OIS product subdomain workspaces | `https://ois-ng.dmp247.com/workspaces` | `CLOUDFLARE_TUNNEL_PUBLIC_VERIFIED` | Current verified OIS Workspaces route through Cloudflare Tunnel. |
 | OIS product subdomain runtime | `https://ois-ng.dmp247.com/runtime` | `CLOUDFLARE_TUNNEL_PUBLIC_VERIFIED` | Current verified OIS Runtime Status route through Cloudflare Tunnel. |
 | PITS product subdomain projects | `https://pits-ng.dmp247.com/projects` | `CLOUDFLARE_TUNNEL_PUBLIC_VERIFIED` | Current verified PITS Project Selector route through Cloudflare Tunnel. |
+| PITS product subdomain project workboard | `https://pits-ng.dmp247.com/projects/<project-id>/workboard` | `PLANNED_NOT_CREATED` | Source-ready Stage 2A PITS Project Workboard route; owner runtime sync and UAT required before public verification. |
 | PITS product subdomain runtime | `https://pits-ng.dmp247.com/runtime` | `CLOUDFLARE_TUNNEL_PUBLIC_VERIFIED` | Current verified PITS Runtime Status route through Cloudflare Tunnel. |
 | Optional Core API tunnel hostname | `https://api-ng.dmp247.com` | `PLANNED_NOT_CREATED` | Optional later route only; not part of Stage 0V-A. |
 | OIS Phase 1 live app shell | `https://oisys.abacusai.app` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Do not test or mutate without owner approval. |

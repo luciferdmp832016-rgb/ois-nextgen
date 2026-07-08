@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Page from "./page";
 import ProjectsPage from "./projects/page";
 import ProjectDetailPage from "./projects/[id]/page";
+import ProjectWorkboardPage from "./projects/[id]/workboard/page";
 import RuntimePage from "./runtime/page";
 
 const coreApiUrl = "https://ois-nextgen.abacusai.cloud";
@@ -670,6 +671,141 @@ const projectDetailPayload = {
   }
 };
 
+const projectWorkboardPayload = {
+  metadata: registryPayload.metadata,
+  runtime: {
+    coreApiBaseUrl: coreApiUrl,
+    oisConsoleBaseUrl: oisPublicBaseUrl,
+    pitsShellBaseUrl: pitsPublicBaseUrl,
+    workboardMode: "read-only-functional-slice",
+    stage: "Stage 2A",
+    note: "Read-only functional slice — editing is not enabled yet"
+  },
+  workboard: {
+    projectId: "prj_emerald_precinct_demo",
+    projectCode: "EMERALD_PRECINCT_DEMO",
+    projectName: "Emerald Precinct Demo",
+    source: "deterministic-demo-data",
+    stage: "Stage 2A",
+    readOnly: true,
+    markers: ["PITS Project Workboard", "Read-only functional slice", "Work items", "Open", "In progress", "Blocked", "Done"]
+  },
+  summary: {
+    totalItems: 5,
+    openCount: 2,
+    inProgressCount: 1,
+    blockedCount: 1,
+    doneCount: 1,
+    highPriorityCount: 2,
+    overdueCount: 1,
+    nextRecommendedAction: "Inspect blocked and high-priority items, then define Stage 2B/2C write-boundary acceptance criteria.",
+    currentLimitations: [
+      "Read-only functional slice — editing is not enabled yet",
+      "No create, edit, delete or status-change mutation endpoint is available in Stage 2A.",
+      "Work items are deterministic demo/runtime data, not persisted task records."
+    ]
+  },
+  statusGroups: [
+    {
+      status: "OPEN",
+      label: "Open",
+      items: [
+        {
+          id: "pits-emerald-open-site-access",
+          title: "Confirm site access package",
+          type: "TASK",
+          status: "OPEN",
+          priority: "HIGH",
+          owner: "Project operator",
+          dueDate: "2026-07-12",
+          source: "Stage 2A deterministic demo data",
+          summary: "Validate the owner can see the first actionable project work item without creating or editing data.",
+          nextAction: "Review access package checklist with the site lead.",
+          blockers: [],
+          relatedProjectId: "prj_emerald_precinct_demo",
+          updatedAt: "2026-07-08T09:00:00.000Z"
+        }
+      ]
+    },
+    {
+      status: "IN_PROGRESS",
+      label: "In progress",
+      items: [
+        {
+          id: "pits-emerald-progress-inspection-plan",
+          title: "Prepare inspection walk plan",
+          type: "TASK",
+          status: "IN_PROGRESS",
+          priority: "MEDIUM",
+          owner: "Field coordinator",
+          dueDate: "2026-07-15",
+          source: "Stage 2A deterministic demo data",
+          summary: "Draft the read-only sequence of project checks the owner can inspect in the browser.",
+          nextAction: "Compare planned checkpoints with the project readiness summary.",
+          blockers: [],
+          relatedProjectId: "prj_emerald_precinct_demo",
+          updatedAt: "2026-07-08T10:00:00.000Z"
+        }
+      ]
+    },
+    {
+      status: "BLOCKED",
+      label: "Blocked",
+      items: [
+        {
+          id: "pits-emerald-blocked-fire-door-risk",
+          title: "Resolve fire door access risk",
+          type: "RISK",
+          status: "BLOCKED",
+          priority: "CRITICAL",
+          owner: "Safety lead",
+          dueDate: "2026-07-07",
+          source: "Stage 2A deterministic demo data",
+          summary: "A high-priority project risk is visible, but resolution remains disabled until write boundaries exist.",
+          nextAction: "Owner reviews blocker context; status changes require Stage 2B/2C write boundary.",
+          blockers: ["Awaiting owner decision", "Requires Stage 2B/2C write boundary"],
+          relatedProjectId: "prj_emerald_precinct_demo",
+          updatedAt: "2026-07-08T11:00:00.000Z"
+        }
+      ]
+    },
+    {
+      status: "DONE",
+      label: "Done",
+      items: [
+        {
+          id: "pits-emerald-done-registry-check",
+          title: "Verify project registry links",
+          type: "FOLLOW_UP",
+          status: "DONE",
+          priority: "LOW",
+          owner: "Runtime steward",
+          dueDate: "2026-07-05",
+          source: "Stage 2A deterministic demo data",
+          summary: "Completed item proves the board can distinguish done work from active work.",
+          nextAction: "No action required; keep evidence visible for owner UAT.",
+          blockers: [],
+          relatedProjectId: "prj_emerald_precinct_demo",
+          updatedAt: "2026-07-08T13:00:00.000Z"
+        }
+      ]
+    }
+  ],
+  items: [],
+  readOnlyBoundary: {
+    editingEnabled: false,
+    mutationEndpointsAdded: false,
+    writePermission: "NOT_ALLOWED_IN_STAGE_2A",
+    notice: "Read-only functional slice — editing is not enabled yet",
+    disabledActions: [
+      "Create work item - Preview only",
+      "Edit work item - Not executable yet",
+      "Change status - Requires Stage 2B/2C write boundary"
+    ],
+    futureWriteBoundary: "Requires Stage 2B/2C write boundary"
+  }
+};
+
 type RouteComponent = () => Promise<ReactElement>;
 
 function jsonResponse(payload: unknown, status = 200) {
@@ -717,6 +853,14 @@ function mockCoreApiFetch() {
 
     if (url === `${coreApiUrl}/platform/projects/prj_emerald_precinct_demo`) {
       return jsonResponse(projectDetailPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/workboard`) {
+      return jsonResponse(projectWorkboardPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/pits/projects/missing/workboard`) {
+      return jsonResponse({ metadata: registryPayload.metadata, error: { code: "NOT_FOUND", message: "project not found" } }, 404);
     }
 
     if (url === `${coreApiUrl}/platform/projects/missing`) {
@@ -862,6 +1006,8 @@ describe("PITS Shell product shell", () => {
         "What is not implemented yet?",
         "Recommended next product functions",
         "project registry shell and readiness shell",
+        "PITS is no longer only a registry/readiness shell",
+        "Open PITS Project Workboard",
         "Suggested next actions",
         "Project readiness",
         "Runtime health:",
@@ -889,6 +1035,10 @@ describe("PITS Shell product shell", () => {
         "Blocked in current stage",
         "Future admin action",
         "Product Capability / UAT Status",
+        "PITS Project Workboard",
+        "Read-only functional slice",
+        "Work items",
+        "Requires Stage 2B/2C write boundary",
         "Product User Journey UAT",
         "Testable now",
         controlPlaneOnlyText,
@@ -975,6 +1125,17 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("Recommended next product functions");
     expect(html).toContain("project detail/readiness shell");
     expect(html).toContain("Future issue and task workflow");
+    expect(html).toContain("PITS Project Workboard");
+    expect(html).toContain("Read-only functional slice");
+    expect(html).toContain("Work items");
+    expect(html).toContain("Open");
+    expect(html).toContain("In progress");
+    expect(html).toContain("Blocked");
+    expect(html).toContain("Done");
+    expect(html).toContain("Confirm site access package");
+    expect(html).toContain("Resolve fire door access risk");
+    expect(html).toContain("Project operator");
+    expect(html).toContain("Requires Stage 2B/2C write boundary");
     expect(html).toContain("Project readiness");
     expect(html).toContain("No issue detected");
     expect(html).toContain("Project Governance / Readiness");
@@ -988,8 +1149,44 @@ describe("PITS Shell product shell", () => {
     expect(html).not.toContain("Execute admin action");
     expect(html).not.toContain("Run admin action");
     expect(html).not.toContain("Apply registry fix");
+    expect(html).not.toContain("<button>Create work item");
+    expect(html).not.toContain("<button>Edit work item");
+    expect(html).not.toContain("<button>Change status");
     expect(html).not.toContain(dbEnvKey);
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/projects/prj_emerald_precinct_demo`, { cache: "no-store" });
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/workboard`, { cache: "no-store" });
+  });
+
+  it("renders the project workboard read-only functional slice", async () => {
+    const fetchMock = mockCoreApiFetch();
+
+    const html = renderToStaticMarkup(await ProjectWorkboardPage({ params: Promise.resolve({ id: "prj_emerald_precinct_demo" }) }));
+
+    expect(html).toContain("PITS Project Workboard");
+    expect(html).toContain("Read-only functional slice");
+    expect(html).toContain("Read-only functional slice — editing is not enabled yet");
+    expect(html).toContain("Work items");
+    expect(html).toContain("Open");
+    expect(html).toContain("In progress");
+    expect(html).toContain("Blocked");
+    expect(html).toContain("Done");
+    expect(html).toContain("Confirm site access package");
+    expect(html).toContain("Prepare inspection walk plan");
+    expect(html).toContain("Resolve fire door access risk");
+    expect(html).toContain("Verify project registry links");
+    expect(html).toContain("Project operator");
+    expect(html).toContain("Safety lead");
+    expect(html).toContain("2026-07-12");
+    expect(html).toContain("Next action");
+    expect(html).toContain("Critical");
+    expect(html).toContain("Requires Stage 2B/2C write boundary");
+    expect(html).toContain("Preview only");
+    expect(html).toContain("Not executable yet");
+    expect(html).not.toContain("<button>Create work item");
+    expect(html).not.toContain("<button>Edit work item");
+    expect(html).not.toContain("<button>Change status");
+    expect(html).not.toContain(dbEnvKey);
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/workboard`, { cache: "no-store" });
   });
 
   it("renders project detail fallback for a controlled Core API 404", async () => {
@@ -1002,6 +1199,17 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("Missing link");
     expect(html).toContain("Safe owner fallback");
     expect(html).toContain("Next step: return to the registry list");
+    expect(html).not.toContain(dbEnvKey);
+  });
+
+  it("renders project workboard fallback for a controlled Core API 404", async () => {
+    mockCoreApiFetch();
+
+    const html = renderToStaticMarkup(await ProjectWorkboardPage({ params: Promise.resolve({ id: "missing" }) }));
+
+    expect(html).toContain("Project Workboard Unavailable");
+    expect(html).toContain("Workboard not linked yet");
+    expect(html).toContain("Safe owner fallback");
     expect(html).not.toContain(dbEnvKey);
   });
 });

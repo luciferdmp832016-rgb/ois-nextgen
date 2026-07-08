@@ -499,6 +499,76 @@ export type ProductUatPayload = {
   recommendedNextProductJourneys: string[];
 };
 
+export type PitsWorkItemStatus = "OPEN" | "IN_PROGRESS" | "BLOCKED" | "DONE";
+export type PitsWorkItemPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export type PitsWorkItemType = "TASK" | "ISSUE" | "RISK" | "DECISION" | "FOLLOW_UP";
+
+export type PitsWorkItem = {
+  id: string;
+  title: string;
+  type: PitsWorkItemType;
+  status: PitsWorkItemStatus;
+  priority: PitsWorkItemPriority;
+  owner: string;
+  dueDate: string;
+  source: string;
+  summary: string;
+  nextAction: string;
+  blockers: string[];
+  relatedProjectId: string;
+  updatedAt: string;
+};
+
+export type PitsWorkboardPayload = {
+  metadata: RegistryMetadata;
+  runtime: {
+    coreApiBaseUrl: string;
+    oisConsoleBaseUrl: string;
+    pitsShellBaseUrl: string;
+    workboardMode: string;
+    stage: string;
+    note: string;
+  };
+  workboard: {
+    projectId: string;
+    projectCode: string;
+    projectName: string;
+    source: string;
+    stage: string;
+    readOnly: boolean;
+    markers: string[];
+  };
+  summary: {
+    totalItems: number;
+    openCount: number;
+    inProgressCount: number;
+    blockedCount: number;
+    doneCount: number;
+    highPriorityCount: number;
+    overdueCount: number;
+    nextRecommendedAction: string;
+    currentLimitations: string[];
+  };
+  statusGroups: Array<{ status: PitsWorkItemStatus; label: string; items: PitsWorkItem[] }>;
+  items: PitsWorkItem[];
+  readOnlyBoundary: {
+    editingEnabled: boolean;
+    mutationEndpointsAdded: boolean;
+    writePermission: string;
+    notice: string;
+    disabledActions: string[];
+    futureWriteBoundary: string;
+  };
+};
+
+export type PitsProjectWorkboardSnapshot = {
+  coreApiUrl: string;
+  workboard: ApiResult;
+  payload: PitsWorkboardPayload | null;
+  notFound: boolean;
+  errorMessage: string | null;
+};
+
 export type PlatformRegistrySnapshot = PlatformSnapshot & {
   registry: ApiResult;
   registryHealth: ApiResult;
@@ -828,6 +898,36 @@ export function getProductUatPayload(source: unknown): ProductUatPayload | null 
   };
 }
 
+export function getPitsWorkboardPayload(source: unknown): PitsWorkboardPayload | null {
+  if (
+    !isRecord(source) ||
+    !isRecord(source.runtime) ||
+    !isRecord(source.workboard) ||
+    !isRecord(source.summary) ||
+    !Array.isArray(source.statusGroups) ||
+    !Array.isArray(source.items) ||
+    !isRecord(source.readOnlyBoundary)
+  ) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+
+  if (!metadata) {
+    return null;
+  }
+
+  return {
+    metadata,
+    runtime: source.runtime as PitsWorkboardPayload["runtime"],
+    workboard: source.workboard as PitsWorkboardPayload["workboard"],
+    summary: source.summary as PitsWorkboardPayload["summary"],
+    statusGroups: source.statusGroups as PitsWorkboardPayload["statusGroups"],
+    items: source.items as PitsWorkItem[],
+    readOnlyBoundary: source.readOnlyBoundary as PitsWorkboardPayload["readOnlyBoundary"]
+  };
+}
+
 function getRegistryErrorMessage(source: unknown) {
   if (!isRecord(source) || !isRecord(source.error)) {
     return null;
@@ -989,6 +1089,18 @@ export async function getProjectRegistryDetail(
 ): Promise<RegistryDetailSnapshot<ProjectRegistryDetail>> {
   const detail = await fetchCoreApi(`/platform/projects/${encodeURIComponent(id)}`, coreApiUrl);
   return createRegistryDetailSnapshot<ProjectRegistryDetail>(coreApiUrl, detail, "project");
+}
+
+export async function getPitsProjectWorkboard(id: string, coreApiUrl = getCoreApiUrl()): Promise<PitsProjectWorkboardSnapshot> {
+  const workboard = await fetchCoreApi(`/platform/pits/projects/${encodeURIComponent(id)}/workboard`, coreApiUrl);
+
+  return {
+    coreApiUrl,
+    workboard,
+    payload: getPitsWorkboardPayload(workboard.data),
+    notFound: workboard.status === 404,
+    errorMessage: getRegistryErrorMessage(workboard.data) ?? workboard.error
+  };
 }
 
 export async function getModuleRegistryDetail(

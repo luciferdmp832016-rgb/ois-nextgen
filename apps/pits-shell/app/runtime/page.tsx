@@ -7,6 +7,7 @@ import {
   PitsProductUatPanel,
   PitsRegistryCockpit,
   PitsOwnerReviewQueuePanel,
+  PitsWorkboardRuntimeStatusPanel,
   PitsShell,
   PlatformCountsPanel,
   ProjectOverviewCards,
@@ -29,6 +30,7 @@ export default async function RuntimePage() {
       <PitsOwnerReviewQueuePanel snapshot={snapshot} title="Safe Action Boundary" />
       <PitsAdminBoundaryPanel snapshot={snapshot} title="Audit / Permission / Admin Boundary" />
       <PitsProductUatPanel snapshot={snapshot} title="Product Capability / UAT Status" />
+      <PitsWorkboardRuntimeStatusPanel snapshot={snapshot} />
       <section className="content-grid">
         <RuntimeStatusCard snapshot={snapshot} />
         <RegistryGovernancePanel snapshot={snapshot} />
