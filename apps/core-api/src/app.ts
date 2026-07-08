@@ -453,6 +453,25 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
     | "BLOCKED_BY_WRITE_BOUNDARY"
     | "BLOCKED_BY_AUTH_OR_PERMISSION"
     | "NEEDS_OWNER_DECISION";
+  type PitsWorkItemType = "TASK" | "ISSUE" | "RISK" | "DECISION" | "FOLLOW_UP";
+  type PitsWorkItemStatus = "OPEN" | "IN_PROGRESS" | "BLOCKED" | "DONE";
+  type PitsWorkItemPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  type PitsWorkItem = {
+    id: string;
+    title: string;
+    type: PitsWorkItemType;
+    status: PitsWorkItemStatus;
+    priority: PitsWorkItemPriority;
+    owner: string;
+    dueDate: string;
+    source: string;
+    summary: string;
+    nextAction: string;
+    blockers: string[];
+    relatedProjectId: string;
+    updatedAt: string;
+  };
+  type ProjectRegistryEntity = RegistrySnapshot["projects"][number];
   type ProductUatSurface = {
     id: string;
     productCode: string;
@@ -2245,6 +2264,26 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
         evidence: ["Project Detail Source", "Project Runtime Health", "Owner-facing project UAT summary"]
       }),
       surface({
+        id: "pits:project-workboard",
+        productCode: "PITS",
+        productName: pitsProductName,
+        surfaceName: "PITS Project Workboard",
+        route: firstProject ? pitsShellUrl(`/projects/${encodeURIComponent(firstProject.id)}/workboard`) : pitsShellUrl("/projects"),
+        entityType: "project",
+        entityId: firstProject?.id ?? null,
+        category: "AVAILABLE_FOR_BROWSER_UAT",
+        testableNow: true,
+        realProductFunction: true,
+        ownerUatStatus: "READY_FOR_BROWSER_UAT",
+        currentUserTest: "Open the project workboard and inspect work items grouped by Open, In progress, Blocked and Done.",
+        currentReality: "Stage 2A provides a read-only PITS workboard functional slice for owner/browser UAT.",
+        functionalGap: "Create, edit, delete and status-change actions are not implemented; work items are deterministic demo/runtime data.",
+        blockers: ["BLOCKED_BY_WRITE_BOUNDARY"],
+        recommendedNextStep: "Define Stage 2B/2C write-boundary acceptance criteria before enabling work item changes.",
+        nextUserLevelTestPath: firstProject ? pitsShellUrl(`/projects/${encodeURIComponent(firstProject.id)}/workboard`) : null,
+        evidence: ["PITS Project Workboard", "Read-only functional slice", "Work items"]
+      }),
+      surface({
         id: "pits:runtime-readiness-boundaries",
         productCode: "PITS",
         productName: pitsProductName,
@@ -2276,13 +2315,13 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
         testableNow: false,
         realProductFunction: true,
         ownerUatStatus: "NOT_IMPLEMENTED_YET",
-        currentUserTest: "No browser UAT path exists yet for project issue or task workflow.",
-        currentReality: "Stage 1K only maps the gap.",
-        functionalGap: "Needs project workflow entities, relationships, starter data and acceptance tests.",
+        currentUserTest: "Browser UAT can inspect Stage 2A workboard items, but persisted issue/task workflow is not available yet.",
+        currentReality: "Stage 2A adds a read-only workboard; persisted issue/task creation and updates are still future work.",
+        functionalGap: "Needs project workflow entities, relationships, starter data, write boundaries and acceptance tests.",
         blockers: ["BLOCKED_BY_MISSING_DATA_MODEL", "NEEDS_OWNER_DECISION"],
-        recommendedNextStep: "Define read-only PITS issue/task list and detail acceptance criteria before writes.",
-        nextUserLevelTestPath: null,
-        evidence: ["Not implemented yet", "Functional gap map"]
+        recommendedNextStep: "Use the read-only workboard as the acceptance baseline before adding writes.",
+        nextUserLevelTestPath: firstProject ? pitsShellUrl(`/projects/${encodeURIComponent(firstProject.id)}/workboard`) : null,
+        evidence: ["PITS Project Workboard", "Functional gap map"]
       }),
       surface({
         id: "pits:future-status-work-tracking",
@@ -2339,7 +2378,7 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
       ownerUatStatus: "READY_FOR_BROWSER_UAT",
       testableNow: surfaces.filter((item) => item.testableNow).map((item) => item.surfaceName),
       controlPlaneOnly: surfaces.filter((item) => item.category === "PLATFORM_CONTROL_PLANE_ONLY").map((item) => item.surfaceName),
-      missingProductFunctions: surfaces.filter((item) => !item.testableNow || item.realProductFunction).map((item) => item.surfaceName),
+      missingProductFunctions: surfaces.filter((item) => !item.testableNow).map((item) => item.surfaceName),
       recommendedNextJourneys,
       surfaces
     });
@@ -2349,9 +2388,9 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
         "Choose document, meeting or knowledge as the first OIS product workflow",
         "Keep admin/write actions disabled until a later approved stage"
       ]),
-      buildProduct("PITS", pitsProductName, pitsSurfaces, "Project registry shell and readiness shell; true project workflow app behavior is mapped but not implemented yet.", [
-        "Define a read-only PITS issue/task list",
-        "Add project workflow detail after data model approval",
+      buildProduct("PITS", pitsProductName, pitsSurfaces, "Project registry shell and readiness shell plus Stage 2A read-only workboard; not a true project workflow app with writes yet.", [
+        "Owner-test the PITS Project Workboard read-only functional slice",
+        "Define persisted issue/task workflow detail after data model approval",
         "Keep project status writes disabled until audit/write boundaries are approved"
       ])
     ];
@@ -2393,6 +2432,151 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
         "Start with read-only product workflow screens before any write/admin action.",
         "Add data-model and acceptance-test evidence before Phase 2/3 behavior is ported."
       ]
+    };
+  }
+
+  function createPitsWorkItems(project: ProjectRegistryEntity): PitsWorkItem[] {
+    const baseId = project.id.replace(/^prj_/, "");
+
+    return [
+      {
+        id: `pits-${baseId}-open-site-access`,
+        title: "Confirm site access package",
+        type: "TASK",
+        status: "OPEN",
+        priority: "HIGH",
+        owner: "Project operator",
+        dueDate: "2026-07-12",
+        source: "Stage 2A deterministic demo data",
+        summary: "Validate the owner can see the first actionable project work item without creating or editing data.",
+        nextAction: "Review access package checklist with the site lead.",
+        blockers: [],
+        relatedProjectId: project.id,
+        updatedAt: "2026-07-08T09:00:00.000Z"
+      },
+      {
+        id: `pits-${baseId}-progress-inspection-plan`,
+        title: "Prepare inspection walk plan",
+        type: "TASK",
+        status: "IN_PROGRESS",
+        priority: "MEDIUM",
+        owner: "Field coordinator",
+        dueDate: "2026-07-15",
+        source: "Stage 2A deterministic demo data",
+        summary: "Draft the read-only sequence of project checks the owner can inspect in the browser.",
+        nextAction: "Compare planned checkpoints with the project readiness summary.",
+        blockers: [],
+        relatedProjectId: project.id,
+        updatedAt: "2026-07-08T10:00:00.000Z"
+      },
+      {
+        id: `pits-${baseId}-blocked-fire-door-risk`,
+        title: "Resolve fire door access risk",
+        type: "RISK",
+        status: "BLOCKED",
+        priority: "CRITICAL",
+        owner: "Safety lead",
+        dueDate: "2026-07-07",
+        source: "Stage 2A deterministic demo data",
+        summary: "A high-priority project risk is visible, but resolution remains disabled until write boundaries exist.",
+        nextAction: "Owner reviews blocker context; status changes require Stage 2B/2C write boundary.",
+        blockers: ["Awaiting owner decision", "Requires Stage 2B/2C write boundary"],
+        relatedProjectId: project.id,
+        updatedAt: "2026-07-08T11:00:00.000Z"
+      },
+      {
+        id: `pits-${baseId}-open-tenant-notice`,
+        title: "Decide tenant notice wording",
+        type: "DECISION",
+        status: "OPEN",
+        priority: "MEDIUM",
+        owner: "Owner representative",
+        dueDate: "2026-07-18",
+        source: "Stage 2A deterministic demo data",
+        summary: "Decision item demonstrates that the workboard can show non-task workflow work in read-only mode.",
+        nextAction: "Review notice copy outside the system; no approval action is enabled here.",
+        blockers: [],
+        relatedProjectId: project.id,
+        updatedAt: "2026-07-08T12:00:00.000Z"
+      },
+      {
+        id: `pits-${baseId}-done-registry-check`,
+        title: "Verify project registry links",
+        type: "FOLLOW_UP",
+        status: "DONE",
+        priority: "LOW",
+        owner: "Runtime steward",
+        dueDate: "2026-07-05",
+        source: "Stage 2A deterministic demo data",
+        summary: "Completed item proves the board can distinguish done work from active work.",
+        nextAction: "No action required; keep evidence visible for owner UAT.",
+        blockers: [],
+        relatedProjectId: project.id,
+        updatedAt: "2026-07-08T13:00:00.000Z"
+      }
+    ];
+  }
+
+  function buildPitsProjectWorkboard(registry: RegistrySnapshot, project: ProjectRegistryEntity) {
+    const items = createPitsWorkItems(project);
+    const statusDefinitions: Array<{ status: PitsWorkItemStatus; label: string }> = [
+      { status: "OPEN", label: "Open" },
+      { status: "IN_PROGRESS", label: "In progress" },
+      { status: "BLOCKED", label: "Blocked" },
+      { status: "DONE", label: "Done" }
+    ];
+    const countStatus = (status: PitsWorkItemStatus) => items.filter((item) => item.status === status).length;
+    const highPriorityCount = items.filter((item) => item.priority === "HIGH" || item.priority === "CRITICAL").length;
+
+    return {
+      metadata: registry.metadata,
+      runtime: {
+        ...publicRuntimeConfig,
+        workboardMode: "read-only-functional-slice",
+        stage: "Stage 2A",
+        note: "Read-only functional slice — editing is not enabled yet"
+      },
+      workboard: {
+        projectId: project.id,
+        projectCode: project.code,
+        projectName: project.name,
+        source: "deterministic-demo-data",
+        stage: "Stage 2A",
+        readOnly: true,
+        markers: ["PITS Project Workboard", "Read-only functional slice", "Work items", "Open", "In progress", "Blocked", "Done"]
+      },
+      summary: {
+        totalItems: items.length,
+        openCount: countStatus("OPEN"),
+        inProgressCount: countStatus("IN_PROGRESS"),
+        blockedCount: countStatus("BLOCKED"),
+        doneCount: countStatus("DONE"),
+        highPriorityCount,
+        overdueCount: 1,
+        nextRecommendedAction: "Inspect blocked and high-priority items, then define Stage 2B/2C write-boundary acceptance criteria.",
+        currentLimitations: [
+          "Read-only functional slice — editing is not enabled yet",
+          "No create, edit, delete or status-change mutation endpoint is available in Stage 2A.",
+          "Work items are deterministic demo/runtime data, not persisted task records."
+        ]
+      },
+      statusGroups: statusDefinitions.map((definition) => ({
+        ...definition,
+        items: items.filter((item) => item.status === definition.status)
+      })),
+      items,
+      readOnlyBoundary: {
+        editingEnabled: false,
+        mutationEndpointsAdded: false,
+        writePermission: "NOT_ALLOWED_IN_STAGE_2A",
+        notice: "Read-only functional slice — editing is not enabled yet",
+        disabledActions: [
+          "Create work item - Preview only",
+          "Edit work item - Not executable yet",
+          "Change status - Requires Stage 2B/2C write boundary"
+        ],
+        futureWriteBoundary: "Requires Stage 2B/2C write boundary"
+      }
     };
   }
 
@@ -2692,6 +2876,33 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
               }
             }
           }
+        },
+        "/platform/pits/projects/{id}/workboard": {
+          get: {
+            tags: ["pits"],
+            responses: {
+              "200": {
+                description: "Read-only PITS project workboard functional slice",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["metadata", "runtime", "workboard", "summary", "statusGroups", "items", "readOnlyBoundary"],
+                      properties: {
+                        metadata: { type: "object" },
+                        runtime: { type: "object" },
+                        workboard: { type: "object" },
+                        summary: { type: "object" },
+                        statusGroups: { type: "array", items: { type: "object" } },
+                        items: { type: "array", items: { type: "object" } },
+                        readOnlyBoundary: { type: "object" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -2856,6 +3067,17 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
   app.get("/platform/admin-boundary", async () => buildAdminBoundary(await readRegistry()));
 
   app.get("/platform/product-uat", async () => buildProductUat(await readRegistry()));
+
+  app.get("/platform/pits/projects/:id/workboard", async (request, reply) => {
+    const params = request.params as { id: string };
+    const { registry, project } = await readProjectDetailById(params.id);
+
+    if (!project) {
+      return registryNotFound(reply, "project", { id: params.id });
+    }
+
+    return buildPitsProjectWorkboard(registry, project);
+  });
 
   app.get("/platform/products/code/:code", async (request, reply) => {
     const params = request.params as { code: string };

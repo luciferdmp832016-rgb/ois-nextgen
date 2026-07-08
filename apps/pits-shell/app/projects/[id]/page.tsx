@@ -3,6 +3,7 @@ import {
   findRegistryHealthItem,
   findRegistryReadinessItem,
   getPlatformRegistrySnapshot,
+  getPitsProjectWorkboard,
   getProjectRegistryDetail
 } from "@ois/shared-ui";
 import {
@@ -14,6 +15,7 @@ import {
   PageHeading,
   PitsAdminBoundaryPanel,
   PitsOwnerEntityUatSummary,
+  PitsProjectWorkboardPanel,
   PitsProductUatPanel,
   PitsOwnerReviewQueuePanel,
   PitsShell,
@@ -32,7 +34,7 @@ type ProjectDetailPageProps = {
 export default async function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const { id } = await params;
   const snapshot = await getPlatformRegistrySnapshot();
-  const detail = await getProjectRegistryDetail(id, snapshot.coreApiUrl);
+  const [detail, workboard] = await Promise.all([getProjectRegistryDetail(id, snapshot.coreApiUrl), getPitsProjectWorkboard(id, snapshot.coreApiUrl)]);
   const project = detail.item;
 
   if (!project) {
@@ -109,6 +111,8 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
           }
         ]}
       />
+
+      <PitsProjectWorkboardPanel payload={workboard.payload} />
 
       <PitsOwnerReviewQueuePanel snapshot={snapshot} entityType="project" entityId={project.id} />
 

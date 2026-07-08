@@ -2246,6 +2246,7 @@ Stage 1H adds owner-first IA/visual design polish, status badge markers, safe fa
 Stage 1I adds read-only owner review workflow and safe action-boundary preview surfaces via `/platform/owner-review`. It did not add real write/admin/sync actions, mutation endpoints, deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, import Prisma into UI shells, call `/auth/demo-login` or touch legacy resources.
 Stage 1J adds read-only audit/admin permission model surfaces via `/platform/admin-boundary`. It did not add real write/admin/sync actions, mutation endpoints, deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, import Prisma into UI shells, call `/auth/demo-login` or touch legacy resources.
 Stage 1K adds read-only product user journey UAT baseline and functional gap map surfaces via `/platform/product-uat`. It did not add product writes, real admin/write/sync actions, mutation endpoints, deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, import Prisma into UI shells, call `/auth/demo-login` or touch legacy resources.
+Stage 2A adds the read-only PITS Project Workboard functional slice via `/platform/pits/projects/{id}/workboard` and PITS `/projects/{id}/workboard`. It did not add work item writes, task lifecycle mutations, schema changes, migrations, seed, `prisma db push`, auth changes, deploy from Codex, Cloudflare/DNS changes, credentials, UI `DATABASE_URL`, Prisma UI imports, `/auth/demo-login` changes or legacy-resource touch.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -2269,6 +2270,8 @@ Stage 1K adds read-only product user journey UAT baseline and functional gap map
 - Core API `/platform/admin-boundary` returns HTTP 200 with `Admin Boundary`, `Audit Required`, `Permission Model`, `Preview only`, `Blocked in current stage` and `BLOCKED_IN_CURRENT_STAGE` after Stage 1J owner runtime sync.
 - Core API `/platform/product-uat` returns HTTP 200 with `Product User Journey UAT`, `Testable now`, `Control-plane only`, `Functional gap map`, `Next product journey` and `NOT_ALLOWED_IN_STAGE_1K` after Stage 1K owner runtime sync.
 - OIS root/dashboard/runtime/product detail/workspace detail/installation detail and PITS root/projects/runtime/project detail surfaces show Stage 1K product UAT markers after owner runtime sync.
+- Core API `/platform/pits/projects/<project-id>/workboard` returns HTTP 200 with `PITS Project Workboard`, `Read-only functional slice`, `Work items`, `Open`, `In progress`, `Blocked`, `Done` and `NOT_ALLOWED_IN_STAGE_2A` after Stage 2A owner runtime sync.
+- PITS `/projects/<project-id>/workboard` renders status groups, work item cards, priority/owner/due date/next action fields and the read-only notice after Stage 2A owner runtime sync.
 - Core API `/docs` renders Swagger UI.
 - OIS Console `/` renders `OIS Console`.
 - PITS Shell `/` renders `PITS Shell`.
@@ -2314,6 +2317,7 @@ Stage 1H adds no endpoint. It changes OIS/PITS owner-facing IA, visual hierarchy
 Stage 1I adds `https://ois-nextgen.abacusai.cloud/platform/owner-review` as a read-only owner review and safe action-boundary endpoint. It changes OIS/PITS owner-facing HTML to show preview-only boundary markers on dashboard/runtime/detail surfaces. Public verification is pending owner runtime sync and owner browser/UAT.
 Stage 1J adds `https://ois-nextgen.abacusai.cloud/platform/admin-boundary` as a read-only audit/admin permission model endpoint. It changes OIS/PITS owner-facing HTML to show admin boundary markers on dashboard/runtime/detail surfaces. Public verification is pending owner runtime sync and owner browser/UAT.
 Stage 1K adds `https://ois-nextgen.abacusai.cloud/platform/product-uat` as a read-only product user journey UAT baseline endpoint. It changes OIS/PITS owner-facing HTML to show product UAT and functional gap map markers on root, dashboard/runtime and detail surfaces. Public verification is pending owner runtime sync and owner browser/UAT.
+Stage 2A adds `https://ois-nextgen.abacusai.cloud/platform/pits/projects/<project-id>/workboard` as a read-only PITS workboard endpoint and `https://pits-ng.dmp247.com/projects/<project-id>/workboard` as the direct browser workboard route. Public verification is pending owner runtime sync and owner browser/UAT.
 
 ## Stop Conditions
 

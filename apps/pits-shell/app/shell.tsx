@@ -23,6 +23,10 @@ import {
   type OwnerReviewSeverity,
   type PlatformRegistrySnapshot,
   type PlatformSnapshot,
+  type PitsWorkboardPayload,
+  type PitsWorkItem,
+  type PitsWorkItemPriority,
+  type PitsWorkItemStatus,
   type ProductUatSurface,
   type RegistryDetailSnapshot,
   type RegistryHealthItem,
@@ -740,6 +744,227 @@ export function PitsProductUatPanel({
   );
 }
 
+const workboardStatusLabels: Record<PitsWorkItemStatus, string> = {
+  OPEN: "Open",
+  IN_PROGRESS: "In progress",
+  BLOCKED: "Blocked",
+  DONE: "Done"
+};
+
+const priorityLabels: Record<PitsWorkItemPriority, string> = {
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
+  CRITICAL: "Critical"
+};
+
+export function PriorityBadge({ priority }: { priority: PitsWorkItemPriority }) {
+  return (
+    <span className={`priority-badge priority-${priority.toLowerCase()}`} data-priority={priority}>
+      {priorityLabels[priority]}
+    </span>
+  );
+}
+
+export function WorkItemCard({ item }: { item: PitsWorkItem }) {
+  return (
+    <article className="work-item-card" data-work-item-status={item.status}>
+      <div className="panel-heading">
+        <div>
+          <span className="eyebrow">{item.type.replace("_", " ")}</span>
+          <h4>{item.title}</h4>
+        </div>
+        <PriorityBadge priority={item.priority} />
+      </div>
+      <p>{item.summary}</p>
+      <dl className="work-item-facts">
+        <div>
+          <dt>Owner</dt>
+          <dd>{item.owner}</dd>
+        </div>
+        <div>
+          <dt>Due</dt>
+          <dd>{item.dueDate}</dd>
+        </div>
+        <div>
+          <dt>Next action</dt>
+          <dd>{item.nextAction}</dd>
+        </div>
+      </dl>
+      {item.blockers.length > 0 ? (
+        <div className="functional-gap-list" aria-label="Work item blockers">
+          {item.blockers.map((blocker) => (
+            <span key={blocker}>{blocker}</span>
+          ))}
+        </div>
+      ) : null}
+      <p className="muted health-note">Source: {item.source}</p>
+    </article>
+  );
+}
+
+export function WorkflowStatusColumn({ group }: { group: PitsWorkboardPayload["statusGroups"][number] }) {
+  return (
+    <section className="workflow-status-column" data-workboard-status={group.status}>
+      <div className="panel-heading">
+        <div>
+          <span className="eyebrow">{group.status}</span>
+          <h4>{workboardStatusLabels[group.status] ?? group.label}</h4>
+        </div>
+        <span className="pill">{group.items.length}</span>
+      </div>
+      <div className="workflow-card-stack">
+        {group.items.length > 0 ? (
+          group.items.map((item) => <WorkItemCard item={item} key={item.id} />)
+        ) : (
+          <article className="work-item-card owner-empty-state">
+            <span className="eyebrow">No items</span>
+            <h4>{group.label}</h4>
+            <p className="muted">No read-only work items are mapped for this status.</p>
+          </article>
+        )}
+      </div>
+    </section>
+  );
+}
+
+export function ReadOnlyFunctionalSliceNotice({ payload }: { payload: PitsWorkboardPayload }) {
+  return (
+    <section className="read-only-functional-slice" aria-label="Read-only functional slice boundary">
+      <div>
+        <span className="eyebrow">Read-only boundary</span>
+        <h4>{payload.readOnlyBoundary.notice}</h4>
+        <p className="muted">Work items can be inspected in Stage 2A. Editing, deletion and status changes remain disabled.</p>
+      </div>
+      <div className="owner-review-marker-row">
+        {payload.readOnlyBoundary.disabledActions.map((action) => (
+          <span key={action}>{action}</span>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function WorkboardSummaryPanel({ payload }: { payload: PitsWorkboardPayload }) {
+  return (
+    <section className="workboard-summary-panel" aria-label="Workboard summary">
+      <dl className="owner-fact-grid">
+        <div>
+          <dt>Total items</dt>
+          <dd>{payload.summary.totalItems}</dd>
+        </div>
+        <div>
+          <dt>Open</dt>
+          <dd>{payload.summary.openCount}</dd>
+        </div>
+        <div>
+          <dt>In progress</dt>
+          <dd>{payload.summary.inProgressCount}</dd>
+        </div>
+        <div>
+          <dt>Blocked</dt>
+          <dd>{payload.summary.blockedCount}</dd>
+        </div>
+        <div>
+          <dt>Done</dt>
+          <dd>{payload.summary.doneCount}</dd>
+        </div>
+        <div>
+          <dt>High priority</dt>
+          <dd>{payload.summary.highPriorityCount}</dd>
+        </div>
+      </dl>
+      <section className="suggested-actions" aria-label="Next recommended workboard action">
+        <h5>Next recommended action</h5>
+        <p>{payload.summary.nextRecommendedAction}</p>
+      </section>
+    </section>
+  );
+}
+
+export function PitsProjectWorkboardPanel({
+  payload,
+  title = "PITS Project Workboard"
+}: {
+  payload: PitsWorkboardPayload | null;
+  title?: string | undefined;
+}) {
+  if (!payload) {
+    return (
+      <section className="panel workboard-panel owner-empty-state" data-pits-workboard="PITS Project Workboard">
+        <div className="panel-heading">
+          <div>
+            <h3>{title}</h3>
+            <p className="muted">Project workboard data is unavailable from Core API.</p>
+          </div>
+          <StatusBadge ok={false} label="Needs owner review" />
+        </div>
+        <p className="muted">Read-only functional slice — editing is not enabled yet.</p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="panel workboard-panel" data-pits-workboard="PITS Project Workboard">
+      <div className="panel-heading">
+        <div>
+          <span className="eyebrow">{payload.workboard.projectCode}</span>
+          <h3>{title}</h3>
+          <p className="muted">
+            {payload.workboard.projectName} work items grouped by workflow status. This is the first real PITS user-level browser workflow.
+          </p>
+        </div>
+        <StatusBadge ok={payload.workboard.readOnly} label="Read-only functional slice" />
+      </div>
+      <div className="owner-review-marker-row" aria-label="PITS workboard markers">
+        {payload.workboard.markers.map((marker) => (
+          <span key={marker}>{marker}</span>
+        ))}
+      </div>
+      <WorkboardSummaryPanel payload={payload} />
+      <ReadOnlyFunctionalSliceNotice payload={payload} />
+      <div className="workflow-board-grid" aria-label="Work items by status">
+        {payload.statusGroups.map((group) => (
+          <WorkflowStatusColumn group={group} key={group.status} />
+        ))}
+      </div>
+      <p className="muted health-note">{payload.runtime.note}</p>
+    </section>
+  );
+}
+
+export function PitsWorkboardRuntimeStatusPanel({ snapshot }: { snapshot: PlatformRegistrySnapshot }) {
+  const firstProject = snapshot.projects[0] ?? null;
+
+  return (
+    <section className="panel workboard-panel" data-pits-workboard-runtime="Stage 2A workboard">
+      <div className="panel-heading">
+        <div>
+          <h3>PITS Project Workboard</h3>
+          <p className="muted">Stage 2A adds a read-only functional slice for project work items.</p>
+        </div>
+        <StatusBadge ok={Boolean(firstProject)} label="Read-only functional slice" />
+      </div>
+      <div className="owner-review-marker-row" aria-label="Stage 2A runtime markers">
+        <span>Read-only functional slice</span>
+        <span>Work items</span>
+        <span>Preview only</span>
+        <span>Requires Stage 2B/2C write boundary</span>
+      </div>
+      <p className="muted">
+        {firstProject
+          ? `Open ${firstProject.name} to inspect the workboard. Editing and status changes are not enabled yet.`
+          : "No project is available for the workboard in the current registry snapshot."}
+      </p>
+      {firstProject ? (
+        <div className="link-list">
+          <Link href={`/projects/${firstProject.id}/workboard`}>Open PITS Project Workboard</Link>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 export function PitsOwnerReviewQueuePanel({
   snapshot,
   entityType,
@@ -1079,6 +1304,7 @@ export function ProjectSelector({ snapshot }: { snapshot: PlatformRegistrySnapsh
         <div>
           <h3>Project Selector</h3>
           <p className="muted">Project count from Core API /platform/overview: {snapshot.counts.projects ?? "-"}.</p>
+          <p className="muted">PITS is no longer only a registry/readiness shell; Stage 2A adds a read-only workboard functional slice.</p>
         </div>
         <span className="pill">Installations: {snapshot.counts.installations ?? "-"}</span>
       </div>
@@ -1101,6 +1327,10 @@ export function ProjectSelector({ snapshot }: { snapshot: PlatformRegistrySnapsh
                 }`}
               />
               <strong>{project.installations.length} installation(s)</strong>
+              <div className="link-list">
+                <Link href={`/projects/${project.id}`}>Open project detail</Link>
+                <Link href={`/projects/${project.id}/workboard`}>Open PITS Project Workboard</Link>
+              </div>
             </article>
           ))
         ) : (
