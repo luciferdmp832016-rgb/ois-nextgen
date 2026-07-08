@@ -421,6 +421,16 @@ describe("PITS Shell product shell", () => {
 
     expect(html).toContain("PITS Shell");
     expect(html).toContain("PITS_SHELL");
+    expect(html).toContain('data-shell-standard="Modern Shell Layout"');
+    expect(html).toContain('data-shell-navigation="Fixed Navigation Shell"');
+    expect(html).toContain('data-shell-responsive="Responsive Product Shell"');
+    expect(html).toContain('data-shell-toggle="Shell Navigation Toggle"');
+    expect(html).toContain("Shell Navigation Toggle");
+    expect(html).toContain("Fixed Navigation Shell");
+    expect(html).toContain("Responsive Product Shell");
+    expect(html).toContain("Hide nav");
+    expect(html).toContain("Menu");
+    expect(html).toContain('aria-label="PITS Shell navigation"');
     expect(html).toContain("Project Runtime Overview");
     expect(html).toContain("PITS Registry Cockpit / Project Runtime Summary");
     expect(html).toContain("Project readiness");
@@ -490,6 +500,10 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain(coreApiUrl);
     expect(html).toContain("Core API healthy");
     expect(html).toContain("DEMO DATA - NOT PRODUCTION");
+    expect(html).toContain("Modern Shell Layout");
+    expect(html).toContain("Shell Navigation Toggle");
+    expect(html).toContain("Fixed Navigation Shell");
+    expect(html).toContain("Responsive Product Shell");
     for (const marker of markers) {
       expect(html).toContain(marker);
     }
@@ -509,6 +523,8 @@ describe("PITS Shell product shell", () => {
     const html = renderToStaticMarkup(await ProjectDetailPage({ params: Promise.resolve({ id: "prj_emerald_precinct_demo" }) }));
 
     expect(html).toContain("Project Detail Source");
+    expect(html).toContain("Modern Shell Layout");
+    expect(html).toContain("Shell Navigation Toggle");
     expect(html).toContain("Owner-facing project UAT summary");
     expect(html).toContain("Project readiness");
     expect(html).toContain("No issue detected");

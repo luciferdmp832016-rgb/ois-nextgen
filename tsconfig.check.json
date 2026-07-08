@@ -7,6 +7,7 @@
     "apps/**/*.ts",
     "apps/**/*.tsx",
     "packages/**/*.ts",
+    "packages/**/*.tsx",
     "domains/**/*.ts",
     "prisma/**/*.ts",
     "tests/**/*.ts"

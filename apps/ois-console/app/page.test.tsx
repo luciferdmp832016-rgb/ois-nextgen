@@ -511,6 +511,16 @@ describe("OIS Console product shell", () => {
     expect(html).toContain("OIS Console");
     expect(html).toContain("OIS_CONSOLE");
     expect(html).toContain("Product Administration Overview");
+    expect(html).toContain('data-shell-standard="Modern Shell Layout"');
+    expect(html).toContain('data-shell-navigation="Fixed Navigation Shell"');
+    expect(html).toContain('data-shell-responsive="Responsive Product Shell"');
+    expect(html).toContain('data-shell-toggle="Shell Navigation Toggle"');
+    expect(html).toContain("Shell Navigation Toggle");
+    expect(html).toContain("Fixed Navigation Shell");
+    expect(html).toContain("Responsive Product Shell");
+    expect(html).toContain("Hide nav");
+    expect(html).toContain("Menu");
+    expect(html).toContain('aria-label="OIS Console navigation"');
     expect(html).toContain("Owner Registry Cockpit / Registry Runtime Summary");
     expect(html).toContain("Missing runtime URL");
     expect(html).toContain("Forbidden link guard");
@@ -643,6 +653,10 @@ describe("OIS Console product shell", () => {
     expect(html).toContain(coreApiUrl);
     expect(html).toContain("Core API healthy");
     expect(html).toContain("DEMO DATA - NOT PRODUCTION");
+    expect(html).toContain("Modern Shell Layout");
+    expect(html).toContain("Shell Navigation Toggle");
+    expect(html).toContain("Fixed Navigation Shell");
+    expect(html).toContain("Responsive Product Shell");
     for (const marker of markers) {
       expect(html).toContain(marker);
     }
@@ -662,6 +676,8 @@ describe("OIS Console product shell", () => {
     const html = renderToStaticMarkup(await ProductDetailPage({ params: Promise.resolve({ id: "prod_pits" }) }));
 
     expect(html).toContain("Product Detail Source");
+    expect(html).toContain("Modern Shell Layout");
+    expect(html).toContain("Shell Navigation Toggle");
     expect(html).toContain("Owner-facing UAT summary");
     expect(html).toContain("Runtime health");
     expect(html).toContain("Readiness");
@@ -738,6 +754,8 @@ describe("OIS Console product shell", () => {
       for (const marker of markers) {
         expect(html).toContain(marker);
       }
+      expect(html).toContain("Modern Shell Layout");
+      expect(html).toContain("Shell Navigation Toggle");
       expect(html).toContain(`data-detail-source="${markers[0]}"`);
       expect(html).toContain("Detail ready");
       expect(html).not.toContain(dbEnvKey);
