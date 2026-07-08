@@ -6,6 +6,7 @@ import Page from "./page";
 import DashboardPage from "./dashboard/page";
 import InstallationDetailPage from "./installations/[id]/page";
 import ModuleDetailPage from "./modules/[id]/page";
+import ProductFlowPage from "./product-flow/page";
 import ProductsPage from "./products/page";
 import ProductDetailPage from "./products/[id]/page";
 import RuntimePage from "./runtime/page";
@@ -926,6 +927,7 @@ describe("OIS Console product shell", () => {
     expect(html).toContain("Owner UAT status");
     expect(html).toContain("Next user-level test path");
     expect(html).toContain("Dashboard");
+    expect(html).toContain("Product Flow");
     expect(html).toContain("Products");
     expect(html).toContain("Workspaces");
     expect(html).toContain("Runtime");
@@ -987,6 +989,27 @@ describe("OIS Console product shell", () => {
   });
 
   it.each([
+    [
+      "product flow",
+      ProductFlowPage,
+      [
+        "OIS Product UX Blueprint",
+        "Product Flow Preview",
+        "UX Draft / Product Flow Preview",
+        "Product page vs Admin console",
+        "Executive Dashboard",
+        "Workspace List",
+        "Workspace Intelligence Dashboard",
+        "Meeting/Document Knowledge Feed",
+        "Knowledge Detail",
+        "Ask OIS / Copilot",
+        "Runtime/Admin",
+        "Owner approval checklist",
+        "No write endpoints added",
+        "No LLM call",
+        "No hallucinated answer rule"
+      ]
+    ],
     [
       "dashboard",
       DashboardPage,

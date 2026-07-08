@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import Page from "./page";
+import ProductFlowPage from "./product-flow/page";
 import ProjectsPage from "./projects/page";
 import ProjectDetailPage from "./projects/[id]/page";
 import ProjectWorkboardPage from "./projects/[id]/workboard/page";
@@ -1216,6 +1217,7 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("Registry Governance / Readiness");
     expect(html).toContain("Registry Runtime Health");
     expect(html).toContain("Runtime");
+    expect(html).toContain("Product Flow");
     expect(html).toContain("Emerald Precinct Demo");
     expect(html).toContain("/projects/prj_emerald_precinct_demo");
     expect(html).toContain("Second Project Demo");
@@ -1242,6 +1244,27 @@ describe("PITS Shell product shell", () => {
   });
 
   it.each([
+    [
+      "product flow",
+      ProductFlowPage,
+      [
+        "PITS Product UX Blueprint",
+        "Product Flow Preview",
+        "UX Draft / Product Flow Preview",
+        "Product page vs Admin console",
+        "Home",
+        "Projects",
+        "Project Detail",
+        "Workboard",
+        "Work Item Detail",
+        "Dry-run Action Preview",
+        "Runtime and Admin",
+        "Owner approval checklist",
+        "No write endpoints added",
+        "No data will be changed",
+        "Not executable yet"
+      ]
+    ],
     [
       "projects",
       ProjectsPage,
@@ -1343,6 +1366,9 @@ describe("PITS Shell product shell", () => {
     expect(html).not.toContain("Execute admin action");
     expect(html).not.toContain("Run admin action");
     expect(html).not.toContain("Apply registry fix");
+    expect(html).not.toContain("<button>Create");
+    expect(html).not.toContain("<button>Edit");
+    expect(html).not.toContain("<button>Change");
     expect(html).not.toContain(dbEnvKey);
   });
 

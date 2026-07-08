@@ -35,6 +35,13 @@ product_uat_ui_markers=(
   "What is not implemented yet?"
   "Recommended next product functions"
 )
+product_flow_ui_markers=(
+  "Product Flow Preview"
+  "UX Draft / Product Flow Preview"
+  "Product page vs Admin console"
+  "Owner approval checklist"
+  "No write endpoints added"
+)
 pits_workboard_endpoint_markers=(
   '"source":"default-db"'
   '"mode":"read-only"'
@@ -243,6 +250,7 @@ check_route "OIS_CONSOLE_PUBLIC_SHELL_STANDARD" "$OIS_CONSOLE_PUBLIC_URL" "Moder
 check_route "OIS_CONSOLE_PUBLIC_OWNER_DESIGN_SYSTEM" "$OIS_CONSOLE_PUBLIC_URL" "Owner-first Design System" "Visual Hierarchy Standard" "Owner-friendly Status Badges"
 check_route "OIS_CONSOLE_PUBLIC_ROOT_COCKPIT" "$OIS_CONSOLE_PUBLIC_URL" "Owner Registry Cockpit / Registry Runtime Summary" "Ready to operate" "Forbidden link guard" "OIS_CONSOLE"
 check_route "OIS_CONSOLE_PUBLIC_PRODUCT_UAT_ROOT" "$OIS_CONSOLE_PUBLIC_URL" "Product User Journey UAT Baseline" "${product_uat_ui_markers[@]}"
+check_route "OIS_CONSOLE_PUBLIC_PRODUCT_FLOW" "$OIS_CONSOLE_PUBLIC_URL/product-flow" "${product_flow_ui_markers[@]}" "OIS Product UX Blueprint" "Executive Dashboard" "Workspace Intelligence Dashboard" "Meeting/Document Knowledge Feed" "Knowledge Detail" "Ask OIS / Copilot" "Runtime/Admin" "No LLM call"
 check_route "OIS_CONSOLE_PUBLIC_DASHBOARD" "$OIS_CONSOLE_PUBLIC_URL/dashboard" "Platform Overview" "Owner Registry Cockpit / Registry Runtime Summary" "Owner Review Queue" "Safe Action Boundary" "Read-only preview" "Future admin action requires audit" "Action is read-only preview only" "Admin Boundary" "Audit Required" "Permission Model" "Preview only" "Blocked in current stage" "Future admin action" "Preview only - not executable yet" "Suggested next actions" "Registry Governance / Readiness" "Registry Runtime Health" "Missing runtime URL" "Forbidden link guard" "DEMO DATA - NOT PRODUCTION"
 check_route "OIS_CONSOLE_PUBLIC_PRODUCT_UAT_DASHBOARD" "$OIS_CONSOLE_PUBLIC_URL/dashboard" "Product User Journey / UAT Baseline" "${product_uat_ui_markers[@]}"
 check_route "OIS_CONSOLE_PUBLIC_PRODUCTS" "$OIS_CONSOLE_PUBLIC_URL/products" "Products &amp; Modules" "Product &amp; Module Overview" "Owner Registry Cockpit / Registry Runtime Summary" "Registry Governance / Readiness" "Registry Runtime Health" "Runtime health:" "Readiness:" "Linked to PITS" "PITS_RUNTIME_SHELL" "OIS_CONSOLE"
@@ -254,12 +262,15 @@ check_route "PITS_SHELL_PUBLIC_SHELL_STANDARD" "$PITS_SHELL_PUBLIC_URL" "Modern 
 check_route "PITS_SHELL_PUBLIC_OWNER_DESIGN_SYSTEM" "$PITS_SHELL_PUBLIC_URL" "Owner-first Design System" "Visual Hierarchy Standard" "Owner-friendly Status Badges"
 check_route "PITS_SHELL_PUBLIC_ROOT_COCKPIT" "$PITS_SHELL_PUBLIC_URL" "PITS Registry Cockpit / Project Runtime Summary" "Project readiness" "Forbidden link guard" "PITS_SHELL"
 check_route "PITS_SHELL_PUBLIC_PRODUCT_UAT_ROOT" "$PITS_SHELL_PUBLIC_URL" "Product User Journey UAT Baseline" "${product_uat_ui_markers[@]}" "project registry/readiness shell" "true project workflow app"
+check_route "PITS_SHELL_PUBLIC_PRODUCT_FLOW" "$PITS_SHELL_PUBLIC_URL/product-flow" "${product_flow_ui_markers[@]}" "PITS Product UX Blueprint" "Home" "Projects" "Project Detail" "Workboard" "Work Item Detail" "Dry-run Action Preview" "Runtime and Admin" "No data will be changed"
 check_route "PITS_SHELL_PUBLIC_PROJECTS" "$PITS_SHELL_PUBLIC_URL/projects" "Project Selector" "PITS Registry Cockpit / Project Runtime Summary" "Owner Review Queue" "Safe Action Boundary" "Read-only preview" "Future admin action requires audit" "Action is read-only preview only" "Admin Boundary" "Audit Required" "Permission Model" "Preview only" "Blocked in current stage" "Future admin action" "Preview only - not executable yet" "Suggested next actions" "Project readiness" "Runtime health:" "Registry Governance / Readiness" "Registry Runtime Health" "PITS is no longer only a registry/readiness shell" "Open PITS Project Workboard" "Open Work Item Detail" "EMERALD_PRECINCT_DEMO" "DEMO DATA - NOT PRODUCTION"
 check_route "PITS_SHELL_PUBLIC_PRODUCT_UAT_PROJECTS" "$PITS_SHELL_PUBLIC_URL/projects" "Product User Journey / UAT Baseline" "${product_uat_ui_markers[@]}" "project registry shell" "true workflow app"
 check_route "PITS_SHELL_PUBLIC_RUNTIME" "$PITS_SHELL_PUBLIC_URL/runtime" "Runtime Status" "PITS Registry Cockpit / Project Runtime Summary" "Safe Action Boundary" "Read-only preview" "Future admin action requires audit" "Audit / Permission / Admin Boundary" "Audit Required" "Permission Model" "Preview only" "Blocked in current stage" "Project readiness" "Registry Governance / Readiness" "Registry Runtime Health" "Core API source:" "PITS_SHELL" "PITS Project Workboard" "Read-only functional slice" "Work Item Detail" "Dry-run Action Preview" "No data will be changed" "Requires Stage 2B/2C write boundary"
 check_route "PITS_SHELL_PUBLIC_PRODUCT_UAT_RUNTIME" "$PITS_SHELL_PUBLIC_URL/runtime" "Product Capability / UAT Status" "${product_uat_ui_markers[@]}"
 check_absent_markers "OIS_CONSOLE_PUBLIC_DASHBOARD_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/dashboard" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
+check_absent_markers "OIS_CONSOLE_PUBLIC_PRODUCT_FLOW_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/product-flow" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "PITS_SHELL_PUBLIC_PROJECTS_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/projects" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
+check_absent_markers "PITS_SHELL_PUBLIC_PRODUCT_FLOW_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/product-flow" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 
 if [ -n "$REGISTRY_PRODUCT_ID" ] && [ -n "$REGISTRY_WORKSPACE_ID" ] && [ -n "$REGISTRY_PROJECT_ID" ] && [ -n "$REGISTRY_MODULE_ID" ] && [ -n "$REGISTRY_INSTALLATION_ID" ]; then
   registry_project_base_id="${REGISTRY_PROJECT_ID#prj_}"
