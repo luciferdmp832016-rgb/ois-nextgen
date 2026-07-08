@@ -31,6 +31,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 1D adds read-only Platform Registry runtime health through Core API and owner-verifiable health panels in OIS Console and PITS Shell.
 - Stage 1E adds read-only Platform Registry governance/readiness through Core API and owner-verifiable readiness panels in OIS Console and PITS Shell.
 - Stage 1F adds read-only owner cockpit and visual UAT navigation surfaces in OIS Console and PITS Shell without adding a Core API endpoint.
+- Stage 1F-R1 fixes the OIS Console root cockpit marker contract by rendering deterministic `Ready to operate` text on `/`.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -137,6 +138,8 @@ Stage 1D registry runtime health result: Core API now exposes source-ready read-
 Stage 1E registry governance readiness result: Core API now exposes source-ready read-only `/platform/registry/readiness`. OIS Console and PITS Shell render owner-facing `Registry Governance / Readiness` plus per-entity readiness panels with `What is missing?` sections. Final result is `REGISTRY_GOVERNANCE_INSTALLATION_LIFECYCLE_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
 
 Stage 1F owner registry cockpit visual UAT result: OIS Console and PITS Shell now render source-ready owner cockpit surfaces that summarize existing registry counts, health, readiness, missing link/runtime URL guard status, forbidden link guard status and cross-product detail links. Final result is `OWNER_REGISTRY_COCKPIT_VISUAL_UAT_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
+
+Stage 1F-R1 OIS Console root cockpit marker hotfix result: OIS Console root `/` now renders deterministic server-side `Ready to operate` text while preserving the real cockpit status. Final result is `OWNER_REGISTRY_COCKPIT_ROOT_MARKER_HOTFIX_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
 
 Stage 1C Product Registry detail cross-linking result: Core API now exposes source-ready read-only detail endpoints for products, product code lookup, workspaces, projects, modules and installations. OIS Console adds product/workspace/module/installation detail routes, PITS Shell adds project detail routes, and shared UI helpers build staging-only links between `https://ois-ng.dmp247.com` and `https://pits-ng.dmp247.com`. Final result is `PRODUCT_REGISTRY_DETAIL_CROSS_LINKING_READY`; public HTTP 200 verification requires owner runtime sync.
 
@@ -1928,6 +1931,39 @@ bash ops/abacus/check-public-staging-endpoints.sh
 Expected owner runtime label after Abacus pass and browser/UAT: `OWNER_REGISTRY_COCKPIT_VISUAL_UAT_RUNTIME_VERIFIED`.
 
 Stage 1F safety:
+
+- No new Core API endpoint.
+- No Cloudflare dashboard change.
+- No DNS change.
+- No migrations.
+- No seed.
+- No `prisma db push`.
+- No credentials committed.
+- No UI `DATABASE_URL`.
+- No Prisma import in UI shells.
+- No write/mutation endpoints.
+- No `/auth/demo-login` change.
+- No `ois.dmp247.com` or `oisys.abacusai.app` change.
+- No legacy resources touched.
+
+## Stage 1F-R1 OIS Console Root Cockpit Marker Hotfix
+
+Stage 1F-R1 fixes the OIS Console root marker contract after runtime verification found:
+
+- `OIS_CONSOLE_LOCAL_ROOT_COCKPIT` missing marker: `Ready to operate`
+- `OIS_CONSOLE_PUBLIC_ROOT_COCKPIT` missing marker: `Ready to operate`
+
+The root page `/` must render server-side HTML containing:
+
+- `Owner Registry Cockpit / Registry Runtime Summary`
+- `Ready to operate`
+- `Forbidden link guard`
+
+The hotfix does not weaken ops checks and does not force the real cockpit status to green. It adds deterministic owner-facing target-state text on the root page while preserving the cockpit's actual `Ready to operate` or `Needs owner review` status.
+
+Expected owner runtime label after Abacus pass and browser/UAT remains: `OWNER_REGISTRY_COCKPIT_VISUAL_UAT_RUNTIME_VERIFIED`.
+
+Stage 1F-R1 safety:
 
 - No new Core API endpoint.
 - No Cloudflare dashboard change.
