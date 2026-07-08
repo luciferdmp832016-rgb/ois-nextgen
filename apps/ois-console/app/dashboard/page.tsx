@@ -3,6 +3,7 @@ import { getPlatformRegistrySnapshot } from "@ois/shared-ui";
 import {
   DataBoundaryPanel,
   OisConsoleShell,
+  OwnerRegistryCockpit,
   PageHeading,
   PlatformOverviewCard,
   RegistryGovernancePanel,
@@ -46,6 +47,7 @@ export default async function DashboardPage() {
       <PageHeading eyebrow="Dashboard" title="Platform Overview">
         Administration dashboard for the current staging Platform Kernel baseline.
       </PageHeading>
+      <OwnerRegistryCockpit snapshot={snapshot} />
       <section className="dashboard-grid">
         <PlatformOverviewCard snapshot={snapshot} />
         <ProductModuleOverview snapshot={snapshot} />

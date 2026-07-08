@@ -12,6 +12,7 @@ import {
   DetailSourceMarker,
   DetailStatusPanel,
   OisConsoleShell,
+  OwnerEntityUatSummary,
   PageHeading,
   RegistryHealthItemPanel,
   RegistryReadinessItemPanel,
@@ -48,6 +49,21 @@ export default async function ModuleDetailPage({ params }: ModuleDetailPageProps
 
   const moduleHealth = findRegistryHealthItem(snapshot, "modules", module.id);
   const moduleReadiness = findRegistryReadinessItem(snapshot, "modules", module.id);
+  const ownerLinks = [
+    {
+      href: module.relationships?.product ? `/products/${module.relationships.product.id}` : null,
+      label: `Open product ${module.relationships?.product?.name ?? module.productCode}`,
+      detail: module.productCode
+    },
+    ...(module.relationships?.installations ?? []).slice(0, 3).map((installation) => {
+      const targets = buildCrossProductLinkTargets({ installationId: installation.id, projectId: installation.projectId });
+      return {
+        href: targets.oisInstallation,
+        label: `Open installation ${installation.productCode}`,
+        detail: installation.project?.name ?? installation.projectId
+      };
+    })
+  ];
 
   return (
     <OisConsoleShell active="products" snapshot={snapshot}>
@@ -68,6 +84,17 @@ export default async function ModuleDetailPage({ params }: ModuleDetailPageProps
           ]}
         />
       </section>
+
+      <OwnerEntityUatSummary
+        title="Owner-facing UAT summary"
+        health={moduleHealth}
+        readiness={moduleReadiness}
+        linkedFacts={[
+          `Linked product ${module.relationships?.product?.name ?? module.product?.name ?? module.productCode}`,
+          `${module.relationships?.installations.length ?? 0} installation link(s)`
+        ]}
+        links={ownerLinks}
+      />
 
       <RegistryReadinessItemPanel title="Module Governance / Readiness" item={moduleReadiness} />
 

@@ -1,6 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import {
+  getOwnerForbiddenLinkIssueCount,
+  getOwnerHealthLabel,
+  getOwnerMissingLinkCount,
+  getOwnerReadinessLabel,
+  getReadinessGaps,
   kernelFields,
   type KernelField,
   type PlatformRegistrySnapshot,
@@ -109,6 +114,224 @@ const healthLinkLabels: Record<string, string> = {
   pitsProject: "PITS project",
   productRuntime: "Product runtime"
 };
+
+type OwnerLink = { href: string | null | undefined; label: string; detail?: string | undefined; external?: boolean | undefined };
+
+function OwnerLinkList({ links }: { links: OwnerLink[] }) {
+  const availableLinks = links.filter((link): link is OwnerLink & { href: string } => Boolean(link.href));
+
+  if (availableLinks.length === 0) {
+    return <p className="muted">No owner quick links are available for this project view.</p>;
+  }
+
+  return (
+    <div className="owner-link-list">
+      {availableLinks.map((link) =>
+        link.external ? (
+          <a href={link.href} key={`${link.href}-${link.label}`}>
+            {link.label}
+            {link.detail ? <span>{link.detail}</span> : null}
+          </a>
+        ) : (
+          <Link href={link.href} key={`${link.href}-${link.label}`}>
+            {link.label}
+            {link.detail ? <span>{link.detail}</span> : null}
+          </Link>
+        )
+      )}
+    </div>
+  );
+}
+
+function ownerReadyStatus(readiness: RegistryReadinessItem | null | undefined, health: RegistryHealthItem | null | undefined) {
+  return Boolean(readiness?.status === "READY" && health?.status === "Healthy");
+}
+
+function readinessGapText(readiness: RegistryReadinessItem | null | undefined) {
+  const gaps = getReadinessGaps(readiness);
+  return gaps.length > 0 ? gaps.join(" ") : "No issue detected";
+}
+
+export function PitsRegistryCockpit({ snapshot }: { snapshot: PlatformRegistrySnapshot }) {
+  const healthSummary = snapshot.registryHealthPayload?.summary;
+  const readinessSummary = snapshot.registryReadinessPayload?.summary;
+  const missingLinkCount = getOwnerMissingLinkCount(snapshot);
+  const forbiddenIssueCount = getOwnerForbiddenLinkIssueCount(snapshot);
+  const missingRuntimeUrlCount = healthSummary?.missingUrl ?? 0;
+  const firstProjectReadiness = snapshot.projects[0]
+    ? snapshot.registryReadinessEntities.projects.find((project) => project.id === snapshot.projects[0]?.id)
+    : null;
+  const isReady =
+    Boolean(snapshot.registryHealthPayload && snapshot.registryReadinessPayload) &&
+    (readinessSummary?.blocked ?? 1) === 0 &&
+    (readinessSummary?.incomplete ?? 1) === 0 &&
+    (healthSummary?.degraded ?? 1) === 0 &&
+    missingRuntimeUrlCount === 0 &&
+    missingLinkCount === 0 &&
+    forbiddenIssueCount === 0;
+
+  const quickLinks: OwnerLink[] = [];
+  const firstProject = snapshot.projects[0];
+
+  if (firstProject) {
+    quickLinks.push({ href: `/projects/${firstProject.id}`, label: "Open first PITS project", detail: firstProject.name });
+    quickLinks.push({
+      href: firstProjectReadiness?.links.oisProduct,
+      label: "Open linked OIS product",
+      detail: firstProject.name,
+      external: true
+    });
+    quickLinks.push({
+      href: firstProjectReadiness?.links.oisWorkspace,
+      label: "Open linked OIS workspace",
+      detail: firstProject.workspace?.name ?? firstProject.workspaceId,
+      external: true
+    });
+  }
+
+  return (
+    <section className="panel owner-cockpit" data-owner-cockpit="PITS Registry Cockpit / Project Runtime Summary">
+      <div className="panel-heading">
+        <div>
+          <h3>PITS Registry Cockpit / Project Runtime Summary</h3>
+          <p className="muted">Read-only project cockpit for registry readiness, runtime health and OIS Console cross-links.</p>
+        </div>
+        <StatusBadge ok={isReady} label={isReady ? "Ready to operate" : "Needs owner review"} />
+      </div>
+      <dl className="owner-fact-grid" aria-label="PITS registry counts">
+        <div>
+          <dt>Total projects</dt>
+          <dd>{snapshot.projects.length}</dd>
+        </div>
+        <div>
+          <dt>Total products</dt>
+          <dd>{snapshot.products.length}</dd>
+        </div>
+        <div>
+          <dt>Total workspaces</dt>
+          <dd>{snapshot.workspaces.length}</dd>
+        </div>
+        <div>
+          <dt>Total installations</dt>
+          <dd>{snapshot.installations.length}</dd>
+        </div>
+        <div>
+          <dt>Health summary</dt>
+          <dd>{healthSummary ? `${healthSummary.healthy} healthy / ${healthSummary.degraded} needs review` : "unavailable"}</dd>
+        </div>
+        <div>
+          <dt>Project readiness</dt>
+          <dd>{readinessSummary ? getOwnerReadinessLabel(readinessSummary.status) : "unavailable"}</dd>
+        </div>
+        <div>
+          <dt>Ready / incomplete / blocked</dt>
+          <dd>
+            {readinessSummary
+              ? `${readinessSummary.ready} / ${readinessSummary.incomplete} / ${readinessSummary.blocked}`
+              : "unavailable"}
+          </dd>
+        </div>
+      </dl>
+      <div className="owner-guard-grid" aria-label="PITS readiness guards">
+        <div>
+          <span>Missing link</span>
+          <strong>{missingLinkCount}</strong>
+          <StatusBadge ok={missingLinkCount === 0} label={missingLinkCount === 0 ? "No issue detected" : "Needs owner review"} />
+        </div>
+        <div>
+          <span>Missing runtime URL</span>
+          <strong>{missingRuntimeUrlCount}</strong>
+          <StatusBadge ok={missingRuntimeUrlCount === 0} label={missingRuntimeUrlCount === 0 ? "No issue detected" : "Needs owner review"} />
+        </div>
+        <div>
+          <span>Forbidden link guard</span>
+          <strong>{forbiddenIssueCount}</strong>
+          <StatusBadge ok={forbiddenIssueCount === 0} label={forbiddenIssueCount === 0 ? "No issue detected" : "Blocked"} />
+        </div>
+      </div>
+      <div className="owner-quick-links">
+        <h4>Quick project links</h4>
+        <OwnerLinkList links={quickLinks} />
+      </div>
+    </section>
+  );
+}
+
+export function ProjectCardUatSummary({
+  health,
+  readiness,
+  linkedLabel
+}: {
+  health: RegistryHealthItem | null;
+  readiness: RegistryReadinessItem | null;
+  linkedLabel: string;
+}) {
+  const oisProductLink = readiness?.links.oisProduct ?? health?.links.oisProduct;
+  const oisWorkspaceLink = readiness?.links.oisWorkspace ?? health?.links.oisWorkspace;
+
+  return (
+    <div className="owner-card-summary">
+      <div className="badge-row">
+        <StatusBadge ok={health?.status === "Healthy"} label={`Runtime health: ${getOwnerHealthLabel(health?.status)}`} />
+        <StatusBadge ok={readiness?.status === "READY"} label={`Project readiness: ${getOwnerReadinessLabel(readiness?.status)}`} />
+      </div>
+      <p className="owner-relationship-line">{linkedLabel}</p>
+      <p className="muted">What is missing? {readinessGapText(readiness)}</p>
+      <div className="owner-inline-links">
+        {oisProductLink ? <a href={oisProductLink}>OIS product link</a> : null}
+        {oisWorkspaceLink ? <a href={oisWorkspaceLink}>OIS workspace link</a> : null}
+      </div>
+    </div>
+  );
+}
+
+export function PitsOwnerEntityUatSummary({
+  title,
+  health,
+  readiness,
+  linkedFacts,
+  links
+}: {
+  title: string;
+  health: RegistryHealthItem | null;
+  readiness: RegistryReadinessItem | null;
+  linkedFacts: string[];
+  links: OwnerLink[];
+}) {
+  return (
+    <section className="panel owner-uat-summary" data-owner-uat={title}>
+      <div className="panel-heading">
+        <div>
+          <h3>{title}</h3>
+          <p className="muted">Owner-friendly project readiness and health answer for browser UAT.</p>
+        </div>
+        <StatusBadge ok={ownerReadyStatus(readiness, health)} label={ownerReadyStatus(readiness, health) ? "Ready to operate" : "Needs owner review"} />
+      </div>
+      <dl className="facts">
+        <div>
+          <dt>Runtime health</dt>
+          <dd>{getOwnerHealthLabel(health?.status)}</dd>
+        </div>
+        <div>
+          <dt>Project readiness</dt>
+          <dd>{getOwnerReadinessLabel(readiness?.status)}</dd>
+        </div>
+        <div>
+          <dt>What is missing?</dt>
+          <dd>{readinessGapText(readiness)}</dd>
+        </div>
+        <div>
+          <dt>Linked registry</dt>
+          <dd>{linkedFacts.length > 0 ? linkedFacts.join("; ") : "No linked registry relationship returned"}</dd>
+        </div>
+      </dl>
+      <div className="owner-quick-links">
+        <h4>Owner UAT links</h4>
+        <OwnerLinkList links={links} />
+      </div>
+    </section>
+  );
+}
 
 function HealthCheckList({ item }: { item: RegistryHealthItem }) {
   return (
@@ -391,6 +614,13 @@ export function ProjectSelector({ snapshot }: { snapshot: PlatformRegistrySnapsh
               <p className="muted">
                 {project.organization?.name ?? "Unknown organization"} / {project.workspace?.name ?? "Unknown workspace"}
               </p>
+              <ProjectCardUatSummary
+                health={snapshot.registryHealthEntities.projects.find((item) => item.id === project.id) ?? null}
+                readiness={snapshot.registryReadinessEntities.projects.find((item) => item.id === project.id) ?? null}
+                linkedLabel={`Linked product(s): ${project.installations.length}; linked workspace: ${
+                  project.workspace?.name ?? project.workspaceId
+                }`}
+              />
               <strong>{project.installations.length} installation(s)</strong>
             </article>
           ))

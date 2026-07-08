@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { getPlatformRegistrySnapshot } from "@ois/shared-ui";
+import { findRegistryHealthItem, findRegistryReadinessItem, getPlatformRegistrySnapshot } from "@ois/shared-ui";
 import {
   CountGrid,
   DataBoundaryPanel,
   OisConsoleShell,
+  OwnerRegistryCockpit,
   PageHeading,
+  RegistryCardUatSummary,
   RegistryGovernancePanel,
   RegistryHealthPanel,
   RegistryStatusPanel,
@@ -21,6 +23,7 @@ export default async function WorkspacesPage() {
       <PageHeading eyebrow="Workspace Control" title="Organizations, Workspaces & Projects">
         Tenant-scoped navigation baseline for the seeded staging organization.
       </PageHeading>
+      <OwnerRegistryCockpit snapshot={snapshot} />
       <section className="panel">
         <div className="panel-heading">
           <div>
@@ -49,6 +52,11 @@ export default async function WorkspacesPage() {
             <p className="muted">
               {workspace.projects.length} project(s), {workspace.installations.length} installation(s).
             </p>
+            <RegistryCardUatSummary
+              health={findRegistryHealthItem(snapshot, "workspaces", workspace.id)}
+              readiness={findRegistryReadinessItem(snapshot, "workspaces", workspace.id)}
+              linkedLabel={`${workspace.projects.length} linked project(s), ${workspace.installations.length} installation link(s)`}
+            />
             <strong>{workspace.lifecycle}</strong>
           </article>
         ))}
@@ -69,6 +77,11 @@ export default async function WorkspacesPage() {
               <p className="muted">
                 {project.installations.length} installation(s) in {project.organization?.name ?? "unknown organization"}.
               </p>
+              <RegistryCardUatSummary
+                health={findRegistryHealthItem(snapshot, "projects", project.id)}
+                readiness={findRegistryReadinessItem(snapshot, "projects", project.id)}
+                linkedLabel={`Linked workspace ${project.workspace?.name ?? project.workspaceId}; ${project.installations.length} installation link(s)`}
+              />
               <strong>{project.lifecycle}</strong>
             </article>
           ))

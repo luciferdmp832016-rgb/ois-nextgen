@@ -422,6 +422,10 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("PITS Shell");
     expect(html).toContain("PITS_SHELL");
     expect(html).toContain("Project Runtime Overview");
+    expect(html).toContain("PITS Registry Cockpit / Project Runtime Summary");
+    expect(html).toContain("Project readiness");
+    expect(html).toContain("Forbidden link guard");
+    expect(html).toContain("No issue detected");
     expect(html).toContain("Project Selector");
     expect(html).toContain("Registry Governance / Readiness");
     expect(html).toContain("Registry Runtime Health");
@@ -454,6 +458,9 @@ describe("PITS Shell product shell", () => {
       ProjectsPage,
       [
         "Project Selector",
+        "PITS Registry Cockpit / Project Runtime Summary",
+        "Project readiness",
+        "Runtime health:",
         "Registry Governance / Readiness",
         "Registry Runtime Health",
         "EMERALD_PRECINCT_DEMO",
@@ -464,7 +471,15 @@ describe("PITS Shell product shell", () => {
     [
       "runtime",
       RuntimePage,
-      ["Runtime Status", "Health ready", "Registry Governance / Readiness", "Registry Runtime Health", "Project Installation Registry"]
+      [
+        "Runtime Status",
+        "PITS Registry Cockpit / Project Runtime Summary",
+        "Project readiness",
+        "Health ready",
+        "Registry Governance / Readiness",
+        "Registry Runtime Health",
+        "Project Installation Registry"
+      ]
     ]
   ] satisfies Array<[string, RouteComponent, string[]]>)("renders the %s route shell", async (_name, Component, markers) => {
     mockCoreApiFetch();
@@ -494,6 +509,9 @@ describe("PITS Shell product shell", () => {
     const html = renderToStaticMarkup(await ProjectDetailPage({ params: Promise.resolve({ id: "prj_emerald_precinct_demo" }) }));
 
     expect(html).toContain("Project Detail Source");
+    expect(html).toContain("Owner-facing project UAT summary");
+    expect(html).toContain("Project readiness");
+    expect(html).toContain("No issue detected");
     expect(html).toContain("Project Governance / Readiness");
     expect(html).toContain("What is missing?");
     expect(html).toContain("Project Runtime Health");

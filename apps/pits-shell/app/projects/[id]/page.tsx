@@ -12,6 +12,7 @@ import {
   DetailSourceMarker,
   DetailStatusPanel,
   PageHeading,
+  PitsOwnerEntityUatSummary,
   PitsShell,
   RegistryHealthItemPanel,
   RegistryReadinessItemPanel,
@@ -49,6 +50,16 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
 
   const projectHealth = findRegistryHealthItem(snapshot, "projects", project.id);
   const projectReadiness = findRegistryReadinessItem(snapshot, "projects", project.id);
+  const installations = project.relationships?.installations ?? project.installations;
+  const products = project.relationships?.products ?? [];
+  const modules = project.relationships?.modules ?? [];
+  const firstInstallation = installations[0];
+  const firstProduct = firstInstallation ? products.find((item) => item.code === firstInstallation.productCode) : null;
+  const targets = buildCrossProductLinkTargets({
+    productId: firstInstallation?.productId ?? firstProduct?.id,
+    workspaceId: project.workspaceId,
+    projectId: project.id
+  });
 
   return (
     <PitsShell active="projects" snapshot={snapshot}>
@@ -65,10 +76,36 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
             ["Organization", project.organization?.name],
             ["Lifecycle", project.lifecycle],
             ["Version", project.version],
-            ["Installations", project.relationships?.installations.length ?? project.installations.length]
+            ["Installations", installations.length]
           ]}
         />
       </section>
+
+      <PitsOwnerEntityUatSummary
+        title="Owner-facing project UAT summary"
+        health={projectHealth}
+        readiness={projectReadiness}
+        linkedFacts={[
+          `Linked product(s): ${products.length}`,
+          `Linked workspace ${project.workspace?.name ?? project.workspaceId}`,
+          `${installations.length} installation link(s)`,
+          `${modules.length} module link(s)`
+        ]}
+        links={[
+          {
+            href: targets.oisProduct,
+            label: `Open OIS product ${firstInstallation?.productName ?? firstInstallation?.productCode ?? "product"}`,
+            detail: firstInstallation?.productCode,
+            external: true
+          },
+          {
+            href: targets.oisWorkspace,
+            label: `Open OIS workspace ${project.workspace?.name ?? project.workspaceId}`,
+            detail: "Cross-product staging link",
+            external: true
+          }
+        ]}
+      />
 
       <RegistryReadinessItemPanel title="Project Governance / Readiness" item={projectReadiness} />
 
@@ -77,7 +114,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
       <RelatedLinksPanel
         title="Related OIS Console Links"
         description="Cross-product links use staging public base URLs and never legacy production domains."
-        links={(project.relationships?.installations ?? project.installations).flatMap((installation) => {
+        links={installations.flatMap((installation) => {
           const product = project.relationships?.products.find((item) => item.code === installation.productCode);
           const targets = buildCrossProductLinkTargets({
             productId: installation.productId ?? product?.id,
@@ -103,8 +140,8 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
       />
 
       <section className="project-grid" aria-label="Project modules">
-        {(project.relationships?.modules ?? []).length > 0 ? (
-          (project.relationships?.modules ?? []).map((module) => (
+        {modules.length > 0 ? (
+          modules.map((module) => (
             <article className="project-card" key={module.id}>
               <span className="eyebrow">{module.productCode}</span>
               <h3>{module.code}</h3>

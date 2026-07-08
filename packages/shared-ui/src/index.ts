@@ -694,3 +694,73 @@ export function findRegistryReadinessItem(
 ) {
   return snapshot.registryReadinessEntities[collection].find((item) => item.id === id) ?? null;
 }
+
+export const registryEntityCollections = ["products", "workspaces", "projects", "modules", "installations"] as const;
+
+export function getOwnerReadinessLabel(status: RegistryReadinessStatus | null | undefined) {
+  const labels: Record<RegistryReadinessStatus, string> = {
+    READY: "Ready to operate",
+    INCOMPLETE: "Needs owner review",
+    BLOCKED: "Blocked",
+    NOT_APPLICABLE: "Not applicable",
+    UNKNOWN: "Needs owner review"
+  };
+
+  return status ? labels[status] : "Needs owner review";
+}
+
+export function getOwnerHealthLabel(status: RegistryHealthItem["status"] | RegistryHealthStatus | null | undefined) {
+  if (!status) {
+    return "Needs owner review";
+  }
+
+  if (status === "Healthy" || status === "Configured" || status === "Linked" || status === "Reachable") {
+    return "No issue detected";
+  }
+
+  if (status === "Not applicable") {
+    return "Not applicable";
+  }
+
+  if (status === "Missing URL") {
+    return "Missing runtime URL";
+  }
+
+  return "Needs owner review";
+}
+
+export function getReadinessGaps(item: RegistryReadinessItem | null | undefined) {
+  return item ? [...item.blockedReasons, ...item.missing] : [];
+}
+
+export function getAllRegistryReadinessItems(snapshot: PlatformRegistrySnapshot) {
+  return registryEntityCollections.flatMap((collection) => snapshot.registryReadinessEntities[collection]);
+}
+
+function readinessCheckText(check: RegistryReadinessCheck) {
+  return [check.dimension, check.label, check.reason, check.ownerAction ?? ""].join(" ").toLowerCase();
+}
+
+export function getOwnerMissingLinkCount(snapshot: PlatformRegistrySnapshot) {
+  const items = getAllRegistryReadinessItems(snapshot);
+  const failedLinkChecks = items
+    .flatMap((item) => item.checks)
+    .filter((check) => !check.ok && readinessCheckText(check).includes("link")).length;
+  const missingLinkGaps = items
+    .flatMap((item) => [...item.missing, ...item.blockedReasons])
+    .filter((gap) => {
+      const text = gap.toLowerCase();
+      return text.includes("link") || text.includes("linked");
+    }).length;
+
+  return failedLinkChecks + missingLinkGaps;
+}
+
+export function getOwnerForbiddenLinkIssueCount(snapshot: PlatformRegistrySnapshot) {
+  return getAllRegistryReadinessItems(snapshot)
+    .flatMap((item) => item.checks)
+    .filter((check) => {
+      const text = readinessCheckText(check);
+      return !check.ok && (text.includes("forbidden") || text.includes("legacy") || text.includes("localhost"));
+    }).length;
+}
