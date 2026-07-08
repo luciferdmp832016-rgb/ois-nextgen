@@ -24,8 +24,8 @@ bash ops/abacus/status.sh
 | `install-ui-shell-systemd-services.sh` | Installs and starts durable systemd services for OIS Console and PITS Shell public staging shells. | Yes, UI systemd units only. |
 | `uninstall-ui-shell-systemd-services.sh` | Stops, disables and removes only the OIS Console/PITS Shell public staging systemd units. Requires `--confirm`. | Yes, UI systemd units only. |
 | `restart-public-staging-runtime.sh` | Restarts Core API, stops OIS/PITS UI services, stops legacy temporary UI demo processes, removes only orphan listeners on `3000/tcp` and `3001/tcp`, starts UI services, then verifies local/public staging endpoints. Does not restart `cloudflared` unless `--include-cloudflared` is passed. | Yes, service restart and UI port cleanup only. |
-| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs, public staging URLs, Stage 1B registry endpoints, Stage 1C registry detail routes, Stage 1D health markers, Stage 1E readiness markers, Stage 1F cockpit/UAT markers and Stage 1G shell markers. | No. Read-only. |
-| `check-public-staging-endpoints.sh` | Checks public Core API, registry, registry health, registry readiness, OIS and PITS staging endpoints for HTTP 200, product markers, Core API URL, seeded counts, Stage 1F cockpit/UAT markers, Stage 1G shell markers and forbidden localhost/legacy links on Stage 1D/1E/1F surfaces. | No. Read-only. |
+| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs, public staging URLs, Stage 1B registry endpoints, Stage 1C registry detail routes, Stage 1D health markers, Stage 1E readiness markers, Stage 1F cockpit/UAT markers, Stage 1G shell markers and Stage 1H owner-first design markers. | No. Read-only. |
+| `check-public-staging-endpoints.sh` | Checks public Core API, registry, registry health, registry readiness, OIS and PITS staging endpoints for HTTP 200, product markers, Core API URL, seeded counts, Stage 1F cockpit/UAT markers, Stage 1G shell markers, Stage 1H owner-first design markers and forbidden localhost/legacy links on Stage 1D/1E/1F surfaces. | No. Read-only. |
 | `verify-ui-route-manifests.sh` | Checks production `.next` route manifests and server entries for every Stage 1A route plus Stage 1C dynamic detail routes. | No. Read-only build artifact check. |
 | `enable-product-subdomain-demo-routes.sh` | Adds a dedicated nginx host-routing config for `ois-ng.dmp247.com` -> port 3000 and `pits-ng.dmp247.com` -> port 3001. | Yes, nginx config only. |
 | `status-product-subdomain-demo-routes.sh` | Checks local Host-header product subdomain routing and optional public DNS/TLS routes. | No. Read-only. |
@@ -371,6 +371,21 @@ Stage 1G modern responsive shell layout checks:
 - `status-public-staging-runtime.sh` checks local and public shell markers; `check-public-staging-endpoints.sh` checks public shell markers.
 
 Verify Stage 1G after source sync:
+
+```sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
+Stage 1H owner-first information architecture and visual design system checks:
+
+- No Core API endpoint is added; the UI reuses existing registry, health and readiness data.
+- OIS Console and PITS Shell roots render `Owner-first Design System`, `Visual Hierarchy Standard` and `Owner-friendly Status Badges`.
+- Status labels use owner-operable language such as `Ready`, `Ready to operate`, `Needs owner review`, `Incomplete`, `Blocked`, `Healthy`, `No issue detected`, `Missing link` and `Missing runtime URL`.
+- Empty/fallback states avoid secrets, environment values, stack traces and internal paths while preserving read-only ops markers.
+- `status-public-staging-runtime.sh` checks local and public design markers; `check-public-staging-endpoints.sh` checks public design markers.
+
+Verify Stage 1H after source sync:
 
 ```sh
 bash ops/abacus/status-public-staging-runtime.sh

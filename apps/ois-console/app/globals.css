@@ -10,6 +10,7 @@
   --blue: #2563eb;
   --green: #0f766e;
   --amber: #b45309;
+  --red: #b91c1c;
 }
 
 * {
@@ -336,18 +337,38 @@ p {
 }
 
 .page-heading {
+  border-left: 4px solid var(--blue);
+  display: grid;
+  gap: 10px;
   padding: 18px;
 }
 
 .page-heading h2 {
-  margin-bottom: 8px;
   font-size: 28px;
   line-height: 1.15;
+  margin: 0;
 }
 
 .page-heading p,
 .panel p {
   margin-bottom: 0;
+}
+
+.owner-page-cues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.owner-page-cues span {
+  background: #eef2f5;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: #344554;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  padding: 6px 8px;
 }
 
 .dashboard-grid,
@@ -454,7 +475,11 @@ p {
   padding: 7px 10px;
   font-size: 13px;
   font-weight: 700;
-  white-space: nowrap;
+  line-height: 1.2;
+  max-width: 100%;
+  min-height: 30px;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .pill,
@@ -466,6 +491,11 @@ p {
 .status-warn {
   background: #fef3c7;
   color: var(--amber);
+}
+
+.status-critical {
+  background: #fee2e2;
+  color: var(--red);
 }
 
 .status-neutral {
@@ -580,7 +610,9 @@ p {
   display: inline-grid;
   font-weight: 800;
   gap: 3px;
+  min-width: 0;
   padding: 9px 10px;
+  overflow-wrap: anywhere;
 }
 
 .owner-link-list span {
@@ -603,6 +635,14 @@ p {
 
 .owner-relationship-line {
   color: var(--green);
+  font-weight: 800;
+}
+
+.owner-empty-state {
+  border-style: dashed;
+}
+
+.owner-safe-note {
   font-weight: 800;
 }
 
@@ -777,6 +817,18 @@ input {
   .product-header,
   .panel-heading {
     display: grid;
+  }
+
+  .status,
+  .pill {
+    justify-content: flex-start;
+    width: fit-content;
+  }
+
+  .owner-page-cues,
+  .owner-link-list {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .facts div {

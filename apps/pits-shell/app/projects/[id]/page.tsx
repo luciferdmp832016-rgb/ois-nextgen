@@ -41,7 +41,7 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
         <DetailSourceMarker label="Project Detail Source" />
         <section className="dashboard-grid">
           <DetailStatusPanel detail={detail} label="Project Detail" />
-          <DetailFallbackPanel title="Project not linked yet" message={detail.errorMessage ?? "Core API returned no project detail."} />
+          <DetailFallbackPanel title="Project not linked yet" message={detail.errorMessage ?? "No project detail is available in the current registry view."} />
           <DataBoundaryPanel />
         </section>
       </PitsShell>
@@ -152,10 +152,11 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
             </article>
           ))
         ) : (
-          <article className="project-card">
-            <span className="eyebrow">Not linked yet</span>
+          <article className="project-card owner-empty-state" data-owner-empty-state="Owner-safe empty state">
+            <span className="eyebrow">Missing link</span>
             <h3>No modules returned</h3>
-            <p className="muted">Core API returned no module relationship for this project.</p>
+            <p className="muted">This project has no module relationship in the current registry payload.</p>
+            <p className="muted owner-safe-note">Safe empty state: only registry-safe summary copy is shown.</p>
           </article>
         )}
       </section>

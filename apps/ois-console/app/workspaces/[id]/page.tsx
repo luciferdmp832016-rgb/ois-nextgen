@@ -41,7 +41,7 @@ export default async function WorkspaceDetailPage({ params }: WorkspaceDetailPag
         <DetailSourceMarker label="Workspace Detail Source" />
         <section className="dashboard-grid">
           <DetailStatusPanel detail={detail} label="Workspace Detail" />
-          <DetailFallbackPanel title="Workspace not linked yet" message={detail.errorMessage ?? "Core API returned no workspace detail."} />
+          <DetailFallbackPanel title="Workspace not linked yet" message={detail.errorMessage ?? "No workspace detail is available in the current registry view."} />
           <DataBoundaryPanel />
         </section>
       </OisConsoleShell>
@@ -114,10 +114,11 @@ export default async function WorkspaceDetailPage({ params }: WorkspaceDetailPag
             </article>
           ))
         ) : (
-          <article className="panel compact-panel">
-            <span className="eyebrow">Not linked yet</span>
+          <article className="panel compact-panel owner-empty-state" data-owner-empty-state="Owner-safe empty state">
+            <span className="eyebrow">Missing link</span>
             <h3>No products returned</h3>
             <p className="muted">This workspace has no product relationship in the current registry payload.</p>
+            <p className="muted owner-safe-note">Safe empty state: only registry-safe summary copy is shown.</p>
           </article>
         )}
       </section>

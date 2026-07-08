@@ -41,7 +41,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         <DetailSourceMarker label="Product Detail Source" />
         <section className="dashboard-grid">
           <DetailStatusPanel detail={detail} label="Product Detail" />
-          <DetailFallbackPanel title="Product not linked yet" message={detail.errorMessage ?? "Core API returned no product detail."} />
+          <DetailFallbackPanel title="Product not linked yet" message={detail.errorMessage ?? "No product detail is available in the current registry view."} />
           <DataBoundaryPanel />
         </section>
       </OisConsoleShell>

@@ -59,10 +59,11 @@ export default async function ProductsPage() {
             );
           })
         ) : (
-          <article className="panel compact-panel">
-            <span className="eyebrow">Registry fallback</span>
+          <article className="panel compact-panel owner-empty-state" data-owner-empty-state="Owner-safe empty state">
+            <span className="eyebrow">Needs owner review</span>
             <h3>No products returned</h3>
-            <p className="muted">Core API returned an empty product registry array.</p>
+            <p className="muted">No products are available in this registry view. Confirm registry data after owner runtime sync.</p>
+            <p className="muted owner-safe-note">Safe empty state: only registry-safe summary copy is shown.</p>
           </article>
         )}
       </section>
@@ -86,10 +87,11 @@ export default async function ProductsPage() {
             </article>
           ))
         ) : (
-          <article className="panel compact-panel">
-            <span className="eyebrow">Registry fallback</span>
+          <article className="panel compact-panel owner-empty-state" data-owner-empty-state="Owner-safe empty state">
+            <span className="eyebrow">Needs owner review</span>
             <h3>No modules returned</h3>
-            <p className="muted">Core API returned an empty module registry array.</p>
+            <p className="muted">No modules are available in this registry view. Confirm registry data after owner runtime sync.</p>
+            <p className="muted owner-safe-note">Safe empty state: only registry-safe summary copy is shown.</p>
           </article>
         )}
       </section>

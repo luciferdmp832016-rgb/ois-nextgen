@@ -51,7 +51,7 @@ export function PitsShell({
       active={active}
       coreApiUrl={snapshot.coreApiUrl}
       demoBanner={snapshot.overviewBanner}
-      healthLabel={healthOk ? "Core API healthy" : "Core API unavailable"}
+      healthLabel={healthOk ? "Core API healthy" : "Needs owner review"}
       healthOk={healthOk}
       navAriaLabel="PITS Shell navigation"
       navItems={navItems}
@@ -66,16 +66,57 @@ export function PitsShell({
 
 export function PageHeading({ title, eyebrow, children }: { title: string; eyebrow: string; children?: ReactNode }) {
   return (
-    <section className="page-heading">
+    <section
+      className="page-heading"
+      data-owner-design-system="Owner-first Design System"
+      data-visual-hierarchy="Visual Hierarchy Standard"
+    >
       <span className="eyebrow">{eyebrow}</span>
       <h2>{title}</h2>
       {children ? <p>{children}</p> : null}
+      <div className="owner-page-cues" aria-label="Owner page cues">
+        <span>What this is</span>
+        <span>Health</span>
+        <span>Readiness</span>
+        <span>Missing</span>
+        <span>Next</span>
+      </div>
     </section>
   );
 }
 
+function ownerStatusTone(ok: boolean, label: string) {
+  const normalized = label.toLowerCase();
+
+  if (normalized.includes("blocked")) {
+    return "status-critical";
+  }
+
+  if (normalized.includes("not applicable")) {
+    return "status-neutral";
+  }
+
+  if (
+    ok ||
+    normalized.includes("ready") ||
+    normalized.includes("healthy") ||
+    normalized.includes("no issue detected") ||
+    normalized.includes("detail ready") ||
+    normalized.includes("overview ready") ||
+    normalized.includes("registry ready")
+  ) {
+    return "status-ok";
+  }
+
+  return "status-warn";
+}
+
 export function StatusBadge({ ok, label }: { ok: boolean; label: string }) {
-  return <span className={ok ? "status status-ok" : "status status-warn"}>{label}</span>;
+  return (
+    <span className={`status ${ownerStatusTone(ok, label)}`} data-owner-status="Owner-friendly Status Badges">
+      {label}
+    </span>
+  );
 }
 
 function HealthBadge({ status }: { status: RegistryHealthStatus }) {
@@ -86,7 +127,11 @@ function HealthBadge({ status }: { status: RegistryHealthStatus }) {
         ? "status status-neutral"
         : "status status-warn";
 
-  return <span className={className}>{status}</span>;
+  return (
+    <span className={className} data-owner-status="Owner-friendly Status Badges">
+      {status}
+    </span>
+  );
 }
 
 function HealthBadgeRow({ badges }: { badges: RegistryHealthStatus[] }) {
@@ -188,7 +233,7 @@ export function PitsRegistryCockpit({ snapshot }: { snapshot: PlatformRegistrySn
       <div className="panel-heading">
         <div>
           <h3>PITS Registry Cockpit / Project Runtime Summary</h3>
-          <p className="muted">Read-only project cockpit for registry readiness, runtime health and OIS Console cross-links.</p>
+          <p className="muted">Read-only project cockpit showing what is ready, what needs owner review, what is missing and the next detail link to open.</p>
         </div>
         <StatusBadge ok={isReady} label={isReady ? "Ready to operate" : "Needs owner review"} />
       </div>
@@ -211,19 +256,15 @@ export function PitsRegistryCockpit({ snapshot }: { snapshot: PlatformRegistrySn
         </div>
         <div>
           <dt>Health summary</dt>
-          <dd>{healthSummary ? `${healthSummary.healthy} healthy / ${healthSummary.degraded} needs review` : "unavailable"}</dd>
+          <dd>{healthSummary ? `${healthSummary.healthy} healthy / ${healthSummary.degraded} needs review` : "Needs owner review"}</dd>
         </div>
         <div>
           <dt>Project readiness</dt>
-          <dd>{readinessSummary ? getOwnerReadinessLabel(readinessSummary.status) : "unavailable"}</dd>
+          <dd>{readinessSummary ? getOwnerReadinessLabel(readinessSummary.status) : "Incomplete"}</dd>
         </div>
         <div>
           <dt>Ready / incomplete / blocked</dt>
-          <dd>
-            {readinessSummary
-              ? `${readinessSummary.ready} / ${readinessSummary.incomplete} / ${readinessSummary.blocked}`
-              : "unavailable"}
-          </dd>
+          <dd>{readinessSummary ? `${readinessSummary.ready} / ${readinessSummary.incomplete} / ${readinessSummary.blocked}` : "Incomplete"}</dd>
         </div>
       </dl>
       <div className="owner-guard-grid" aria-label="PITS readiness guards">
@@ -316,7 +357,7 @@ export function PitsOwnerEntityUatSummary({
         </div>
         <div>
           <dt>Linked registry</dt>
-          <dd>{linkedFacts.length > 0 ? linkedFacts.join("; ") : "No linked registry relationship returned"}</dd>
+          <dd>{linkedFacts.length > 0 ? linkedFacts.join("; ") : "Missing link"}</dd>
         </div>
       </dl>
       <div className="owner-quick-links">
@@ -374,7 +415,7 @@ export function RegistryHealthPanel({ snapshot }: { snapshot: PlatformRegistrySn
         </div>
         <StatusBadge
           ok={Boolean(payload && summary?.status === "Healthy")}
-          label={payload ? `Registry health ${summary?.status}` : "Registry health unavailable"}
+          label={payload ? `Registry health ${summary?.status}` : "Needs owner review"}
         />
       </div>
       {payload ? (
@@ -412,7 +453,7 @@ export function RegistryHealthPanel({ snapshot }: { snapshot: PlatformRegistrySn
           <p className="muted health-note">{payload.runtime.note}</p>
         </>
       ) : (
-        <p className="muted">{snapshot.registryHealth.status ?? snapshot.registryHealth.error ?? "Health endpoint unavailable"}.</p>
+        <p className="muted">Health needs owner review. Registry-safe summary copy is shown.</p>
       )}
     </section>
   );
@@ -426,7 +467,7 @@ export function RegistryHealthItemPanel({ title, item }: { title: string; item: 
           <h3>{title}</h3>
           <p className="muted">Workspace, product, installation, OIS link and Core API source checks for this project.</p>
         </div>
-        {item ? <HealthBadge status={item.status} /> : <StatusBadge ok={false} label="Health unavailable" />}
+        {item ? <HealthBadge status={item.status} /> : <StatusBadge ok={false} label="Needs owner review" />}
       </div>
       {item ? (
         <>
@@ -435,7 +476,7 @@ export function RegistryHealthItemPanel({ title, item }: { title: string; item: 
           <HealthLinks item={item} />
         </>
       ) : (
-        <p className="muted">Core API did not return a health item for this project.</p>
+        <p className="muted">No health item is available for this project. Review the registry sync before runtime closure.</p>
       )}
     </section>
   );
@@ -456,7 +497,11 @@ function readinessLabel(status: RegistryReadinessStatus) {
 function ReadinessBadge({ status }: { status: RegistryReadinessStatus }) {
   const className = status === "READY" ? "status status-ok" : status === "NOT_APPLICABLE" ? "status status-neutral" : "status status-warn";
 
-  return <span className={className}>{readinessLabel(status)}</span>;
+  return (
+    <span className={className} data-owner-status="Owner-friendly Status Badges">
+      {readinessLabel(status)}
+    </span>
+  );
 }
 
 function ReadinessBadgeRow({ badges }: { badges: RegistryReadinessStatus[] }) {
@@ -525,7 +570,7 @@ export function RegistryGovernancePanel({ snapshot }: { snapshot: PlatformRegist
           <h3>Registry Governance / Readiness</h3>
           <p className="muted">Project readiness from Core API /platform/registry/readiness.</p>
         </div>
-        {summary ? <ReadinessBadge status={summary.status} /> : <StatusBadge ok={false} label="Readiness unavailable" />}
+        {summary ? <ReadinessBadge status={summary.status} /> : <StatusBadge ok={false} label="Needs owner review" />}
       </div>
       {payload ? (
         <>
@@ -558,7 +603,7 @@ export function RegistryGovernancePanel({ snapshot }: { snapshot: PlatformRegist
           <p className="muted health-note">{payload.runtime.note}</p>
         </>
       ) : (
-        <p className="muted">{snapshot.registryReadiness.status ?? snapshot.registryReadiness.error ?? "Readiness endpoint unavailable"}.</p>
+        <p className="muted">Readiness is incomplete. Registry-safe summary copy is shown.</p>
       )}
     </section>
   );
@@ -572,7 +617,7 @@ export function RegistryReadinessItemPanel({ title, item }: { title: string; ite
           <h3>{title}</h3>
           <p className="muted">Readiness shows whether this project can operate from the registry perspective.</p>
         </div>
-        {item ? <ReadinessBadge status={item.status} /> : <StatusBadge ok={false} label="Readiness unavailable" />}
+        {item ? <ReadinessBadge status={item.status} /> : <StatusBadge ok={false} label="Incomplete" />}
       </div>
       {item ? (
         <>
@@ -581,7 +626,7 @@ export function RegistryReadinessItemPanel({ title, item }: { title: string; ite
           <ReadinessCheckList item={item} />
         </>
       ) : (
-        <p className="muted">Core API did not return a readiness item for this project.</p>
+        <p className="muted">No readiness item is available for this project. Review the registry sync before runtime closure.</p>
       )}
     </section>
   );
@@ -619,10 +664,11 @@ export function ProjectSelector({ snapshot }: { snapshot: PlatformRegistrySnapsh
             </article>
           ))
         ) : (
-          <article className="project-card">
-            <span className="eyebrow">Registry fallback</span>
+          <article className="project-card owner-empty-state" data-owner-empty-state="Owner-safe empty state">
+            <span className="eyebrow">Needs owner review</span>
             <h3>No projects returned</h3>
-            <p className="muted">Core API returned an empty project registry array.</p>
+            <p className="muted">No projects are available in this registry view. Confirm registry data after owner runtime sync.</p>
+            <p className="muted owner-safe-note">Safe empty state: only registry-safe summary copy is shown.</p>
             <strong>Read-only</strong>
           </article>
         )}
@@ -641,7 +687,7 @@ export function RuntimeStatusCard({ snapshot }: { snapshot: PlatformSnapshot }) 
         </div>
         <StatusBadge
           ok={snapshot.health.ok && snapshot.healthStatus === "ok"}
-          label={snapshot.health.ok ? "Health ready" : "Health unavailable"}
+          label={snapshot.health.ok ? "Health ready" : "Needs owner review"}
         />
       </div>
       <dl className="facts">
@@ -659,7 +705,7 @@ export function RuntimeStatusCard({ snapshot }: { snapshot: PlatformSnapshot }) 
         </div>
         <div>
           <dt>HTTP</dt>
-          <dd>{snapshot.health.status ?? snapshot.health.error ?? "unavailable"}</dd>
+          <dd>{snapshot.health.status ?? snapshot.health.error ?? "Needs owner review"}</dd>
         </div>
         <div>
           <dt>Core API</dt>
@@ -704,10 +750,11 @@ export function InstallationRegistryPanel({ snapshot }: { snapshot: PlatformRegi
             </article>
           ))
         ) : (
-          <article className="project-card">
-            <span className="eyebrow">Registry fallback</span>
+          <article className="project-card owner-empty-state" data-owner-empty-state="Owner-safe empty state">
+            <span className="eyebrow">Needs owner review</span>
             <h3>No installations returned</h3>
-            <p className="muted">Core API returned an empty installation registry array.</p>
+            <p className="muted">No installations are available in this registry view. Confirm registry data after owner runtime sync.</p>
+            <p className="muted owner-safe-note">Safe empty state: only registry-safe summary copy is shown.</p>
             <strong>Read-only</strong>
           </article>
         )}
@@ -724,12 +771,12 @@ export function DetailStatusPanel<T>({ detail, label }: { detail: RegistryDetail
           <h3>{label} Source</h3>
           <p className="muted">Read-only detail data from Core API.</p>
         </div>
-        <StatusBadge ok={detail.detail.ok} label={detail.detail.ok ? "Detail ready" : detail.notFound ? "Not found" : "Detail fallback"} />
+        <StatusBadge ok={detail.detail.ok} label={detail.detail.ok ? "Detail ready" : detail.notFound ? "Missing link" : "Needs owner review"} />
       </div>
       <dl className="facts">
         <div>
           <dt>Source</dt>
-          <dd>{detail.metadata?.source ?? "unavailable"}</dd>
+          <dd>{detail.metadata?.source ?? "Needs owner review"}</dd>
         </div>
         <div>
           <dt>Mode</dt>
@@ -737,7 +784,7 @@ export function DetailStatusPanel<T>({ detail, label }: { detail: RegistryDetail
         </div>
         <div>
           <dt>HTTP</dt>
-          <dd>{detail.detail.status ?? detail.errorMessage ?? "unavailable"}</dd>
+          <dd>{detail.detail.status ?? detail.errorMessage ?? "Needs owner review"}</dd>
         </div>
         <div>
           <dt>Core API</dt>
@@ -758,10 +805,12 @@ export function DetailSourceMarker({ label }: { label: string }) {
 
 export function DetailFallbackPanel({ title, message }: { title: string; message: string }) {
   return (
-    <section className="panel">
-      <span className="eyebrow">Read-only fallback</span>
+    <section className="panel owner-empty-state" data-owner-empty-state="Owner-safe fallback">
+      <span className="eyebrow">Needs owner review</span>
       <h3>{title}</h3>
       <p className="muted">{message}</p>
+      <p className="muted owner-safe-note">Safe owner fallback: only registry-safe summary copy is shown.</p>
+      <p className="muted">Next step: return to the registry list and choose an available item.</p>
     </section>
   );
 }
@@ -772,7 +821,7 @@ export function DetailFacts({ facts }: { facts: Array<[string, string | number |
       {facts.map(([label, value]) => (
         <div key={label}>
           <dt>{label}</dt>
-          <dd>{value ?? "unavailable"}</dd>
+          <dd>{value ?? "Needs owner review"}</dd>
         </div>
       ))}
     </dl>
@@ -814,7 +863,7 @@ export function RelatedLinksPanel({
           ))
         ) : (
           <article className="project-card">
-            <span className="eyebrow">Not linked yet</span>
+            <span className="eyebrow">Missing link</span>
             <h3>No registry relationship link</h3>
             <p className="muted">This project has no related registry link in the current read-only payload.</p>
           </article>

@@ -33,6 +33,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 1F adds read-only owner cockpit and visual UAT navigation surfaces in OIS Console and PITS Shell without adding a Core API endpoint.
 - Stage 1F-R1 fixes the OIS Console root cockpit marker contract by rendering deterministic `Ready to operate` text on `/`.
 - Stage 1G standardizes OIS Console and PITS Shell around a modern responsive shell with fixed navigation/header, independent content scrolling and hide/show navigation controls.
+- Stage 1H polishes owner-first OIS/PITS information architecture, visual hierarchy, status badges, empty/fallback states and responsive readability without changing business logic or endpoints.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -143,6 +144,8 @@ Stage 1F owner registry cockpit visual UAT result: OIS Console and PITS Shell no
 Stage 1F-R1 OIS Console root cockpit marker hotfix result: OIS Console root `/` now renders deterministic server-side `Ready to operate` text while preserving the real cockpit status. Final result is `OWNER_REGISTRY_COCKPIT_ROOT_MARKER_HOTFIX_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
 
 Stage 1G modern responsive shell layout result: OIS Console and PITS Shell now share a source-ready modern product shell standard with fixed navigation/header, independent content scrolling, responsive drawer behavior, hide/show navigation controls and deterministic shell markers. Final result is `MODERN_RESPONSIVE_SHELL_NAVIGATION_STANDARD_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
+
+Stage 1H owner-first information architecture visual design polish result: OIS Console and PITS Shell now share source-ready owner-first page cues, visual hierarchy, status badge metadata, safe empty/fallback copy and responsive readability polish. Final result is `OWNER_FIRST_VISUAL_DESIGN_SYSTEM_POLISH_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
 
 Stage 1C Product Registry detail cross-linking result: Core API now exposes source-ready read-only detail endpoints for products, product code lookup, workspaces, projects, modules and installations. OIS Console adds product/workspace/module/installation detail routes, PITS Shell adds project detail routes, and shared UI helpers build staging-only links between `https://ois-ng.dmp247.com` and `https://pits-ng.dmp247.com`. Final result is `PRODUCT_REGISTRY_DETAIL_CROSS_LINKING_READY`; public HTTP 200 verification requires owner runtime sync.
 
@@ -2040,6 +2043,60 @@ Stage 1G safety:
 - No `ois.dmp247.com` or `oisys.abacusai.app` change.
 - No legacy resources touched.
 
+## Stage 1H Owner-first Information Architecture Visual Design System Polish
+
+Stage 1H polishes the existing OIS Console and PITS Shell owner surfaces without changing business logic.
+
+The source-ready owner-first polish provides:
+
+- Consistent page-heading cues for what the page is, health, readiness, missing items and next action.
+- Consistent visual hierarchy for page headings, panels, metric/card sections, quick links and owner guard summaries.
+- Owner-friendly status badge metadata and labels across shell, cockpit, readiness, health and detail surfaces.
+- Safe empty and fallback states that avoid secrets, environment values, stack traces and internal paths.
+- Responsive badge/link/card behavior so owner UAT remains readable on narrow screens.
+
+Stage 1H deterministic UI markers:
+
+- `Owner-first Design System`
+- `Visual Hierarchy Standard`
+- `Owner-friendly Status Badges`
+
+Stage 1H keeps existing Stage 1B/1C/1D/1E/1F/1G behavior intact:
+
+- OIS/PITS pages still use Core API registry, health and readiness data only.
+- OIS/PITS cockpit, readiness, health, detail and cross-link markers remain rendered.
+- Stage 1G shell markers remain rendered.
+- Forbidden localhost and legacy links remain absent from checked public routes.
+
+Owner runtime sync after Stage 1H merge:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+git fetch origin
+git checkout stage-0b-complete-handoff-ingestion
+git pull --ff-only
+PUBLIC_STAGING_RESTART_SCOPE=all bash ops/abacus/runtime-sync.sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
+Stage 1H safety:
+
+- No new Core API endpoint.
+- No registry data behavior change.
+- No Cloudflare dashboard change.
+- No DNS change.
+- No migrations.
+- No seed.
+- No `prisma db push`.
+- No credentials committed.
+- No UI `DATABASE_URL`.
+- No Prisma import in UI shells.
+- No write/mutation endpoints.
+- No `/auth/demo-login` change.
+- No `ois.dmp247.com` or `oisys.abacusai.app` change.
+- No legacy resources touched.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -2119,6 +2176,8 @@ Stage 1C-R1 adds explicit UI detail route markers, tests and documentation only.
 Stage 1D adds read-only registry runtime health API/UI surfaces, tests, ops checks and owner UAT documentation only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, import Prisma into UI shells, add write endpoints, call `/auth/demo-login` or touch legacy resources.
 Stage 1E adds read-only registry governance/readiness API/UI surfaces, tests, ops checks and owner UAT documentation only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, import Prisma into UI shells, add write endpoints, call `/auth/demo-login` or touch legacy resources.
 Stage 1F adds read-only owner cockpit/UI navigation surfaces, tests, ops checks and owner UAT documentation only. It did not add a Core API endpoint, deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, import Prisma into UI shells, add write endpoints, call `/auth/demo-login` or touch legacy resources.
+Stage 1G adds shared responsive shell layout/navigation markers, tests, ops checks and owner UAT documentation only. It did not add a Core API endpoint, deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, import Prisma into UI shells, add write endpoints, call `/auth/demo-login` or touch legacy resources.
+Stage 1H adds owner-first IA/visual design polish, status badge markers, safe fallback copy, tests, ops checks and owner UAT documentation only. It did not add a Core API endpoint, deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, import Prisma into UI shells, add write endpoints, call `/auth/demo-login` or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -2135,6 +2194,8 @@ Stage 1F adds read-only owner cockpit/UI navigation surfaces, tests, ops checks 
 - Core API `/platform/registry/health` returns HTTP 200, `source=default-db`, `mode=read-only`, `summary`, `entities` and staging-safe URLs after Stage 1D owner runtime sync.
 - Core API `/platform/registry/readiness` returns HTTP 200, `source=default-db`, `mode=read-only`, `summary`, `entities`, `READY` and no forbidden local/legacy links after Stage 1E owner runtime sync.
 - OIS/PITS public routes show Stage 1F owner cockpit markers: `Owner Registry Cockpit / Registry Runtime Summary`, `PITS Registry Cockpit / Project Runtime Summary`, `Runtime health:`, `Readiness:` and `Project readiness` after owner runtime sync.
+- OIS/PITS public roots show Stage 1G shell markers: `Modern Shell Layout`, `Shell Navigation Toggle`, `Fixed Navigation Shell` and `Responsive Product Shell` after owner runtime sync.
+- OIS/PITS public roots show Stage 1H owner-first design markers: `Owner-first Design System`, `Visual Hierarchy Standard` and `Owner-friendly Status Badges` after owner runtime sync.
 - Core API `/docs` renders Swagger UI.
 - OIS Console `/` renders `OIS Console`.
 - PITS Shell `/` renders `PITS Shell`.
@@ -2175,6 +2236,8 @@ Stage 1C-R1 adds no endpoints. It changes the expected Stage 1C detail UI route 
 Stage 1D adds planned read-only Core API registry health endpoint `/platform/registry/health`. It changes OIS/PITS pages to render owner-facing `Registry Runtime Health` and per-entity runtime health markers. Public verification is pending owner runtime sync and owner browser/UAT.
 Stage 1E adds planned read-only Core API registry readiness endpoint `/platform/registry/readiness`. It changes OIS/PITS pages to render owner-facing `Registry Governance / Readiness` and per-entity governance/readiness markers with `What is missing?` sections. Public verification is pending owner runtime sync and owner browser/UAT.
 Stage 1F adds no endpoint. It changes OIS/PITS pages to render owner-facing cockpit and visual UAT navigation markers using existing registry, health and readiness endpoints. Public verification is pending owner runtime sync and owner browser/UAT.
+Stage 1G adds no endpoint. It changes OIS/PITS shell HTML/layout to render modern responsive shell markers. Public verification is pending owner runtime sync and owner browser/UAT.
+Stage 1H adds no endpoint. It changes OIS/PITS owner-facing IA, visual hierarchy, badge markers and safe fallback copy using existing registry, health and readiness data. Public verification is pending owner runtime sync and owner browser/UAT.
 
 ## Stop Conditions
 
