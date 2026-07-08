@@ -4,6 +4,7 @@ import {
   InstallationRegistryPanel,
   PageHeading,
   PitsRegistryCockpit,
+  PitsOwnerReviewQueuePanel,
   PitsShell,
   PlatformCountsPanel,
   ProjectOverviewCards,
@@ -23,6 +24,7 @@ export default async function RuntimePage() {
         PITS Shell runtime baseline for public staging, Core API health and Platform Kernel counts.
       </PageHeading>
       <PitsRegistryCockpit snapshot={snapshot} />
+      <PitsOwnerReviewQueuePanel snapshot={snapshot} title="Safe Action Boundary" />
       <section className="content-grid">
         <RuntimeStatusCard snapshot={snapshot} />
         <RegistryGovernancePanel snapshot={snapshot} />

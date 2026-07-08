@@ -384,6 +384,32 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
     ownerAction: string | null;
     evidenceUrl: string | null;
   };
+  type OwnerReviewSeverity = "INFO" | "REVIEW" | "WARNING" | "BLOCKED";
+  type OwnerActionPermission =
+    | "READ_ONLY_PREVIEW"
+    | "OWNER_REVIEW_REQUIRED"
+    | "FUTURE_ADMIN_ACTION"
+    | "BLOCKED_UNTIL_AUDIT"
+    | "NOT_ALLOWED_IN_STAGE_1I";
+  type OwnerReviewItem = {
+    id: string;
+    title: string;
+    entityType: RegistryHealthEntityKind;
+    entityId: string;
+    entityName: string;
+    severity: OwnerReviewSeverity;
+    currentStatus: RegistryReadinessStatus | RegistryHealthStatus;
+    reason: string;
+    suggestedOwnerAction: string;
+    actionPermission: OwnerActionPermission;
+    actionCurrentlyAllowed: boolean;
+    requiredSafetyGates: string[];
+    auditRequirement: string;
+    rollbackRequirement: string;
+    confirmationRequirement: string;
+    source: "registry-readiness" | "registry-health";
+    evidenceUrl: string | null;
+  };
 
   const forbiddenRuntimeUrlFragments = ["localhost", "127.0.0.1", ["ois", "dmp247", "com"].join("."), ["oisys", "abacusai", "app"].join(".")];
   const approvedRuntimeBaseUrls = [
@@ -1423,6 +1449,193 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
     };
   }
 
+  function buildOwnerReview(registry: RegistrySnapshot) {
+    const readiness = buildRegistryReadiness(registry);
+    const health = buildRegistryHealth(registry);
+    const safetyGates = [
+      "ADR or stage approval for write behavior",
+      "Versioned Prisma migration if schema changes are required",
+      "Sensitive write audit trail",
+      "Owner confirmation before execution",
+      "Rollback plan before enabling action"
+    ];
+    const auditRequirement = "Future admin action requires audit before execution.";
+    const rollbackRequirement = "Future admin action requires rollback plan before execution.";
+    const confirmationRequirement = "Future admin action requires owner confirmation before execution.";
+    const slug = (value: string) =>
+      value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    const shouldReviewReadinessCheck = (check: RegistryReadinessCheck) =>
+      Boolean(check.ownerAction) || check.status === "BLOCKED" || check.status === "UNKNOWN" || check.status === "INCOMPLETE" || !check.ok;
+    const shouldReviewHealthCheck = (check: RegistryHealthCheck) =>
+      !check.ok || check.status === "Unavailable" || check.status === "Missing URL";
+    const readinessSeverity = (check: RegistryReadinessCheck): OwnerReviewSeverity => {
+      if (check.status === "BLOCKED") {
+        return "BLOCKED";
+      }
+
+      if (check.required && !check.ok) {
+        return "WARNING";
+      }
+
+      if (check.ownerAction || check.status === "INCOMPLETE" || check.status === "UNKNOWN") {
+        return "REVIEW";
+      }
+
+      return "INFO";
+    };
+    const healthSeverity = (check: RegistryHealthCheck): OwnerReviewSeverity => {
+      if (check.status === "Unavailable") {
+        return check.required ? "BLOCKED" : "WARNING";
+      }
+
+      if (check.status === "Missing URL" || !check.ok) {
+        return check.required ? "WARNING" : "REVIEW";
+      }
+
+      return "INFO";
+    };
+    const permissionForReadiness = (check: RegistryReadinessCheck): OwnerActionPermission => {
+      const text = `${check.reason} ${check.ownerAction ?? ""}`.toLowerCase();
+
+      if (check.status === "BLOCKED") {
+        return "BLOCKED_UNTIL_AUDIT";
+      }
+
+      if (text.includes("later approved admin stage") || text.includes("add/verify")) {
+        return "FUTURE_ADMIN_ACTION";
+      }
+
+      if (check.required && !check.ok) {
+        return "OWNER_REVIEW_REQUIRED";
+      }
+
+      if (check.ownerAction || check.status === "INCOMPLETE") {
+        return "READ_ONLY_PREVIEW";
+      }
+
+      return "NOT_ALLOWED_IN_STAGE_1I";
+    };
+    const permissionForHealth = (check: RegistryHealthCheck): OwnerActionPermission => {
+      if (check.status === "Unavailable") {
+        return "BLOCKED_UNTIL_AUDIT";
+      }
+
+      if (check.status === "Missing URL" || !check.ok) {
+        return check.required ? "OWNER_REVIEW_REQUIRED" : "FUTURE_ADMIN_ACTION";
+      }
+
+      return "NOT_ALLOWED_IN_STAGE_1I";
+    };
+    const suggestedReadinessAction = (check: RegistryReadinessCheck) => {
+      if (check.dimension === "owner_uat_required") {
+        return "Run the Stage 1I Owner Browser/UAT checklist after Abacus runtime sync.";
+      }
+
+      return check.ownerAction ?? "Review this item with the owner before any future admin action is designed.";
+    };
+
+    const readinessItems = Object.values(readiness.entities)
+      .flat()
+      .flatMap((entity) =>
+        entity.checks.filter(shouldReviewReadinessCheck).map<OwnerReviewItem>((check) => ({
+          id: `${entity.kind}:${entity.id}:readiness:${slug(check.dimension)}`,
+          title: `${entity.name} - ${check.label}`,
+          entityType: entity.kind,
+          entityId: entity.id,
+          entityName: entity.name,
+          severity: readinessSeverity(check),
+          currentStatus: check.status,
+          reason: check.reason,
+          suggestedOwnerAction: suggestedReadinessAction(check),
+          actionPermission: permissionForReadiness(check),
+          actionCurrentlyAllowed: false,
+          requiredSafetyGates: safetyGates,
+          auditRequirement,
+          rollbackRequirement,
+          confirmationRequirement,
+          source: "registry-readiness",
+          evidenceUrl: check.evidenceUrl
+        }))
+      );
+    const readinessItemIds = new Set(readinessItems.map((item) => `${item.entityType}:${item.entityId}:${item.reason}`));
+    const healthItems = Object.values(health.entities)
+      .flat()
+      .flatMap((entity) =>
+        entity.checks
+          .filter(shouldReviewHealthCheck)
+          .filter((check) => !readinessItemIds.has(`${entity.kind}:${entity.id}:${check.detail}`))
+          .map<OwnerReviewItem>((check) => ({
+            id: `${entity.kind}:${entity.id}:health:${slug(check.label)}`,
+            title: `${entity.name} - ${check.label}`,
+            entityType: entity.kind,
+            entityId: entity.id,
+            entityName: entity.name,
+            severity: healthSeverity(check),
+            currentStatus: check.status,
+            reason: check.detail,
+            suggestedOwnerAction: "Review runtime health evidence before any future admin action is designed.",
+            actionPermission: permissionForHealth(check),
+            actionCurrentlyAllowed: false,
+            requiredSafetyGates: safetyGates,
+            auditRequirement,
+            rollbackRequirement,
+            confirmationRequirement,
+            source: "registry-health",
+            evidenceUrl: check.url
+          }))
+      );
+    const severityOrder: Record<OwnerReviewSeverity, number> = {
+      BLOCKED: 0,
+      WARNING: 1,
+      REVIEW: 2,
+      INFO: 3
+    };
+    const items = [...readinessItems, ...healthItems].sort((left, right) => {
+      const severityDelta = severityOrder[left.severity] - severityOrder[right.severity];
+
+      if (severityDelta !== 0) {
+        return severityDelta;
+      }
+
+      return `${left.entityType}:${left.entityId}:${left.id}`.localeCompare(`${right.entityType}:${right.entityId}:${right.id}`);
+    });
+    const countSeverity = (severity: OwnerReviewSeverity) => items.filter((item) => item.severity === severity).length;
+    const countPermission = (permission: OwnerActionPermission) => items.filter((item) => item.actionPermission === permission).length;
+
+    return {
+      metadata: registry.metadata,
+      runtime: {
+        ...publicRuntimeConfig,
+        reviewMode: "read-only-owner-review",
+        stage: "Stage 1I",
+        note: "Owner review derives from registry readiness/health. No admin action is executable in Stage 1I."
+      },
+      actionBoundary: {
+        stage: "Stage 1I",
+        enabledAdminActions: 0,
+        mutationEndpointsAdded: false,
+        writePermission: "NOT_ALLOWED_IN_STAGE_1I" as const,
+        markers: ["Owner Review Queue", "Safe Action Boundary", "Read-only preview", "Future admin action requires audit"]
+      },
+      summary: {
+        total: items.length,
+        info: countSeverity("INFO"),
+        review: countSeverity("REVIEW"),
+        warning: countSeverity("WARNING"),
+        blocked: countSeverity("BLOCKED"),
+        readOnlyPreview: countPermission("READ_ONLY_PREVIEW"),
+        ownerReviewRequired: countPermission("OWNER_REVIEW_REQUIRED"),
+        futureAdminAction: countPermission("FUTURE_ADMIN_ACTION"),
+        blockedUntilAudit: countPermission("BLOCKED_UNTIL_AUDIT"),
+        notAllowedInStage1I: countPermission("NOT_ALLOWED_IN_STAGE_1I")
+      },
+      items
+    };
+  }
+
   function buildProductDetail(registry: RegistrySnapshot, product: ProductRegistryEntity) {
     const projects = uniqueById(
       product.installations
@@ -1640,6 +1853,31 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
               }
             }
           }
+        },
+        "/platform/owner-review": {
+          get: {
+            tags: ["platform"],
+            responses: {
+              "200": {
+                description: "Read-only owner review and safe action-boundary projection",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["metadata", "runtime", "actionBoundary", "summary", "items"],
+                      properties: {
+                        metadata: { type: "object" },
+                        runtime: { type: "object" },
+                        actionBoundary: { type: "object" },
+                        summary: { type: "object" },
+                        items: { type: "array", items: { type: "object" } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -1798,6 +2036,8 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
   app.get("/platform/registry/health", async () => buildRegistryHealth(await readRegistry()));
 
   app.get("/platform/registry/readiness", async () => buildRegistryReadiness(await readRegistry()));
+
+  app.get("/platform/owner-review", async () => buildOwnerReview(await readRegistry()));
 
   app.get("/platform/products/code/:code", async (request, reply) => {
     const params = request.params as { code: string };

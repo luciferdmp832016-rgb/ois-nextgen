@@ -4,6 +4,7 @@ import {
   DataBoundaryPanel,
   OisConsoleShell,
   OwnerRegistryCockpit,
+  OwnerReviewQueuePanel,
   PageHeading,
   PlatformOverviewCard,
   RegistryGovernancePanel,
@@ -48,6 +49,7 @@ export default async function DashboardPage() {
         Administration dashboard for the current staging Platform Kernel baseline.
       </PageHeading>
       <OwnerRegistryCockpit snapshot={snapshot} />
+      <OwnerReviewQueuePanel snapshot={snapshot} />
       <section className="dashboard-grid">
         <PlatformOverviewCard snapshot={snapshot} />
         <ProductModuleOverview snapshot={snapshot} />

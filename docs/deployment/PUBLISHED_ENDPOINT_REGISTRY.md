@@ -40,6 +40,7 @@ Do not probe or mutate legacy production endpoints during NextGen staging work u
 |---|---|---|---|---|
 | OIS NextGen Core API staging health | `https://ois-nextgen.abacusai.cloud/health` | `ABACUS_MANAGED_PUBLIC_STAGING` | HTTP 200 with `{"status":"ok","service":"core-api","stage":"bootstrap-stage-a"}` | Primary current NextGen staging health check. |
 | OIS NextGen platform overview | `https://ois-nextgen.abacusai.cloud/platform/overview` | `ABACUS_MANAGED_PUBLIC_STAGING` | HTTP 200, DB-backed read-only platform overview with seeded Platform Kernel counts. | Primary current DB-backed staging smoke check. |
+| OIS NextGen owner review | `https://ois-nextgen.abacusai.cloud/platform/owner-review` | `PLANNED_NOT_CREATED` | HTTP 200 read-only owner review/action-boundary payload after Stage 1I runtime sync. | Stage 1I safe action-boundary smoke check. |
 | OIS Console Cloudflare Tunnel staging | `https://ois-ng.dmp247.com` | `CLOUDFLARE_TUNNEL_PUBLIC_VERIFIED` | HTTPS opens OIS Console with `OIS_CONSOLE`, shared Core API URL, healthy Core API and seeded counts. | Primary current OIS product staging subdomain. |
 | OIS Console Cloudflare Tunnel dashboard | `https://ois-ng.dmp247.com/dashboard` | `CLOUDFLARE_TUNNEL_PUBLIC_VERIFIED` | HTTPS opens OIS Platform Overview. | Current OIS dashboard smoke check. |
 | OIS Console Cloudflare Tunnel products | `https://ois-ng.dmp247.com/products` | `CLOUDFLARE_TUNNEL_PUBLIC_VERIFIED` | HTTPS opens OIS Products & Modules route. | Current OIS products smoke check. |
@@ -58,6 +59,8 @@ Current NextGen live scope is Core API `/health`, DB-backed read-only `/platform
 Stage 1G standardizes the existing OIS/PITS public staging shells around a modern responsive layout. It adds no endpoint, but after owner runtime sync the OIS and PITS roots should also include `Modern Shell Layout`, `Shell Navigation Toggle`, `Fixed Navigation Shell` and `Responsive Product Shell`.
 
 Stage 1H polishes the existing OIS/PITS public staging shells with owner-first IA, visual hierarchy, status badges, safe empty/fallback states and responsive readability. It adds no endpoint, but after owner runtime sync the OIS and PITS roots should also include `Owner-first Design System`, `Visual Hierarchy Standard` and `Owner-friendly Status Badges`.
+
+Stage 1I adds read-only Core API `/platform/owner-review` and preview-only OIS/PITS owner review boundary surfaces. After owner runtime sync, dashboard/runtime/detail routes should include `Owner Review Queue`, `Safe Action Boundary`, `Read-only preview` and `Future admin action requires audit`.
 
 ## 2. Local/Loopback Endpoints
 
@@ -301,6 +304,15 @@ Known OIS Phase 1 production-equivalent resources include database `ois_phase1_d
 | Stage 1G | `https://pits-ng.dmp247.com` | `PLANNED_NOT_CREATED` | Source-ready PITS modern shell standard markers; not deployed from Codex. | Expected HTTP 200 with `Modern Shell Layout`, `Shell Navigation Toggle`, `Fixed Navigation Shell`, `Responsive Product Shell` and existing cockpit markers after owner runtime sync. |
 | Stage 1H | `https://ois-ng.dmp247.com` | `PLANNED_NOT_CREATED` | Source-ready OIS owner-first visual design markers; not deployed from Codex. | Expected HTTP 200 with `Owner-first Design System`, `Visual Hierarchy Standard`, `Owner-friendly Status Badges` and existing shell/cockpit markers after owner runtime sync. |
 | Stage 1H | `https://pits-ng.dmp247.com` | `PLANNED_NOT_CREATED` | Source-ready PITS owner-first visual design markers; not deployed from Codex. | Expected HTTP 200 with `Owner-first Design System`, `Visual Hierarchy Standard`, `Owner-friendly Status Badges` and existing shell/cockpit markers after owner runtime sync. |
+| Stage 1I | `https://ois-nextgen.abacusai.cloud/platform/owner-review` | `PLANNED_NOT_CREATED` | Source-ready read-only owner review safe action-boundary endpoint; not deployed from Codex. | Expected HTTP 200 with `Owner Review Queue`, `Safe Action Boundary`, `Read-only preview`, `Future admin action requires audit` and `NOT_ALLOWED_IN_STAGE_1I` after owner runtime sync. |
+| Stage 1I | `https://ois-ng.dmp247.com/dashboard` | `PLANNED_NOT_CREATED` | Source-ready OIS owner review queue marker; not deployed from Codex. | Expected HTTP 200 with `Owner Review Queue`, `Safe Action Boundary`, `Read-only preview` and `Future admin action requires audit` after owner runtime sync. |
+| Stage 1I | `https://ois-ng.dmp247.com/runtime` | `PLANNED_NOT_CREATED` | Source-ready OIS safe action-boundary marker; not deployed from Codex. | Expected HTTP 200 with `Safe Action Boundary`, `Read-only preview` and `Future admin action requires audit` after owner runtime sync. |
+| Stage 1I | `https://ois-ng.dmp247.com/products/{id}` | `PLANNED_NOT_CREATED` | Source-ready OIS product owner review boundary; not deployed from Codex. | Expected HTTP 200 with `Owner Review Queue`, `Safe Action Boundary` and `Action is read-only preview only` after owner runtime sync. |
+| Stage 1I | `https://ois-ng.dmp247.com/workspaces/{id}` | `PLANNED_NOT_CREATED` | Source-ready OIS workspace owner review boundary; not deployed from Codex. | Expected HTTP 200 with `Owner Review Queue`, `Safe Action Boundary` and `Action is read-only preview only` after owner runtime sync. |
+| Stage 1I | `https://ois-ng.dmp247.com/installations/{id}` | `PLANNED_NOT_CREATED` | Source-ready OIS installation owner review boundary; not deployed from Codex. | Expected HTTP 200 with `Owner Review Queue`, `Safe Action Boundary` and `Action is read-only preview only` after owner runtime sync. |
+| Stage 1I | `https://pits-ng.dmp247.com/projects` | `PLANNED_NOT_CREATED` | Source-ready PITS project owner review queue marker; not deployed from Codex. | Expected HTTP 200 with `Owner Review Queue`, `Safe Action Boundary`, `Read-only preview` and `Future admin action requires audit` after owner runtime sync. |
+| Stage 1I | `https://pits-ng.dmp247.com/runtime` | `PLANNED_NOT_CREATED` | Source-ready PITS safe action-boundary marker; not deployed from Codex. | Expected HTTP 200 with `Safe Action Boundary`, `Read-only preview` and `Future admin action requires audit` after owner runtime sync. |
+| Stage 1I | `https://pits-ng.dmp247.com/projects/{id}` | `PLANNED_NOT_CREATED` | Source-ready PITS project owner review boundary; not deployed from Codex. | Expected HTTP 200 with `Owner Review Queue`, `Safe Action Boundary` and `Action is read-only preview only` after owner runtime sync. |
 | Stage 0N audit | `https://oisys.abacusai.app` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Existing live Phase 1 app shell. | Do not touch. |
 | Stage 0N audit | `https://ois.dmp247.com` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Existing live Phase 1 custom domain. | Do not touch. |
 
@@ -407,6 +419,8 @@ Use these commands only on endpoints allowed by the current stage. Do not probe 
 | OIS Console root cockpit after Stage 1F-R1 sync | `curl -i https://ois-ng.dmp247.com` | HTTP 200 with `Owner Registry Cockpit / Registry Runtime Summary`, `Ready to operate` and `Forbidden link guard`. |
 | OIS Console shell standard after Stage 1G sync | `curl -i https://ois-ng.dmp247.com` | HTTP 200 with `Modern Shell Layout`, `Shell Navigation Toggle`, `Fixed Navigation Shell`, `Responsive Product Shell` and existing cockpit markers. |
 | OIS Console owner-first design after Stage 1H sync | `curl -i https://ois-ng.dmp247.com` | HTTP 200 with `Owner-first Design System`, `Visual Hierarchy Standard`, `Owner-friendly Status Badges` and existing cockpit markers. |
+| Owner review endpoint after Stage 1I sync | `curl -i https://ois-nextgen.abacusai.cloud/platform/owner-review` | HTTP 200 with `Owner Review Queue`, `Safe Action Boundary`, `Read-only preview`, `Future admin action requires audit` and `NOT_ALLOWED_IN_STAGE_1I`. |
+| OIS Console dashboard owner review after Stage 1I sync | `curl -i https://ois-ng.dmp247.com/dashboard` | HTTP 200 with `Owner Review Queue`, `Safe Action Boundary` and preview-only action copy. |
 | OIS Console dashboard cockpit after Stage 1F sync | `curl -i https://ois-ng.dmp247.com/dashboard` | HTTP 200 with `Owner Registry Cockpit / Registry Runtime Summary`, `Missing runtime URL` and `Forbidden link guard`. |
 | OIS Console product card UAT after Stage 1F sync | `curl -i https://ois-ng.dmp247.com/products` | HTTP 200 with `Runtime health:`, `Readiness:` and `Linked to PITS`. |
 | OIS Console workspace card UAT after Stage 1F sync | `curl -i https://ois-ng.dmp247.com/workspaces` | HTTP 200 with `Runtime health:` and `Readiness:`. |
@@ -415,6 +429,7 @@ Use these commands only on endpoints allowed by the current stage. Do not probe 
 | PITS Shell root cockpit after Stage 1F sync | `curl -i https://pits-ng.dmp247.com` | HTTP 200 with `PITS Registry Cockpit / Project Runtime Summary`. |
 | PITS Shell standard after Stage 1G sync | `curl -i https://pits-ng.dmp247.com` | HTTP 200 with `Modern Shell Layout`, `Shell Navigation Toggle`, `Fixed Navigation Shell`, `Responsive Product Shell` and existing cockpit markers. |
 | PITS Shell owner-first design after Stage 1H sync | `curl -i https://pits-ng.dmp247.com` | HTTP 200 with `Owner-first Design System`, `Visual Hierarchy Standard`, `Owner-friendly Status Badges` and existing cockpit markers. |
+| PITS Shell projects owner review after Stage 1I sync | `curl -i https://pits-ng.dmp247.com/projects` | HTTP 200 with `Owner Review Queue`, `Safe Action Boundary` and preview-only action copy. |
 | PITS Shell project card UAT after Stage 1F sync | `curl -i https://pits-ng.dmp247.com/projects` | HTTP 200 with `Project readiness` and `Runtime health:`. |
 | PITS Shell project detail UAT after Stage 1F sync | `curl -i https://pits-ng.dmp247.com/projects/<project-id>` | HTTP 200 with `Owner-facing project UAT summary`. |
 | PITS Shell runtime cockpit after Stage 1F sync | `curl -i https://pits-ng.dmp247.com/runtime` | HTTP 200 with `PITS Registry Cockpit / Project Runtime Summary`. |

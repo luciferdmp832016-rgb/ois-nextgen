@@ -14,6 +14,7 @@ import {
   DetailStatusPanel,
   OisConsoleShell,
   OwnerEntityUatSummary,
+  OwnerReviewQueuePanel,
   PageHeading,
   RegistryHealthItemPanel,
   RegistryReadinessItemPanel,
@@ -108,6 +109,8 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         ]}
         links={ownerLinks}
       />
+
+      <OwnerReviewQueuePanel snapshot={snapshot} entityType="product" entityId={product.id} />
 
       <RegistryReadinessItemPanel title="Product Governance / Readiness" item={productReadiness} />
 

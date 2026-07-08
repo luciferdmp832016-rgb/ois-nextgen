@@ -318,6 +318,71 @@ const registryReadinessPayload = {
   }
 };
 
+const ownerReviewGates = [
+  "ADR or stage approval for write behavior",
+  "Versioned Prisma migration if schema changes are required",
+  "Sensitive write audit trail",
+  "Owner confirmation before execution",
+  "Rollback plan before enabling action"
+];
+
+function ownerReviewItem(entityType: string, entityId: string, entityName: string) {
+  return {
+    id: `${entityType}:${entityId}:readiness:owner-uat-required`,
+    title: `${entityName} - Owner UAT`,
+    entityType,
+    entityId,
+    entityName,
+    severity: "REVIEW",
+    currentStatus: "INCOMPLETE",
+    reason: "Owner Browser/UAT is required before closing the runtime verified label.",
+    suggestedOwnerAction: "Run the owner Browser/UAT checklist after Abacus runtime sync.",
+    actionPermission: "READ_ONLY_PREVIEW",
+    actionCurrentlyAllowed: false,
+    requiredSafetyGates: ownerReviewGates,
+    auditRequirement: "Future admin action requires audit before execution.",
+    rollbackRequirement: "Future admin action requires rollback plan before execution.",
+    confirmationRequirement: "Future admin action requires owner confirmation before execution.",
+    source: "registry-readiness",
+    evidenceUrl: null
+  };
+}
+
+const ownerReviewPayload = {
+  metadata: registryPayload.metadata,
+  runtime: {
+    coreApiBaseUrl: coreApiUrl,
+    oisConsoleBaseUrl: oisPublicBaseUrl,
+    pitsShellBaseUrl: pitsPublicBaseUrl,
+    reviewMode: "read-only-owner-review",
+    stage: "Stage 1I",
+    note: "Owner review derives from registry readiness/health. No admin action is executable in Stage 1I."
+  },
+  actionBoundary: {
+    stage: "Stage 1I",
+    enabledAdminActions: 0,
+    mutationEndpointsAdded: false,
+    writePermission: "NOT_ALLOWED_IN_STAGE_1I",
+    markers: ["Owner Review Queue", "Safe Action Boundary", "Read-only preview", "Future admin action requires audit"]
+  },
+  summary: {
+    total: 2,
+    info: 0,
+    review: 2,
+    warning: 0,
+    blocked: 0,
+    readOnlyPreview: 2,
+    ownerReviewRequired: 0,
+    futureAdminAction: 0,
+    blockedUntilAudit: 0,
+    notAllowedInStage1I: 0
+  },
+  items: [
+    ownerReviewItem("project", "prj_emerald_precinct_demo", "Emerald Precinct Demo"),
+    ownerReviewItem("installation", "inst_pits_emerald", "PITS installation")
+  ]
+};
+
 const projectDetailPayload = {
   metadata: registryPayload.metadata,
   project: {
@@ -363,6 +428,10 @@ function mockCoreApiFetch() {
 
     if (url === `${coreApiUrl}/platform/registry/readiness`) {
       return jsonResponse(registryReadinessPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/owner-review`) {
+      return jsonResponse(ownerReviewPayload);
     }
 
     if (url === `${coreApiUrl}/platform/projects/prj_emerald_precinct_demo`) {
@@ -465,6 +534,7 @@ describe("PITS Shell product shell", () => {
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry/health`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry/readiness`, { cache: "no-store" });
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/owner-review`, { cache: "no-store" });
   });
 
   it.each([
@@ -474,6 +544,12 @@ describe("PITS Shell product shell", () => {
       [
         "Project Selector",
         "PITS Registry Cockpit / Project Runtime Summary",
+        "Owner Review Queue",
+        "Safe Action Boundary",
+        "Read-only preview",
+        "Future admin action requires audit",
+        "Action is read-only preview only",
+        "Suggested next actions",
         "Project readiness",
         "Runtime health:",
         "Registry Governance / Readiness",
@@ -489,6 +565,10 @@ describe("PITS Shell product shell", () => {
       [
         "Runtime Status",
         "PITS Registry Cockpit / Project Runtime Summary",
+        "Owner Review Queue",
+        "Safe Action Boundary",
+        "Read-only preview",
+        "Future admin action requires audit",
         "Project readiness",
         "Health ready",
         "Registry Governance / Readiness",
@@ -535,6 +615,10 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("Modern Shell Layout");
     expect(html).toContain("Shell Navigation Toggle");
     expect(html).toContain("Owner-facing project UAT summary");
+    expect(html).toContain("Owner Review Queue");
+    expect(html).toContain("Safe Action Boundary");
+    expect(html).toContain("Action is read-only preview only");
+    expect(html).toContain("Future admin action requires audit");
     expect(html).toContain("Project readiness");
     expect(html).toContain("No issue detected");
     expect(html).toContain("Project Governance / Readiness");
