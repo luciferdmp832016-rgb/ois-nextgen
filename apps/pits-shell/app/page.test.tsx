@@ -928,6 +928,17 @@ describe("PITS Shell product shell", () => {
     expect(html).not.toContain(dbEnvKey);
   });
 
+  it("renders the projects route Product UAT marker contract honestly", async () => {
+    mockCoreApiFetch();
+
+    const html = await renderRouteHtml(ProjectsPage);
+
+    expect(html).toContain("Product User Journey / UAT Baseline");
+    expect(html).toContain("PITS is not a true workflow app yet");
+    expect(html).toContain("project registry shell");
+    expect(html).toContain("project readiness shell");
+  });
+
   it("renders without a direct database environment value", async () => {
     mockCoreApiFetch();
 
