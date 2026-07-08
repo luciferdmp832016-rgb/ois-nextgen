@@ -3,6 +3,7 @@ import {
   DataBoundaryPanel,
   InstallationRegistryPanel,
   PageHeading,
+  PitsProductUatPanel,
   PitsRegistryCockpit,
   PitsShell,
   PlatformCountsPanel,
@@ -24,6 +25,7 @@ export default async function Page() {
         Product runtime baseline for project selection, installation status and Core API health.
       </PageHeading>
       <PitsRegistryCockpit snapshot={snapshot} />
+      <PitsProductUatPanel snapshot={snapshot} title="Product User Journey UAT Baseline" />
       <ProjectOverviewCards snapshot={snapshot} />
       <section className="content-grid">
         <ProjectSelector snapshot={snapshot} />

@@ -14,6 +14,7 @@ import {
   PageHeading,
   PitsAdminBoundaryPanel,
   PitsOwnerEntityUatSummary,
+  PitsProductUatPanel,
   PitsOwnerReviewQueuePanel,
   PitsShell,
   RegistryHealthItemPanel,
@@ -112,6 +113,8 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
       <PitsOwnerReviewQueuePanel snapshot={snapshot} entityType="project" entityId={project.id} />
 
       <PitsAdminBoundaryPanel snapshot={snapshot} entityType="project" entityId={project.id} />
+
+      <PitsProductUatPanel snapshot={snapshot} title="Project Product UAT Baseline" entityType="project" entityId={project.id} />
 
       <RegistryReadinessItemPanel title="Project Governance / Readiness" item={projectReadiness} />
 

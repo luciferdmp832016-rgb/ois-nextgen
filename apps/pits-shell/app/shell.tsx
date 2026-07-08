@@ -9,6 +9,9 @@ import {
   getOwnerReviewItemsFor,
   getOwnerReviewPreviewItems,
   getOwnerReadinessLabel,
+  getProductUatPreviewSurfaces,
+  getProductUatProduct,
+  getProductUatSurfacesFor,
   getReadinessGaps,
   kernelFields,
   ModernProductShell,
@@ -20,6 +23,7 @@ import {
   type OwnerReviewSeverity,
   type PlatformRegistrySnapshot,
   type PlatformSnapshot,
+  type ProductUatSurface,
   type RegistryDetailSnapshot,
   type RegistryHealthItem,
   type RegistryHealthStatus,
@@ -43,6 +47,7 @@ const countLabels: Record<KernelField, string> = {
   modules: "Modules",
   auditRecords: "Audit Records"
 };
+const controlPlaneOnlyText = ["Control", "plane only"].join("-");
 
 export function PitsShell({
   active,
@@ -592,6 +597,144 @@ export function PitsAdminBoundaryPanel({
         </article>
       )}
       <p className="muted health-note">{payload?.runtime.note ?? "Admin boundary payload unavailable. No action is executable from this UI."}</p>
+    </section>
+  );
+}
+
+function CapabilityStatusBadge({ surface }: { surface: ProductUatSurface }) {
+  return <StatusBadge ok={surface.category === "AVAILABLE_FOR_BROWSER_UAT"} label={surface.statusLabel} />;
+}
+
+function FunctionalGapList({ surface }: { surface: ProductUatSurface }) {
+  return (
+    <div className="functional-gap-list">
+      <span>Owner UAT status: {surface.ownerUatStatus}</span>
+      <span>Next user-level test path: {surface.nextUserLevelTestPath ?? "Not implemented yet"}</span>
+      {surface.blockers.map((blocker) => (
+        <span key={blocker}>{blocker}</span>
+      ))}
+    </div>
+  );
+}
+
+function PitsUserJourneyCard({ surface }: { surface: ProductUatSurface }) {
+  return (
+    <article className="owner-review-card user-journey-card" data-product-uat-surface={surface.id}>
+      <div className="panel-heading">
+        <div>
+          <span className="eyebrow">{surface.productCode}</span>
+          <h4>{surface.surfaceName}</h4>
+        </div>
+        <CapabilityStatusBadge surface={surface} />
+      </div>
+      <section className="suggested-actions" aria-label="What can be tested now?">
+        <h5>What can be tested now?</h5>
+        <p>{surface.currentUserTest}</p>
+      </section>
+      <section className="suggested-actions" aria-label="Registry/runtime scope">
+        <h5>{controlPlaneOnlyText}</h5>
+        <p>{surface.currentReality}</p>
+      </section>
+      <section className="suggested-actions" aria-label="What is not implemented yet?">
+        <h5>What is not implemented yet?</h5>
+        <p>{surface.functionalGap ?? "No functional gap is mapped for this surface."}</p>
+      </section>
+      <section className="suggested-actions" aria-label="Recommended next product functions">
+        <h5>Recommended next product functions</h5>
+        <p>{surface.recommendedNextStep}</p>
+      </section>
+      <FunctionalGapList surface={surface} />
+      {surface.route ? (
+        <div className="link-list">
+          <a href={surface.route}>Open test path</a>
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+export function PitsProductUatPanel({
+  snapshot,
+  entityType,
+  entityId,
+  title = "Product User Journey UAT"
+}: {
+  snapshot: PlatformRegistrySnapshot;
+  entityType?: ProductUatSurface["entityType"] | undefined;
+  entityId?: string | undefined;
+  title?: string | undefined;
+}) {
+  const payload = snapshot.productUatPayload;
+  const product = getProductUatProduct(snapshot, "PITS");
+  const surfaces = getProductUatSurfacesFor(snapshot, "PITS", entityType, entityId).slice(0, 6);
+  const markers = payload?.productUat.markers ?? ["Product User Journey UAT", "Testable now", controlPlaneOnlyText, "Functional gap map", "Next product journey"];
+  const previewSurfaces = surfaces.length > 0 ? surfaces : getProductUatPreviewSurfaces(snapshot, 4);
+  const nextJourneys = product?.recommendedNextJourneys ?? payload?.recommendedNextProductJourneys ?? [];
+
+  return (
+    <section className="panel product-uat-panel" data-product-uat="Product User Journey UAT">
+      <div className="panel-heading">
+        <div>
+          <h3>{title}</h3>
+          <p className="muted">Project-level UAT baseline and functional gap map. This is read-only and does not enable project writes.</p>
+        </div>
+        <StatusBadge ok={Boolean(payload)} label="Testable now" />
+      </div>
+      <div className="owner-review-marker-row" aria-label="Product UAT markers">
+        {markers.map((marker) => (
+          <span key={marker}>{marker}</span>
+        ))}
+        <span>Owner UAT status</span>
+        <span>Next user-level test path</span>
+      </div>
+      <dl className="owner-fact-grid" aria-label="Project UAT summary">
+        <div>
+          <dt>Products</dt>
+          <dd>{payload?.summary.products ?? 0}</dd>
+        </div>
+        <div>
+          <dt>Testable now</dt>
+          <dd>{payload?.summary.testableNow ?? 0}</dd>
+        </div>
+        <div>
+          <dt>{controlPlaneOnlyText}</dt>
+          <dd>{payload?.summary.controlPlaneOnly ?? 0}</dd>
+        </div>
+        <div>
+          <dt>Real product functions</dt>
+          <dd>{payload?.summary.realProductFunctionsAvailable ?? 0}</dd>
+        </div>
+      </dl>
+      {product ? (
+        <section className="suggested-actions" aria-label="Owner UAT status">
+          <h5>Owner UAT status</h5>
+          <p>{product.currentState}</p>
+        </section>
+      ) : null}
+      {nextJourneys.length > 0 ? (
+        <section className="suggested-actions" aria-label="Next product journey">
+          <h5>Next product journey</h5>
+          <div className="functional-gap-list">
+            {nextJourneys.map((journey) => (
+              <span key={journey}>{journey}</span>
+            ))}
+          </div>
+        </section>
+      ) : null}
+      {previewSurfaces.length > 0 ? (
+        <div className="owner-review-grid">
+          {previewSurfaces.map((surface) => (
+            <PitsUserJourneyCard surface={surface} key={surface.id} />
+          ))}
+        </div>
+      ) : (
+        <article className="owner-review-card owner-empty-state">
+          <span className="eyebrow">Functional gap map</span>
+          <h4>No product UAT map available</h4>
+          <p className="muted">Product user journey data is unavailable. No project action is executable.</p>
+        </article>
+      )}
+      <p className="muted health-note">{payload?.runtime.note ?? "Product UAT payload unavailable. No product action is executable."}</p>
     </section>
   );
 }

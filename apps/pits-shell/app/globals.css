@@ -662,6 +662,10 @@ p {
   border-left: 4px solid var(--gold);
 }
 
+.product-uat-panel {
+  border-left: 4px solid var(--teal);
+}
+
 .owner-review-marker-row,
 .owner-action-boundary-row {
   display: flex;
@@ -721,6 +725,28 @@ p {
 
 .future-action-card {
   background: #fffefa;
+}
+
+.user-journey-card {
+  background: #f7fffb;
+}
+
+.functional-gap-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.functional-gap-list span {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+  padding: 7px 9px;
 }
 
 .suggested-actions {

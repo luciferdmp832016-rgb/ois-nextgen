@@ -419,17 +419,99 @@ export type AdminBoundaryPayload = {
   futureAdminActions: AdminBoundaryAction[];
 };
 
+export type ProductUatCategory =
+  | "AVAILABLE_FOR_BROWSER_UAT"
+  | "PLATFORM_CONTROL_PLANE_ONLY"
+  | "PLACEHOLDER_OR_SHELL_ONLY"
+  | "FUTURE_PRODUCT_FUNCTION"
+  | "BLOCKED_BY_MISSING_DATA_MODEL"
+  | "BLOCKED_BY_WRITE_BOUNDARY"
+  | "BLOCKED_BY_AUTH_OR_PERMISSION"
+  | "NEEDS_OWNER_DECISION";
+
+export type ProductUatSurface = {
+  id: string;
+  productCode: string;
+  productName: string;
+  surfaceName: string;
+  route: string | null;
+  entityType: OwnerReviewItem["entityType"] | "platform";
+  entityId: string | null;
+  category: ProductUatCategory;
+  statusLabel: string;
+  testableNow: boolean;
+  realProductFunction: boolean;
+  ownerUatStatus: "READY_FOR_BROWSER_UAT" | "MAPPED_AS_CONTROL_PLANE" | "NOT_IMPLEMENTED_YET";
+  currentUserTest: string;
+  currentReality: string;
+  functionalGap: string | null;
+  blockers: ProductUatCategory[];
+  recommendedNextStep: string;
+  nextUserLevelTestPath: string | null;
+  evidence: string[];
+};
+
+export type ProductUatProduct = {
+  productCode: string;
+  productName: string;
+  productId: string | null;
+  currentState: string;
+  ownerUatStatus: "READY_FOR_BROWSER_UAT" | "MAPPED_AS_CONTROL_PLANE" | "NOT_IMPLEMENTED_YET";
+  testableNow: string[];
+  controlPlaneOnly: string[];
+  missingProductFunctions: string[];
+  recommendedNextJourneys: string[];
+  surfaces: ProductUatSurface[];
+};
+
+export type ProductUatPayload = {
+  metadata: RegistryMetadata;
+  runtime: {
+    coreApiBaseUrl: string;
+    oisConsoleBaseUrl: string;
+    pitsShellBaseUrl: string;
+    uatMode: string;
+    stage: string;
+    note: string;
+  };
+  productUat: {
+    stage: string;
+    mutationEndpointsAdded: boolean;
+    writePermission: string;
+    markers: string[];
+  };
+  summary: {
+    products: number;
+    surfaces: number;
+    visiblePages: number;
+    testableNow: number;
+    realProductFunctionsAvailable: number;
+    controlPlaneOnly: number;
+    placeholderOrShellOnly: number;
+    futureProductFunctions: number;
+    blockedByMissingDataModel: number;
+    blockedByWriteBoundary: number;
+    blockedByAuthOrPermission: number;
+    needsOwnerDecision: number;
+  };
+  categories: Array<{ category: ProductUatCategory; label: string; description: string }>;
+  products: ProductUatProduct[];
+  recommendedNextProductJourneys: string[];
+};
+
 export type PlatformRegistrySnapshot = PlatformSnapshot & {
   registry: ApiResult;
   registryHealth: ApiResult;
   registryReadiness: ApiResult;
   ownerReview: ApiResult;
   adminBoundary: ApiResult;
+  productUat: ApiResult;
   registryMetadata: RegistryMetadata | null;
   registryHealthPayload: RegistryHealthPayload | null;
   registryReadinessPayload: RegistryReadinessPayload | null;
   ownerReviewPayload: OwnerReviewPayload | null;
   adminBoundaryPayload: AdminBoundaryPayload | null;
+  productUatPayload: ProductUatPayload | null;
   registryHealthEntities: RegistryHealthPayload["entities"];
   registryReadinessEntities: RegistryReadinessPayload["entities"];
   products: ProductRegistryItem[];
@@ -716,6 +798,36 @@ export function getAdminBoundaryPayload(source: unknown): AdminBoundaryPayload |
   };
 }
 
+export function getProductUatPayload(source: unknown): ProductUatPayload | null {
+  if (
+    !isRecord(source) ||
+    !isRecord(source.summary) ||
+    !isRecord(source.productUat) ||
+    !Array.isArray(source.categories) ||
+    !Array.isArray(source.products) ||
+    !Array.isArray(source.recommendedNextProductJourneys)
+  ) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+  const runtime = isRecord(source.runtime) ? source.runtime : null;
+
+  if (!metadata || !runtime) {
+    return null;
+  }
+
+  return {
+    metadata,
+    runtime: runtime as ProductUatPayload["runtime"],
+    productUat: source.productUat as ProductUatPayload["productUat"],
+    summary: source.summary as ProductUatPayload["summary"],
+    categories: source.categories as ProductUatPayload["categories"],
+    products: source.products as ProductUatProduct[],
+    recommendedNextProductJourneys: source.recommendedNextProductJourneys as string[]
+  };
+}
+
 function getRegistryErrorMessage(source: unknown) {
   if (!isRecord(source) || !isRecord(source.error)) {
     return null;
@@ -794,20 +906,22 @@ export async function getPlatformSnapshot(): Promise<PlatformSnapshot> {
 
 export async function getPlatformRegistrySnapshot(): Promise<PlatformRegistrySnapshot> {
   const coreApiUrl = getCoreApiUrl();
-  const [health, overview, registry, registryHealth, registryReadiness, ownerReview, adminBoundary] = await Promise.all([
+  const [health, overview, registry, registryHealth, registryReadiness, ownerReview, adminBoundary, productUat] = await Promise.all([
     fetchCoreApi("/health", coreApiUrl),
     fetchCoreApi("/platform/overview", coreApiUrl),
     fetchCoreApi("/platform/registry", coreApiUrl),
     fetchCoreApi("/platform/registry/health", coreApiUrl),
     fetchCoreApi("/platform/registry/readiness", coreApiUrl),
     fetchCoreApi("/platform/owner-review", coreApiUrl),
-    fetchCoreApi("/platform/admin-boundary", coreApiUrl)
+    fetchCoreApi("/platform/admin-boundary", coreApiUrl),
+    fetchCoreApi("/platform/product-uat", coreApiUrl)
   ]);
   const platform = createPlatformSnapshot(coreApiUrl, health, overview);
   const registryHealthPayload = getRegistryHealthPayload(registryHealth.data);
   const registryReadinessPayload = getRegistryReadinessPayload(registryReadiness.data);
   const ownerReviewPayload = getOwnerReviewPayload(ownerReview.data);
   const adminBoundaryPayload = getAdminBoundaryPayload(adminBoundary.data);
+  const productUatPayload = getProductUatPayload(productUat.data);
 
   return {
     ...platform,
@@ -816,11 +930,13 @@ export async function getPlatformRegistrySnapshot(): Promise<PlatformRegistrySna
     registryReadiness,
     ownerReview,
     adminBoundary,
+    productUat,
     registryMetadata: getRegistryMetadata(registry.data),
     registryHealthPayload,
     registryReadinessPayload,
     ownerReviewPayload,
     adminBoundaryPayload,
+    productUatPayload,
     registryHealthEntities: registryHealthPayload?.entities ?? emptyRegistryHealthEntities(),
     registryReadinessEntities: registryReadinessPayload?.entities ?? emptyRegistryReadinessEntities(),
     products: getArray<ProductRegistryItem>(registry.data, "products"),
@@ -999,4 +1115,32 @@ export function getAdminBoundaryActionsFor(
 
 export function getAdminBoundaryPreviewActions(snapshot: PlatformRegistrySnapshot, limit = 6) {
   return snapshot.adminBoundaryPayload?.futureAdminActions.slice(0, limit) ?? [];
+}
+
+export function getProductUatProduct(snapshot: PlatformRegistrySnapshot, productCode: string) {
+  return snapshot.productUatPayload?.products.find((product) => product.productCode === productCode) ?? null;
+}
+
+export function getProductUatSurfacesFor(
+  snapshot: PlatformRegistrySnapshot,
+  productCode: string,
+  entityType?: ProductUatSurface["entityType"],
+  entityId?: string
+) {
+  const product = getProductUatProduct(snapshot, productCode);
+
+  if (!product) {
+    return [];
+  }
+
+  if (!entityType || !entityId) {
+    return product.surfaces;
+  }
+
+  const entitySurfaces = product.surfaces.filter((surface) => surface.entityType === entityType && surface.entityId === entityId);
+  return entitySurfaces.length > 0 ? entitySurfaces : product.surfaces.slice(0, 4);
+}
+
+export function getProductUatPreviewSurfaces(snapshot: PlatformRegistrySnapshot, limit = 6) {
+  return snapshot.productUatPayload?.products.flatMap((product) => product.surfaces).slice(0, limit) ?? [];
 }

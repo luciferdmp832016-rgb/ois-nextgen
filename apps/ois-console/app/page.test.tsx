@@ -517,6 +517,212 @@ const adminBoundaryPayload = {
   ]
 };
 
+const productUatPayload = {
+  metadata: registryPayload.metadata,
+  runtime: {
+    coreApiBaseUrl: coreApiUrl,
+    oisConsoleBaseUrl: "https://ois-ng.dmp247.com",
+    pitsShellBaseUrl: pitsPublicBaseUrl,
+    uatMode: "read-only-product-user-journey-map",
+    stage: "Stage 1K",
+    note: "Product User Journey UAT is a read-only functional gap map. It does not enable product writes or admin actions."
+  },
+  productUat: {
+    stage: "Stage 1K",
+    mutationEndpointsAdded: false,
+    writePermission: "NOT_ALLOWED_IN_STAGE_1K",
+    markers: ["Product User Journey UAT", "Testable now", "Control-plane only", "Functional gap map", "Next product journey"]
+  },
+  summary: {
+    products: 2,
+    surfaces: 6,
+    visiblePages: 5,
+    testableNow: 4,
+    realProductFunctionsAvailable: 0,
+    controlPlaneOnly: 2,
+    placeholderOrShellOnly: 1,
+    futureProductFunctions: 1,
+    blockedByMissingDataModel: 1,
+    blockedByWriteBoundary: 1,
+    blockedByAuthOrPermission: 0,
+    needsOwnerDecision: 1
+  },
+  categories: [
+    { category: "AVAILABLE_FOR_BROWSER_UAT", label: "Testable now", description: "Browser UAT is possible without writes." },
+    { category: "PLATFORM_CONTROL_PLANE_ONLY", label: "Control-plane only", description: "Registry, runtime or administration view." },
+    { category: "PLACEHOLDER_OR_SHELL_ONLY", label: "Placeholder or shell only", description: "Shell exists before product workflow." },
+    { category: "FUTURE_PRODUCT_FUNCTION", label: "Not implemented yet", description: "Planned future product behavior." },
+    { category: "BLOCKED_BY_MISSING_DATA_MODEL", label: "Needs data model", description: "Domain model is required first." },
+    { category: "BLOCKED_BY_WRITE_BOUNDARY", label: "Needs write boundary", description: "Write/audit boundary is required first." },
+    { category: "BLOCKED_BY_AUTH_OR_PERMISSION", label: "Needs auth or permission", description: "Permission model is required first." },
+    { category: "NEEDS_OWNER_DECISION", label: "Needs owner decision", description: "Owner priority is required first." }
+  ],
+  products: [
+    {
+      productCode: "OIS",
+      productName: "OIS Console",
+      productId: null,
+      currentState: "Strong platform/control-plane foundation; true OIS end-user functions are mapped but not implemented yet.",
+      ownerUatStatus: "READY_FOR_BROWSER_UAT",
+      testableNow: ["OIS Console root and shell", "OIS dashboard and platform overview", "Workspace registry and workspace details"],
+      controlPlaneOnly: ["OIS dashboard and platform overview", "Workspace registry and workspace details"],
+      missingProductFunctions: ["Future OIS workspace/product user home"],
+      recommendedNextJourneys: [
+        "Define the first OIS workspace user home",
+        "Choose document, meeting or knowledge as the first OIS product workflow"
+      ],
+      surfaces: [
+        {
+          id: "ois:root-shell",
+          productCode: "OIS",
+          productName: "OIS Console",
+          surfaceName: "OIS Console root and shell",
+          route: "https://ois-ng.dmp247.com/",
+          entityType: "platform",
+          entityId: null,
+          category: "AVAILABLE_FOR_BROWSER_UAT",
+          statusLabel: "Testable now",
+          testableNow: true,
+          realProductFunction: false,
+          ownerUatStatus: "READY_FOR_BROWSER_UAT",
+          currentUserTest: "Open the OIS Console root and verify shell layout, cockpit, status badges and safe staging links.",
+          currentReality: "This is a platform/product administration shell, not an end-user OIS business workflow.",
+          functionalGap: "True OIS workspace, document, meeting or knowledge user journeys are not implemented yet.",
+          blockers: ["NEEDS_OWNER_DECISION"],
+          recommendedNextStep: "Choose the first OIS end-user product journey and define acceptance checks.",
+          nextUserLevelTestPath: "https://ois-ng.dmp247.com/dashboard",
+          evidence: ["Modern Shell Layout", "Owner Registry Cockpit / Registry Runtime Summary"]
+        },
+        {
+          id: "ois:dashboard",
+          productCode: "OIS",
+          productName: "OIS Console",
+          surfaceName: "OIS dashboard and platform overview",
+          route: "https://ois-ng.dmp247.com/dashboard",
+          entityType: "platform",
+          entityId: null,
+          category: "PLATFORM_CONTROL_PLANE_ONLY",
+          statusLabel: "Control-plane only",
+          testableNow: true,
+          realProductFunction: false,
+          ownerUatStatus: "MAPPED_AS_CONTROL_PLANE",
+          currentUserTest: "Verify registry health, readiness, owner review and admin boundary summaries.",
+          currentReality: "The dashboard proves control-plane readiness and runtime status.",
+          functionalGap: "It does not yet execute OIS user work such as meetings, documents, knowledge capture or copilot tasks.",
+          blockers: ["BLOCKED_BY_MISSING_DATA_MODEL", "NEEDS_OWNER_DECISION"],
+          recommendedNextStep: "Pick one user-level OIS workflow as the next product test.",
+          nextUserLevelTestPath: "https://ois-ng.dmp247.com/dashboard",
+          evidence: ["Registry Governance / Readiness", "Owner Review Queue", "Admin Boundary"]
+        },
+        {
+          id: "ois:workspace-registry",
+          productCode: "OIS",
+          productName: "OIS Console",
+          surfaceName: "Workspace registry and workspace details",
+          route: "https://ois-ng.dmp247.com/workspaces/ws_pmc_org_demo",
+          entityType: "workspace",
+          entityId: "ws_pmc_org_demo",
+          category: "PLATFORM_CONTROL_PLANE_ONLY",
+          statusLabel: "Control-plane only",
+          testableNow: true,
+          realProductFunction: false,
+          ownerUatStatus: "MAPPED_AS_CONTROL_PLANE",
+          currentUserTest: "Open a workspace detail to verify tenant, workspace and project relationships.",
+          currentReality: "This is workspace administration and relationship visibility.",
+          functionalGap: "It does not yet provide an end-user workspace home, task stream or collaboration workflow.",
+          blockers: ["BLOCKED_BY_AUTH_OR_PERMISSION", "BLOCKED_BY_MISSING_DATA_MODEL"],
+          recommendedNextStep: "Define the workspace user's landing journey and required permission model.",
+          nextUserLevelTestPath: "https://ois-ng.dmp247.com/workspaces/ws_pmc_org_demo",
+          evidence: ["Workspace Governance / Readiness", "Workspace Runtime Health"]
+        },
+        {
+          id: "ois:future-workspace-home",
+          productCode: "OIS",
+          productName: "OIS Console",
+          surfaceName: "Future OIS workspace/product user home",
+          route: null,
+          entityType: "workspace",
+          entityId: "ws_pmc_org_demo",
+          category: "PLACEHOLDER_OR_SHELL_ONLY",
+          statusLabel: "Placeholder or shell only",
+          testableNow: false,
+          realProductFunction: true,
+          ownerUatStatus: "NOT_IMPLEMENTED_YET",
+          currentUserTest: "No browser UAT path exists yet for a true OIS workspace user home.",
+          currentReality: "Navigation and registry context exist, but the end-user workspace function does not.",
+          functionalGap: "Needs concrete user stories, data model and page contract.",
+          blockers: ["BLOCKED_BY_MISSING_DATA_MODEL", "NEEDS_OWNER_DECISION"],
+          recommendedNextStep: "Define the first OIS workspace user journey and owner acceptance path.",
+          nextUserLevelTestPath: null,
+          evidence: ["Not implemented yet", "Functional gap map"]
+        }
+      ]
+    },
+    {
+      productCode: "PITS",
+      productName: "PITS",
+      productId: "prod_pits",
+      currentState: "Project registry shell and readiness shell; true project workflow app behavior is mapped but not implemented yet.",
+      ownerUatStatus: "READY_FOR_BROWSER_UAT",
+      testableNow: ["PITS project list", "PITS project detail"],
+      controlPlaneOnly: ["PITS runtime, readiness and boundary summary"],
+      missingProductFunctions: ["Future issue and task workflow"],
+      recommendedNextJourneys: [
+        "Define a read-only PITS issue/task list",
+        "Keep project status writes disabled until audit/write boundaries are approved"
+      ],
+      surfaces: [
+        {
+          id: "pits:project-list",
+          productCode: "PITS",
+          productName: "PITS",
+          surfaceName: "PITS project list",
+          route: `${pitsPublicBaseUrl}/projects`,
+          entityType: "project",
+          entityId: "prj_emerald_precinct_demo",
+          category: "AVAILABLE_FOR_BROWSER_UAT",
+          statusLabel: "Testable now",
+          testableNow: true,
+          realProductFunction: false,
+          ownerUatStatus: "READY_FOR_BROWSER_UAT",
+          currentUserTest: "Open Projects and confirm project cards, installation context, readiness and runtime health.",
+          currentReality: "This is testable as a project registry shell and readiness shell, not a true workflow app.",
+          functionalGap: "It does not yet support issue/task creation, assignment, status updates or project workflow execution.",
+          blockers: ["BLOCKED_BY_WRITE_BOUNDARY", "BLOCKED_BY_MISSING_DATA_MODEL"],
+          recommendedNextStep: "Define a read-only issue/task list as the first true PITS workflow baseline.",
+          nextUserLevelTestPath: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`,
+          evidence: ["Project Selector", "Project Installation Registry"]
+        },
+        {
+          id: "pits:future-project-status-write",
+          productCode: "PITS",
+          productName: "PITS",
+          surfaceName: "Future project status update",
+          route: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`,
+          entityType: "installation",
+          entityId: "inst_pits_emerald",
+          category: "BLOCKED_BY_WRITE_BOUNDARY",
+          statusLabel: "Needs write boundary",
+          testableNow: false,
+          realProductFunction: true,
+          ownerUatStatus: "NOT_IMPLEMENTED_YET",
+          currentUserTest: "No status write can be tested in Stage 1K.",
+          currentReality: "Write actions remain intentionally blocked.",
+          functionalGap: "Needs audit trail, confirmation, rollback and permissions before project status changes.",
+          blockers: ["BLOCKED_BY_WRITE_BOUNDARY"],
+          recommendedNextStep: "Keep status updates read-only until the owner approves a write-boundary stage.",
+          nextUserLevelTestPath: null,
+          evidence: ["Blocked in current stage", "Preview only"]
+        }
+      ]
+    }
+  ],
+  recommendedNextProductJourneys: [
+    "Confirm whether OIS workspace home or PITS issue/task workflow is the first true product journey.",
+    "Start with read-only product workflow screens before any write/admin action."
+  ]
+};
+
 const productDetailPayload = {
   metadata: registryPayload.metadata,
   product: {
@@ -582,6 +788,7 @@ function mockCoreApiFetch(overrides?: {
   registryReadiness?: unknown;
   ownerReview?: unknown;
   adminBoundary?: unknown;
+  productUat?: unknown;
 }) {
   const fetchMock = vi.fn(async (input: Parameters<typeof fetch>[0]) => {
     const url = input instanceof Request ? input.url : String(input);
@@ -612,6 +819,10 @@ function mockCoreApiFetch(overrides?: {
 
     if (url === `${coreApiUrl}/platform/admin-boundary`) {
       return jsonResponse(overrides?.adminBoundary ?? adminBoundaryPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/product-uat`) {
+      return jsonResponse(overrides?.productUat ?? productUatPayload);
     }
 
     if (url === `${coreApiUrl}/platform/products/prod_pits`) {
@@ -702,6 +913,18 @@ describe("OIS Console product shell", () => {
     expect(html).toContain("Missing runtime URL");
     expect(html).toContain("Forbidden link guard");
     expect(html).toContain("Ready to operate");
+    expect(html).toContain("Product User Journey UAT Baseline");
+    expect(html).toContain("Product User Journey UAT");
+    expect(html).toContain("Testable now");
+    expect(html).toContain("Control-plane only");
+    expect(html).toContain("Functional gap map");
+    expect(html).toContain("Next product journey");
+    expect(html).toContain("What can be tested now?");
+    expect(html).toContain("What is platform/control-plane only?");
+    expect(html).toContain("What is not implemented yet?");
+    expect(html).toContain("Recommended next product functions");
+    expect(html).toContain("Owner UAT status");
+    expect(html).toContain("Next user-level test path");
     expect(html).toContain("Dashboard");
     expect(html).toContain("Products");
     expect(html).toContain("Workspaces");
@@ -729,6 +952,7 @@ describe("OIS Console product shell", () => {
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry/readiness`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/owner-review`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/admin-boundary`, { cache: "no-store" });
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/product-uat`, { cache: "no-store" });
   });
 
   it("keeps the root Ready to operate marker when the cockpit needs owner review", async () => {
@@ -781,6 +1005,16 @@ describe("OIS Console product shell", () => {
         "Blocked in current stage",
         "Future admin action",
         "Preview only - not executable yet",
+        "Product User Journey / UAT Baseline",
+        "Product User Journey UAT",
+        "Testable now",
+        "Control-plane only",
+        "Functional gap map",
+        "Next product journey",
+        "What can be tested now?",
+        "What is platform/control-plane only?",
+        "What is not implemented yet?",
+        "Recommended next product functions",
         "Suggested next actions",
         "Missing runtime URL",
         "Forbidden link guard",
@@ -840,6 +1074,13 @@ describe("OIS Console product shell", () => {
         "Preview only",
         "Blocked in current stage",
         "Future admin action",
+        "Product Capability / UAT Status",
+        "Product User Journey UAT",
+        "Testable now",
+        "Control-plane only",
+        "Functional gap map",
+        "Next product journey",
+        "Owner UAT status",
         "Health ready",
         "Registry Governance / Readiness",
         "Registry Runtime Health",
@@ -897,6 +1138,16 @@ describe("OIS Console product shell", () => {
     expect(html).toContain("Permission Model");
     expect(html).toContain("Preview only - not executable yet");
     expect(html).toContain("Blocked in current stage");
+    expect(html).toContain("Product User Journey UAT");
+    expect(html).toContain("Testable now");
+    expect(html).toContain("Functional gap map");
+    expect(html).toContain("Next product journey");
+    expect(html).toContain("What can be tested now?");
+    expect(html).toContain("What is platform/control-plane only?");
+    expect(html).toContain("What is not implemented yet?");
+    expect(html).toContain("Recommended next product functions");
+    expect(html).toContain("project registry shell and readiness shell");
+    expect(html).toContain("not a true workflow app");
     expect(html).toContain("Runtime health");
     expect(html).toContain("Readiness");
     expect(html).toContain("No issue detected");
@@ -944,6 +1195,11 @@ describe("OIS Console product shell", () => {
         "Permission Model",
         "Preview only - not executable yet",
         "Blocked in current stage",
+        "Product User Journey UAT",
+        "Control-plane only",
+        "Functional gap map",
+        "Next product journey",
+        "end-user workspace home",
         "Workspace Governance / Readiness",
         "Workspace Runtime Health",
         "https://pits-ng.dmp247.com/projects/prj_emerald_precinct_demo"
@@ -977,6 +1233,11 @@ describe("OIS Console product shell", () => {
         "Permission Model",
         "Preview only - not executable yet",
         "Blocked in current stage",
+        "Product User Journey UAT",
+        "Functional gap map",
+        "Next product journey",
+        "Future project status update",
+        "No status write can be tested in Stage 1K",
         "Installation Governance / Readiness",
         "Installation Runtime Health",
         "/products/prod_pits",

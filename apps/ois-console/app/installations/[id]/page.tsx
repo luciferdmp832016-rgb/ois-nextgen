@@ -16,6 +16,7 @@ import {
   OwnerEntityUatSummary,
   OwnerReviewQueuePanel,
   PageHeading,
+  ProductUatPanel,
   RegistryHealthItemPanel,
   RegistryReadinessItemPanel,
   RelatedLinksPanel
@@ -115,6 +116,8 @@ export default async function InstallationDetailPage({ params }: InstallationDet
       <OwnerReviewQueuePanel snapshot={snapshot} entityType="installation" entityId={installation.id} />
 
       <AdminBoundaryPanel snapshot={snapshot} entityType="installation" entityId={installation.id} />
+
+      <ProductUatPanel snapshot={snapshot} productCode={installation.productCode} entityType="installation" entityId={installation.id} />
 
       <RegistryReadinessItemPanel title="Installation Governance / Readiness" item={installationReadiness} />
 

@@ -4,6 +4,7 @@ import {
   InstallationRegistryPanel,
   PageHeading,
   PitsAdminBoundaryPanel,
+  PitsProductUatPanel,
   PitsRegistryCockpit,
   PitsOwnerReviewQueuePanel,
   PitsShell,
@@ -28,6 +29,7 @@ export default async function ProjectsPage() {
       <PitsRegistryCockpit snapshot={snapshot} />
       <PitsOwnerReviewQueuePanel snapshot={snapshot} />
       <PitsAdminBoundaryPanel snapshot={snapshot} />
+      <PitsProductUatPanel snapshot={snapshot} title="Product User Journey / UAT Baseline" />
       <ProjectSelector snapshot={snapshot} />
       <InstallationRegistryPanel snapshot={snapshot} />
       <ProjectOverviewCards snapshot={snapshot} />

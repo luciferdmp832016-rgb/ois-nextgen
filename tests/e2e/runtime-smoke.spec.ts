@@ -7,7 +7,7 @@ const coreApiUrl = process.env.CORE_API_URL ?? "http://localhost:4000";
 test("OIS Console renders the Stage A control plane shell", async ({ page }) => {
   await page.goto(consoleUrl, { waitUntil: "domcontentloaded" });
 
-  await expect(page.getByRole("heading", { name: "OIS Console" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "OIS Console", exact: true })).toBeVisible();
   await expect(page.getByText("DEMO DATA - NOT PRODUCTION")).toBeVisible();
   await page.screenshot({ path: "test-results/stage-0d/ois-console-home.png", fullPage: true });
 });
@@ -15,7 +15,7 @@ test("OIS Console renders the Stage A control plane shell", async ({ page }) => 
 test("PITS Shell renders the Stage A product runtime shell", async ({ page }) => {
   await page.goto(pitsUrl, { waitUntil: "domcontentloaded" });
 
-  await expect(page.getByRole("heading", { name: "PITS Shell" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "PITS Shell", exact: true })).toBeVisible();
   await expect(page.getByText("DEMO DATA - NOT PRODUCTION")).toBeVisible();
   await page.screenshot({ path: "test-results/stage-0d/pits-shell-home.png", fullPage: true });
 });
