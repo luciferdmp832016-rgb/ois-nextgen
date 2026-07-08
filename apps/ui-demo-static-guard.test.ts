@@ -36,11 +36,16 @@ const expectedRouteFiles = [
   "pits-shell/app/projects/[id]/work-items/[itemId]/page.tsx",
   "pits-shell/app/runtime/page.tsx"
 ];
-const expectedUxBlueprintDocs = [
+const expectedStage2CUxBlueprintDocs = [
   "architecture/ux/PITS_PRODUCT_UX_BLUEPRINT.md",
   "architecture/ux/OIS_PRODUCT_UX_BLUEPRINT.md",
   "architecture/ux/PRODUCT_PAGE_VS_ADMIN_CONSOLE_MAP.md",
   "architecture/implementation/STAGE_2C_PRODUCT_UX_BLUEPRINT_SCREEN_FLOW_DRAFT_GATE.md"
+];
+const expectedStage2DLocalizationDocs = [
+  "architecture/ux/LOCALIZATION_FOUNDATION.md",
+  "architecture/ux/PRODUCT_FLOW_VISUAL_PREVIEW.md",
+  "architecture/implementation/STAGE_2D_LOCALIZATION_FOUNDATION_PRODUCT_FLOW_PREVIEW.md"
 ];
 
 function collectScannedFiles(root: string): string[] {
@@ -97,15 +102,29 @@ describe("UI demo package static guard", () => {
 
   it("keeps Stage 2C UX blueprint docs present with owner approval markers", () => {
     const repoRoot = fileURLToPath(new URL("..", import.meta.url));
-    const missingDocs = expectedUxBlueprintDocs.filter((doc) => !existsSync(join(repoRoot, doc)));
+    const missingDocs = expectedStage2CUxBlueprintDocs.filter((doc) => !existsSync(join(repoRoot, doc)));
 
     expect(missingDocs).toEqual([]);
 
-    for (const doc of expectedUxBlueprintDocs) {
+    for (const doc of expectedStage2CUxBlueprintDocs) {
       const content = readFileSync(join(repoRoot, doc), "utf8");
 
       expect(content).toContain("Stage 2C");
       expect(content).toContain("PRODUCT_UX_BLUEPRINT_SCREEN_FLOW_DRAFT_READY");
+      expect(content).toContain("Owner");
+    }
+  });
+
+  it("keeps Stage 2D localization and visual preview docs present", () => {
+    const repoRoot = fileURLToPath(new URL("..", import.meta.url));
+
+    for (const doc of expectedStage2DLocalizationDocs) {
+      const content = readFileSync(join(repoRoot, doc), "utf8");
+
+      expect(content).toContain("Stage 2D");
+      expect(content).toContain("LOCALIZATION_FOUNDATION_PRODUCT_FLOW_PREVIEW_READY");
+      expect(content).toContain("Localization Foundation");
+      expect(content).toContain("Product Flow Preview");
       expect(content).toContain("Owner");
     }
   });

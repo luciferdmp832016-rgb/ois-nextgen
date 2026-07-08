@@ -467,6 +467,48 @@ p {
   overflow-wrap: anywhere;
 }
 
+.language-selector {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: inline-flex;
+  gap: 8px;
+  margin: 0;
+  min-height: 34px;
+  padding: 5px 7px;
+}
+
+.language-selector-label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.language-selector select {
+  background: transparent;
+  border: 0;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  min-width: 112px;
+  padding: 2px 4px;
+}
+
+.visually-hidden {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .status,
 .pill {
   display: inline-flex;
@@ -741,6 +783,142 @@ p {
   padding: 7px 9px;
 }
 
+.product-flow-visual-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.screen-flow-rail {
+  align-items: stretch;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(156px, 1fr));
+}
+
+.flow-rail-item {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: #344554;
+  display: flex;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 8px;
+  justify-content: space-between;
+  min-height: 52px;
+  min-width: 0;
+  padding: 10px;
+}
+
+.flow-rail-item span {
+  overflow-wrap: anywhere;
+}
+
+.flow-rail-item strong {
+  color: var(--blue);
+  flex: 0 0 auto;
+}
+
+.product-flow-card {
+  display: grid;
+  gap: 12px;
+  min-height: 100%;
+}
+
+.flow-card-topline {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.flow-step {
+  align-items: center;
+  background: var(--shell-accent-soft);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--blue);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+
+.flow-card-facts {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-top: 10px;
+}
+
+.flow-card-facts div {
+  display: grid;
+  gap: 4px;
+}
+
+.flow-card-facts dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.flow-card-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.wireframe-preview {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  min-height: 116px;
+  padding: 10px;
+}
+
+.wireframe-header,
+.wireframe-row,
+.wireframe-columns span {
+  background: #dbeafe;
+  border-radius: 6px;
+}
+
+.wireframe-header {
+  height: 22px;
+  width: 48%;
+}
+
+.wireframe-row {
+  height: 12px;
+  width: 92%;
+}
+
+.wireframe-row.short {
+  width: 68%;
+}
+
+.wireframe-columns {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 4px;
+}
+
+.wireframe-columns span {
+  min-height: 38px;
+}
+
+.flow-owner-review {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
 .suggested-actions {
   border-left: 3px solid var(--blue);
   display: grid;
@@ -940,7 +1118,8 @@ input {
   }
 
   .owner-page-cues,
-  .owner-link-list {
+  .owner-link-list,
+  .language-selector {
     display: grid;
     grid-template-columns: 1fr;
   }

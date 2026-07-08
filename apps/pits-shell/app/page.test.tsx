@@ -17,6 +17,7 @@ const dbEnvKey = ["DATABASE", "URL"].join("_");
 const adminBoundaryPath = ["/platform", "admin-boundary"].join("/");
 const productUatPath = ["/platform", "product-uat"].join("/");
 const controlPlaneOnlyText = ["Control", "plane only"].join("-");
+const runtimeAdminText = ["Runtime", "Admin"].join("/");
 
 const healthPayload = {
   status: "ok",
@@ -1191,6 +1192,10 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("Visual Hierarchy Standard");
     expect(html).toContain("Owner-friendly Status Badges");
     expect(html).toContain('data-owner-status="Owner-friendly Status Badges"');
+    expect(html).toContain("Localization Foundation");
+    expect(html).toContain("Language Settings");
+    expect(html).toContain("English");
+    expect(html).toContain("Tiếng Việt");
     expect(html).toContain("What this is");
     expect(html).toContain("Hide nav");
     expect(html).toContain("Menu");
@@ -1251,14 +1256,23 @@ describe("PITS Shell product shell", () => {
         "PITS Product UX Blueprint",
         "Product Flow Preview",
         "UX Draft / Product Flow Preview",
+        "Localization Foundation",
+        "Language Settings",
+        "English",
+        "Tiếng Việt",
+        "PITS Product UX Preview",
         "Product page vs Admin console",
-        "Home",
-        "Projects",
+        "PITS Home",
+        "Projects List",
         "Project Detail",
-        "Workboard",
+        "Project Workboard",
         "Work Item Detail",
         "Dry-run Action Preview",
-        "Runtime and Admin",
+        runtimeAdminText,
+        "Primary user",
+        "Main action",
+        "Current stage status",
+        "Screen mock",
         "Owner approval checklist",
         "No write endpoints added",
         "No data will be changed",
@@ -1360,6 +1374,10 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("Visual Hierarchy Standard");
     expect(html).toContain("Owner-friendly Status Badges");
     expect(html).toContain('data-owner-status="Owner-friendly Status Badges"');
+    expect(html).toContain("Localization Foundation");
+    expect(html).toContain("Language Settings");
+    expect(html).toContain("English");
+    expect(html).toContain("Tiếng Việt");
     for (const marker of markers) {
       expect(html).toContain(marker);
     }
