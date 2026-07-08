@@ -5,6 +5,7 @@ import {
   OwnerRegistryCockpit,
   PageHeading,
   PlatformOverviewCard,
+  ProductUatPanel,
   ProductModuleOverview,
   RuntimeStatusCard
 } from "./shell";
@@ -20,6 +21,7 @@ export default async function Page() {
         Control-plane baseline for workspaces, products, modules and runtime health.
       </PageHeading>
       <OwnerRegistryCockpit snapshot={snapshot} />
+      <ProductUatPanel snapshot={snapshot} title="Product User Journey UAT Baseline" />
       <section className="panel" data-root-cockpit-marker="Ready to operate">
         <span className="eyebrow">Owner root check</span>
         <h3>Ready to operate</h3>

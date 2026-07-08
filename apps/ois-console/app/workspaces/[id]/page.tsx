@@ -17,6 +17,7 @@ import {
   OwnerEntityUatSummary,
   OwnerReviewQueuePanel,
   PageHeading,
+  ProductUatPanel,
   RegistryHealthItemPanel,
   RegistryReadinessItemPanel,
   RelatedLinksPanel
@@ -102,6 +103,8 @@ export default async function WorkspaceDetailPage({ params }: WorkspaceDetailPag
       <OwnerReviewQueuePanel snapshot={snapshot} entityType="workspace" entityId={workspace.id} />
 
       <AdminBoundaryPanel snapshot={snapshot} entityType="workspace" entityId={workspace.id} />
+
+      <ProductUatPanel snapshot={snapshot} productCode="OIS" entityType="workspace" entityId={workspace.id} />
 
       <RegistryReadinessItemPanel title="Workspace Governance / Readiness" item={workspaceReadiness} />
 

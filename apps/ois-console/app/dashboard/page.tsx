@@ -8,6 +8,7 @@ import {
   OwnerReviewQueuePanel,
   PageHeading,
   PlatformOverviewCard,
+  ProductUatPanel,
   RegistryGovernancePanel,
   ProductModuleOverview,
   RegistryHealthPanel,
@@ -52,6 +53,7 @@ export default async function DashboardPage() {
       <OwnerRegistryCockpit snapshot={snapshot} />
       <OwnerReviewQueuePanel snapshot={snapshot} />
       <AdminBoundaryPanel snapshot={snapshot} />
+      <ProductUatPanel snapshot={snapshot} title="Product User Journey / UAT Baseline" />
       <section className="dashboard-grid">
         <PlatformOverviewCard snapshot={snapshot} />
         <ProductModuleOverview snapshot={snapshot} />

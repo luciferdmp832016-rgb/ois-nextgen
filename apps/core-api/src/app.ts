@@ -444,6 +444,48 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
     entityId: string | null;
     entityName: string | null;
   };
+  type ProductUatCategory =
+    | "AVAILABLE_FOR_BROWSER_UAT"
+    | "PLATFORM_CONTROL_PLANE_ONLY"
+    | "PLACEHOLDER_OR_SHELL_ONLY"
+    | "FUTURE_PRODUCT_FUNCTION"
+    | "BLOCKED_BY_MISSING_DATA_MODEL"
+    | "BLOCKED_BY_WRITE_BOUNDARY"
+    | "BLOCKED_BY_AUTH_OR_PERMISSION"
+    | "NEEDS_OWNER_DECISION";
+  type ProductUatSurface = {
+    id: string;
+    productCode: string;
+    productName: string;
+    surfaceName: string;
+    route: string | null;
+    entityType: RegistryHealthEntityKind | "platform";
+    entityId: string | null;
+    category: ProductUatCategory;
+    statusLabel: string;
+    testableNow: boolean;
+    realProductFunction: boolean;
+    ownerUatStatus: "READY_FOR_BROWSER_UAT" | "MAPPED_AS_CONTROL_PLANE" | "NOT_IMPLEMENTED_YET";
+    currentUserTest: string;
+    currentReality: string;
+    functionalGap: string | null;
+    blockers: ProductUatCategory[];
+    recommendedNextStep: string;
+    nextUserLevelTestPath: string | null;
+    evidence: string[];
+  };
+  type ProductUatProduct = {
+    productCode: string;
+    productName: string;
+    productId: string | null;
+    currentState: string;
+    ownerUatStatus: "READY_FOR_BROWSER_UAT" | "MAPPED_AS_CONTROL_PLANE" | "NOT_IMPLEMENTED_YET";
+    testableNow: string[];
+    controlPlaneOnly: string[];
+    missingProductFunctions: string[];
+    recommendedNextJourneys: string[];
+    surfaces: ProductUatSurface[];
+  };
 
   const forbiddenRuntimeUrlFragments = ["localhost", "127.0.0.1", ["ois", "dmp247", "com"].join("."), ["oisys", "abacusai", "app"].join(".")];
   const approvedRuntimeBaseUrls = [
@@ -1942,6 +1984,418 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
     };
   }
 
+  function buildProductUat(registry: RegistrySnapshot) {
+    const productByCode = (code: string) => registry.products.find((product) => product.code === code) ?? null;
+    const productName = (code: string, fallback: string) => productByCode(code)?.name ?? fallback;
+    const productId = (code: string) => productByCode(code)?.id ?? null;
+    const firstProject = registry.projects[0] ?? null;
+    const firstWorkspace = registry.workspaces[0] ?? null;
+    const firstPitsInstallation = registry.installations.find((installation) => installation.productCode === "PITS") ?? registry.installations[0] ?? null;
+    const categoryDefinitions: Array<{ category: ProductUatCategory; label: string; description: string }> = [
+      {
+        category: "AVAILABLE_FOR_BROWSER_UAT",
+        label: "Testable now",
+        description: "A browser user can verify this surface today without writes."
+      },
+      {
+        category: "PLATFORM_CONTROL_PLANE_ONLY",
+        label: "Control-plane only",
+        description: "The surface is useful for administration, registry or runtime validation, not end-user product workflow."
+      },
+      {
+        category: "PLACEHOLDER_OR_SHELL_ONLY",
+        label: "Placeholder or shell only",
+        description: "The shell or navigation exists, but user-level product behavior is not implemented."
+      },
+      {
+        category: "FUTURE_PRODUCT_FUNCTION",
+        label: "Not implemented yet",
+        description: "The expected product function is planned for a later product stage."
+      },
+      {
+        category: "BLOCKED_BY_MISSING_DATA_MODEL",
+        label: "Needs data model",
+        description: "The journey needs domain entities, relationships or starter data before implementation."
+      },
+      {
+        category: "BLOCKED_BY_WRITE_BOUNDARY",
+        label: "Needs write boundary",
+        description: "The journey needs approved write, audit, confirmation and rollback rules before it can execute."
+      },
+      {
+        category: "BLOCKED_BY_AUTH_OR_PERMISSION",
+        label: "Needs auth or permission",
+        description: "The journey needs user roles, permissions or product session rules before it can be enabled."
+      },
+      {
+        category: "NEEDS_OWNER_DECISION",
+        label: "Needs owner decision",
+        description: "The next product behavior needs owner prioritization or acceptance criteria."
+      }
+    ];
+    const statusLabelFor = (category: ProductUatCategory) =>
+      categoryDefinitions.find((item) => item.category === category)?.label ?? "Not implemented yet";
+    const surface = (input: Omit<ProductUatSurface, "statusLabel">): ProductUatSurface => ({
+      ...input,
+      statusLabel: statusLabelFor(input.category)
+    });
+    const oisProductName = productName("OIS", "OIS Console");
+    const pitsProductName = productName("PITS", "PITS");
+    const oisSurfaces: ProductUatSurface[] = [
+      surface({
+        id: "ois:root-shell",
+        productCode: "OIS",
+        productName: oisProductName,
+        surfaceName: "OIS Console root and shell",
+        route: oisConsoleUrl("/"),
+        entityType: "platform",
+        entityId: null,
+        category: "AVAILABLE_FOR_BROWSER_UAT",
+        testableNow: true,
+        realProductFunction: false,
+        ownerUatStatus: "READY_FOR_BROWSER_UAT",
+        currentUserTest: "Open the OIS Console root and verify shell layout, cockpit, status badges and safe staging links.",
+        currentReality: "This is a platform/product administration shell, not an end-user OIS business workflow.",
+        functionalGap: "True OIS workspace, document, meeting or knowledge user journeys are not implemented yet.",
+        blockers: ["NEEDS_OWNER_DECISION"],
+        recommendedNextStep: "Choose the first OIS end-user product journey and define its data model plus acceptance checks.",
+        nextUserLevelTestPath: oisConsoleUrl("/dashboard"),
+        evidence: ["Modern Shell Layout", "Owner Registry Cockpit / Registry Runtime Summary", "Ready to operate"]
+      }),
+      surface({
+        id: "ois:dashboard",
+        productCode: "OIS",
+        productName: oisProductName,
+        surfaceName: "OIS dashboard and platform overview",
+        route: oisConsoleUrl("/dashboard"),
+        entityType: "platform",
+        entityId: null,
+        category: "PLATFORM_CONTROL_PLANE_ONLY",
+        testableNow: true,
+        realProductFunction: false,
+        ownerUatStatus: "MAPPED_AS_CONTROL_PLANE",
+        currentUserTest: "Verify registry health, readiness, owner review and admin boundary summaries.",
+        currentReality: "The dashboard proves control-plane readiness and runtime status.",
+        functionalGap: "It does not yet execute OIS user work such as meetings, documents, knowledge capture or copilot tasks.",
+        blockers: ["BLOCKED_BY_MISSING_DATA_MODEL", "NEEDS_OWNER_DECISION"],
+        recommendedNextStep: "Pick one user-level OIS workflow to replace the control-plane-only validation as the next product test.",
+        nextUserLevelTestPath: oisConsoleUrl("/dashboard"),
+        evidence: ["Registry Governance / Readiness", "Owner Review Queue", "Admin Boundary"]
+      }),
+      surface({
+        id: "ois:product-registry",
+        productCode: "OIS",
+        productName: oisProductName,
+        surfaceName: "Product registry and product details",
+        route: oisConsoleUrl("/products"),
+        entityType: "product",
+        entityId: productId("PITS"),
+        category: "PLATFORM_CONTROL_PLANE_ONLY",
+        testableNow: true,
+        realProductFunction: false,
+        ownerUatStatus: "MAPPED_AS_CONTROL_PLANE",
+        currentUserTest: "Open Products and a product detail to verify registry data, module links, readiness and runtime health.",
+        currentReality: "This is product administration and registry inspection.",
+        functionalGap: "It is not a product user's working screen for OIS or PITS behavior.",
+        blockers: ["BLOCKED_BY_WRITE_BOUNDARY"],
+        recommendedNextStep: "Define the first editable product lifecycle only after audit/write gates are approved.",
+        nextUserLevelTestPath: productId("PITS") ? oisConsoleUrl(`/products/${encodeURIComponent(productId("PITS") ?? "")}`) : oisConsoleUrl("/products"),
+        evidence: ["Products & Modules", "Product Governance / Readiness", "Product Runtime Health"]
+      }),
+      surface({
+        id: "ois:workspace-registry",
+        productCode: "OIS",
+        productName: oisProductName,
+        surfaceName: "Workspace registry and workspace details",
+        route: oisConsoleUrl("/workspaces"),
+        entityType: "workspace",
+        entityId: firstWorkspace?.id ?? null,
+        category: "PLATFORM_CONTROL_PLANE_ONLY",
+        testableNow: true,
+        realProductFunction: false,
+        ownerUatStatus: "MAPPED_AS_CONTROL_PLANE",
+        currentUserTest: "Open Workspaces and a workspace detail to verify tenant/workspace/project relationships.",
+        currentReality: "This is workspace administration and relationship visibility.",
+        functionalGap: "It does not yet provide an end-user workspace home, task stream or collaboration workflow.",
+        blockers: ["BLOCKED_BY_AUTH_OR_PERMISSION", "BLOCKED_BY_MISSING_DATA_MODEL"],
+        recommendedNextStep: "Define the workspace user's landing journey and required permission model.",
+        nextUserLevelTestPath: firstWorkspace ? oisConsoleUrl(`/workspaces/${encodeURIComponent(firstWorkspace.id)}`) : oisConsoleUrl("/workspaces"),
+        evidence: ["Workspace Overview", "Workspace Governance / Readiness", "Workspace Runtime Health"]
+      }),
+      surface({
+        id: "ois:runtime-boundaries",
+        productCode: "OIS",
+        productName: oisProductName,
+        surfaceName: "Runtime, review and audit boundaries",
+        route: oisConsoleUrl("/runtime"),
+        entityType: "platform",
+        entityId: null,
+        category: "PLATFORM_CONTROL_PLANE_ONLY",
+        testableNow: true,
+        realProductFunction: false,
+        ownerUatStatus: "MAPPED_AS_CONTROL_PLANE",
+        currentUserTest: "Verify runtime health, readiness, safe action boundary and audit/admin permission model.",
+        currentReality: "This is runtime governance and owner safety visibility.",
+        functionalGap: "It does not yet create or update user work.",
+        blockers: ["BLOCKED_BY_WRITE_BOUNDARY"],
+        recommendedNextStep: "Keep this as the safety baseline before enabling any user-level write workflow.",
+        nextUserLevelTestPath: oisConsoleUrl("/runtime"),
+        evidence: ["Runtime Status", "Safe Action Boundary", "Audit / Permission / Admin Boundary"]
+      }),
+      surface({
+        id: "ois:future-workspace-home",
+        productCode: "OIS",
+        productName: oisProductName,
+        surfaceName: "Future OIS workspace/product user home",
+        route: null,
+        entityType: "workspace",
+        entityId: firstWorkspace?.id ?? null,
+        category: "PLACEHOLDER_OR_SHELL_ONLY",
+        testableNow: false,
+        realProductFunction: true,
+        ownerUatStatus: "NOT_IMPLEMENTED_YET",
+        currentUserTest: "No browser UAT path exists yet for a true OIS workspace user home.",
+        currentReality: "Navigation and registry context exist, but the end-user workspace function does not.",
+        functionalGap: "Needs concrete user stories, data model and page contract.",
+        blockers: ["BLOCKED_BY_MISSING_DATA_MODEL", "NEEDS_OWNER_DECISION"],
+        recommendedNextStep: "Define the first OIS workspace user journey and owner acceptance path.",
+        nextUserLevelTestPath: null,
+        evidence: ["Not implemented yet", "Functional gap map"]
+      }),
+      surface({
+        id: "ois:future-knowledge-docs-copilot",
+        productCode: "OIS",
+        productName: oisProductName,
+        surfaceName: "Future meeting, document, knowledge and copilot functions",
+        route: null,
+        entityType: "platform",
+        entityId: null,
+        category: "NEEDS_OWNER_DECISION",
+        testableNow: false,
+        realProductFunction: true,
+        ownerUatStatus: "NOT_IMPLEMENTED_YET",
+        currentUserTest: "No browser UAT path exists yet for OIS meeting, document, knowledge or copilot functions.",
+        currentReality: "These are future product capabilities, not Stage 1K behavior.",
+        functionalGap: "Needs owner priority, domain model, evidence rules and non-LLM baseline tests before implementation.",
+        blockers: ["NEEDS_OWNER_DECISION", "BLOCKED_BY_MISSING_DATA_MODEL", "BLOCKED_BY_AUTH_OR_PERMISSION"],
+        recommendedNextStep: "Choose whether OIS workspace, document or knowledge should be the first true user journey.",
+        nextUserLevelTestPath: null,
+        evidence: ["Not implemented yet", "Next product journey"]
+      })
+    ];
+    const pitsSurfaces: ProductUatSurface[] = [
+      surface({
+        id: "pits:root-shell",
+        productCode: "PITS",
+        productName: pitsProductName,
+        surfaceName: "PITS runtime shell",
+        route: pitsShellUrl("/"),
+        entityType: "platform",
+        entityId: null,
+        category: "AVAILABLE_FOR_BROWSER_UAT",
+        testableNow: true,
+        realProductFunction: false,
+        ownerUatStatus: "READY_FOR_BROWSER_UAT",
+        currentUserTest: "Open PITS Shell and verify the product runtime frame, project summary and safe staging links.",
+        currentReality: "PITS is currently a project registry/readiness shell, not a true project workflow app.",
+        functionalGap: "Issue, task, incident, status and work-tracking journeys are not implemented yet.",
+        blockers: ["BLOCKED_BY_MISSING_DATA_MODEL", "NEEDS_OWNER_DECISION"],
+        recommendedNextStep: "Select the first PITS workflow journey, likely project issue/task triage, before adding writes.",
+        nextUserLevelTestPath: pitsShellUrl("/projects"),
+        evidence: ["PITS Registry Cockpit / Project Runtime Summary", "Project readiness"]
+      }),
+      surface({
+        id: "pits:project-list",
+        productCode: "PITS",
+        productName: pitsProductName,
+        surfaceName: "PITS project list",
+        route: pitsShellUrl("/projects"),
+        entityType: "project",
+        entityId: firstProject?.id ?? null,
+        category: "AVAILABLE_FOR_BROWSER_UAT",
+        testableNow: true,
+        realProductFunction: false,
+        ownerUatStatus: "READY_FOR_BROWSER_UAT",
+        currentUserTest: "Open Projects and confirm project cards, installation context, readiness and runtime health.",
+        currentReality: "This is testable as a project registry shell and readiness shell.",
+        functionalGap: "It does not yet support issue/task creation, assignment, status updates or project workflow execution.",
+        blockers: ["BLOCKED_BY_WRITE_BOUNDARY", "BLOCKED_BY_MISSING_DATA_MODEL"],
+        recommendedNextStep: "Define a read-only issue/task list or status board as the first true PITS workflow baseline.",
+        nextUserLevelTestPath: firstProject ? pitsShellUrl(`/projects/${encodeURIComponent(firstProject.id)}`) : pitsShellUrl("/projects"),
+        evidence: ["Project Selector", "Project Installation Registry", "Registry Governance / Readiness"]
+      }),
+      surface({
+        id: "pits:project-detail",
+        productCode: "PITS",
+        productName: pitsProductName,
+        surfaceName: "PITS project detail",
+        route: firstProject ? pitsShellUrl(`/projects/${encodeURIComponent(firstProject.id)}`) : pitsShellUrl("/projects"),
+        entityType: "project",
+        entityId: firstProject?.id ?? null,
+        category: "AVAILABLE_FOR_BROWSER_UAT",
+        testableNow: true,
+        realProductFunction: false,
+        ownerUatStatus: "READY_FOR_BROWSER_UAT",
+        currentUserTest: "Open one project detail and verify OIS cross-links, project readiness, runtime health and owner boundaries.",
+        currentReality: "This is a project detail/readiness shell.",
+        functionalGap: "It does not yet provide field reports, cases, tasks, incidents or work status transitions.",
+        blockers: ["BLOCKED_BY_MISSING_DATA_MODEL", "BLOCKED_BY_WRITE_BOUNDARY"],
+        recommendedNextStep: "Add a read-only project workflow baseline before enabling task or incident writes.",
+        nextUserLevelTestPath: firstProject ? pitsShellUrl(`/projects/${encodeURIComponent(firstProject.id)}`) : null,
+        evidence: ["Project Detail Source", "Project Runtime Health", "Owner-facing project UAT summary"]
+      }),
+      surface({
+        id: "pits:runtime-readiness-boundaries",
+        productCode: "PITS",
+        productName: pitsProductName,
+        surfaceName: "PITS runtime, readiness and boundary summary",
+        route: pitsShellUrl("/runtime"),
+        entityType: "platform",
+        entityId: null,
+        category: "PLATFORM_CONTROL_PLANE_ONLY",
+        testableNow: true,
+        realProductFunction: false,
+        ownerUatStatus: "MAPPED_AS_CONTROL_PLANE",
+        currentUserTest: "Verify project runtime health, readiness, owner review and audit/admin boundary status.",
+        currentReality: "This is runtime readiness and governance visibility for PITS.",
+        functionalGap: "It is not a project user's daily work execution screen.",
+        blockers: ["BLOCKED_BY_WRITE_BOUNDARY"],
+        recommendedNextStep: "Use this as the safety baseline for the first project workflow read model.",
+        nextUserLevelTestPath: pitsShellUrl("/runtime"),
+        evidence: ["Runtime Status", "Safe Action Boundary", "Audit / Permission / Admin Boundary"]
+      }),
+      surface({
+        id: "pits:future-issue-task-workflow",
+        productCode: "PITS",
+        productName: pitsProductName,
+        surfaceName: "Future issue and task workflow",
+        route: null,
+        entityType: "project",
+        entityId: firstProject?.id ?? null,
+        category: "BLOCKED_BY_MISSING_DATA_MODEL",
+        testableNow: false,
+        realProductFunction: true,
+        ownerUatStatus: "NOT_IMPLEMENTED_YET",
+        currentUserTest: "No browser UAT path exists yet for project issue or task workflow.",
+        currentReality: "Stage 1K only maps the gap.",
+        functionalGap: "Needs project workflow entities, relationships, starter data and acceptance tests.",
+        blockers: ["BLOCKED_BY_MISSING_DATA_MODEL", "NEEDS_OWNER_DECISION"],
+        recommendedNextStep: "Define read-only PITS issue/task list and detail acceptance criteria before writes.",
+        nextUserLevelTestPath: null,
+        evidence: ["Not implemented yet", "Functional gap map"]
+      }),
+      surface({
+        id: "pits:future-status-work-tracking",
+        productCode: "PITS",
+        productName: pitsProductName,
+        surfaceName: "Future incident, status and work-tracking capabilities",
+        route: null,
+        entityType: "project",
+        entityId: firstProject?.id ?? null,
+        category: "FUTURE_PRODUCT_FUNCTION",
+        testableNow: false,
+        realProductFunction: true,
+        ownerUatStatus: "NOT_IMPLEMENTED_YET",
+        currentUserTest: "No browser UAT path exists yet for incident, status or work-tracking functions.",
+        currentReality: "These are planned future product capabilities.",
+        functionalGap: "Needs owner sequencing, data model, permission model and write boundary approval.",
+        blockers: ["BLOCKED_BY_WRITE_BOUNDARY", "BLOCKED_BY_AUTH_OR_PERMISSION", "NEEDS_OWNER_DECISION"],
+        recommendedNextStep: "Choose whether issue/task triage or project status tracking is the next PITS user journey.",
+        nextUserLevelTestPath: null,
+        evidence: ["Not implemented yet", "Next product journey"]
+      }),
+      surface({
+        id: "pits:future-project-status-write",
+        productCode: "PITS",
+        productName: pitsProductName,
+        surfaceName: "Future project status update",
+        route: firstPitsInstallation?.projectId ? pitsShellUrl(`/projects/${encodeURIComponent(firstPitsInstallation.projectId)}`) : null,
+        entityType: "installation",
+        entityId: firstPitsInstallation?.id ?? null,
+        category: "BLOCKED_BY_WRITE_BOUNDARY",
+        testableNow: false,
+        realProductFunction: true,
+        ownerUatStatus: "NOT_IMPLEMENTED_YET",
+        currentUserTest: "No status write can be tested in Stage 1K.",
+        currentReality: "Write actions remain intentionally blocked.",
+        functionalGap: "Needs audit trail, confirmation, rollback and permissions before project status changes.",
+        blockers: ["BLOCKED_BY_WRITE_BOUNDARY"],
+        recommendedNextStep: "Keep status updates read-only until the owner approves a write-boundary stage.",
+        nextUserLevelTestPath: null,
+        evidence: ["Blocked in current stage", "Preview only"]
+      })
+    ];
+    const buildProduct = (
+      productCode: "OIS" | "PITS",
+      productNameValue: string,
+      surfaces: ProductUatSurface[],
+      currentState: string,
+      recommendedNextJourneys: string[]
+    ): ProductUatProduct => ({
+      productCode,
+      productName: productNameValue,
+      productId: productId(productCode),
+      currentState,
+      ownerUatStatus: "READY_FOR_BROWSER_UAT",
+      testableNow: surfaces.filter((item) => item.testableNow).map((item) => item.surfaceName),
+      controlPlaneOnly: surfaces.filter((item) => item.category === "PLATFORM_CONTROL_PLANE_ONLY").map((item) => item.surfaceName),
+      missingProductFunctions: surfaces.filter((item) => !item.testableNow || item.realProductFunction).map((item) => item.surfaceName),
+      recommendedNextJourneys,
+      surfaces
+    });
+    const products = [
+      buildProduct("OIS", oisProductName, oisSurfaces, "Strong platform/control-plane foundation; true OIS end-user functions are mapped but not implemented yet.", [
+        "Define the first OIS workspace user home",
+        "Choose document, meeting or knowledge as the first OIS product workflow",
+        "Keep admin/write actions disabled until a later approved stage"
+      ]),
+      buildProduct("PITS", pitsProductName, pitsSurfaces, "Project registry shell and readiness shell; true project workflow app behavior is mapped but not implemented yet.", [
+        "Define a read-only PITS issue/task list",
+        "Add project workflow detail after data model approval",
+        "Keep project status writes disabled until audit/write boundaries are approved"
+      ])
+    ];
+    const allSurfaces = products.flatMap((product) => product.surfaces);
+    const countCategory = (category: ProductUatCategory) => allSurfaces.filter((surfaceItem) => surfaceItem.category === category).length;
+
+    return {
+      metadata: registry.metadata,
+      runtime: {
+        ...publicRuntimeConfig,
+        uatMode: "read-only-product-user-journey-map",
+        stage: "Stage 1K",
+        note: "Product User Journey UAT is a read-only functional gap map. It does not enable product writes or admin actions."
+      },
+      productUat: {
+        stage: "Stage 1K",
+        mutationEndpointsAdded: false,
+        writePermission: "NOT_ALLOWED_IN_STAGE_1K" as const,
+        markers: ["Product User Journey UAT", "Testable now", "Control-plane only", "Functional gap map", "Next product journey"]
+      },
+      summary: {
+        products: products.length,
+        surfaces: allSurfaces.length,
+        visiblePages: allSurfaces.filter((surfaceItem) => surfaceItem.route).length,
+        testableNow: allSurfaces.filter((surfaceItem) => surfaceItem.testableNow).length,
+        realProductFunctionsAvailable: allSurfaces.filter((surfaceItem) => surfaceItem.testableNow && surfaceItem.realProductFunction).length,
+        controlPlaneOnly: countCategory("PLATFORM_CONTROL_PLANE_ONLY"),
+        placeholderOrShellOnly: countCategory("PLACEHOLDER_OR_SHELL_ONLY"),
+        futureProductFunctions: countCategory("FUTURE_PRODUCT_FUNCTION"),
+        blockedByMissingDataModel: countCategory("BLOCKED_BY_MISSING_DATA_MODEL"),
+        blockedByWriteBoundary: countCategory("BLOCKED_BY_WRITE_BOUNDARY"),
+        blockedByAuthOrPermission: countCategory("BLOCKED_BY_AUTH_OR_PERMISSION"),
+        needsOwnerDecision: countCategory("NEEDS_OWNER_DECISION")
+      },
+      categories: categoryDefinitions,
+      products,
+      recommendedNextProductJourneys: [
+        "Confirm whether OIS workspace home or PITS issue/task workflow is the first true product journey.",
+        "Start with read-only product workflow screens before any write/admin action.",
+        "Add data-model and acceptance-test evidence before Phase 2/3 behavior is ported."
+      ]
+    };
+  }
+
   function buildProductDetail(registry: RegistrySnapshot, product: ProductRegistryEntity) {
     const projects = uniqueById(
       product.installations
@@ -2211,6 +2665,33 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
               }
             }
           }
+        },
+        "/platform/product-uat": {
+          get: {
+            tags: ["platform"],
+            responses: {
+              "200": {
+                description: "Read-only product user journey UAT baseline and functional gap map",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["metadata", "runtime", "productUat", "summary", "categories", "products", "recommendedNextProductJourneys"],
+                      properties: {
+                        metadata: { type: "object" },
+                        runtime: { type: "object" },
+                        productUat: { type: "object" },
+                        summary: { type: "object" },
+                        categories: { type: "array", items: { type: "object" } },
+                        products: { type: "array", items: { type: "object" } },
+                        recommendedNextProductJourneys: { type: "array", items: { type: "string" } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -2373,6 +2854,8 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
   app.get("/platform/owner-review", async () => buildOwnerReview(await readRegistry()));
 
   app.get("/platform/admin-boundary", async () => buildAdminBoundary(await readRegistry()));
+
+  app.get("/platform/product-uat", async () => buildProductUat(await readRegistry()));
 
   app.get("/platform/products/code/:code", async (request, reply) => {
     const params = request.params as { code: string };

@@ -12,6 +12,8 @@ const oisPublicBaseUrl = "https://ois-ng.dmp247.com";
 const pitsPublicBaseUrl = "https://pits-ng.dmp247.com";
 const dbEnvKey = ["DATABASE", "URL"].join("_");
 const adminBoundaryPath = ["/platform", "admin-boundary"].join("/");
+const productUatPath = ["/platform", "product-uat"].join("/");
+const controlPlaneOnlyText = ["Control", "plane only"].join("-");
 
 const healthPayload = {
   status: "ok",
@@ -472,6 +474,188 @@ const adminBoundaryPayload = {
   ]
 };
 
+const productUatPayload = {
+  metadata: registryPayload.metadata,
+  runtime: {
+    coreApiBaseUrl: coreApiUrl,
+    oisConsoleBaseUrl: oisPublicBaseUrl,
+    pitsShellBaseUrl: pitsPublicBaseUrl,
+    uatMode: "read-only-product-user-journey-map",
+    stage: "Stage 1K",
+    note: "Product User Journey UAT is a read-only functional gap map. It does not enable project writes or admin actions."
+  },
+  productUat: {
+    stage: "Stage 1K",
+    mutationEndpointsAdded: false,
+    writePermission: "NOT_ALLOWED_IN_STAGE_1K",
+    markers: ["Product User Journey UAT", "Testable now", controlPlaneOnlyText, "Functional gap map", "Next product journey"]
+  },
+  summary: {
+    products: 2,
+    surfaces: 5,
+    visiblePages: 4,
+    testableNow: 3,
+    realProductFunctionsAvailable: 0,
+    controlPlaneOnly: 1,
+    placeholderOrShellOnly: 0,
+    futureProductFunctions: 1,
+    blockedByMissingDataModel: 1,
+    blockedByWriteBoundary: 1,
+    blockedByAuthOrPermission: 0,
+    needsOwnerDecision: 1
+  },
+  categories: [
+    { category: "AVAILABLE_FOR_BROWSER_UAT", label: "Testable now", description: "Browser UAT is possible without writes." },
+    { category: "PLATFORM_CONTROL_PLANE_ONLY", label: controlPlaneOnlyText, description: "Registry, runtime or administration view." },
+    { category: "PLACEHOLDER_OR_SHELL_ONLY", label: "Placeholder or shell only", description: "Shell exists before product workflow." },
+    { category: "FUTURE_PRODUCT_FUNCTION", label: "Not implemented yet", description: "Planned future product behavior." },
+    { category: "BLOCKED_BY_MISSING_DATA_MODEL", label: "Needs data model", description: "Domain model is required first." },
+    { category: "BLOCKED_BY_WRITE_BOUNDARY", label: "Needs write boundary", description: "Write/audit boundary is required first." },
+    { category: "BLOCKED_BY_AUTH_OR_PERMISSION", label: "Needs auth or permission", description: "Permission model is required first." },
+    { category: "NEEDS_OWNER_DECISION", label: "Needs owner decision", description: "Owner priority is required first." }
+  ],
+  products: [
+    {
+      productCode: "OIS",
+      productName: "OIS Console",
+      productId: null,
+      currentState: "OIS platform foundation is mapped for comparison.",
+      ownerUatStatus: "READY_FOR_BROWSER_UAT",
+      testableNow: ["OIS dashboard"],
+      controlPlaneOnly: ["OIS dashboard"],
+      missingProductFunctions: ["Future OIS workspace home"],
+      recommendedNextJourneys: ["Define the first OIS workspace user home"],
+      surfaces: []
+    },
+    {
+      productCode: "PITS",
+      productName: "PITS",
+      productId: "prod_pits",
+      currentState: "Project registry shell and readiness shell; not a true project workflow app yet.",
+      ownerUatStatus: "READY_FOR_BROWSER_UAT",
+      testableNow: ["PITS runtime shell", "PITS project list", "PITS project detail"],
+      controlPlaneOnly: ["PITS runtime, readiness and boundary summary"],
+      missingProductFunctions: ["Future issue and task workflow", "Future project status update"],
+      recommendedNextJourneys: [
+        "Define a read-only PITS issue/task list",
+        "Add project workflow detail after data model approval",
+        "Keep project status writes disabled until audit/write boundaries are approved"
+      ],
+      surfaces: [
+        {
+          id: "pits:root-shell",
+          productCode: "PITS",
+          productName: "PITS",
+          surfaceName: "PITS runtime shell",
+          route: `${pitsPublicBaseUrl}/`,
+          entityType: "platform",
+          entityId: null,
+          category: "AVAILABLE_FOR_BROWSER_UAT",
+          statusLabel: "Testable now",
+          testableNow: true,
+          realProductFunction: false,
+          ownerUatStatus: "READY_FOR_BROWSER_UAT",
+          currentUserTest: "Open PITS Shell and verify the product runtime frame, project summary and safe staging links.",
+          currentReality: "PITS is currently a project registry/readiness shell, not a true project workflow app.",
+          functionalGap: "Issue, task, incident, status and work-tracking journeys are not implemented yet.",
+          blockers: ["BLOCKED_BY_MISSING_DATA_MODEL", "NEEDS_OWNER_DECISION"],
+          recommendedNextStep: "Select the first PITS workflow journey before adding writes.",
+          nextUserLevelTestPath: `${pitsPublicBaseUrl}/projects`,
+          evidence: ["PITS Registry Cockpit / Project Runtime Summary", "Project readiness"]
+        },
+        {
+          id: "pits:project-list",
+          productCode: "PITS",
+          productName: "PITS",
+          surfaceName: "PITS project list",
+          route: `${pitsPublicBaseUrl}/projects`,
+          entityType: "project",
+          entityId: "prj_emerald_precinct_demo",
+          category: "AVAILABLE_FOR_BROWSER_UAT",
+          statusLabel: "Testable now",
+          testableNow: true,
+          realProductFunction: false,
+          ownerUatStatus: "READY_FOR_BROWSER_UAT",
+          currentUserTest: "Open Projects and confirm project cards, installation context, readiness and runtime health.",
+          currentReality: "This is testable as a project registry shell and readiness shell.",
+          functionalGap: "It does not yet support issue/task creation, assignment, status updates or project workflow execution.",
+          blockers: ["BLOCKED_BY_WRITE_BOUNDARY", "BLOCKED_BY_MISSING_DATA_MODEL"],
+          recommendedNextStep: "Define a read-only issue/task list as the first true PITS workflow baseline.",
+          nextUserLevelTestPath: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`,
+          evidence: ["Project Selector", "Project Installation Registry"]
+        },
+        {
+          id: "pits:project-detail",
+          productCode: "PITS",
+          productName: "PITS",
+          surfaceName: "PITS project detail",
+          route: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`,
+          entityType: "project",
+          entityId: "prj_emerald_precinct_demo",
+          category: "AVAILABLE_FOR_BROWSER_UAT",
+          statusLabel: "Testable now",
+          testableNow: true,
+          realProductFunction: false,
+          ownerUatStatus: "READY_FOR_BROWSER_UAT",
+          currentUserTest: "Open one project detail and verify OIS cross-links, project readiness and runtime health.",
+          currentReality: "This is a project detail/readiness shell.",
+          functionalGap: "It does not yet provide field reports, cases, tasks, incidents or work status transitions.",
+          blockers: ["BLOCKED_BY_MISSING_DATA_MODEL", "BLOCKED_BY_WRITE_BOUNDARY"],
+          recommendedNextStep: "Add a read-only project workflow baseline before enabling task or incident writes.",
+          nextUserLevelTestPath: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`,
+          evidence: ["Project Detail Source", "Project Runtime Health"]
+        },
+        {
+          id: "pits:runtime-readiness-boundaries",
+          productCode: "PITS",
+          productName: "PITS",
+          surfaceName: "PITS runtime, readiness and boundary summary",
+          route: `${pitsPublicBaseUrl}/runtime`,
+          entityType: "platform",
+          entityId: null,
+          category: "PLATFORM_CONTROL_PLANE_ONLY",
+          statusLabel: controlPlaneOnlyText,
+          testableNow: true,
+          realProductFunction: false,
+          ownerUatStatus: "MAPPED_AS_CONTROL_PLANE",
+          currentUserTest: "Verify project runtime health, readiness, owner review and audit and admin boundary status.",
+          currentReality: "This is runtime readiness and governance visibility for PITS.",
+          functionalGap: "It is not a project user's daily work execution screen.",
+          blockers: ["BLOCKED_BY_WRITE_BOUNDARY"],
+          recommendedNextStep: "Use this as the safety baseline for the first project workflow read model.",
+          nextUserLevelTestPath: `${pitsPublicBaseUrl}/runtime`,
+          evidence: ["Runtime Status", "Safe Action Boundary"]
+        },
+        {
+          id: "pits:future-issue-task-workflow",
+          productCode: "PITS",
+          productName: "PITS",
+          surfaceName: "Future issue and task workflow",
+          route: null,
+          entityType: "project",
+          entityId: "prj_emerald_precinct_demo",
+          category: "BLOCKED_BY_MISSING_DATA_MODEL",
+          statusLabel: "Needs data model",
+          testableNow: false,
+          realProductFunction: true,
+          ownerUatStatus: "NOT_IMPLEMENTED_YET",
+          currentUserTest: "No browser UAT path exists yet for project issue or task workflow.",
+          currentReality: "Stage 1K only maps the gap.",
+          functionalGap: "Needs project workflow entities, relationships, starter data and acceptance tests.",
+          blockers: ["BLOCKED_BY_MISSING_DATA_MODEL", "NEEDS_OWNER_DECISION"],
+          recommendedNextStep: "Define read-only PITS issue/task list and detail acceptance criteria before writes.",
+          nextUserLevelTestPath: null,
+          evidence: ["Not implemented yet", "Functional gap map"]
+        }
+      ]
+    }
+  ],
+  recommendedNextProductJourneys: [
+    "Confirm whether OIS workspace home or PITS issue/task workflow is the first true product journey.",
+    "Start with read-only product workflow screens before any write or admin action."
+  ]
+};
+
 const projectDetailPayload = {
   metadata: registryPayload.metadata,
   project: {
@@ -525,6 +709,10 @@ function mockCoreApiFetch() {
 
     if (url === `${coreApiUrl}${adminBoundaryPath}`) {
       return jsonResponse(adminBoundaryPayload);
+    }
+
+    if (url === `${coreApiUrl}${productUatPath}`) {
+      return jsonResponse(productUatPayload);
     }
 
     if (url === `${coreApiUrl}/platform/projects/prj_emerald_precinct_demo`) {
@@ -603,6 +791,19 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("Project readiness");
     expect(html).toContain("Forbidden link guard");
     expect(html).toContain("No issue detected");
+    expect(html).toContain("Product User Journey UAT Baseline");
+    expect(html).toContain("Product User Journey UAT");
+    expect(html).toContain("Testable now");
+    expect(html).toContain(controlPlaneOnlyText);
+    expect(html).toContain("Functional gap map");
+    expect(html).toContain("Next product journey");
+    expect(html).toContain("What can be tested now?");
+    expect(html).toContain("What is not implemented yet?");
+    expect(html).toContain("Recommended next product functions");
+    expect(html).toContain("Owner UAT status");
+    expect(html).toContain("Next user-level test path");
+    expect(html).toContain("project registry/readiness shell");
+    expect(html).toContain("not a true project workflow app");
     expect(html).toContain("Project Selector");
     expect(html).toContain("Registry Governance / Readiness");
     expect(html).toContain("Registry Runtime Health");
@@ -629,6 +830,7 @@ describe("PITS Shell product shell", () => {
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry/readiness`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/owner-review`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}${adminBoundaryPath}`, { cache: "no-store" });
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}${productUatPath}`, { cache: "no-store" });
   });
 
   it.each([
@@ -650,6 +852,16 @@ describe("PITS Shell product shell", () => {
         "Blocked in current stage",
         "Future admin action",
         "Preview only - not executable yet",
+        "Product User Journey / UAT Baseline",
+        "Product User Journey UAT",
+        "Testable now",
+        controlPlaneOnlyText,
+        "Functional gap map",
+        "Next product journey",
+        "What can be tested now?",
+        "What is not implemented yet?",
+        "Recommended next product functions",
+        "project registry shell and readiness shell",
         "Suggested next actions",
         "Project readiness",
         "Runtime health:",
@@ -676,6 +888,13 @@ describe("PITS Shell product shell", () => {
         "Preview only",
         "Blocked in current stage",
         "Future admin action",
+        "Product Capability / UAT Status",
+        "Product User Journey UAT",
+        "Testable now",
+        controlPlaneOnlyText,
+        "Functional gap map",
+        "Next product journey",
+        "runtime readiness and governance visibility for PITS",
         "Project readiness",
         "Health ready",
         "Registry Governance / Readiness",
@@ -734,6 +953,17 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("Permission Model");
     expect(html).toContain("Preview only - not executable yet");
     expect(html).toContain("Blocked in current stage");
+    expect(html).toContain("Project Product UAT Baseline");
+    expect(html).toContain("Product User Journey UAT");
+    expect(html).toContain("Testable now");
+    expect(html).toContain(controlPlaneOnlyText);
+    expect(html).toContain("Functional gap map");
+    expect(html).toContain("Next product journey");
+    expect(html).toContain("What can be tested now?");
+    expect(html).toContain("What is not implemented yet?");
+    expect(html).toContain("Recommended next product functions");
+    expect(html).toContain("project detail/readiness shell");
+    expect(html).toContain("Future issue and task workflow");
     expect(html).toContain("Project readiness");
     expect(html).toContain("No issue detected");
     expect(html).toContain("Project Governance / Readiness");

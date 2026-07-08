@@ -7,6 +7,7 @@ import {
   OwnerReviewQueuePanel,
   PageHeading,
   PlatformOverviewCard,
+  ProductUatPanel,
   RegistryGovernancePanel,
   RegistryHealthPanel,
   RegistryStatusPanel,
@@ -26,6 +27,7 @@ export default async function RuntimePage() {
       <OwnerRegistryCockpit snapshot={snapshot} />
       <OwnerReviewQueuePanel snapshot={snapshot} title="Safe Action Boundary" />
       <AdminBoundaryPanel snapshot={snapshot} title="Audit / Permission / Admin Boundary" />
+      <ProductUatPanel snapshot={snapshot} title="Product Capability / UAT Status" />
       <section className="dashboard-grid">
         <RuntimeStatusCard snapshot={snapshot} />
         <RegistryGovernancePanel snapshot={snapshot} />

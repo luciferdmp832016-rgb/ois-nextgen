@@ -17,6 +17,7 @@ import {
   OwnerEntityUatSummary,
   OwnerReviewQueuePanel,
   PageHeading,
+  ProductUatPanel,
   RegistryHealthItemPanel,
   RegistryReadinessItemPanel,
   RelatedLinksPanel
@@ -114,6 +115,8 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       <OwnerReviewQueuePanel snapshot={snapshot} entityType="product" entityId={product.id} />
 
       <AdminBoundaryPanel snapshot={snapshot} entityType="product" entityId={product.id} />
+
+      <ProductUatPanel snapshot={snapshot} productCode={product.code} entityType="product" entityId={product.id} />
 
       <RegistryReadinessItemPanel title="Product Governance / Readiness" item={productReadiness} />
 

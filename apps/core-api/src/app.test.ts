@@ -801,7 +801,143 @@ describe("platform registry read-only endpoints", () => {
     }
   });
 
-  it("does not add owner review mutation endpoints", () => {
+  it("returns deterministic read-only product user journey UAT baseline", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/product-uat" });
+      const body = response.json();
+      const serialized = JSON.stringify(body);
+
+      expect(response.statusCode).toBe(200);
+      expect(body).toMatchObject({
+        metadata: {
+          source: "default-db",
+          mode: "read-only",
+          environment: "staging"
+        },
+        runtime: {
+          coreApiBaseUrl: "https://ois-nextgen.abacusai.cloud",
+          oisConsoleBaseUrl: "https://ois-ng.dmp247.com",
+          pitsShellBaseUrl: "https://pits-ng.dmp247.com",
+          uatMode: "read-only-product-user-journey-map",
+          stage: "Stage 1K"
+        },
+        productUat: {
+          stage: "Stage 1K",
+          mutationEndpointsAdded: false,
+          writePermission: "NOT_ALLOWED_IN_STAGE_1K",
+          markers: expect.arrayContaining(["Product User Journey UAT", "Testable now", "Control-plane only", "Functional gap map", "Next product journey"])
+        },
+        summary: {
+          products: 2,
+          surfaces: 14,
+          visiblePages: 10,
+          testableNow: 9,
+          realProductFunctionsAvailable: 0,
+          controlPlaneOnly: 5
+        }
+      });
+      const products = body.products as Array<{
+        productCode: string;
+        currentState: string;
+        recommendedNextJourneys: string[];
+        surfaces: Array<{
+          id: string;
+          category: string;
+          currentReality: string;
+          functionalGap: string | null;
+          statusLabel: string;
+          testableNow: boolean;
+          realProductFunction: boolean;
+          nextUserLevelTestPath: string | null;
+        }>;
+      }>;
+      const oisProduct = products.find((item) => item.productCode === "OIS");
+      const pitsProduct = products.find((item) => item.productCode === "PITS");
+
+      expect(oisProduct).toMatchObject({
+        currentState: expect.stringContaining("platform/control-plane foundation"),
+        recommendedNextJourneys: expect.arrayContaining(["Define the first OIS workspace user home"])
+      });
+      expect(oisProduct?.surfaces).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: "ois:dashboard",
+            category: "PLATFORM_CONTROL_PLANE_ONLY",
+            statusLabel: "Control-plane only",
+            realProductFunction: false
+          }),
+          expect.objectContaining({
+            id: "ois:future-knowledge-docs-copilot",
+            category: "NEEDS_OWNER_DECISION",
+            testableNow: false,
+            realProductFunction: true
+          })
+        ])
+      );
+      expect(pitsProduct).toMatchObject({
+        currentState: expect.stringContaining("Project registry shell and readiness shell"),
+        recommendedNextJourneys: expect.arrayContaining(["Define a read-only PITS issue/task list"])
+      });
+      expect(pitsProduct?.surfaces).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: "pits:project-list",
+            category: "AVAILABLE_FOR_BROWSER_UAT",
+            currentReality: expect.stringContaining("project registry shell and readiness shell"),
+            functionalGap: expect.stringContaining("project workflow execution")
+          }),
+          expect.objectContaining({
+            id: "pits:future-issue-task-workflow",
+            category: "BLOCKED_BY_MISSING_DATA_MODEL",
+            testableNow: false,
+            realProductFunction: true
+          }),
+          expect.objectContaining({
+            id: "pits:future-project-status-write",
+            category: "BLOCKED_BY_WRITE_BOUNDARY",
+            testableNow: false,
+            nextUserLevelTestPath: null
+          })
+        ])
+      );
+      expect(body.categories.map((item: { category: string }) => item.category)).toEqual([
+        "AVAILABLE_FOR_BROWSER_UAT",
+        "PLATFORM_CONTROL_PLANE_ONLY",
+        "PLACEHOLDER_OR_SHELL_ONLY",
+        "FUTURE_PRODUCT_FUNCTION",
+        "BLOCKED_BY_MISSING_DATA_MODEL",
+        "BLOCKED_BY_WRITE_BOUNDARY",
+        "BLOCKED_BY_AUTH_OR_PERMISSION",
+        "NEEDS_OWNER_DECISION"
+      ]);
+      expect(serialized).toContain("A browser user can verify this surface today without writes");
+      expect(serialized).toContain("Product User Journey UAT is a read-only functional gap map");
+      expect(serialized).toContain("not a true project workflow app");
+      expect(serialized).toContain("Next product journey");
+      expect(serialized).not.toContain("localhost");
+      expect(serialized).not.toContain("127.0.0.1");
+      expect(serialized).not.toContain("ois.dmp247.com");
+      expect(serialized).not.toContain("oisys.abacusai.app");
+      expect(mock.readCalls).toEqual([
+        "productDefinition.findMany",
+        "organization.findMany",
+        "workspace.findMany",
+        "project.findMany",
+        "moduleDefinition.findMany",
+        "productInstallation.findMany"
+      ]);
+      expect(mock.writeCalls).toEqual([]);
+      expect(mock.userAccount.findUnique).not.toHaveBeenCalled();
+      expect(mock.delegates.productInstallation.findUnique).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("does not add owner review, admin boundary or product UAT mutation endpoints", () => {
     const source = readFileSync(new URL("./app.ts", import.meta.url), "utf8");
 
     expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/owner-review/);
@@ -809,6 +945,9 @@ describe("platform registry read-only endpoints", () => {
     expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/audit-model/);
     expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/permissions\/model/);
     expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/registry\/action-boundary/);
+    expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/product-uat/);
+    expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/user-journeys/);
+    expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/product-capabilities/);
   });
 
   it.each([
