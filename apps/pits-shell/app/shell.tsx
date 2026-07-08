@@ -677,6 +677,7 @@ export function PitsProductUatPanel({
         <div>
           <h3>{title}</h3>
           <p className="muted">Project-level UAT baseline and functional gap map. This is read-only and does not enable project writes.</p>
+          <p className="muted">PITS is not a true workflow app yet; it is currently a project registry shell and project readiness shell.</p>
         </div>
         <StatusBadge ok={Boolean(payload)} label="Testable now" />
       </div>
