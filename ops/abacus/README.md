@@ -24,9 +24,9 @@ bash ops/abacus/status.sh
 | `install-ui-shell-systemd-services.sh` | Installs and starts durable systemd services for OIS Console and PITS Shell public staging shells. | Yes, UI systemd units only. |
 | `uninstall-ui-shell-systemd-services.sh` | Stops, disables and removes only the OIS Console/PITS Shell public staging systemd units. Requires `--confirm`. | Yes, UI systemd units only. |
 | `restart-public-staging-runtime.sh` | Restarts Core API, stops OIS/PITS UI services, stops legacy temporary UI demo processes, removes only orphan listeners on `3000/tcp` and `3001/tcp`, starts UI services, then verifies local/public staging endpoints. Does not restart `cloudflared` unless `--include-cloudflared` is passed. | Yes, service restart and UI port cleanup only. |
-| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs, public staging URLs, Stage 1B registry endpoints, Stage 1C registry detail routes, Stage 1D health markers, Stage 1E readiness markers, Stage 1F cockpit/UAT markers, Stage 1G shell markers, Stage 1H owner-first design markers, Stage 1I owner-review safe action-boundary markers, Stage 1J audit/admin permission model markers, Stage 1K product UAT/gap-map markers, Stage 2A/2B PITS workboard/detail markers and Stage 2C product-flow markers. | No. Read-only. |
-| `check-public-staging-endpoints.sh` | Checks public Core API, registry, registry health, registry readiness, owner review, admin boundary, product UAT, PITS workboard/detail, OIS/PITS product-flow and OIS/PITS staging endpoints for HTTP 200, product markers, Core API URL, seeded counts, Stage 1F cockpit/UAT markers, Stage 1G shell markers, Stage 1H owner-first design markers, Stage 1I safe action-boundary markers, Stage 1J admin/audit permission markers, Stage 1K product journey/gap-map markers, Stage 2A/2B workboard/detail markers, Stage 2C product-flow markers and forbidden localhost/legacy links on read-only surfaces. | No. Read-only. |
-| `verify-ui-route-manifests.sh` | Checks production `.next` route manifests and server entries for every Stage 1A route plus Stage 1C dynamic detail routes, Stage 2A/2B PITS routes and Stage 2C product-flow routes. | No. Read-only build artifact check. |
+| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs, public staging URLs, Stage 1B registry endpoints, Stage 1C registry detail routes, Stage 1D health markers, Stage 1E readiness markers, Stage 1F cockpit/UAT markers, Stage 1G shell markers, Stage 1H owner-first design markers, Stage 1I owner-review safe action-boundary markers, Stage 1J audit/admin permission model markers, Stage 1K product UAT/gap-map markers, Stage 2A/2B PITS workboard/detail markers and Stage 2D localization/product-flow markers. | No. Read-only. |
+| `check-public-staging-endpoints.sh` | Checks public Core API, registry, registry health, registry readiness, owner review, admin boundary, product UAT, PITS workboard/detail, OIS/PITS product-flow and OIS/PITS staging endpoints for HTTP 200, product markers, Core API URL, seeded counts, Stage 1F cockpit/UAT markers, Stage 1G shell markers, Stage 1H owner-first design markers, Stage 1I safe action-boundary markers, Stage 1J admin/audit permission markers, Stage 1K product journey/gap-map markers, Stage 2A/2B workboard/detail markers, Stage 2D localization/product-flow markers and forbidden localhost/legacy links on read-only surfaces. | No. Read-only. |
+| `verify-ui-route-manifests.sh` | Checks production `.next` route manifests and server entries for every Stage 1A route plus Stage 1C dynamic detail routes, Stage 2A/2B PITS routes and Stage 2D product-flow routes. | No. Read-only build artifact check. |
 | `enable-product-subdomain-demo-routes.sh` | Adds a dedicated nginx host-routing config for `ois-ng.dmp247.com` -> port 3000 and `pits-ng.dmp247.com` -> port 3001. | Yes, nginx config only. |
 | `status-product-subdomain-demo-routes.sh` | Checks local Host-header product subdomain routing and optional public DNS/TLS routes. | No. Read-only. |
 | `disable-product-subdomain-demo-routes.sh` | Removes only the Stage 0U-A managed nginx product-subdomain config. | Yes, nginx config only. |
@@ -478,6 +478,21 @@ Stage 2C Product UX Blueprint and Screen Flow Draft Gate checks:
 - No Core API endpoint, LLM call, status/owner/note/priority/blocker mutation, write endpoint, schema change, migration, seed, `prisma db push`, UI `DATABASE_URL`, Prisma UI import, `/auth/demo-login` change or legacy resource touch is allowed.
 
 Verify Stage 2C after source sync:
+
+```sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
+Stage 2D Localization Foundation and Visual Product Flow Preview checks:
+
+- OIS and PITS shared shells render `Localization Foundation`, `Language Settings`, `English` and `Tiếng Việt`.
+- OIS `/product-flow` renders `OIS Product UX Preview`, visual screen cards, `Primary user`, `Main action`, `Current stage status`, `Screen mock`, `Executive Dashboard`, `Workspace Intelligence Dashboard`, `Meeting/Document Knowledge Feed`, `Knowledge Detail`, `Ask OIS / Copilot` and `Runtime/Admin`.
+- PITS `/product-flow` renders `PITS Product UX Preview`, visual screen cards, `Primary user`, `Main action`, `Current stage status`, `Screen mock`, `PITS Home`, `Projects List`, `Project Detail`, `Project Workboard`, `Work Item Detail`, `Dry-run Action Preview` and `Runtime/Admin`.
+- Checks preserve Stage 2A workboard and Stage 2B work item detail/dry-run markers.
+- No Core API endpoint, LLM call, status/owner/note/priority/blocker mutation, write endpoint, schema change, migration, seed, `prisma db push`, UI `DATABASE_URL`, Prisma UI import, `/auth/demo-login` change or legacy resource touch is allowed.
+
+Verify Stage 2D after source sync:
 
 ```sh
 bash ops/abacus/status-public-staging-runtime.sh

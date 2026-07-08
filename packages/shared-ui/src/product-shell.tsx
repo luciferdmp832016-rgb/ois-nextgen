@@ -2,6 +2,8 @@
 
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { LanguageSelector, LocalizationProvider, useLocalization } from "./localization-context";
+import { localizeNavLabel } from "./localization";
 
 export type ProductShellNavItem = {
   id: string;
@@ -24,7 +26,15 @@ export type ProductShellProps = {
   children: ReactNode;
 };
 
-export function ModernProductShell({
+export function ModernProductShell(props: ProductShellProps) {
+  return (
+    <LocalizationProvider>
+      <ModernProductShellFrame {...props} />
+    </LocalizationProvider>
+  );
+}
+
+function ModernProductShellFrame({
   active,
   productName,
   productCode,
@@ -39,6 +49,7 @@ export function ModernProductShell({
 }: ProductShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { locale, t } = useLocalization();
   const navOpen = drawerOpen || !collapsed;
   const shellClassName = [
     "modern-shell",
@@ -47,6 +58,18 @@ export function ModernProductShell({
   ]
     .filter(Boolean)
     .join(" ");
+  const localizedProductContext =
+    productContext === "Product Administration"
+      ? t("shell.productAdministration")
+      : productContext === "Product Runtime"
+        ? t("shell.productRuntime")
+        : productContext;
+  const localizedHealthLabel =
+    healthLabel === "Core API healthy"
+      ? t("shell.coreApiHealthy")
+      : healthLabel === "Needs owner review"
+        ? t("shell.needsOwnerReview")
+        : healthLabel;
 
   return (
     <main
@@ -54,22 +77,33 @@ export function ModernProductShell({
       data-shell-standard="Modern Shell Layout"
       data-shell-navigation="Fixed Navigation Shell"
       data-shell-responsive="Responsive Product Shell"
+      data-localization-foundation="Localization Foundation"
     >
       <aside className="shell-sidebar" aria-label={navAriaLabel}>
         <div className="shell-brand">
-          <span className="eyebrow">{productContext}</span>
+          <span className="eyebrow">{localizedProductContext}</span>
           <h1>{productName}</h1>
           <p>{productCode}</p>
         </div>
         <nav className="shell-nav" aria-label={navAriaLabel}>
-          {navItems.map((item) => (
-            <a aria-current={active === item.id ? "page" : undefined} aria-label={item.label} className={active === item.id ? "active" : ""} href={item.href} key={item.id}>
-              <span className="nav-label">{item.label}</span>
-              <span aria-hidden="true" className="nav-short">
-                {item.shortLabel ?? item.label.slice(0, 2)}
-              </span>
-            </a>
-          ))}
+          {navItems.map((item) => {
+            const localizedLabel = localizeNavLabel(item.id, item.label, locale);
+
+            return (
+              <a
+                aria-current={active === item.id ? "page" : undefined}
+                aria-label={localizedLabel}
+                className={active === item.id ? "active" : ""}
+                href={item.href}
+                key={item.id}
+              >
+                <span className="nav-label">{localizedLabel}</span>
+                <span aria-hidden="true" className="nav-short">
+                  {item.shortLabel ?? localizedLabel.slice(0, 2)}
+                </span>
+              </a>
+            );
+          })}
         </nav>
         <div className="shell-sidebar-actions">
           <button
@@ -80,7 +114,7 @@ export function ModernProductShell({
             onClick={() => setCollapsed((current) => !current)}
             type="button"
           >
-            <span className="toggle-label">{collapsed ? "Show nav" : "Hide nav"}</span>
+            <span className="toggle-label">{collapsed ? t("shell.showNav") : t("shell.hideNav")}</span>
             <span aria-hidden="true" className="toggle-short">
               Nav
             </span>
@@ -100,15 +134,18 @@ export function ModernProductShell({
               onClick={() => setDrawerOpen((current) => !current)}
               type="button"
             >
-              Menu
+              {t("shell.menu")}
             </button>
             <div>
               <div className="demo">{demoBanner}</div>
-              <p className="source-line">Core API source: {coreApiUrl}</p>
+              <p className="source-line">
+                {t("shell.coreApiSource")}: {coreApiUrl}
+              </p>
             </div>
           </div>
           <div className="shell-topbar-status">
-            <span className={healthOk ? "status status-ok" : "status status-warn"}>{healthLabel}</span>
+            <LanguageSelector />
+            <span className={healthOk ? "status status-ok" : "status status-warn"}>{localizedHealthLabel}</span>
             <span className="shell-context">{productCode}</span>
           </div>
         </header>
@@ -123,6 +160,10 @@ export function ModernProductShell({
           <span>Owner-first Design System</span>
           <span>Visual Hierarchy Standard</span>
           <span>Owner-friendly Status Badges</span>
+          <span>Localization Foundation</span>
+          <span>Language Settings</span>
+          <span>English</span>
+          <span>Tiếng Việt</span>
         </footer>
       </section>
     </main>

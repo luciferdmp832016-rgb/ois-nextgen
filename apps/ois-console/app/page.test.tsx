@@ -906,6 +906,10 @@ describe("OIS Console product shell", () => {
     expect(html).toContain("Visual Hierarchy Standard");
     expect(html).toContain("Owner-friendly Status Badges");
     expect(html).toContain('data-owner-status="Owner-friendly Status Badges"');
+    expect(html).toContain("Localization Foundation");
+    expect(html).toContain("Language Settings");
+    expect(html).toContain("English");
+    expect(html).toContain("Tiếng Việt");
     expect(html).toContain("What this is");
     expect(html).toContain("Hide nav");
     expect(html).toContain("Menu");
@@ -996,6 +1000,11 @@ describe("OIS Console product shell", () => {
         "OIS Product UX Blueprint",
         "Product Flow Preview",
         "UX Draft / Product Flow Preview",
+        "Localization Foundation",
+        "Language Settings",
+        "English",
+        "Tiếng Việt",
+        "OIS Product UX Preview",
         "Product page vs Admin console",
         "Executive Dashboard",
         "Workspace List",
@@ -1004,6 +1013,10 @@ describe("OIS Console product shell", () => {
         "Knowledge Detail",
         "Ask OIS / Copilot",
         "Runtime/Admin",
+        "Primary user",
+        "Main action",
+        "Current stage status",
+        "Screen mock",
         "Owner approval checklist",
         "No write endpoints added",
         "No LLM call",
@@ -1127,6 +1140,10 @@ describe("OIS Console product shell", () => {
     expect(html).toContain("Visual Hierarchy Standard");
     expect(html).toContain("Owner-friendly Status Badges");
     expect(html).toContain('data-owner-status="Owner-friendly Status Badges"');
+    expect(html).toContain("Localization Foundation");
+    expect(html).toContain("Language Settings");
+    expect(html).toContain("English");
+    expect(html).toContain("Tiếng Việt");
     for (const marker of markers) {
       expect(html).toContain(marker);
     }
