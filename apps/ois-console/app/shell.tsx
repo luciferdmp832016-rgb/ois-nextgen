@@ -33,6 +33,7 @@ import {
 
 const navItems = [
   { id: "overview", href: "/", label: "Overview", shortLabel: "Ov" },
+  { id: "product-flow", href: "/product-flow", label: "Product Flow", shortLabel: "Fx" },
   { id: "dashboard", href: "/dashboard", label: "Dashboard", shortLabel: "Db" },
   { id: "products", href: "/products", label: "Products", shortLabel: "Pr" },
   { id: "workspaces", href: "/workspaces", label: "Workspaces", shortLabel: "Ws" },

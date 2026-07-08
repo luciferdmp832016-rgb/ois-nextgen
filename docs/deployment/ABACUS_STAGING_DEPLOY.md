@@ -39,6 +39,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 1K adds read-only product user journey UAT baseline and functional gap map surfaces, backed by Core API `/platform/product-uat`.
 - Stage 2A adds the read-only PITS Project Workboard functional slice, backed by Core API `/platform/pits/projects/{id}/workboard`.
 - Stage 2B adds read-only PITS Work Item Detail and Dry-run Action Preview, backed by Core API `/platform/pits/projects/{projectId}/work-items/{itemId}` and `/action-preview`.
+- Stage 2C adds read-only OIS/PITS Product Flow Preview routes and product UX blueprint docs; it adds no Core API endpoint.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -159,6 +160,8 @@ Stage 1J audit trail and admin permission model design result: Core API now expo
 Stage 1K product user journey UAT baseline result: Core API now exposes read-only `/platform/product-uat` with deterministic OIS/PITS product UAT categories, testable-now surfaces, platform/control-plane-only surfaces, missing product functions, blockers and recommended next journeys. OIS/PITS render `Product User Journey UAT`, `Testable now`, `Control-plane only`, `Functional gap map` and `Next product journey` markers without executable product/admin controls. Final result is `PRODUCT_USER_JOURNEY_UAT_BASELINE_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
 
 Stage 2B PITS work item detail and dry-run action preview result: Core API now exposes read-only `/platform/pits/projects/{projectId}/work-items/{itemId}` and `/platform/pits/projects/{projectId}/work-items/{itemId}/action-preview`. PITS Shell renders `/projects/{id}/work-items/{itemId}` with `Work Item Detail`, `Dry-run Action Preview`, `Preview only`, `No data will be changed`, `Requires audit trail`, `Requires confirmation` and `Requires rollback plan` markers. Final result is `PITS_WORK_ITEM_DETAIL_DRY_RUN_ACTION_PREVIEW_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
+
+Stage 2C product UX blueprint and screen-flow draft gate result: OIS and PITS now have blueprint docs plus read-only `/product-flow` routes. OIS renders `Product Flow Preview`, `OIS Product UX Blueprint`, `Product page vs Admin console`, `Executive Dashboard`, `Workspace Intelligence Dashboard` and `Ask OIS / Copilot`. PITS renders `Product Flow Preview`, `PITS Product UX Blueprint`, `Product page vs Admin console`, `Workboard`, `Work Item Detail` and `Dry-run Action Preview`. Final result is `PRODUCT_UX_BLUEPRINT_SCREEN_FLOW_DRAFT_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
 
 Stage 1C Product Registry detail cross-linking result: Core API now exposes source-ready read-only detail endpoints for products, product code lookup, workspaces, projects, modules and installations. OIS Console adds product/workspace/module/installation detail routes, PITS Shell adds project detail routes, and shared UI helpers build staging-only links between `https://ois-ng.dmp247.com` and `https://pits-ng.dmp247.com`. Final result is `PRODUCT_REGISTRY_DETAIL_CROSS_LINKING_READY`; public HTTP 200 verification requires owner runtime sync.
 
@@ -2252,6 +2255,7 @@ Stage 1J adds read-only audit/admin permission model surfaces via `/platform/adm
 Stage 1K adds read-only product user journey UAT baseline and functional gap map surfaces via `/platform/product-uat`. It did not add product writes, real admin/write/sync actions, mutation endpoints, deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, import Prisma into UI shells, call `/auth/demo-login` or touch legacy resources.
 Stage 2A adds the read-only PITS Project Workboard functional slice via `/platform/pits/projects/{id}/workboard` and PITS `/projects/{id}/workboard`. It did not add work item writes, task lifecycle mutations, schema changes, migrations, seed, `prisma db push`, auth changes, deploy from Codex, Cloudflare/DNS changes, credentials, UI `DATABASE_URL`, Prisma UI imports, `/auth/demo-login` changes or legacy-resource touch.
 Stage 2B adds read-only PITS Work Item Detail and Dry-run Action Preview via `/platform/pits/projects/{projectId}/work-items/{itemId}`, `/platform/pits/projects/{projectId}/work-items/{itemId}/action-preview` and PITS `/projects/{id}/work-items/{itemId}`. It did not add work item writes, task lifecycle mutations, status/owner/note/priority/blocker mutations, schema changes, migrations, seed, `prisma db push`, auth changes, deploy from Codex, Cloudflare/DNS changes, credentials, UI `DATABASE_URL`, Prisma UI imports, `/auth/demo-login` changes or legacy-resource touch.
+Stage 2C adds OIS/PITS product UX blueprint docs and read-only `/product-flow` routes. It did not add Core API endpoints, LLM calls, product writes, status/owner/note/priority/blocker mutations, schema changes, migrations, seed, `prisma db push`, auth changes, deploy from Codex, Cloudflare/DNS changes, credentials, UI `DATABASE_URL`, Prisma UI imports, `/auth/demo-login` changes or legacy-resource touch.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -2280,6 +2284,8 @@ Stage 2B adds read-only PITS Work Item Detail and Dry-run Action Preview via `/p
 - Core API `/platform/pits/projects/<project-id>/work-items/<item-id>` returns HTTP 200 with `Work Item Detail`, `Dry-run Action Preview`, `Preview only`, `No data will be changed`, `Requires audit trail`, `Requires confirmation`, `Requires rollback plan` and `NOT_ALLOWED_IN_STAGE_2B` after Stage 2B owner runtime sync.
 - Core API `/platform/pits/projects/<project-id>/work-items/<item-id>/action-preview` returns HTTP 200 with `DRY_RUN_ONLY`, `allowedInCurrentStage=false` and `noDataChanged=true` after Stage 2B owner runtime sync.
 - PITS `/projects/<project-id>/work-items/<item-id>` renders work item detail and dry-run preview cards with no enabled mutation action after Stage 2B owner runtime sync.
+- OIS `/product-flow` renders `Product Flow Preview`, `OIS Product UX Blueprint`, `Product page vs Admin console`, `Executive Dashboard`, `Workspace Intelligence Dashboard`, `Ask OIS / Copilot` and no write/LLM action after Stage 2C owner runtime sync.
+- PITS `/product-flow` renders `Product Flow Preview`, `PITS Product UX Blueprint`, `Product page vs Admin console`, `Workboard`, `Work Item Detail`, `Dry-run Action Preview`, `No data will be changed` and no enabled mutation action after Stage 2C owner runtime sync.
 - Core API `/docs` renders Swagger UI.
 - OIS Console `/` renders `OIS Console`.
 - PITS Shell `/` renders `PITS Shell`.
@@ -2327,6 +2333,7 @@ Stage 1J adds `https://ois-nextgen.abacusai.cloud/platform/admin-boundary` as a 
 Stage 1K adds `https://ois-nextgen.abacusai.cloud/platform/product-uat` as a read-only product user journey UAT baseline endpoint. It changes OIS/PITS owner-facing HTML to show product UAT and functional gap map markers on root, dashboard/runtime and detail surfaces. Public verification is pending owner runtime sync and owner browser/UAT.
 Stage 2A adds `https://ois-nextgen.abacusai.cloud/platform/pits/projects/<project-id>/workboard` as a read-only PITS workboard endpoint and `https://pits-ng.dmp247.com/projects/<project-id>/workboard` as the direct browser workboard route. Public verification is pending owner runtime sync and owner browser/UAT.
 Stage 2B adds `https://ois-nextgen.abacusai.cloud/platform/pits/projects/<project-id>/work-items/<item-id>` and `https://ois-nextgen.abacusai.cloud/platform/pits/projects/<project-id>/work-items/<item-id>/action-preview` as read-only PITS detail/dry-run endpoints, plus `https://pits-ng.dmp247.com/projects/<project-id>/work-items/<item-id>` as the direct browser route. Public verification is pending owner runtime sync and owner browser/UAT.
+Stage 2C adds `https://ois-ng.dmp247.com/product-flow` and `https://pits-ng.dmp247.com/product-flow` as read-only Product Flow Preview routes. No Core API endpoint is added. Public verification is pending owner runtime sync and owner browser/UAT.
 
 ## Stop Conditions
 

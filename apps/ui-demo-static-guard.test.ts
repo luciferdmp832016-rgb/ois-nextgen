@@ -20,6 +20,7 @@ const forbiddenReferences = [
 const expectedRouteFiles = [
   "ois-console/app/page.tsx",
   "ois-console/app/dashboard/page.tsx",
+  "ois-console/app/product-flow/page.tsx",
   "ois-console/app/products/page.tsx",
   "ois-console/app/products/[id]/page.tsx",
   "ois-console/app/workspaces/page.tsx",
@@ -28,9 +29,18 @@ const expectedRouteFiles = [
   "ois-console/app/installations/[id]/page.tsx",
   "ois-console/app/runtime/page.tsx",
   "pits-shell/app/page.tsx",
+  "pits-shell/app/product-flow/page.tsx",
   "pits-shell/app/projects/page.tsx",
   "pits-shell/app/projects/[id]/page.tsx",
+  "pits-shell/app/projects/[id]/workboard/page.tsx",
+  "pits-shell/app/projects/[id]/work-items/[itemId]/page.tsx",
   "pits-shell/app/runtime/page.tsx"
+];
+const expectedUxBlueprintDocs = [
+  "architecture/ux/PITS_PRODUCT_UX_BLUEPRINT.md",
+  "architecture/ux/OIS_PRODUCT_UX_BLUEPRINT.md",
+  "architecture/ux/PRODUCT_PAGE_VS_ADMIN_CONSOLE_MAP.md",
+  "architecture/implementation/STAGE_2C_PRODUCT_UX_BLUEPRINT_SCREEN_FLOW_DRAFT_GATE.md"
 ];
 
 function collectScannedFiles(root: string): string[] {
@@ -83,5 +93,20 @@ describe("UI demo package static guard", () => {
     const missingRoutes = expectedRouteFiles.filter((routeFile) => !existsSync(join(appsRoot, routeFile)));
 
     expect(missingRoutes).toEqual([]);
+  });
+
+  it("keeps Stage 2C UX blueprint docs present with owner approval markers", () => {
+    const repoRoot = fileURLToPath(new URL("..", import.meta.url));
+    const missingDocs = expectedUxBlueprintDocs.filter((doc) => !existsSync(join(repoRoot, doc)));
+
+    expect(missingDocs).toEqual([]);
+
+    for (const doc of expectedUxBlueprintDocs) {
+      const content = readFileSync(join(repoRoot, doc), "utf8");
+
+      expect(content).toContain("Stage 2C");
+      expect(content).toContain("PRODUCT_UX_BLUEPRINT_SCREEN_FLOW_DRAFT_READY");
+      expect(content).toContain("Owner");
+    }
   });
 });
