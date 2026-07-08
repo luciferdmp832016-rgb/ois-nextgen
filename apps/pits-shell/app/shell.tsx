@@ -23,7 +23,10 @@ import {
   type OwnerReviewSeverity,
   type PlatformRegistrySnapshot,
   type PlatformSnapshot,
+  type PitsDryRunActionPreview,
+  type PitsWorkItemActionPreviewPayload,
   type PitsWorkboardPayload,
+  type PitsWorkItemDetailPayload,
   type PitsWorkItem,
   type PitsWorkItemPriority,
   type PitsWorkItemStatus,
@@ -758,6 +761,11 @@ const priorityLabels: Record<PitsWorkItemPriority, string> = {
   CRITICAL: "Critical"
 };
 
+function firstDeterministicWorkItemHref(projectId: string) {
+  const baseId = projectId.replace(/^prj_/, "");
+  return `/projects/${projectId}/work-items/pits-${baseId}-open-site-access`;
+}
+
 export function PriorityBadge({ priority }: { priority: PitsWorkItemPriority }) {
   return (
     <span className={`priority-badge priority-${priority.toLowerCase()}`} data-priority={priority}>
@@ -766,7 +774,7 @@ export function PriorityBadge({ priority }: { priority: PitsWorkItemPriority }) 
   );
 }
 
-export function WorkItemCard({ item }: { item: PitsWorkItem }) {
+export function WorkItemCard({ item, detailHref }: { item: PitsWorkItem; detailHref?: string | undefined }) {
   return (
     <article className="work-item-card" data-work-item-status={item.status}>
       <div className="panel-heading">
@@ -799,6 +807,11 @@ export function WorkItemCard({ item }: { item: PitsWorkItem }) {
         </div>
       ) : null}
       <p className="muted health-note">Source: {item.source}</p>
+      {detailHref ? (
+        <div className="link-list">
+          <Link href={detailHref}>Open Work Item Detail</Link>
+        </div>
+      ) : null}
     </article>
   );
 }
@@ -815,7 +828,7 @@ export function WorkflowStatusColumn({ group }: { group: PitsWorkboardPayload["s
       </div>
       <div className="workflow-card-stack">
         {group.items.length > 0 ? (
-          group.items.map((item) => <WorkItemCard item={item} key={item.id} />)
+          group.items.map((item) => <WorkItemCard detailHref={`/projects/${item.relatedProjectId}/work-items/${item.id}`} item={item} key={item.id} />)
         ) : (
           <article className="work-item-card owner-empty-state">
             <span className="eyebrow">No items</span>
@@ -933,32 +946,227 @@ export function PitsProjectWorkboardPanel({
   );
 }
 
+export function DryRunActionPreviewCard({ preview }: { preview: PitsDryRunActionPreview }) {
+  return (
+    <article className="dry-run-action-card" data-dry-run-action={preview.actionType}>
+      <div className="panel-heading">
+        <div>
+          <span className="eyebrow">{preview.actionType.replace("_", " ")}</span>
+          <h4>{preview.label}</h4>
+        </div>
+        <StatusBadge ok={preview.noDataChanged} label="No data will be changed" />
+      </div>
+      <dl className="work-item-facts dry-run-facts">
+        <div>
+          <dt>Current value</dt>
+          <dd>{preview.currentValue}</dd>
+        </div>
+        <div>
+          <dt>Proposed value</dt>
+          <dd>{preview.proposedValue}</dd>
+        </div>
+        <div>
+          <dt>Required role</dt>
+          <dd>{preview.requiredRole}</dd>
+        </div>
+        <div>
+          <dt>Mode</dt>
+          <dd>{preview.mode}</dd>
+        </div>
+      </dl>
+      <section className="suggested-actions" aria-label={`${preview.label} expected impact`}>
+        <h5>What would happen?</h5>
+        <p>{preview.expectedImpact}</p>
+      </section>
+      <section className="suggested-actions" aria-label={`${preview.label} blocked reason`}>
+        <h5>Why is it blocked now?</h5>
+        <p>{preview.blockedReason}</p>
+      </section>
+      <div className="owner-review-marker-row" aria-label={`${preview.label} required gates`}>
+        <span>Preview only</span>
+        <span>Requires future write boundary</span>
+        {preview.auditRequired ? <span>Requires audit trail</span> : null}
+        {preview.confirmationRequired ? <span>Requires confirmation</span> : null}
+        {preview.rollbackRequired ? <span>Requires rollback plan</span> : null}
+      </div>
+      <SafetyGateList gates={preview.safetyGates} />
+    </article>
+  );
+}
+
+export function DryRunActionPreviewPanel({
+  payload,
+  detailPayload
+}: {
+  payload: PitsWorkItemActionPreviewPayload | null;
+  detailPayload: PitsWorkItemDetailPayload | null;
+}) {
+  const previews = payload?.previews ?? detailPayload?.dryRunPreviews ?? [];
+
+  return (
+    <section className="panel dry-run-preview-panel" data-dry-run-preview="Dry-run Action Preview">
+      <div className="panel-heading">
+        <div>
+          <span className="eyebrow">Stage 2B</span>
+          <h3>Dry-run Action Preview</h3>
+          <p className="muted">Preview only. No data will be changed. Future execution requires audit, confirmation and rollback gates.</p>
+        </div>
+        <StatusBadge ok={payload?.noDataChanged ?? previews.every((preview) => preview.noDataChanged)} label="Preview only" />
+      </div>
+      <div className="owner-review-marker-row" aria-label="Dry-run action preview markers">
+        <span>Dry-run Action Preview</span>
+        <span>Preview only</span>
+        <span>No data will be changed</span>
+        <span>Requires audit trail</span>
+        <span>Requires confirmation</span>
+        <span>Requires rollback plan</span>
+      </div>
+      <div className="dry-run-grid">
+        {previews.length > 0 ? (
+          previews.map((preview) => <DryRunActionPreviewCard preview={preview} key={preview.actionType} />)
+        ) : (
+          <article className="dry-run-action-card owner-empty-state">
+            <span className="eyebrow">Preview unavailable</span>
+            <h4>No dry-run action preview was returned</h4>
+            <p className="muted">No action is executable in Stage 2B.</p>
+          </article>
+        )}
+      </div>
+    </section>
+  );
+}
+
+export function WorkItemDetailPanel({ payload }: { payload: PitsWorkItemDetailPayload | null }) {
+  if (!payload) {
+    return (
+      <section className="panel work-item-detail-panel owner-empty-state" data-work-item-detail="Work Item Detail">
+        <div className="panel-heading">
+          <div>
+            <h3>Work Item Detail</h3>
+            <p className="muted">Work item detail data is unavailable from Core API.</p>
+          </div>
+          <StatusBadge ok={false} label="Preview unavailable" />
+        </div>
+        <p className="muted">Preview only. No data will be changed.</p>
+      </section>
+    );
+  }
+
+  const item = payload.item;
+
+  return (
+    <section className="panel work-item-detail-panel" data-work-item-detail="Work Item Detail">
+      <div className="panel-heading">
+        <div>
+          <span className="eyebrow">{payload.workItemDetail.projectCode}</span>
+          <h3>Work Item Detail</h3>
+          <p className="muted">{item.description}</p>
+        </div>
+        <PriorityBadge priority={item.priority} />
+      </div>
+      <div className="owner-review-marker-row" aria-label="Work item detail markers">
+        {payload.workItemDetail.markers.map((marker) => (
+          <span key={marker}>{marker}</span>
+        ))}
+      </div>
+      <article className="work-item-detail-card">
+        <div className="panel-heading">
+          <div>
+            <span className="eyebrow">{item.type.replace("_", " ")}</span>
+            <h4>{item.title}</h4>
+          </div>
+          <StatusBadge ok={payload.workItemDetail.readOnly} label="Read-only" />
+        </div>
+        <p>{item.summary}</p>
+        <dl className="work-item-facts work-item-detail-facts">
+          <div>
+            <dt>Status</dt>
+            <dd>{workboardStatusLabels[item.status] ?? item.status}</dd>
+          </div>
+          <div>
+            <dt>Priority</dt>
+            <dd>{priorityLabels[item.priority] ?? item.priority}</dd>
+          </div>
+          <div>
+            <dt>Owner</dt>
+            <dd>{item.owner}</dd>
+          </div>
+          <div>
+            <dt>Due date</dt>
+            <dd>{item.dueDate}</dd>
+          </div>
+          <div>
+            <dt>Source</dt>
+            <dd>{item.source}</dd>
+          </div>
+          <div>
+            <dt>Related project</dt>
+            <dd>{payload.workItemDetail.projectName}</dd>
+          </div>
+        </dl>
+        <section className="suggested-actions" aria-label="Work item next action">
+          <h5>Next action</h5>
+          <p>{item.nextAction}</p>
+        </section>
+        <section className="suggested-actions" aria-label="Work item blockers">
+          <h5>Blockers</h5>
+          {item.blockers.length > 0 ? <SafetyGateList gates={item.blockers} /> : <p>No blockers are recorded for this item.</p>}
+        </section>
+        <section className="suggested-actions" aria-label="Available dry-run actions">
+          <h5>Available dry-run actions</h5>
+          <div className="owner-review-marker-row">
+            {item.availableDryRunActions.map((action) => (
+              <span key={action.actionType}>{action.label}</span>
+            ))}
+          </div>
+        </section>
+      </article>
+      <section className="read-only-functional-slice" aria-label="Stage 2B read-only boundary">
+        <div>
+          <span className="eyebrow">Read-only boundary</span>
+          <h4>{payload.readOnlyBoundary.notice}</h4>
+          <p className="muted">No status, owner, note, priority or blocker mutation is enabled in Stage 2B.</p>
+        </div>
+        <div className="owner-review-marker-row">
+          {payload.readOnlyBoundary.disabledActions.map((action) => (
+            <span key={action}>{action}</span>
+          ))}
+        </div>
+      </section>
+    </section>
+  );
+}
+
 export function PitsWorkboardRuntimeStatusPanel({ snapshot }: { snapshot: PlatformRegistrySnapshot }) {
   const firstProject = snapshot.projects[0] ?? null;
 
   return (
-    <section className="panel workboard-panel" data-pits-workboard-runtime="Stage 2A workboard">
+    <section className="panel workboard-panel" data-pits-workboard-runtime="Stage 2A and Stage 2B workboard">
       <div className="panel-heading">
         <div>
           <h3>PITS Project Workboard</h3>
-          <p className="muted">Stage 2A adds a read-only functional slice for project work items.</p>
+          <p className="muted">Stage 2A adds a read-only workboard; Stage 2B adds work item detail and dry-run action preview.</p>
         </div>
         <StatusBadge ok={Boolean(firstProject)} label="Read-only functional slice" />
       </div>
-      <div className="owner-review-marker-row" aria-label="Stage 2A runtime markers">
+      <div className="owner-review-marker-row" aria-label="Stage 2A and Stage 2B runtime markers">
         <span>Read-only functional slice</span>
         <span>Work items</span>
+        <span>Work Item Detail</span>
+        <span>Dry-run Action Preview</span>
+        <span>No data will be changed</span>
         <span>Preview only</span>
         <span>Requires Stage 2B/2C write boundary</span>
       </div>
       <p className="muted">
         {firstProject
-          ? `Open ${firstProject.name} to inspect the workboard. Editing and status changes are not enabled yet.`
+          ? `Open ${firstProject.name} to inspect the workboard, work item detail and dry-run previews. Editing and status changes are not enabled yet.`
           : "No project is available for the workboard in the current registry snapshot."}
       </p>
       {firstProject ? (
         <div className="link-list">
           <Link href={`/projects/${firstProject.id}/workboard`}>Open PITS Project Workboard</Link>
+          <Link href={firstDeterministicWorkItemHref(firstProject.id)}>Open Work Item Detail</Link>
         </div>
       ) : null}
     </section>
@@ -1304,7 +1512,7 @@ export function ProjectSelector({ snapshot }: { snapshot: PlatformRegistrySnapsh
         <div>
           <h3>Project Selector</h3>
           <p className="muted">Project count from Core API /platform/overview: {snapshot.counts.projects ?? "-"}.</p>
-          <p className="muted">PITS is no longer only a registry/readiness shell; Stage 2A adds a read-only workboard functional slice.</p>
+          <p className="muted">PITS is no longer only a registry/readiness shell; Stage 2A adds a read-only workboard and Stage 2B adds work item detail with dry-run preview.</p>
         </div>
         <span className="pill">Installations: {snapshot.counts.installations ?? "-"}</span>
       </div>
@@ -1330,6 +1538,7 @@ export function ProjectSelector({ snapshot }: { snapshot: PlatformRegistrySnapsh
               <div className="link-list">
                 <Link href={`/projects/${project.id}`}>Open project detail</Link>
                 <Link href={`/projects/${project.id}/workboard`}>Open PITS Project Workboard</Link>
+                <Link href={firstDeterministicWorkItemHref(project.id)}>Open Work Item Detail</Link>
               </div>
             </article>
           ))

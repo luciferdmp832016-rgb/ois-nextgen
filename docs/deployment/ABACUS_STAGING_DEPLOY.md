@@ -37,6 +37,8 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 1I adds read-only owner review workflow and safe action-boundary preview surfaces, backed by Core API `/platform/owner-review`.
 - Stage 1J adds read-only audit trail and admin permission model surfaces, backed by Core API `/platform/admin-boundary`.
 - Stage 1K adds read-only product user journey UAT baseline and functional gap map surfaces, backed by Core API `/platform/product-uat`.
+- Stage 2A adds the read-only PITS Project Workboard functional slice, backed by Core API `/platform/pits/projects/{id}/workboard`.
+- Stage 2B adds read-only PITS Work Item Detail and Dry-run Action Preview, backed by Core API `/platform/pits/projects/{projectId}/work-items/{itemId}` and `/action-preview`.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -155,6 +157,8 @@ Stage 1I owner review workflow boundary and safe admin action design result: Cor
 Stage 1J audit trail and admin permission model design result: Core API now exposes read-only `/platform/admin-boundary` with deterministic roles, permission states, action categories, audit requirements, confirmation requirements, rollback requirements, blocked actions and preview-only future actions. OIS/PITS render `Admin Boundary`, `Audit Required`, `Permission Model`, `Preview only` and `Blocked in current stage` markers without executable admin controls. Final result is `AUDIT_TRAIL_ADMIN_PERMISSION_MODEL_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
 
 Stage 1K product user journey UAT baseline result: Core API now exposes read-only `/platform/product-uat` with deterministic OIS/PITS product UAT categories, testable-now surfaces, platform/control-plane-only surfaces, missing product functions, blockers and recommended next journeys. OIS/PITS render `Product User Journey UAT`, `Testable now`, `Control-plane only`, `Functional gap map` and `Next product journey` markers without executable product/admin controls. Final result is `PRODUCT_USER_JOURNEY_UAT_BASELINE_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
+
+Stage 2B PITS work item detail and dry-run action preview result: Core API now exposes read-only `/platform/pits/projects/{projectId}/work-items/{itemId}` and `/platform/pits/projects/{projectId}/work-items/{itemId}/action-preview`. PITS Shell renders `/projects/{id}/work-items/{itemId}` with `Work Item Detail`, `Dry-run Action Preview`, `Preview only`, `No data will be changed`, `Requires audit trail`, `Requires confirmation` and `Requires rollback plan` markers. Final result is `PITS_WORK_ITEM_DETAIL_DRY_RUN_ACTION_PREVIEW_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
 
 Stage 1C Product Registry detail cross-linking result: Core API now exposes source-ready read-only detail endpoints for products, product code lookup, workspaces, projects, modules and installations. OIS Console adds product/workspace/module/installation detail routes, PITS Shell adds project detail routes, and shared UI helpers build staging-only links between `https://ois-ng.dmp247.com` and `https://pits-ng.dmp247.com`. Final result is `PRODUCT_REGISTRY_DETAIL_CROSS_LINKING_READY`; public HTTP 200 verification requires owner runtime sync.
 
@@ -2247,6 +2251,7 @@ Stage 1I adds read-only owner review workflow and safe action-boundary preview s
 Stage 1J adds read-only audit/admin permission model surfaces via `/platform/admin-boundary`. It did not add real write/admin/sync actions, mutation endpoints, deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, import Prisma into UI shells, call `/auth/demo-login` or touch legacy resources.
 Stage 1K adds read-only product user journey UAT baseline and functional gap map surfaces via `/platform/product-uat`. It did not add product writes, real admin/write/sync actions, mutation endpoints, deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, import Prisma into UI shells, call `/auth/demo-login` or touch legacy resources.
 Stage 2A adds the read-only PITS Project Workboard functional slice via `/platform/pits/projects/{id}/workboard` and PITS `/projects/{id}/workboard`. It did not add work item writes, task lifecycle mutations, schema changes, migrations, seed, `prisma db push`, auth changes, deploy from Codex, Cloudflare/DNS changes, credentials, UI `DATABASE_URL`, Prisma UI imports, `/auth/demo-login` changes or legacy-resource touch.
+Stage 2B adds read-only PITS Work Item Detail and Dry-run Action Preview via `/platform/pits/projects/{projectId}/work-items/{itemId}`, `/platform/pits/projects/{projectId}/work-items/{itemId}/action-preview` and PITS `/projects/{id}/work-items/{itemId}`. It did not add work item writes, task lifecycle mutations, status/owner/note/priority/blocker mutations, schema changes, migrations, seed, `prisma db push`, auth changes, deploy from Codex, Cloudflare/DNS changes, credentials, UI `DATABASE_URL`, Prisma UI imports, `/auth/demo-login` changes or legacy-resource touch.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -2272,6 +2277,9 @@ Stage 2A adds the read-only PITS Project Workboard functional slice via `/platfo
 - OIS root/dashboard/runtime/product detail/workspace detail/installation detail and PITS root/projects/runtime/project detail surfaces show Stage 1K product UAT markers after owner runtime sync.
 - Core API `/platform/pits/projects/<project-id>/workboard` returns HTTP 200 with `PITS Project Workboard`, `Read-only functional slice`, `Work items`, `Open`, `In progress`, `Blocked`, `Done` and `NOT_ALLOWED_IN_STAGE_2A` after Stage 2A owner runtime sync.
 - PITS `/projects/<project-id>/workboard` renders status groups, work item cards, priority/owner/due date/next action fields and the read-only notice after Stage 2A owner runtime sync.
+- Core API `/platform/pits/projects/<project-id>/work-items/<item-id>` returns HTTP 200 with `Work Item Detail`, `Dry-run Action Preview`, `Preview only`, `No data will be changed`, `Requires audit trail`, `Requires confirmation`, `Requires rollback plan` and `NOT_ALLOWED_IN_STAGE_2B` after Stage 2B owner runtime sync.
+- Core API `/platform/pits/projects/<project-id>/work-items/<item-id>/action-preview` returns HTTP 200 with `DRY_RUN_ONLY`, `allowedInCurrentStage=false` and `noDataChanged=true` after Stage 2B owner runtime sync.
+- PITS `/projects/<project-id>/work-items/<item-id>` renders work item detail and dry-run preview cards with no enabled mutation action after Stage 2B owner runtime sync.
 - Core API `/docs` renders Swagger UI.
 - OIS Console `/` renders `OIS Console`.
 - PITS Shell `/` renders `PITS Shell`.
@@ -2318,6 +2326,7 @@ Stage 1I adds `https://ois-nextgen.abacusai.cloud/platform/owner-review` as a re
 Stage 1J adds `https://ois-nextgen.abacusai.cloud/platform/admin-boundary` as a read-only audit/admin permission model endpoint. It changes OIS/PITS owner-facing HTML to show admin boundary markers on dashboard/runtime/detail surfaces. Public verification is pending owner runtime sync and owner browser/UAT.
 Stage 1K adds `https://ois-nextgen.abacusai.cloud/platform/product-uat` as a read-only product user journey UAT baseline endpoint. It changes OIS/PITS owner-facing HTML to show product UAT and functional gap map markers on root, dashboard/runtime and detail surfaces. Public verification is pending owner runtime sync and owner browser/UAT.
 Stage 2A adds `https://ois-nextgen.abacusai.cloud/platform/pits/projects/<project-id>/workboard` as a read-only PITS workboard endpoint and `https://pits-ng.dmp247.com/projects/<project-id>/workboard` as the direct browser workboard route. Public verification is pending owner runtime sync and owner browser/UAT.
+Stage 2B adds `https://ois-nextgen.abacusai.cloud/platform/pits/projects/<project-id>/work-items/<item-id>` and `https://ois-nextgen.abacusai.cloud/platform/pits/projects/<project-id>/work-items/<item-id>/action-preview` as read-only PITS detail/dry-run endpoints, plus `https://pits-ng.dmp247.com/projects/<project-id>/work-items/<item-id>` as the direct browser route. Public verification is pending owner runtime sync and owner browser/UAT.
 
 ## Stop Conditions
 

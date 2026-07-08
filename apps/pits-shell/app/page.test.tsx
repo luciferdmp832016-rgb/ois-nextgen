@@ -6,6 +6,7 @@ import Page from "./page";
 import ProjectsPage from "./projects/page";
 import ProjectDetailPage from "./projects/[id]/page";
 import ProjectWorkboardPage from "./projects/[id]/workboard/page";
+import WorkItemDetailPage from "./projects/[id]/work-items/[itemId]/page";
 import RuntimePage from "./runtime/page";
 
 const coreApiUrl = "https://ois-nextgen.abacusai.cloud";
@@ -475,6 +476,8 @@ const adminBoundaryPayload = {
   ]
 };
 
+const workItemId = "pits-emerald_precinct_demo-open-site-access";
+
 const productUatPayload = {
   metadata: registryPayload.metadata,
   runtime: {
@@ -493,10 +496,10 @@ const productUatPayload = {
   },
   summary: {
     products: 2,
-    surfaces: 5,
-    visiblePages: 4,
-    testableNow: 3,
-    realProductFunctionsAvailable: 0,
+    surfaces: 6,
+    visiblePages: 5,
+    testableNow: 5,
+    realProductFunctionsAvailable: 1,
     controlPlaneOnly: 1,
     placeholderOrShellOnly: 0,
     futureProductFunctions: 1,
@@ -532,14 +535,20 @@ const productUatPayload = {
       productCode: "PITS",
       productName: "PITS",
       productId: "prod_pits",
-      currentState: "Project registry shell and readiness shell; not a true project workflow app yet.",
+      currentState: "Project registry shell, Stage 2A read-only workboard and Stage 2B work item detail/dry-run preview; writes remain blocked.",
       ownerUatStatus: "READY_FOR_BROWSER_UAT",
-      testableNow: ["PITS runtime shell", "PITS project list", "PITS project detail"],
+      testableNow: [
+        "PITS runtime shell",
+        "PITS project list",
+        "PITS project detail",
+        "PITS Work Item Detail and Dry-run Action Preview",
+        "PITS runtime, readiness and boundary summary"
+      ],
       controlPlaneOnly: ["PITS runtime, readiness and boundary summary"],
       missingProductFunctions: ["Future issue and task workflow", "Future project status update"],
       recommendedNextJourneys: [
-        "Define a read-only PITS issue/task list",
-        "Add project workflow detail after data model approval",
+        "Owner-test the PITS Project Workboard read-only functional slice",
+        "Owner-test PITS Work Item Detail and Dry-run Action Preview",
         "Keep project status writes disabled until audit/write boundaries are approved"
       ],
       surfaces: [
@@ -605,6 +614,27 @@ const productUatPayload = {
           recommendedNextStep: "Add a read-only project workflow baseline before enabling task or incident writes.",
           nextUserLevelTestPath: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`,
           evidence: ["Project Detail Source", "Project Runtime Health"]
+        },
+        {
+          id: "pits:work-item-detail-dry-run",
+          productCode: "PITS",
+          productName: "PITS",
+          surfaceName: "PITS Work Item Detail and Dry-run Action Preview",
+          route: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo/work-items/${workItemId}`,
+          entityType: "project",
+          entityId: "prj_emerald_precinct_demo",
+          category: "AVAILABLE_FOR_BROWSER_UAT",
+          statusLabel: "Testable now",
+          testableNow: true,
+          realProductFunction: true,
+          ownerUatStatus: "READY_FOR_BROWSER_UAT",
+          currentUserTest: "Open a work item detail and inspect dry-run action previews without changing data.",
+          currentReality: "Stage 2B provides read-only work item detail and deterministic dry-run action preview.",
+          functionalGap: "No real status, owner, note, priority or blocker mutation is implemented.",
+          blockers: ["BLOCKED_BY_WRITE_BOUNDARY"],
+          recommendedNextStep: "Owner-test dry-run previews, then define the future write-boundary acceptance criteria.",
+          nextUserLevelTestPath: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo/work-items/${workItemId}`,
+          evidence: ["Work Item Detail", "Dry-run Action Preview", "No data will be changed"]
         },
         {
           id: "pits:runtime-readiness-boundaries",
@@ -711,7 +741,7 @@ const projectWorkboardPayload = {
       label: "Open",
       items: [
         {
-          id: "pits-emerald-open-site-access",
+          id: "pits-emerald_precinct_demo-open-site-access",
           title: "Confirm site access package",
           type: "TASK",
           status: "OPEN",
@@ -732,7 +762,7 @@ const projectWorkboardPayload = {
       label: "In progress",
       items: [
         {
-          id: "pits-emerald-progress-inspection-plan",
+          id: "pits-emerald_precinct_demo-progress-inspection-plan",
           title: "Prepare inspection walk plan",
           type: "TASK",
           status: "IN_PROGRESS",
@@ -753,7 +783,7 @@ const projectWorkboardPayload = {
       label: "Blocked",
       items: [
         {
-          id: "pits-emerald-blocked-fire-door-risk",
+          id: "pits-emerald_precinct_demo-blocked-fire-door-risk",
           title: "Resolve fire door access risk",
           type: "RISK",
           status: "BLOCKED",
@@ -774,7 +804,7 @@ const projectWorkboardPayload = {
       label: "Done",
       items: [
         {
-          id: "pits-emerald-done-registry-check",
+          id: "pits-emerald_precinct_demo-done-registry-check",
           title: "Verify project registry links",
           type: "FOLLOW_UP",
           status: "DONE",
@@ -804,6 +834,224 @@ const projectWorkboardPayload = {
     ],
     futureWriteBoundary: "Requires Stage 2B/2C write boundary"
   }
+};
+
+const dryRunPreviews = [
+  {
+    actionType: "CHANGE_STATUS",
+    label: "Change status preview",
+    allowedInCurrentStage: false,
+    mode: "DRY_RUN_ONLY",
+    currentValue: "OPEN",
+    proposedValue: "DONE",
+    expectedImpact: "Would move the work item to another status column after a future audited write boundary exists.",
+    requiredRole: "PROJECT_OPERATOR",
+    auditRequired: true,
+    confirmationRequired: true,
+    rollbackRequired: true,
+    blockedReason: "Stage 2B is dry-run only. Requires future write boundary before any status, owner, note, priority or blocker change can execute.",
+    safetyGates: [
+      "Requires future write boundary",
+      "Requires audit trail",
+      "Requires confirmation",
+      "Requires rollback plan",
+      "No data will be changed in Stage 2B"
+    ],
+    noDataChanged: true
+  },
+  {
+    actionType: "ASSIGN_OWNER",
+    label: "Assign owner preview",
+    allowedInCurrentStage: false,
+    mode: "DRY_RUN_ONLY",
+    currentValue: "Project operator",
+    proposedValue: "Owner delegate",
+    expectedImpact: "Would reassign responsibility after future permission checks and audit logging are approved.",
+    requiredRole: "PROJECT_MANAGER",
+    auditRequired: true,
+    confirmationRequired: true,
+    rollbackRequired: true,
+    blockedReason: "Stage 2B is dry-run only. Requires future write boundary before any status, owner, note, priority or blocker change can execute.",
+    safetyGates: [
+      "Requires future write boundary",
+      "Requires audit trail",
+      "Requires confirmation",
+      "Requires rollback plan",
+      "No data will be changed in Stage 2B"
+    ],
+    noDataChanged: true
+  },
+  {
+    actionType: "ADD_NOTE",
+    label: "Add note preview",
+    allowedInCurrentStage: false,
+    mode: "DRY_RUN_ONLY",
+    currentValue: "No persisted note field is available in Stage 2B.",
+    proposedValue: "Dry-run note: owner reviewed this item.",
+    expectedImpact: "Would append an auditable project note after note storage and write rules exist.",
+    requiredRole: "PROJECT_OPERATOR",
+    auditRequired: true,
+    confirmationRequired: true,
+    rollbackRequired: true,
+    blockedReason: "Stage 2B is dry-run only. Requires future write boundary before any status, owner, note, priority or blocker change can execute.",
+    safetyGates: [
+      "Requires future write boundary",
+      "Requires audit trail",
+      "Requires confirmation",
+      "Requires rollback plan",
+      "No data will be changed in Stage 2B"
+    ],
+    noDataChanged: true
+  },
+  {
+    actionType: "SET_PRIORITY",
+    label: "Set priority preview",
+    allowedInCurrentStage: false,
+    mode: "DRY_RUN_ONLY",
+    currentValue: "HIGH",
+    proposedValue: "CRITICAL",
+    expectedImpact: "Would change escalation priority after confirmation and rollback requirements are met.",
+    requiredRole: "PROJECT_MANAGER",
+    auditRequired: true,
+    confirmationRequired: true,
+    rollbackRequired: true,
+    blockedReason: "Stage 2B is dry-run only. Requires future write boundary before any status, owner, note, priority or blocker change can execute.",
+    safetyGates: [
+      "Requires future write boundary",
+      "Requires audit trail",
+      "Requires confirmation",
+      "Requires rollback plan",
+      "No data will be changed in Stage 2B"
+    ],
+    noDataChanged: true
+  },
+  {
+    actionType: "RESOLVE_BLOCKER",
+    label: "Resolve blocker preview",
+    allowedInCurrentStage: false,
+    mode: "DRY_RUN_ONLY",
+    currentValue: "No blocker is currently recorded.",
+    proposedValue: "No blocker resolution available for this item.",
+    expectedImpact: "Would record blocker resolution evidence after future workflow writes are enabled.",
+    requiredRole: "SAFETY_LEAD",
+    auditRequired: true,
+    confirmationRequired: true,
+    rollbackRequired: true,
+    blockedReason: "Stage 2B is dry-run only. Requires future write boundary before any status, owner, note, priority or blocker change can execute.",
+    safetyGates: [
+      "Requires future write boundary",
+      "Requires audit trail",
+      "Requires confirmation",
+      "Requires rollback plan",
+      "No data will be changed in Stage 2B"
+    ],
+    noDataChanged: true
+  }
+];
+
+const workItemDetailPayload = {
+  metadata: registryPayload.metadata,
+  runtime: {
+    coreApiBaseUrl: coreApiUrl,
+    oisConsoleBaseUrl: oisPublicBaseUrl,
+    pitsShellBaseUrl: pitsPublicBaseUrl,
+    workItemDetailMode: "read-only-dry-run-preview",
+    stage: "Stage 2B",
+    note: "Work Item Detail and Dry-run Action Preview are preview only. No data will be changed."
+  },
+  workItemDetail: {
+    projectId: "prj_emerald_precinct_demo",
+    projectCode: "EMERALD_PRECINCT_DEMO",
+    projectName: "Emerald Precinct Demo",
+    itemId: workItemId,
+    readOnly: true,
+    dryRunOnly: true,
+    markers: [
+      "Work Item Detail",
+      "Dry-run Action Preview",
+      "Preview only",
+      "No data will be changed",
+      "Requires audit trail",
+      "Requires confirmation",
+      "Requires rollback plan"
+    ]
+  },
+  item: {
+    id: workItemId,
+    title: "Confirm site access package",
+    type: "TASK",
+    status: "OPEN",
+    priority: "HIGH",
+    owner: "Project operator",
+    dueDate: "2026-07-12",
+    source: "Stage 2A deterministic demo data",
+    summary: "Validate the owner can see the first actionable project work item without creating or editing data.",
+    description:
+      "Confirm site access package belongs to Emerald Precinct Demo. Stage 2B lets the owner inspect this work item and preview future actions without mutating project data.",
+    nextAction: "Review access package checklist with the site lead.",
+    blockers: [],
+    relatedProjectId: "prj_emerald_precinct_demo",
+    updatedAt: "2026-07-08T09:00:00.000Z",
+    readOnlyNotice: "Preview only. No data will be changed.",
+    relatedEntities: [
+      { type: "project", id: "prj_emerald_precinct_demo", name: "Emerald Precinct Demo" },
+      { type: "workboard", id: "prj_emerald_precinct_demo:workboard", name: "PITS Project Workboard" },
+      { type: "product", id: "PITS", name: "PITS" }
+    ],
+    availableDryRunActions: dryRunPreviews.map((preview) => ({
+      actionType: preview.actionType,
+      label: preview.label,
+      currentValue: preview.currentValue,
+      proposedValue: preview.proposedValue,
+      previewRoute: `/platform/pits/projects/prj_emerald_precinct_demo/work-items/${workItemId}/action-preview?actionType=${preview.actionType}`
+    }))
+  },
+  dryRunPreviews,
+  readOnlyBoundary: {
+    mutationEndpointsAdded: false,
+    writePermission: "NOT_ALLOWED_IN_STAGE_2B",
+    notice: "Preview only. No data will be changed.",
+    disabledActions: [
+      "Change status - Preview only",
+      "Assign owner - Preview only",
+      "Add note - Preview only",
+      "Set priority - Preview only",
+      "Resolve blocker - Preview only"
+    ],
+    futureWriteBoundary: "Requires future write boundary"
+  }
+};
+
+const workItemActionPreviewPayload = {
+  metadata: registryPayload.metadata,
+  runtime: {
+    coreApiBaseUrl: coreApiUrl,
+    oisConsoleBaseUrl: oisPublicBaseUrl,
+    pitsShellBaseUrl: pitsPublicBaseUrl,
+    dryRunMode: "DRY_RUN_ONLY",
+    stage: "Stage 2B",
+    note: "Dry-run Action Preview is non-mutating. No data will be changed."
+  },
+  actionPreview: {
+    projectId: "prj_emerald_precinct_demo",
+    projectCode: "EMERALD_PRECINCT_DEMO",
+    projectName: "Emerald Precinct Demo",
+    itemId: workItemId,
+    requestedActionType: null,
+    allowedInCurrentStage: false,
+    noDataChanged: true,
+    markers: [
+      "Dry-run Action Preview",
+      "Preview only",
+      "No data will be changed",
+      "Requires audit trail",
+      "Requires confirmation",
+      "Requires rollback plan"
+    ]
+  },
+  previews: dryRunPreviews,
+  preview: null,
+  noDataChanged: true
 };
 
 type RouteComponent = () => Promise<ReactElement>;
@@ -861,6 +1109,22 @@ function mockCoreApiFetch() {
 
     if (url === `${coreApiUrl}/platform/pits/projects/missing/workboard`) {
       return jsonResponse({ metadata: registryPayload.metadata, error: { code: "NOT_FOUND", message: "project not found" } }, 404);
+    }
+
+    if (url === `${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/work-items/${workItemId}`) {
+      return jsonResponse(workItemDetailPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/work-items/${workItemId}/action-preview`) {
+      return jsonResponse(workItemActionPreviewPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/work-items/missing`) {
+      return jsonResponse({ metadata: registryPayload.metadata, error: { code: "NOT_FOUND", message: "workItem not found" } }, 404);
+    }
+
+    if (url === `${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/work-items/missing/action-preview`) {
+      return jsonResponse({ metadata: registryPayload.metadata, error: { code: "NOT_FOUND", message: "workItem not found" } }, 404);
     }
 
     if (url === `${coreApiUrl}/platform/projects/missing`) {
@@ -1008,6 +1272,7 @@ describe("PITS Shell product shell", () => {
         "project registry shell and readiness shell",
         "PITS is no longer only a registry/readiness shell",
         "Open PITS Project Workboard",
+        "Open Work Item Detail",
         "Suggested next actions",
         "Project readiness",
         "Runtime health:",
@@ -1038,6 +1303,9 @@ describe("PITS Shell product shell", () => {
         "PITS Project Workboard",
         "Read-only functional slice",
         "Work items",
+        "Work Item Detail",
+        "Dry-run Action Preview",
+        "No data will be changed",
         "Requires Stage 2B/2C write boundary",
         "Product User Journey UAT",
         "Testable now",
@@ -1084,7 +1352,8 @@ describe("PITS Shell product shell", () => {
     const html = await renderRouteHtml(ProjectsPage);
 
     expect(html).toContain("Product User Journey / UAT Baseline");
-    expect(html).toContain("PITS is not a true workflow app yet");
+    expect(html).toContain("PITS Work Item Detail and Dry-run Action Preview");
+    expect(html).toContain("writes remain blocked");
     expect(html).toContain("project registry shell");
     expect(html).toContain("project readiness shell");
   });
@@ -1128,6 +1397,7 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("PITS Project Workboard");
     expect(html).toContain("Read-only functional slice");
     expect(html).toContain("Work items");
+    expect(html).toContain("Open Work Item Detail");
     expect(html).toContain("Open");
     expect(html).toContain("In progress");
     expect(html).toContain("Blocked");
@@ -1166,6 +1436,7 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("Read-only functional slice");
     expect(html).toContain("Read-only functional slice — editing is not enabled yet");
     expect(html).toContain("Work items");
+    expect(html).toContain("Open Work Item Detail");
     expect(html).toContain("Open");
     expect(html).toContain("In progress");
     expect(html).toContain("Blocked");
@@ -1189,6 +1460,40 @@ describe("PITS Shell product shell", () => {
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/workboard`, { cache: "no-store" });
   });
 
+  it("renders the work item detail and dry-run action preview", async () => {
+    const fetchMock = mockCoreApiFetch();
+
+    const html = renderToStaticMarkup(await WorkItemDetailPage({ params: Promise.resolve({ id: "prj_emerald_precinct_demo", itemId: workItemId }) }));
+
+    expect(html).toContain("Work Item Detail");
+    expect(html).toContain("Confirm site access package");
+    expect(html).toContain("Project operator");
+    expect(html).toContain("2026-07-12");
+    expect(html).toContain("Validate the owner can see the first actionable project work item");
+    expect(html).toContain("Dry-run Action Preview");
+    expect(html).toContain("Change status preview");
+    expect(html).toContain("Assign owner preview");
+    expect(html).toContain("Add note preview");
+    expect(html).toContain("Set priority preview");
+    expect(html).toContain("Resolve blocker preview");
+    expect(html).toContain("Preview only");
+    expect(html).toContain("No data will be changed");
+    expect(html).toContain("Requires audit trail");
+    expect(html).toContain("Requires confirmation");
+    expect(html).toContain("Requires rollback plan");
+    expect(html).toContain("Requires future write boundary");
+    expect(html).toContain("Available dry-run actions");
+    expect(html).not.toContain("<button>Create work item");
+    expect(html).not.toContain("<button>Edit work item");
+    expect(html).not.toContain("<button>Delete work item");
+    expect(html).not.toContain("<button>Change status");
+    expect(html).not.toContain("<button>Assign owner");
+    expect(html).not.toContain("<button>Add note");
+    expect(html).not.toContain(dbEnvKey);
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/work-items/${workItemId}`, { cache: "no-store" });
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/work-items/${workItemId}/action-preview`, { cache: "no-store" });
+  });
+
   it("renders project detail fallback for a controlled Core API 404", async () => {
     mockCoreApiFetch();
 
@@ -1209,6 +1514,17 @@ describe("PITS Shell product shell", () => {
 
     expect(html).toContain("Project Workboard Unavailable");
     expect(html).toContain("Workboard not linked yet");
+    expect(html).toContain("Safe owner fallback");
+    expect(html).not.toContain(dbEnvKey);
+  });
+
+  it("renders work item detail fallback for a controlled Core API 404", async () => {
+    mockCoreApiFetch();
+
+    const html = renderToStaticMarkup(await WorkItemDetailPage({ params: Promise.resolve({ id: "prj_emerald_precinct_demo", itemId: "missing" }) }));
+
+    expect(html).toContain("Work Item Detail Unavailable");
+    expect(html).toContain("Work item not linked yet");
     expect(html).toContain("Safe owner fallback");
     expect(html).not.toContain(dbEnvKey);
   });

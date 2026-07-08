@@ -670,6 +670,14 @@ p {
   border-left: 4px solid var(--blue);
 }
 
+.work-item-detail-panel {
+  border-left: 4px solid var(--teal);
+}
+
+.dry-run-preview-panel {
+  border-left: 4px solid var(--gold);
+}
+
 .owner-review-marker-row,
 .owner-action-boundary-row {
   display: flex;
@@ -813,6 +821,21 @@ p {
   margin: 0;
 }
 
+.work-item-detail-card,
+.dry-run-action-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.work-item-detail-card h4,
+.dry-run-action-card h4,
+.dry-run-action-card h5 {
+  margin: 0;
+}
+
 .work-item-facts {
   display: grid;
   gap: 8px;
@@ -834,6 +857,17 @@ p {
 .work-item-facts dd {
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+.work-item-detail-facts,
+.dry-run-facts {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.dry-run-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .priority-badge {
