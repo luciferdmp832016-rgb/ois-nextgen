@@ -57,6 +57,8 @@ Current NextGen live scope is Core API `/health`, DB-backed read-only `/platform
 
 Stage 1G standardizes the existing OIS/PITS public staging shells around a modern responsive layout. It adds no endpoint, but after owner runtime sync the OIS and PITS roots should also include `Modern Shell Layout`, `Shell Navigation Toggle`, `Fixed Navigation Shell` and `Responsive Product Shell`.
 
+Stage 1H polishes the existing OIS/PITS public staging shells with owner-first IA, visual hierarchy, status badges, safe empty/fallback states and responsive readability. It adds no endpoint, but after owner runtime sync the OIS and PITS roots should also include `Owner-first Design System`, `Visual Hierarchy Standard` and `Owner-friendly Status Badges`.
+
 ## 2. Local/Loopback Endpoints
 
 | Environment | Endpoint | Status | Stage evidence | Expected result |
@@ -297,6 +299,8 @@ Known OIS Phase 1 production-equivalent resources include database `ois_phase1_d
 | Stage 1F-R1 | `https://ois-ng.dmp247.com` | `PLANNED_NOT_CREATED` | Source-ready OIS root marker hotfix; not deployed from Codex. | Expected HTTP 200 with `Owner Registry Cockpit / Registry Runtime Summary`, `Ready to operate` and `Forbidden link guard` after owner runtime sync. |
 | Stage 1G | `https://ois-ng.dmp247.com` | `PLANNED_NOT_CREATED` | Source-ready OIS modern shell standard markers; not deployed from Codex. | Expected HTTP 200 with `Modern Shell Layout`, `Shell Navigation Toggle`, `Fixed Navigation Shell`, `Responsive Product Shell` and existing cockpit markers after owner runtime sync. |
 | Stage 1G | `https://pits-ng.dmp247.com` | `PLANNED_NOT_CREATED` | Source-ready PITS modern shell standard markers; not deployed from Codex. | Expected HTTP 200 with `Modern Shell Layout`, `Shell Navigation Toggle`, `Fixed Navigation Shell`, `Responsive Product Shell` and existing cockpit markers after owner runtime sync. |
+| Stage 1H | `https://ois-ng.dmp247.com` | `PLANNED_NOT_CREATED` | Source-ready OIS owner-first visual design markers; not deployed from Codex. | Expected HTTP 200 with `Owner-first Design System`, `Visual Hierarchy Standard`, `Owner-friendly Status Badges` and existing shell/cockpit markers after owner runtime sync. |
+| Stage 1H | `https://pits-ng.dmp247.com` | `PLANNED_NOT_CREATED` | Source-ready PITS owner-first visual design markers; not deployed from Codex. | Expected HTTP 200 with `Owner-first Design System`, `Visual Hierarchy Standard`, `Owner-friendly Status Badges` and existing shell/cockpit markers after owner runtime sync. |
 | Stage 0N audit | `https://oisys.abacusai.app` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Existing live Phase 1 app shell. | Do not touch. |
 | Stage 0N audit | `https://ois.dmp247.com` | `LEGACY_PRODUCTION_DO_NOT_TOUCH` | Existing live Phase 1 custom domain. | Do not touch. |
 
@@ -402,6 +406,7 @@ Use these commands only on endpoints allowed by the current stage. Do not probe 
 | PITS Shell project readiness after Stage 1E sync | `curl -i https://pits-ng.dmp247.com/projects/<project-id>` | HTTP 200 with `Project Governance / Readiness` and `What is missing?`. |
 | OIS Console root cockpit after Stage 1F-R1 sync | `curl -i https://ois-ng.dmp247.com` | HTTP 200 with `Owner Registry Cockpit / Registry Runtime Summary`, `Ready to operate` and `Forbidden link guard`. |
 | OIS Console shell standard after Stage 1G sync | `curl -i https://ois-ng.dmp247.com` | HTTP 200 with `Modern Shell Layout`, `Shell Navigation Toggle`, `Fixed Navigation Shell`, `Responsive Product Shell` and existing cockpit markers. |
+| OIS Console owner-first design after Stage 1H sync | `curl -i https://ois-ng.dmp247.com` | HTTP 200 with `Owner-first Design System`, `Visual Hierarchy Standard`, `Owner-friendly Status Badges` and existing cockpit markers. |
 | OIS Console dashboard cockpit after Stage 1F sync | `curl -i https://ois-ng.dmp247.com/dashboard` | HTTP 200 with `Owner Registry Cockpit / Registry Runtime Summary`, `Missing runtime URL` and `Forbidden link guard`. |
 | OIS Console product card UAT after Stage 1F sync | `curl -i https://ois-ng.dmp247.com/products` | HTTP 200 with `Runtime health:`, `Readiness:` and `Linked to PITS`. |
 | OIS Console workspace card UAT after Stage 1F sync | `curl -i https://ois-ng.dmp247.com/workspaces` | HTTP 200 with `Runtime health:` and `Readiness:`. |
@@ -409,6 +414,7 @@ Use these commands only on endpoints allowed by the current stage. Do not probe 
 | OIS Console detail UAT after Stage 1F sync | `curl -i https://ois-ng.dmp247.com/products/<product-id>` | HTTP 200 with `Owner-facing UAT summary`. |
 | PITS Shell root cockpit after Stage 1F sync | `curl -i https://pits-ng.dmp247.com` | HTTP 200 with `PITS Registry Cockpit / Project Runtime Summary`. |
 | PITS Shell standard after Stage 1G sync | `curl -i https://pits-ng.dmp247.com` | HTTP 200 with `Modern Shell Layout`, `Shell Navigation Toggle`, `Fixed Navigation Shell`, `Responsive Product Shell` and existing cockpit markers. |
+| PITS Shell owner-first design after Stage 1H sync | `curl -i https://pits-ng.dmp247.com` | HTTP 200 with `Owner-first Design System`, `Visual Hierarchy Standard`, `Owner-friendly Status Badges` and existing cockpit markers. |
 | PITS Shell project card UAT after Stage 1F sync | `curl -i https://pits-ng.dmp247.com/projects` | HTTP 200 with `Project readiness` and `Runtime health:`. |
 | PITS Shell project detail UAT after Stage 1F sync | `curl -i https://pits-ng.dmp247.com/projects/<project-id>` | HTTP 200 with `Owner-facing project UAT summary`. |
 | PITS Shell runtime cockpit after Stage 1F sync | `curl -i https://pits-ng.dmp247.com/runtime` | HTTP 200 with `PITS Registry Cockpit / Project Runtime Summary`. |

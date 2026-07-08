@@ -120,6 +120,9 @@ export function ModernProductShell({
           <span>Shell Navigation Toggle</span>
           <span>Fixed Navigation Shell</span>
           <span>Responsive Product Shell</span>
+          <span>Owner-first Design System</span>
+          <span>Visual Hierarchy Standard</span>
+          <span>Owner-friendly Status Badges</span>
         </footer>
       </section>
     </main>

@@ -40,7 +40,7 @@ export default async function ModuleDetailPage({ params }: ModuleDetailPageProps
         <DetailSourceMarker label="Module Detail Source" />
         <section className="dashboard-grid">
           <DetailStatusPanel detail={detail} label="Module Detail" />
-          <DetailFallbackPanel title="Module not linked yet" message={detail.errorMessage ?? "Core API returned no module detail."} />
+          <DetailFallbackPanel title="Module not linked yet" message={detail.errorMessage ?? "No module detail is available in the current registry view."} />
           <DataBoundaryPanel />
         </section>
       </OisConsoleShell>

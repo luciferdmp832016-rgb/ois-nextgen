@@ -61,10 +61,11 @@ export default async function WorkspacesPage() {
           </article>
         ))}
         {snapshot.workspaces.length === 0 && snapshot.organizations.length === 0 ? (
-          <article className="panel compact-panel">
-            <span className="eyebrow">Registry fallback</span>
+          <article className="panel compact-panel owner-empty-state" data-owner-empty-state="Owner-safe empty state">
+            <span className="eyebrow">Needs owner review</span>
             <h3>No workspaces returned</h3>
-            <p className="muted">Core API returned empty organization and workspace registry arrays.</p>
+            <p className="muted">No organizations or workspaces are available in this registry view. Confirm registry data after owner runtime sync.</p>
+            <p className="muted owner-safe-note">Safe empty state: only registry-safe summary copy is shown.</p>
           </article>
         ) : null}
       </section>
@@ -86,10 +87,11 @@ export default async function WorkspacesPage() {
             </article>
           ))
         ) : (
-          <article className="panel compact-panel">
-            <span className="eyebrow">Registry fallback</span>
+          <article className="panel compact-panel owner-empty-state" data-owner-empty-state="Owner-safe empty state">
+            <span className="eyebrow">Needs owner review</span>
             <h3>No projects returned</h3>
-            <p className="muted">Core API returned an empty project registry array.</p>
+            <p className="muted">No projects are available in this registry view. Confirm registry data after owner runtime sync.</p>
+            <p className="muted owner-safe-note">Safe empty state: only registry-safe summary copy is shown.</p>
           </article>
         )}
       </section>

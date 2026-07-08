@@ -42,7 +42,7 @@ export default async function InstallationDetailPage({ params }: InstallationDet
           <DetailStatusPanel detail={detail} label="Installation Detail" />
           <DetailFallbackPanel
             title="Installation not linked yet"
-            message={detail.errorMessage ?? "Core API returned no installation detail."}
+            message={detail.errorMessage ?? "No installation detail is available in the current registry view."}
           />
           <DataBoundaryPanel />
         </section>

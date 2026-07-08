@@ -428,6 +428,11 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("Shell Navigation Toggle");
     expect(html).toContain("Fixed Navigation Shell");
     expect(html).toContain("Responsive Product Shell");
+    expect(html).toContain("Owner-first Design System");
+    expect(html).toContain("Visual Hierarchy Standard");
+    expect(html).toContain("Owner-friendly Status Badges");
+    expect(html).toContain('data-owner-status="Owner-friendly Status Badges"');
+    expect(html).toContain("What this is");
     expect(html).toContain("Hide nav");
     expect(html).toContain("Menu");
     expect(html).toContain('aria-label="PITS Shell navigation"');
@@ -504,6 +509,10 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("Shell Navigation Toggle");
     expect(html).toContain("Fixed Navigation Shell");
     expect(html).toContain("Responsive Product Shell");
+    expect(html).toContain("Owner-first Design System");
+    expect(html).toContain("Visual Hierarchy Standard");
+    expect(html).toContain("Owner-friendly Status Badges");
+    expect(html).toContain('data-owner-status="Owner-friendly Status Badges"');
     for (const marker of markers) {
       expect(html).toContain(marker);
     }
@@ -547,7 +556,9 @@ describe("PITS Shell product shell", () => {
 
     expect(html).toContain("Project Not Found");
     expect(html).toContain("Project not linked yet");
-    expect(html).toContain("Not found");
+    expect(html).toContain("Missing link");
+    expect(html).toContain("Safe owner fallback");
+    expect(html).toContain("Next step: return to the registry list");
     expect(html).not.toContain(dbEnvKey);
   });
 });
