@@ -650,6 +650,10 @@ p {
   border-left: 4px solid var(--green);
 }
 
+.admin-boundary-panel {
+  border-left: 4px solid var(--amber);
+}
+
 .owner-review-marker-row,
 .owner-action-boundary-row {
   display: flex;
@@ -676,6 +680,18 @@ p {
   color: var(--muted);
 }
 
+.admin-requirement-badge {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 999px;
+  color: var(--amber);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  padding: 7px 9px;
+}
+
 .owner-review-grid {
   display: grid;
   gap: 12px;
@@ -693,6 +709,10 @@ p {
 .owner-review-card h4,
 .owner-review-card h5 {
   margin: 0;
+}
+
+.future-action-card {
+  background: #fffefa;
 }
 
 .suggested-actions {

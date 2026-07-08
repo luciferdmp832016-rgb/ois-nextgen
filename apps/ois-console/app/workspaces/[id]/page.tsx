@@ -7,6 +7,7 @@ import {
   getWorkspaceRegistryDetail
 } from "@ois/shared-ui";
 import {
+  AdminBoundaryPanel,
   DataBoundaryPanel,
   DetailFacts,
   DetailFallbackPanel,
@@ -99,6 +100,8 @@ export default async function WorkspaceDetailPage({ params }: WorkspaceDetailPag
       />
 
       <OwnerReviewQueuePanel snapshot={snapshot} entityType="workspace" entityId={workspace.id} />
+
+      <AdminBoundaryPanel snapshot={snapshot} entityType="workspace" entityId={workspace.id} />
 
       <RegistryReadinessItemPanel title="Workspace Governance / Readiness" item={workspaceReadiness} />
 

@@ -24,8 +24,8 @@ bash ops/abacus/status.sh
 | `install-ui-shell-systemd-services.sh` | Installs and starts durable systemd services for OIS Console and PITS Shell public staging shells. | Yes, UI systemd units only. |
 | `uninstall-ui-shell-systemd-services.sh` | Stops, disables and removes only the OIS Console/PITS Shell public staging systemd units. Requires `--confirm`. | Yes, UI systemd units only. |
 | `restart-public-staging-runtime.sh` | Restarts Core API, stops OIS/PITS UI services, stops legacy temporary UI demo processes, removes only orphan listeners on `3000/tcp` and `3001/tcp`, starts UI services, then verifies local/public staging endpoints. Does not restart `cloudflared` unless `--include-cloudflared` is passed. | Yes, service restart and UI port cleanup only. |
-| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs, public staging URLs, Stage 1B registry endpoints, Stage 1C registry detail routes, Stage 1D health markers, Stage 1E readiness markers, Stage 1F cockpit/UAT markers, Stage 1G shell markers, Stage 1H owner-first design markers and Stage 1I owner-review safe action-boundary markers. | No. Read-only. |
-| `check-public-staging-endpoints.sh` | Checks public Core API, registry, registry health, registry readiness, owner review, OIS and PITS staging endpoints for HTTP 200, product markers, Core API URL, seeded counts, Stage 1F cockpit/UAT markers, Stage 1G shell markers, Stage 1H owner-first design markers, Stage 1I safe action-boundary markers and forbidden localhost/legacy links on read-only surfaces. | No. Read-only. |
+| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs, public staging URLs, Stage 1B registry endpoints, Stage 1C registry detail routes, Stage 1D health markers, Stage 1E readiness markers, Stage 1F cockpit/UAT markers, Stage 1G shell markers, Stage 1H owner-first design markers, Stage 1I owner-review safe action-boundary markers and Stage 1J audit/admin permission model markers. | No. Read-only. |
+| `check-public-staging-endpoints.sh` | Checks public Core API, registry, registry health, registry readiness, owner review, admin boundary, OIS and PITS staging endpoints for HTTP 200, product markers, Core API URL, seeded counts, Stage 1F cockpit/UAT markers, Stage 1G shell markers, Stage 1H owner-first design markers, Stage 1I safe action-boundary markers, Stage 1J admin/audit permission markers and forbidden localhost/legacy links on read-only surfaces. | No. Read-only. |
 | `verify-ui-route-manifests.sh` | Checks production `.next` route manifests and server entries for every Stage 1A route plus Stage 1C dynamic detail routes. | No. Read-only build artifact check. |
 | `enable-product-subdomain-demo-routes.sh` | Adds a dedicated nginx host-routing config for `ois-ng.dmp247.com` -> port 3000 and `pits-ng.dmp247.com` -> port 3001. | Yes, nginx config only. |
 | `status-product-subdomain-demo-routes.sh` | Checks local Host-header product subdomain routing and optional public DNS/TLS routes. | No. Read-only. |
@@ -402,6 +402,22 @@ Stage 1I owner review workflow boundary and safe admin action design checks:
 - `status-public-staging-runtime.sh` checks local/public endpoint and UI markers; `check-public-staging-endpoints.sh` checks public endpoint and UI markers.
 
 Verify Stage 1I after source sync:
+
+```sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
+Stage 1J audit trail and admin permission model checks:
+
+- Core API adds read-only `/platform/admin-boundary`.
+- The endpoint exposes deterministic roles, permission states, action categories, safety gates, audit requirements, confirmation requirements, rollback requirements, blocked actions, preview-only actions and future admin action plans.
+- OIS Console dashboard, runtime, product detail, workspace detail and installation detail render `Admin Boundary`, `Audit Required`, `Permission Model`, `Preview only` and `Blocked in current stage`.
+- PITS Shell projects, runtime and project detail render the same project-level admin/audit boundary markers.
+- No admin/write action is executable in Stage 1J; UI affordances remain preview-only labels.
+- `status-public-staging-runtime.sh` checks local/public endpoint and UI markers; `check-public-staging-endpoints.sh` checks public endpoint and UI markers.
+
+Verify Stage 1J after source sync:
 
 ```sh
 bash ops/abacus/status-public-staging-runtime.sh

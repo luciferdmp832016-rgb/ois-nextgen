@@ -340,15 +340,96 @@ export type OwnerReviewPayload = {
   items: OwnerReviewItem[];
 };
 
+export type AdminBoundaryRole = "OWNER" | "ADMIN" | "OPERATOR" | "VIEWER" | "SYSTEM";
+
+export type AdminActionCategory =
+  | "REGISTRY_LINK_FIX"
+  | "RUNTIME_URL_UPDATE"
+  | "INSTALLATION_STATUS_UPDATE"
+  | "MODULE_BINDING_UPDATE"
+  | "CROSS_PRODUCT_LINK_UPDATE"
+  | "DEPLOYMENT_RUNTIME_SYNC"
+  | "OWNER_REVIEW_RESOLVE";
+
+export type AdminPermissionState =
+  | "ALLOWED_READ_ONLY"
+  | "PREVIEW_ONLY"
+  | "REQUIRES_OWNER_CONFIRMATION"
+  | "REQUIRES_ADMIN_PERMISSION"
+  | "REQUIRES_AUDIT_TRAIL"
+  | "REQUIRES_ROLLBACK_PLAN"
+  | "BLOCKED_IN_CURRENT_STAGE";
+
+export type AdminBoundaryAction = {
+  id: string;
+  actionName: string;
+  category: AdminActionCategory;
+  requiredRole: AdminBoundaryRole;
+  permissionState: AdminPermissionState;
+  auditRequired: boolean;
+  confirmationRequired: boolean;
+  rollbackRequired: boolean;
+  currentAvailability: "PREVIEW_ONLY" | "BLOCKED_IN_CURRENT_STAGE";
+  unavailableReason: string;
+  safetyGatesNeeded: string[];
+  linkedReviewItemId: string | null;
+  entityType: OwnerReviewItem["entityType"] | "platform";
+  entityId: string | null;
+  entityName: string | null;
+};
+
+export type AdminBoundaryPayload = {
+  metadata: RegistryMetadata;
+  runtime: {
+    coreApiBaseUrl: string;
+    oisConsoleBaseUrl: string;
+    pitsShellBaseUrl: string;
+    boundaryMode: string;
+    stage: string;
+    note: string;
+  };
+  adminBoundary: {
+    stage: string;
+    enabledAdminActions: number;
+    mutationEndpointsAdded: boolean;
+    writePermission: AdminPermissionState;
+    markers: string[];
+  };
+  summary: {
+    roles: number;
+    permissionStates: number;
+    actionCategories: number;
+    safetyGates: number;
+    futureAdminActions: number;
+    previewOnlyActions: number;
+    blockedActions: number;
+    auditRequired: number;
+    confirmationRequired: number;
+    rollbackRequired: number;
+  };
+  roles: Array<{ code: AdminBoundaryRole; label: string; description: string; currentStageCapabilities: string[] }>;
+  permissions: Array<{ state: AdminPermissionState; label: string; description: string }>;
+  actionCategories: Array<{ code: AdminActionCategory; label: string; description: string; requiredRole: AdminBoundaryRole }>;
+  safetyGates: Array<{ code: string; label: string; required: boolean; description: string }>;
+  auditRequirements: Array<{ code: string; label: string; required: boolean; detail: string }>;
+  confirmationRequirements: Array<{ code: string; label: string; required: boolean; detail: string }>;
+  rollbackRequirements: Array<{ code: string; label: string; required: boolean; detail: string }>;
+  blockedActions: AdminBoundaryAction[];
+  previewOnlyActions: AdminBoundaryAction[];
+  futureAdminActions: AdminBoundaryAction[];
+};
+
 export type PlatformRegistrySnapshot = PlatformSnapshot & {
   registry: ApiResult;
   registryHealth: ApiResult;
   registryReadiness: ApiResult;
   ownerReview: ApiResult;
+  adminBoundary: ApiResult;
   registryMetadata: RegistryMetadata | null;
   registryHealthPayload: RegistryHealthPayload | null;
   registryReadinessPayload: RegistryReadinessPayload | null;
   ownerReviewPayload: OwnerReviewPayload | null;
+  adminBoundaryPayload: AdminBoundaryPayload | null;
   registryHealthEntities: RegistryHealthPayload["entities"];
   registryReadinessEntities: RegistryReadinessPayload["entities"];
   products: ProductRegistryItem[];
@@ -598,6 +679,43 @@ export function getOwnerReviewPayload(source: unknown): OwnerReviewPayload | nul
   };
 }
 
+export function getAdminBoundaryPayload(source: unknown): AdminBoundaryPayload | null {
+  if (
+    !isRecord(source) ||
+    !isRecord(source.summary) ||
+    !isRecord(source.adminBoundary) ||
+    !Array.isArray(source.roles) ||
+    !Array.isArray(source.permissions) ||
+    !Array.isArray(source.futureAdminActions)
+  ) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+  const runtime = isRecord(source.runtime) ? source.runtime : null;
+
+  if (!metadata || !runtime) {
+    return null;
+  }
+
+  return {
+    metadata,
+    runtime: runtime as AdminBoundaryPayload["runtime"],
+    adminBoundary: source.adminBoundary as AdminBoundaryPayload["adminBoundary"],
+    summary: source.summary as AdminBoundaryPayload["summary"],
+    roles: source.roles as AdminBoundaryPayload["roles"],
+    permissions: source.permissions as AdminBoundaryPayload["permissions"],
+    actionCategories: getArray<AdminBoundaryPayload["actionCategories"][number]>(source, "actionCategories"),
+    safetyGates: getArray<AdminBoundaryPayload["safetyGates"][number]>(source, "safetyGates"),
+    auditRequirements: getArray<AdminBoundaryPayload["auditRequirements"][number]>(source, "auditRequirements"),
+    confirmationRequirements: getArray<AdminBoundaryPayload["confirmationRequirements"][number]>(source, "confirmationRequirements"),
+    rollbackRequirements: getArray<AdminBoundaryPayload["rollbackRequirements"][number]>(source, "rollbackRequirements"),
+    blockedActions: getArray<AdminBoundaryAction>(source, "blockedActions"),
+    previewOnlyActions: getArray<AdminBoundaryAction>(source, "previewOnlyActions"),
+    futureAdminActions: source.futureAdminActions as AdminBoundaryAction[]
+  };
+}
+
 function getRegistryErrorMessage(source: unknown) {
   if (!isRecord(source) || !isRecord(source.error)) {
     return null;
@@ -676,18 +794,20 @@ export async function getPlatformSnapshot(): Promise<PlatformSnapshot> {
 
 export async function getPlatformRegistrySnapshot(): Promise<PlatformRegistrySnapshot> {
   const coreApiUrl = getCoreApiUrl();
-  const [health, overview, registry, registryHealth, registryReadiness, ownerReview] = await Promise.all([
+  const [health, overview, registry, registryHealth, registryReadiness, ownerReview, adminBoundary] = await Promise.all([
     fetchCoreApi("/health", coreApiUrl),
     fetchCoreApi("/platform/overview", coreApiUrl),
     fetchCoreApi("/platform/registry", coreApiUrl),
     fetchCoreApi("/platform/registry/health", coreApiUrl),
     fetchCoreApi("/platform/registry/readiness", coreApiUrl),
-    fetchCoreApi("/platform/owner-review", coreApiUrl)
+    fetchCoreApi("/platform/owner-review", coreApiUrl),
+    fetchCoreApi("/platform/admin-boundary", coreApiUrl)
   ]);
   const platform = createPlatformSnapshot(coreApiUrl, health, overview);
   const registryHealthPayload = getRegistryHealthPayload(registryHealth.data);
   const registryReadinessPayload = getRegistryReadinessPayload(registryReadiness.data);
   const ownerReviewPayload = getOwnerReviewPayload(ownerReview.data);
+  const adminBoundaryPayload = getAdminBoundaryPayload(adminBoundary.data);
 
   return {
     ...platform,
@@ -695,10 +815,12 @@ export async function getPlatformRegistrySnapshot(): Promise<PlatformRegistrySna
     registryHealth,
     registryReadiness,
     ownerReview,
+    adminBoundary,
     registryMetadata: getRegistryMetadata(registry.data),
     registryHealthPayload,
     registryReadinessPayload,
     ownerReviewPayload,
+    adminBoundaryPayload,
     registryHealthEntities: registryHealthPayload?.entities ?? emptyRegistryHealthEntities(),
     registryReadinessEntities: registryReadinessPayload?.entities ?? emptyRegistryReadinessEntities(),
     products: getArray<ProductRegistryItem>(registry.data, "products"),
@@ -865,4 +987,16 @@ export function getOwnerReviewItemsFor(
 
 export function getOwnerReviewPreviewItems(snapshot: PlatformRegistrySnapshot, limit = 6) {
   return snapshot.ownerReviewPayload?.items.slice(0, limit) ?? [];
+}
+
+export function getAdminBoundaryActionsFor(
+  snapshot: PlatformRegistrySnapshot,
+  entityType: AdminBoundaryAction["entityType"],
+  entityId: string
+) {
+  return snapshot.adminBoundaryPayload?.futureAdminActions.filter((item) => item.entityType === entityType && item.entityId === entityId) ?? [];
+}
+
+export function getAdminBoundaryPreviewActions(snapshot: PlatformRegistrySnapshot, limit = 6) {
+  return snapshot.adminBoundaryPayload?.futureAdminActions.slice(0, limit) ?? [];
 }

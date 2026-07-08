@@ -410,6 +410,40 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
     source: "registry-readiness" | "registry-health";
     evidenceUrl: string | null;
   };
+  type AdminBoundaryRole = "OWNER" | "ADMIN" | "OPERATOR" | "VIEWER" | "SYSTEM";
+  type AdminActionCategory =
+    | "REGISTRY_LINK_FIX"
+    | "RUNTIME_URL_UPDATE"
+    | "INSTALLATION_STATUS_UPDATE"
+    | "MODULE_BINDING_UPDATE"
+    | "CROSS_PRODUCT_LINK_UPDATE"
+    | "DEPLOYMENT_RUNTIME_SYNC"
+    | "OWNER_REVIEW_RESOLVE";
+  type AdminPermissionState =
+    | "ALLOWED_READ_ONLY"
+    | "PREVIEW_ONLY"
+    | "REQUIRES_OWNER_CONFIRMATION"
+    | "REQUIRES_ADMIN_PERMISSION"
+    | "REQUIRES_AUDIT_TRAIL"
+    | "REQUIRES_ROLLBACK_PLAN"
+    | "BLOCKED_IN_CURRENT_STAGE";
+  type AdminBoundaryAction = {
+    id: string;
+    actionName: string;
+    category: AdminActionCategory;
+    requiredRole: AdminBoundaryRole;
+    permissionState: AdminPermissionState;
+    auditRequired: boolean;
+    confirmationRequired: boolean;
+    rollbackRequired: boolean;
+    currentAvailability: "PREVIEW_ONLY" | "BLOCKED_IN_CURRENT_STAGE";
+    unavailableReason: string;
+    safetyGatesNeeded: string[];
+    linkedReviewItemId: string | null;
+    entityType: RegistryHealthEntityKind | "platform";
+    entityId: string | null;
+    entityName: string | null;
+  };
 
   const forbiddenRuntimeUrlFragments = ["localhost", "127.0.0.1", ["ois", "dmp247", "com"].join("."), ["oisys", "abacusai", "app"].join(".")];
   const approvedRuntimeBaseUrls = [
@@ -1636,6 +1670,278 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
     };
   }
 
+  function buildAdminBoundary(registry: RegistrySnapshot) {
+    const ownerReview = buildOwnerReview(registry);
+    const safetyGatesNeeded = [
+      "Permission model approved for the action category",
+      "Audit trail event schema and storage verified",
+      "Owner confirmation workflow verified",
+      "Rollback plan documented and rehearsed",
+      "Stage approval explicitly enables the write action"
+    ];
+    const roles: Array<{ code: AdminBoundaryRole; label: string; description: string; currentStageCapabilities: string[] }> = [
+      {
+        code: "OWNER",
+        label: "Owner",
+        description: "Business owner who can review and confirm future administrative changes.",
+        currentStageCapabilities: ["Read admin boundary model", "Review preview-only actions"]
+      },
+      {
+        code: "ADMIN",
+        label: "Admin",
+        description: "Future platform administrator role for approved admin actions after audit and rollback gates exist.",
+        currentStageCapabilities: ["Read admin boundary model"]
+      },
+      {
+        code: "OPERATOR",
+        label: "Operator",
+        description: "Future runtime operator role for approved operational sync and runtime checks.",
+        currentStageCapabilities: ["Read admin boundary model"]
+      },
+      {
+        code: "VIEWER",
+        label: "Viewer",
+        description: "Read-only observer role for registry, health, readiness and boundary surfaces.",
+        currentStageCapabilities: ["Read-only visibility"]
+      },
+      {
+        code: "SYSTEM",
+        label: "System",
+        description: "Internal service identity for future audited automated actions after approval.",
+        currentStageCapabilities: ["No write automation enabled in Stage 1J"]
+      }
+    ];
+    const permissions: Array<{ state: AdminPermissionState; label: string; description: string }> = [
+      { state: "ALLOWED_READ_ONLY", label: "Allowed read-only", description: "Read-only visibility is allowed in Stage 1J." },
+      { state: "PREVIEW_ONLY", label: "Preview only", description: "The UI may show the action plan, but cannot execute it." },
+      {
+        state: "REQUIRES_OWNER_CONFIRMATION",
+        label: "Requires owner confirmation",
+        description: "Future execution must collect explicit owner approval."
+      },
+      {
+        state: "REQUIRES_ADMIN_PERMISSION",
+        label: "Requires admin permission",
+        description: "Future execution must be limited to an approved admin/operator role."
+      },
+      {
+        state: "REQUIRES_AUDIT_TRAIL",
+        label: "Requires audit trail",
+        description: "Future execution must produce a durable audit event."
+      },
+      {
+        state: "REQUIRES_ROLLBACK_PLAN",
+        label: "Requires rollback plan",
+        description: "Future execution must have a rollback plan before enabling."
+      },
+      {
+        state: "BLOCKED_IN_CURRENT_STAGE",
+        label: "Blocked in current stage",
+        description: "No write/admin action can run in Stage 1J."
+      }
+    ];
+    const actionCategories: Array<{ code: AdminActionCategory; label: string; description: string; requiredRole: AdminBoundaryRole }> = [
+      {
+        code: "REGISTRY_LINK_FIX",
+        label: "Registry link fix",
+        description: "Future repair of missing product/workspace/project/installation relationships.",
+        requiredRole: "ADMIN"
+      },
+      {
+        code: "RUNTIME_URL_UPDATE",
+        label: "Runtime URL update",
+        description: "Future update of public staging runtime URLs or route links.",
+        requiredRole: "ADMIN"
+      },
+      {
+        code: "INSTALLATION_STATUS_UPDATE",
+        label: "Installation status update",
+        description: "Future lifecycle/status change for a product installation.",
+        requiredRole: "ADMIN"
+      },
+      {
+        code: "MODULE_BINDING_UPDATE",
+        label: "Module binding update",
+        description: "Future product/module binding change.",
+        requiredRole: "ADMIN"
+      },
+      {
+        code: "CROSS_PRODUCT_LINK_UPDATE",
+        label: "Cross-product link update",
+        description: "Future OIS/PITS link target repair.",
+        requiredRole: "ADMIN"
+      },
+      {
+        code: "DEPLOYMENT_RUNTIME_SYNC",
+        label: "Deployment runtime sync",
+        description: "Future owner-approved runtime sync action.",
+        requiredRole: "OPERATOR"
+      },
+      {
+        code: "OWNER_REVIEW_RESOLVE",
+        label: "Owner review resolve",
+        description: "Future closure of owner review items after evidence is accepted.",
+        requiredRole: "OWNER"
+      }
+    ];
+    const safetyGates = [
+      {
+        code: "permission_model",
+        label: "Permission Model",
+        required: true,
+        description: "Role and permission checks must be implemented before any write action is enabled."
+      },
+      {
+        code: "audit_required",
+        label: "Audit Required",
+        required: true,
+        description: "Every future sensitive write must create an audit trail event."
+      },
+      {
+        code: "confirmation_required",
+        label: "Confirmation Required",
+        required: true,
+        description: "Owner confirmation must be captured before future admin execution."
+      },
+      {
+        code: "rollback_required",
+        label: "Rollback Required",
+        required: true,
+        description: "Rollback steps must exist before future admin execution."
+      }
+    ];
+    const actionCategoryForReview = (item: OwnerReviewItem): AdminActionCategory => {
+      const text = `${item.title} ${item.reason} ${item.suggestedOwnerAction}`.toLowerCase();
+
+      if (text.includes("runtime") || text.includes("url")) {
+        return "RUNTIME_URL_UPDATE";
+      }
+
+      if (item.entityType === "installation" || text.includes("installation status") || text.includes("lifecycle")) {
+        return "INSTALLATION_STATUS_UPDATE";
+      }
+
+      if (item.entityType === "module" || text.includes("module")) {
+        return "MODULE_BINDING_UPDATE";
+      }
+
+      if (text.includes("cross-product") || text.includes("ois") || text.includes("pits")) {
+        return "CROSS_PRODUCT_LINK_UPDATE";
+      }
+
+      if (text.includes("link")) {
+        return "REGISTRY_LINK_FIX";
+      }
+
+      if (text.includes("sync") || text.includes("uat")) {
+        return "DEPLOYMENT_RUNTIME_SYNC";
+      }
+
+      return "OWNER_REVIEW_RESOLVE";
+    };
+    const categoryRequiredRole = (category: AdminActionCategory) =>
+      actionCategories.find((item) => item.code === category)?.requiredRole ?? "ADMIN";
+    const blockedActions: AdminBoundaryAction[] = actionCategories.map((category) => ({
+      id: `future:${category.code.toLowerCase()}`,
+      actionName: category.label,
+      category: category.code,
+      requiredRole: category.requiredRole,
+      permissionState: "BLOCKED_IN_CURRENT_STAGE",
+      auditRequired: true,
+      confirmationRequired: true,
+      rollbackRequired: true,
+      currentAvailability: "BLOCKED_IN_CURRENT_STAGE",
+      unavailableReason: "Blocked in current stage until permission, audit, confirmation and rollback gates are implemented.",
+      safetyGatesNeeded,
+      linkedReviewItemId: null,
+      entityType: "platform",
+      entityId: null,
+      entityName: null
+    }));
+    const previewOnlyActions: AdminBoundaryAction[] = ownerReview.items.map((item) => {
+      const category = actionCategoryForReview(item);
+
+      return {
+        id: `preview:${item.id}`,
+        actionName: item.title,
+        category,
+        requiredRole: categoryRequiredRole(category),
+        permissionState: "PREVIEW_ONLY",
+        auditRequired: true,
+        confirmationRequired: true,
+        rollbackRequired: true,
+        currentAvailability: "PREVIEW_ONLY",
+        unavailableReason: "Preview only in Stage 1J; no write/admin action is executable.",
+        safetyGatesNeeded,
+        linkedReviewItemId: item.id,
+        entityType: item.entityType,
+        entityId: item.entityId,
+        entityName: item.entityName
+      };
+    });
+    const futureAdminActions = [...blockedActions, ...previewOnlyActions].sort((left, right) => left.id.localeCompare(right.id));
+
+    return {
+      metadata: registry.metadata,
+      runtime: {
+        ...publicRuntimeConfig,
+        boundaryMode: "read-only-admin-permission-model",
+        stage: "Stage 1J",
+        note: "Admin Boundary is a read-only permission and audit model. No admin action is executable in Stage 1J."
+      },
+      adminBoundary: {
+        stage: "Stage 1J",
+        enabledAdminActions: 0,
+        mutationEndpointsAdded: false,
+        writePermission: "BLOCKED_IN_CURRENT_STAGE" as const,
+        markers: ["Admin Boundary", "Audit Required", "Permission Model", "Preview only", "Blocked in current stage"]
+      },
+      summary: {
+        roles: roles.length,
+        permissionStates: permissions.length,
+        actionCategories: actionCategories.length,
+        safetyGates: safetyGates.length,
+        futureAdminActions: futureAdminActions.length,
+        previewOnlyActions: previewOnlyActions.length,
+        blockedActions: blockedActions.length,
+        auditRequired: futureAdminActions.filter((item) => item.auditRequired).length,
+        confirmationRequired: futureAdminActions.filter((item) => item.confirmationRequired).length,
+        rollbackRequired: futureAdminActions.filter((item) => item.rollbackRequired).length
+      },
+      roles,
+      permissions,
+      actionCategories,
+      safetyGates,
+      auditRequirements: [
+        {
+          code: "audit_record_required",
+          label: "Audit Required",
+          required: true,
+          detail: "Future sensitive writes must produce a durable audit record before execution can be enabled."
+        }
+      ],
+      confirmationRequirements: [
+        {
+          code: "owner_confirmation_required",
+          label: "Confirmation Required",
+          required: true,
+          detail: "Future admin execution must collect explicit owner approval."
+        }
+      ],
+      rollbackRequirements: [
+        {
+          code: "rollback_plan_required",
+          label: "Rollback Required",
+          required: true,
+          detail: "Future admin execution must include documented rollback steps."
+        }
+      ],
+      blockedActions,
+      previewOnlyActions,
+      futureAdminActions
+    };
+  }
+
   function buildProductDetail(registry: RegistrySnapshot, product: ProductRegistryEntity) {
     const projects = uniqueById(
       product.installations
@@ -1878,6 +2184,33 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
               }
             }
           }
+        },
+        "/platform/admin-boundary": {
+          get: {
+            tags: ["platform"],
+            responses: {
+              "200": {
+                description: "Read-only audit trail and admin permission model",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["metadata", "runtime", "adminBoundary", "summary", "roles", "permissions", "futureAdminActions"],
+                      properties: {
+                        metadata: { type: "object" },
+                        runtime: { type: "object" },
+                        adminBoundary: { type: "object" },
+                        summary: { type: "object" },
+                        roles: { type: "array", items: { type: "object" } },
+                        permissions: { type: "array", items: { type: "object" } },
+                        futureAdminActions: { type: "array", items: { type: "object" } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -2038,6 +2371,8 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
   app.get("/platform/registry/readiness", async () => buildRegistryReadiness(await readRegistry()));
 
   app.get("/platform/owner-review", async () => buildOwnerReview(await readRegistry()));
+
+  app.get("/platform/admin-boundary", async () => buildAdminBoundary(await readRegistry()));
 
   app.get("/platform/products/code/:code", async (request, reply) => {
     const params = request.params as { code: string };

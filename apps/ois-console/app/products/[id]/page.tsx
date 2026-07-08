@@ -7,6 +7,7 @@ import {
   getProductRegistryDetail
 } from "@ois/shared-ui";
 import {
+  AdminBoundaryPanel,
   DataBoundaryPanel,
   DetailFacts,
   DetailFallbackPanel,
@@ -111,6 +112,8 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       />
 
       <OwnerReviewQueuePanel snapshot={snapshot} entityType="product" entityId={product.id} />
+
+      <AdminBoundaryPanel snapshot={snapshot} entityType="product" entityId={product.id} />
 
       <RegistryReadinessItemPanel title="Product Governance / Readiness" item={productReadiness} />
 

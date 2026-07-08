@@ -12,6 +12,7 @@ import {
   DetailSourceMarker,
   DetailStatusPanel,
   PageHeading,
+  PitsAdminBoundaryPanel,
   PitsOwnerEntityUatSummary,
   PitsOwnerReviewQueuePanel,
   PitsShell,
@@ -109,6 +110,8 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
       />
 
       <PitsOwnerReviewQueuePanel snapshot={snapshot} entityType="project" entityId={project.id} />
+
+      <PitsAdminBoundaryPanel snapshot={snapshot} entityType="project" entityId={project.id} />
 
       <RegistryReadinessItemPanel title="Project Governance / Readiness" item={projectReadiness} />
 

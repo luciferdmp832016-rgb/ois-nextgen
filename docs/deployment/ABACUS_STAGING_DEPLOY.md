@@ -35,6 +35,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 1G standardizes OIS Console and PITS Shell around a modern responsive shell with fixed navigation/header, independent content scrolling and hide/show navigation controls.
 - Stage 1H polishes owner-first OIS/PITS information architecture, visual hierarchy, status badges, empty/fallback states and responsive readability without changing business logic or endpoints.
 - Stage 1I adds read-only owner review workflow and safe action-boundary preview surfaces, backed by Core API `/platform/owner-review`.
+- Stage 1J adds read-only audit trail and admin permission model surfaces, backed by Core API `/platform/admin-boundary`.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -149,6 +150,8 @@ Stage 1G modern responsive shell layout result: OIS Console and PITS Shell now s
 Stage 1H owner-first information architecture visual design polish result: OIS Console and PITS Shell now share source-ready owner-first page cues, visual hierarchy, status badge metadata, safe empty/fallback copy and responsive readability polish. Final result is `OWNER_FIRST_VISUAL_DESIGN_SYSTEM_POLISH_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
 
 Stage 1I owner review workflow boundary and safe admin action design result: Core API now exposes read-only `/platform/owner-review` derived from existing registry health/readiness data, and OIS/PITS render preview-only `Owner Review Queue` / `Safe Action Boundary` surfaces. Final result is `OWNER_REVIEW_WORKFLOW_SAFE_ACTION_BOUNDARY_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
+
+Stage 1J audit trail and admin permission model design result: Core API now exposes read-only `/platform/admin-boundary` with deterministic roles, permission states, action categories, audit requirements, confirmation requirements, rollback requirements, blocked actions and preview-only future actions. OIS/PITS render `Admin Boundary`, `Audit Required`, `Permission Model`, `Preview only` and `Blocked in current stage` markers without executable admin controls. Final result is `AUDIT_TRAIL_ADMIN_PERMISSION_MODEL_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
 
 Stage 1C Product Registry detail cross-linking result: Core API now exposes source-ready read-only detail endpoints for products, product code lookup, workspaces, projects, modules and installations. OIS Console adds product/workspace/module/installation detail routes, PITS Shell adds project detail routes, and shared UI helpers build staging-only links between `https://ois-ng.dmp247.com` and `https://pits-ng.dmp247.com`. Final result is `PRODUCT_REGISTRY_DETAIL_CROSS_LINKING_READY`; public HTTP 200 verification requires owner runtime sync.
 

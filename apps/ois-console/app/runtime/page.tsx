@@ -1,5 +1,6 @@
 import { getPlatformRegistrySnapshot } from "@ois/shared-ui";
 import {
+  AdminBoundaryPanel,
   DataBoundaryPanel,
   OisConsoleShell,
   OwnerRegistryCockpit,
@@ -24,6 +25,7 @@ export default async function RuntimePage() {
       </PageHeading>
       <OwnerRegistryCockpit snapshot={snapshot} />
       <OwnerReviewQueuePanel snapshot={snapshot} title="Safe Action Boundary" />
+      <AdminBoundaryPanel snapshot={snapshot} title="Audit / Permission / Admin Boundary" />
       <section className="dashboard-grid">
         <RuntimeStatusCard snapshot={snapshot} />
         <RegistryGovernancePanel snapshot={snapshot} />
