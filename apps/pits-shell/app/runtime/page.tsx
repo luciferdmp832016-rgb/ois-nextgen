@@ -6,6 +6,7 @@ import {
   PitsShell,
   PlatformCountsPanel,
   ProjectOverviewCards,
+  RegistryHealthPanel,
   RuntimeStatusCard
 } from "../shell";
 
@@ -21,6 +22,7 @@ export default async function RuntimePage() {
       </PageHeading>
       <section className="content-grid">
         <RuntimeStatusCard snapshot={snapshot} />
+        <RegistryHealthPanel snapshot={snapshot} />
         <DataBoundaryPanel />
       </section>
       <ProjectOverviewCards snapshot={snapshot} />

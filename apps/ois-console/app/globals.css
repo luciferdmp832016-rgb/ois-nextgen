@@ -241,6 +241,50 @@ p {
   color: var(--amber);
 }
 
+.status-neutral {
+  background: #eef2f5;
+  color: var(--muted);
+}
+
+.badge-row,
+.link-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.health-check-list {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.health-check {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.health-check strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.health-check a,
+.link-list a {
+  color: var(--blue);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.health-note {
+  margin-top: 12px;
+}
+
 .login {
   min-height: 100vh;
   display: grid;
@@ -310,6 +354,10 @@ input {
   }
 
   .facts div {
+    grid-template-columns: 1fr;
+  }
+
+  .health-check {
     grid-template-columns: 1fr;
   }
 }

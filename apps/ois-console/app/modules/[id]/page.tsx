@@ -1,5 +1,6 @@
 import {
   buildCrossProductLinkTargets,
+  findRegistryHealthItem,
   getModuleRegistryDetail,
   getPlatformRegistrySnapshot
 } from "@ois/shared-ui";
@@ -11,6 +12,7 @@ import {
   DetailStatusPanel,
   OisConsoleShell,
   PageHeading,
+  RegistryHealthItemPanel,
   RelatedLinksPanel
 } from "../../shell";
 
@@ -42,6 +44,8 @@ export default async function ModuleDetailPage({ params }: ModuleDetailPageProps
     );
   }
 
+  const moduleHealth = findRegistryHealthItem(snapshot, "modules", module.id);
+
   return (
     <OisConsoleShell active="products" snapshot={snapshot}>
       <PageHeading title={module.code} eyebrow={module.productCode}>
@@ -61,6 +65,8 @@ export default async function ModuleDetailPage({ params }: ModuleDetailPageProps
           ]}
         />
       </section>
+
+      <RegistryHealthItemPanel title="Module Runtime Health" item={moduleHealth} />
 
       <RelatedLinksPanel
         title="Related Product And Installations"

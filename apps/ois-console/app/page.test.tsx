@@ -174,6 +174,94 @@ const projectRegistryItem = registryPayload.projects[0]!;
 const moduleRegistryItem = registryPayload.modules[0]!;
 const installationRegistryItem = registryPayload.installations[0]!;
 
+function healthItem(kind: string, id: string, code: string, name: string, links: Record<string, string>) {
+  return {
+    kind,
+    id,
+    code,
+    name,
+    lifecycle: "ACTIVE",
+    status: "Healthy",
+    badges: ["Healthy", "Configured", "Linked", "Reachable"],
+    checks: [
+      {
+        label: "Registry row",
+        status: "Configured",
+        ok: true,
+        required: true,
+        detail: "Registry row is present.",
+        url: null
+      },
+      {
+        label: "Core API detail source",
+        status: "Reachable",
+        ok: true,
+        required: true,
+        detail: "Read-only Core API detail URL is configured for staging.",
+        url: links.coreApiDetail
+      }
+    ],
+    links
+  };
+}
+
+const registryHealthPayload = {
+  metadata: registryPayload.metadata,
+  runtime: {
+    coreApiBaseUrl: coreApiUrl,
+    oisConsoleBaseUrl: "https://ois-ng.dmp247.com",
+    pitsShellBaseUrl: pitsPublicBaseUrl,
+    reachabilityMode: "configured-url",
+    note: "Reachable means a staging-safe public URL is configured; this read-only API does not probe external UI routes."
+  },
+  summary: {
+    status: "Healthy",
+    total: 5,
+    healthy: 5,
+    degraded: 0,
+    unavailable: 0,
+    missingUrl: 0
+  },
+  entities: {
+    products: [
+      healthItem("product", "prod_pits", "PITS", "PITS", {
+        coreApiDetail: `${coreApiUrl}/platform/products/prod_pits`,
+        oisConsoleDetail: "https://ois-ng.dmp247.com/products/prod_pits",
+        pitsProject: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`
+      })
+    ],
+    workspaces: [
+      healthItem("workspace", "ws_pmc_org_demo", "PMC_ORG_DEMO", "PMC Org Demo", {
+        coreApiDetail: `${coreApiUrl}/platform/workspaces/ws_pmc_org_demo`,
+        oisConsoleDetail: "https://ois-ng.dmp247.com/workspaces/ws_pmc_org_demo",
+        pitsProject: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`
+      })
+    ],
+    projects: [
+      healthItem("project", "prj_emerald_precinct_demo", "EMERALD_PRECINCT_DEMO", "Emerald Precinct Demo", {
+        coreApiDetail: `${coreApiUrl}/platform/projects/prj_emerald_precinct_demo`,
+        pitsProjectDetail: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`,
+        oisProduct: "https://ois-ng.dmp247.com/products/prod_pits",
+        oisWorkspace: "https://ois-ng.dmp247.com/workspaces/ws_pmc_org_demo"
+      })
+    ],
+    modules: [
+      healthItem("module", "module_pits_runtime_shell", "PITS_RUNTIME_SHELL", "PITS_RUNTIME_SHELL", {
+        coreApiDetail: `${coreApiUrl}/platform/modules/module_pits_runtime_shell`,
+        oisConsoleDetail: "https://ois-ng.dmp247.com/modules/module_pits_runtime_shell",
+        oisProduct: "https://ois-ng.dmp247.com/products/prod_pits"
+      })
+    ],
+    installations: [
+      healthItem("installation", "inst_pits_emerald", "PITS", "PITS installation", {
+        coreApiDetail: `${coreApiUrl}/platform/installations/inst_pits_emerald`,
+        oisConsoleDetail: "https://ois-ng.dmp247.com/installations/inst_pits_emerald",
+        pitsProject: `${pitsPublicBaseUrl}/projects/prj_emerald_precinct_demo`
+      })
+    ]
+  }
+};
+
 const productDetailPayload = {
   metadata: registryPayload.metadata,
   product: {
@@ -248,6 +336,10 @@ function mockCoreApiFetch() {
 
     if (url === `${coreApiUrl}/platform/registry`) {
       return jsonResponse(registryPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/registry/health`) {
+      return jsonResponse(registryHealthPayload);
     }
 
     if (url === `${coreApiUrl}/platform/products/prod_pits`) {
@@ -344,14 +436,25 @@ describe("OIS Console product shell", () => {
   });
 
   it.each([
-    ["dashboard", DashboardPage, ["Platform Overview", "Control plane areas", "Registry ready", "/products/prod_pits"]],
-    ["products", ProductsPage, ["Products &amp; Modules", "Product &amp; Module Overview", "PITS_RUNTIME_SHELL", "/products/prod_pits"]],
+    ["dashboard", DashboardPage, ["Platform Overview", "Control plane areas", "Registry Runtime Health", "Registry ready", "/products/prod_pits"]],
+    [
+      "products",
+      ProductsPage,
+      ["Products &amp; Modules", "Product &amp; Module Overview", "Registry Runtime Health", "PITS_RUNTIME_SHELL", "/products/prod_pits"]
+    ],
     [
       "workspaces",
       WorkspacesPage,
-      ["Organizations, Workspaces &amp; Projects", "Workspace Overview", "PMC Org Demo", "Emerald Precinct Demo", "/workspaces/ws_pmc_org_demo"]
+      [
+        "Organizations, Workspaces &amp; Projects",
+        "Workspace Overview",
+        "Registry Runtime Health",
+        "PMC Org Demo",
+        "Emerald Precinct Demo",
+        "/workspaces/ws_pmc_org_demo"
+      ]
     ],
-    ["runtime", RuntimePage, ["Runtime Status", "Health ready", "Registry ready"]]
+    ["runtime", RuntimePage, ["Runtime Status", "Health ready", "Registry Runtime Health", "Registry ready"]]
   ] satisfies Array<[string, RouteComponent, string[]]>)("renders the %s route shell", async (_name, Component, markers) => {
     mockCoreApiFetch();
 
@@ -380,6 +483,7 @@ describe("OIS Console product shell", () => {
     const html = renderToStaticMarkup(await ProductDetailPage({ params: Promise.resolve({ id: "prod_pits" }) }));
 
     expect(html).toContain("Product Detail Source");
+    expect(html).toContain("Product Runtime Health");
     expect(html).toContain('data-detail-source="Product Detail Source"');
     expect(html).toContain("PITS_RUNTIME_SHELL");
     expect(html).toContain("/modules/module_pits_runtime_shell");
@@ -401,9 +505,19 @@ describe("OIS Console product shell", () => {
   });
 
   it.each([
-    ["workspace", WorkspaceDetailPage, "ws_pmc_org_demo", ["Workspace Detail Source", "https://pits-ng.dmp247.com/projects/prj_emerald_precinct_demo"]],
-    ["module", ModuleDetailPage, "module_pits_runtime_shell", ["Module Detail Source", "/products/prod_pits", "inst_pits_emerald"]],
-    ["installation", InstallationDetailPage, "inst_pits_emerald", ["Installation Detail Source", "/products/prod_pits", "/modules/module_pits_runtime_shell"]]
+    [
+      "workspace",
+      WorkspaceDetailPage,
+      "ws_pmc_org_demo",
+      ["Workspace Detail Source", "Workspace Runtime Health", "https://pits-ng.dmp247.com/projects/prj_emerald_precinct_demo"]
+    ],
+    ["module", ModuleDetailPage, "module_pits_runtime_shell", ["Module Detail Source", "Module Runtime Health", "/products/prod_pits", "inst_pits_emerald"]],
+    [
+      "installation",
+      InstallationDetailPage,
+      "inst_pits_emerald",
+      ["Installation Detail Source", "Installation Runtime Health", "/products/prod_pits", "/modules/module_pits_runtime_shell"]
+    ]
   ] satisfies Array<[string, (props: { params: Promise<{ id: string }> }) => Promise<ReactElement>, string, string[]]>)(
     "renders %s detail route",
     async (_name, Component, id, markers) => {

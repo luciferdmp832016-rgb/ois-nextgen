@@ -1,5 +1,6 @@
 import {
   buildCrossProductLinkTargets,
+  findRegistryHealthItem,
   getPlatformRegistrySnapshot,
   getProjectRegistryDetail
 } from "@ois/shared-ui";
@@ -11,6 +12,7 @@ import {
   DetailStatusPanel,
   PageHeading,
   PitsShell,
+  RegistryHealthItemPanel,
   RelatedLinksPanel,
   RuntimeStatusCard
 } from "../../shell";
@@ -43,6 +45,8 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
     );
   }
 
+  const projectHealth = findRegistryHealthItem(snapshot, "projects", project.id);
+
   return (
     <PitsShell active="projects" snapshot={snapshot}>
       <PageHeading title={project.name} eyebrow={project.code}>
@@ -62,6 +66,8 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
           ]}
         />
       </section>
+
+      <RegistryHealthItemPanel title="Project Runtime Health" item={projectHealth} />
 
       <RelatedLinksPanel
         title="Related OIS Console Links"

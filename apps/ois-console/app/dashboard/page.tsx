@@ -6,6 +6,7 @@ import {
   PageHeading,
   PlatformOverviewCard,
   ProductModuleOverview,
+  RegistryHealthPanel,
   RegistryStatusPanel,
   RuntimeStatusCard
 } from "../shell";
@@ -47,6 +48,7 @@ export default async function DashboardPage() {
       <section className="dashboard-grid">
         <PlatformOverviewCard snapshot={snapshot} />
         <ProductModuleOverview snapshot={snapshot} />
+        <RegistryHealthPanel snapshot={snapshot} />
         <RegistryStatusPanel snapshot={snapshot} />
         <RuntimeStatusCard snapshot={snapshot} />
         <DataBoundaryPanel />

@@ -165,9 +165,69 @@ export type ProductInstallationRegistryDetail = ProductInstallationRegistryItem 
   };
 };
 
+export type RegistryHealthStatus =
+  | "Healthy"
+  | "Configured"
+  | "Linked"
+  | "Reachable"
+  | "Missing URL"
+  | "Not applicable"
+  | "Degraded"
+  | "Unavailable";
+
+export type RegistryHealthCheck = {
+  label: string;
+  status: RegistryHealthStatus;
+  ok: boolean;
+  required: boolean;
+  detail: string;
+  url: string | null;
+};
+
+export type RegistryHealthItem = {
+  kind: "product" | "workspace" | "project" | "module" | "installation";
+  id: string;
+  code: string;
+  name: string;
+  lifecycle: string;
+  status: "Healthy" | "Degraded" | "Unavailable";
+  badges: RegistryHealthStatus[];
+  checks: RegistryHealthCheck[];
+  links: Record<string, string | null>;
+};
+
+export type RegistryHealthPayload = {
+  metadata: RegistryMetadata;
+  runtime: {
+    coreApiBaseUrl: string;
+    oisConsoleBaseUrl: string;
+    pitsShellBaseUrl: string;
+    reachabilityMode: string;
+    note: string;
+  };
+  summary: {
+    status: "Healthy" | "Degraded";
+    total: number;
+    healthy: number;
+    degraded: number;
+    unavailable: number;
+    missingUrl: number;
+  };
+  entities: {
+    products: RegistryHealthItem[];
+    workspaces: RegistryHealthItem[];
+    projects: RegistryHealthItem[];
+    modules: RegistryHealthItem[];
+    installations: RegistryHealthItem[];
+  };
+};
+
 export type PlatformRegistrySnapshot = PlatformSnapshot & {
   registry: ApiResult;
+  registryHealth: ApiResult;
   registryMetadata: RegistryMetadata | null;
+  registryHealthPayload: RegistryHealthPayload | null;
+  registryHealthEntities: RegistryHealthPayload["entities"];
   products: ProductRegistryItem[];
   organizations: OrganizationRegistryItem[];
   workspaces: WorkspaceRegistryItem[];
@@ -299,6 +359,16 @@ function getArray<T>(source: unknown, key: string): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
+function emptyRegistryHealthEntities(): RegistryHealthPayload["entities"] {
+  return {
+    products: [],
+    workspaces: [],
+    projects: [],
+    modules: [],
+    installations: []
+  };
+}
+
 export function getRegistryMetadata(source: unknown): RegistryMetadata | null {
   if (!isRecord(source) || !isRecord(source.metadata)) {
     return null;
@@ -319,6 +389,32 @@ export function getRegistryMetadata(source: unknown): RegistryMetadata | null {
     mode,
     environment,
     generatedAt
+  };
+}
+
+export function getRegistryHealthPayload(source: unknown): RegistryHealthPayload | null {
+  if (!isRecord(source) || !isRecord(source.summary) || !isRecord(source.entities)) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+  const runtime = isRecord(source.runtime) ? source.runtime : null;
+
+  if (!metadata || !runtime) {
+    return null;
+  }
+
+  return {
+    metadata,
+    runtime: runtime as RegistryHealthPayload["runtime"],
+    summary: source.summary as RegistryHealthPayload["summary"],
+    entities: {
+      products: getArray<RegistryHealthItem>(source.entities, "products"),
+      workspaces: getArray<RegistryHealthItem>(source.entities, "workspaces"),
+      projects: getArray<RegistryHealthItem>(source.entities, "projects"),
+      modules: getArray<RegistryHealthItem>(source.entities, "modules"),
+      installations: getArray<RegistryHealthItem>(source.entities, "installations")
+    }
   };
 }
 
@@ -400,17 +496,22 @@ export async function getPlatformSnapshot(): Promise<PlatformSnapshot> {
 
 export async function getPlatformRegistrySnapshot(): Promise<PlatformRegistrySnapshot> {
   const coreApiUrl = getCoreApiUrl();
-  const [health, overview, registry] = await Promise.all([
+  const [health, overview, registry, registryHealth] = await Promise.all([
     fetchCoreApi("/health", coreApiUrl),
     fetchCoreApi("/platform/overview", coreApiUrl),
-    fetchCoreApi("/platform/registry", coreApiUrl)
+    fetchCoreApi("/platform/registry", coreApiUrl),
+    fetchCoreApi("/platform/registry/health", coreApiUrl)
   ]);
   const platform = createPlatformSnapshot(coreApiUrl, health, overview);
+  const registryHealthPayload = getRegistryHealthPayload(registryHealth.data);
 
   return {
     ...platform,
     registry,
+    registryHealth,
     registryMetadata: getRegistryMetadata(registry.data),
+    registryHealthPayload,
+    registryHealthEntities: registryHealthPayload?.entities ?? emptyRegistryHealthEntities(),
     products: getArray<ProductRegistryItem>(registry.data, "products"),
     organizations: getArray<OrganizationRegistryItem>(registry.data, "organizations"),
     workspaces: getArray<WorkspaceRegistryItem>(registry.data, "workspaces"),
@@ -477,4 +578,12 @@ export async function getInstallationRegistryDetail(
 ): Promise<RegistryDetailSnapshot<ProductInstallationRegistryDetail>> {
   const detail = await fetchCoreApi(`/platform/installations/${encodeURIComponent(id)}`, coreApiUrl);
   return createRegistryDetailSnapshot<ProductInstallationRegistryDetail>(coreApiUrl, detail, "installation");
+}
+
+export function findRegistryHealthItem(
+  snapshot: PlatformRegistrySnapshot,
+  collection: keyof RegistryHealthPayload["entities"],
+  id: string
+) {
+  return snapshot.registryHealthEntities[collection].find((item) => item.id === id) ?? null;
 }

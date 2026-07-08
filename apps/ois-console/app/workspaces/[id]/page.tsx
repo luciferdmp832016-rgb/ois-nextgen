@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   buildCrossProductLinkTargets,
+  findRegistryHealthItem,
   getPlatformRegistrySnapshot,
   getWorkspaceRegistryDetail
 } from "@ois/shared-ui";
@@ -12,6 +13,7 @@ import {
   DetailStatusPanel,
   OisConsoleShell,
   PageHeading,
+  RegistryHealthItemPanel,
   RelatedLinksPanel
 } from "../../shell";
 
@@ -45,6 +47,7 @@ export default async function WorkspaceDetailPage({ params }: WorkspaceDetailPag
 
   const products = workspace.relationships?.products ?? [];
   const projects = workspace.relationships?.projects ?? workspace.projects;
+  const workspaceHealth = findRegistryHealthItem(snapshot, "workspaces", workspace.id);
 
   return (
     <OisConsoleShell active="workspaces" snapshot={snapshot}>
@@ -65,6 +68,8 @@ export default async function WorkspaceDetailPage({ params }: WorkspaceDetailPag
           ]}
         />
       </section>
+
+      <RegistryHealthItemPanel title="Workspace Runtime Health" item={workspaceHealth} />
 
       <section className="list-grid" aria-label="Workspace products">
         {products.length > 0 ? (

@@ -454,6 +454,79 @@ describe("platform registry read-only endpoints", () => {
     }
   });
 
+  it("returns deterministic read-only registry runtime health", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/registry/health" });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body).toMatchObject({
+        metadata: {
+          source: "default-db",
+          mode: "read-only",
+          environment: "staging"
+        },
+        runtime: {
+          coreApiBaseUrl: "https://ois-nextgen.abacusai.cloud",
+          oisConsoleBaseUrl: "https://ois-ng.dmp247.com",
+          pitsShellBaseUrl: "https://pits-ng.dmp247.com",
+          reachabilityMode: "configured-url"
+        },
+        summary: {
+          status: "Healthy",
+          total: 5,
+          healthy: 5,
+          degraded: 0,
+          unavailable: 0,
+          missingUrl: 0
+        },
+        entities: {
+          products: [
+            {
+              kind: "product",
+              id: "prod_pits",
+              status: "Healthy",
+              badges: expect.arrayContaining(["Healthy", "Configured", "Linked", "Reachable"])
+            }
+          ],
+          projects: [
+            {
+              kind: "project",
+              id: "prj_emerald_precinct_demo",
+              status: "Healthy",
+              links: {
+                coreApiDetail: "https://ois-nextgen.abacusai.cloud/platform/projects/prj_emerald_precinct_demo",
+                pitsProjectDetail: "https://pits-ng.dmp247.com/projects/prj_emerald_precinct_demo",
+                oisProduct: "https://ois-ng.dmp247.com/products/prod_pits",
+                oisWorkspace: "https://ois-ng.dmp247.com/workspaces/ws_pmc_org_demo"
+              }
+            }
+          ]
+        }
+      });
+      expect(JSON.stringify(body)).toContain("Core API detail source");
+      expect(JSON.stringify(body)).toContain("PITS project runtime link");
+      expect(JSON.stringify(body)).not.toContain("localhost");
+      expect(JSON.stringify(body)).not.toContain("ois.dmp247.com");
+      expect(mock.readCalls).toEqual([
+        "productDefinition.findMany",
+        "organization.findMany",
+        "workspace.findMany",
+        "project.findMany",
+        "moduleDefinition.findMany",
+        "productInstallation.findMany"
+      ]);
+      expect(mock.writeCalls).toEqual([]);
+      expect(mock.userAccount.findUnique).not.toHaveBeenCalled();
+      expect(mock.delegates.productInstallation.findUnique).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
   it.each([
     ["/platform/products/prod_pits", "product", "PITS_RUNTIME_SHELL", "productDefinition.findMany"],
     ["/platform/products/code/PITS", "product", "EMERALD_PRECINCT_DEMO", "productDefinition.findMany"],

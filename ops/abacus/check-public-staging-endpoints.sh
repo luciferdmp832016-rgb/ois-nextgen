@@ -37,6 +37,7 @@ check_core() {
   check_route "PUBLIC_STAGING_REGISTRY_MODULES" "$CORE_API_URL/platform/modules" '"source":"default-db"' '"mode":"read-only"' '"modules"'
   check_route "PUBLIC_STAGING_REGISTRY_INSTALLATIONS" "$CORE_API_URL/platform/installations" '"source":"default-db"' '"mode":"read-only"' '"installations"'
   check_route "PUBLIC_STAGING_REGISTRY_AGGREGATE" "$CORE_API_URL/platform/registry" '"source":"default-db"' '"mode":"read-only"' '"products"' '"projects"'
+  check_route "PUBLIC_STAGING_REGISTRY_HEALTH" "$CORE_API_URL/platform/registry/health" '"source":"default-db"' '"mode":"read-only"' '"summary"' '"entities"' '"Reachable"'
 
   if public_staging_discover_registry_ids "$CORE_API_URL"; then
     printf 'PUBLIC_STAGING_REGISTRY_IDS_READY %s\n' "$PUBLIC_STAGING_DETAIL"
@@ -77,6 +78,34 @@ check_route() {
   fi
 }
 
+check_absent_markers() {
+  local label="$1"
+  local url="$2"
+  shift 2
+  local body=""
+  local code=""
+  local marker
+
+  if ! public_staging_http_get_body body code "$url"; then
+    record_failure "$label request failed ($PUBLIC_STAGING_DETAIL)"
+    return
+  fi
+
+  if [ "$code" != "200" ]; then
+    record_failure "$label expected HTTP 200 got HTTP $code"
+    return
+  fi
+
+  for marker in "$@"; do
+    if [[ "$body" == *"$marker"* ]]; then
+      record_failure "$label contains forbidden marker: $marker"
+      return
+    fi
+  done
+
+  printf 'PUBLIC_STAGING_LINK_BOUNDARY_READY %s forbidden_markers=absent\n' "$label"
+}
+
 check_controlled_404() {
   local label="$1"
   local url="$2"
@@ -110,21 +139,29 @@ public_staging_print_safety
 printf '%s\n' "This script does not probe legacy endpoints, write endpoints or /auth/demo-login."
 
 check_core
+check_absent_markers "PUBLIC_STAGING_REGISTRY_HEALTH_LINK_BOUNDARY" "$CORE_API_URL/platform/registry/health" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_root_shell "OIS_CONSOLE_PUBLIC_ROOT" "$OIS_CONSOLE_PUBLIC_URL" "OIS_CONSOLE" "OIS Console"
-check_route "OIS_CONSOLE_PUBLIC_DASHBOARD" "$OIS_CONSOLE_PUBLIC_URL/dashboard" "Platform Overview" "DEMO DATA - NOT PRODUCTION"
-check_route "OIS_CONSOLE_PUBLIC_PRODUCTS" "$OIS_CONSOLE_PUBLIC_URL/products" "Products &amp; Modules" "Product &amp; Module Overview" "PITS_RUNTIME_SHELL" "OIS_CONSOLE"
-check_route "OIS_CONSOLE_PUBLIC_WORKSPACES" "$OIS_CONSOLE_PUBLIC_URL/workspaces" "Organizations, Workspaces &amp; Projects" "Workspace Overview" "PMC Org Demo" "OIS_CONSOLE"
-check_route "OIS_CONSOLE_PUBLIC_RUNTIME" "$OIS_CONSOLE_PUBLIC_URL/runtime" "Runtime Status" "Core API source:" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_PUBLIC_DASHBOARD" "$OIS_CONSOLE_PUBLIC_URL/dashboard" "Platform Overview" "Registry Runtime Health" "DEMO DATA - NOT PRODUCTION"
+check_route "OIS_CONSOLE_PUBLIC_PRODUCTS" "$OIS_CONSOLE_PUBLIC_URL/products" "Products &amp; Modules" "Product &amp; Module Overview" "Registry Runtime Health" "PITS_RUNTIME_SHELL" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_PUBLIC_WORKSPACES" "$OIS_CONSOLE_PUBLIC_URL/workspaces" "Organizations, Workspaces &amp; Projects" "Workspace Overview" "Registry Runtime Health" "PMC Org Demo" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_PUBLIC_RUNTIME" "$OIS_CONSOLE_PUBLIC_URL/runtime" "Runtime Status" "Registry Runtime Health" "Core API source:" "OIS_CONSOLE"
 check_root_shell "PITS_SHELL_PUBLIC_ROOT" "$PITS_SHELL_PUBLIC_URL" "PITS_SHELL" "PITS Shell"
-check_route "PITS_SHELL_PUBLIC_PROJECTS" "$PITS_SHELL_PUBLIC_URL/projects" "Project Selector" "EMERALD_PRECINCT_DEMO" "DEMO DATA - NOT PRODUCTION"
-check_route "PITS_SHELL_PUBLIC_RUNTIME" "$PITS_SHELL_PUBLIC_URL/runtime" "Runtime Status" "Core API source:" "PITS_SHELL"
+check_route "PITS_SHELL_PUBLIC_PROJECTS" "$PITS_SHELL_PUBLIC_URL/projects" "Project Selector" "Registry Runtime Health" "EMERALD_PRECINCT_DEMO" "DEMO DATA - NOT PRODUCTION"
+check_route "PITS_SHELL_PUBLIC_RUNTIME" "$PITS_SHELL_PUBLIC_URL/runtime" "Runtime Status" "Registry Runtime Health" "Core API source:" "PITS_SHELL"
+check_absent_markers "OIS_CONSOLE_PUBLIC_DASHBOARD_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/dashboard" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
+check_absent_markers "PITS_SHELL_PUBLIC_PROJECTS_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/projects" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 
 if [ -n "$REGISTRY_PRODUCT_ID" ] && [ -n "$REGISTRY_WORKSPACE_ID" ] && [ -n "$REGISTRY_PROJECT_ID" ] && [ -n "$REGISTRY_MODULE_ID" ] && [ -n "$REGISTRY_INSTALLATION_ID" ]; then
-  check_route "OIS_CONSOLE_PUBLIC_PRODUCT_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID" "Product Detail Source" "PITS_RUNTIME_SHELL" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID"
-  check_route "OIS_CONSOLE_PUBLIC_WORKSPACE_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/workspaces/$REGISTRY_WORKSPACE_ID" "Workspace Detail Source" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID"
-  check_route "OIS_CONSOLE_PUBLIC_MODULE_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/modules/$REGISTRY_MODULE_ID" "Module Detail Source" "$REGISTRY_INSTALLATION_ID"
-  check_route "OIS_CONSOLE_PUBLIC_INSTALLATION_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/installations/$REGISTRY_INSTALLATION_ID" "Installation Detail Source" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID"
-  check_route "PITS_SHELL_PUBLIC_PROJECT_DETAIL" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID" "Project Detail Source" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID" "$OIS_CONSOLE_PUBLIC_URL/workspaces/$REGISTRY_WORKSPACE_ID"
+  check_route "OIS_CONSOLE_PUBLIC_PRODUCT_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID" "Product Detail Source" "Product Runtime Health" "PITS_RUNTIME_SHELL" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID"
+  check_route "OIS_CONSOLE_PUBLIC_WORKSPACE_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/workspaces/$REGISTRY_WORKSPACE_ID" "Workspace Detail Source" "Workspace Runtime Health" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID"
+  check_route "OIS_CONSOLE_PUBLIC_MODULE_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/modules/$REGISTRY_MODULE_ID" "Module Detail Source" "Module Runtime Health" "$REGISTRY_INSTALLATION_ID"
+  check_route "OIS_CONSOLE_PUBLIC_INSTALLATION_DETAIL" "$OIS_CONSOLE_PUBLIC_URL/installations/$REGISTRY_INSTALLATION_ID" "Installation Detail Source" "Installation Runtime Health" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID"
+  check_route "PITS_SHELL_PUBLIC_PROJECT_DETAIL" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID" "Project Detail Source" "Project Runtime Health" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID" "$OIS_CONSOLE_PUBLIC_URL/workspaces/$REGISTRY_WORKSPACE_ID"
+  check_absent_markers "OIS_CONSOLE_PUBLIC_PRODUCT_DETAIL_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
+  check_absent_markers "OIS_CONSOLE_PUBLIC_WORKSPACE_DETAIL_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/workspaces/$REGISTRY_WORKSPACE_ID" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
+  check_absent_markers "OIS_CONSOLE_PUBLIC_MODULE_DETAIL_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/modules/$REGISTRY_MODULE_ID" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
+  check_absent_markers "OIS_CONSOLE_PUBLIC_INSTALLATION_DETAIL_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/installations/$REGISTRY_INSTALLATION_ID" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
+  check_absent_markers "PITS_SHELL_PUBLIC_PROJECT_DETAIL_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/projects/$REGISTRY_PROJECT_ID" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 else
   record_failure "registry ids were not available for public detail route checks"
 fi
