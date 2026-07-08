@@ -3,6 +3,7 @@ import {
   DataBoundaryPanel,
   InstallationRegistryPanel,
   PageHeading,
+  PitsRegistryCockpit,
   PitsShell,
   PlatformCountsPanel,
   ProjectOverviewCards,
@@ -21,6 +22,7 @@ export default async function RuntimePage() {
       <PageHeading eyebrow="Runtime" title="Runtime Status">
         PITS Shell runtime baseline for public staging, Core API health and Platform Kernel counts.
       </PageHeading>
+      <PitsRegistryCockpit snapshot={snapshot} />
       <section className="content-grid">
         <RuntimeStatusCard snapshot={snapshot} />
         <RegistryGovernancePanel snapshot={snapshot} />

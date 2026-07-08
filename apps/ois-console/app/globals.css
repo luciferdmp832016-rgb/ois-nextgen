@@ -285,6 +285,100 @@ p {
   margin-top: 12px;
 }
 
+.owner-cockpit {
+  border-left: 4px solid var(--blue);
+}
+
+.owner-fact-grid,
+.owner-guard-grid {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.owner-fact-grid {
+  grid-template-columns: repeat(auto-fit, minmax(152px, 1fr));
+}
+
+.owner-guard-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-top: 14px;
+}
+
+.owner-fact-grid div,
+.owner-guard-grid div {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+}
+
+.owner-fact-grid dt,
+.owner-guard-grid span {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.owner-fact-grid dd {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.owner-guard-grid strong {
+  font-size: 24px;
+}
+
+.owner-quick-links {
+  margin-top: 14px;
+}
+
+.owner-quick-links h4 {
+  margin: 0 0 8px;
+}
+
+.owner-link-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.owner-link-list a,
+.owner-cross-link {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--blue);
+  display: inline-grid;
+  font-weight: 800;
+  gap: 3px;
+  padding: 9px 10px;
+}
+
+.owner-link-list span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.owner-card-summary {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.owner-card-summary p {
+  margin: 0;
+}
+
+.owner-relationship-line {
+  color: var(--green);
+  font-weight: 800;
+}
+
 .missing-list {
   border: 1px solid var(--line);
   border-radius: 8px;

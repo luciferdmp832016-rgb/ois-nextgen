@@ -3,6 +3,7 @@ import {
   DataBoundaryPanel,
   InstallationRegistryPanel,
   PageHeading,
+  PitsRegistryCockpit,
   PitsShell,
   PlatformCountsPanel,
   ProjectOverviewCards,
@@ -22,6 +23,7 @@ export default async function ProjectsPage() {
       <PageHeading eyebrow="Projects" title="Project Selector">
         Select from seeded staging projects that read shared platform state through Core API.
       </PageHeading>
+      <PitsRegistryCockpit snapshot={snapshot} />
       <ProjectSelector snapshot={snapshot} />
       <InstallationRegistryPanel snapshot={snapshot} />
       <ProjectOverviewCards snapshot={snapshot} />

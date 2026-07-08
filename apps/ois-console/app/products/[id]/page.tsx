@@ -13,6 +13,7 @@ import {
   DetailSourceMarker,
   DetailStatusPanel,
   OisConsoleShell,
+  OwnerEntityUatSummary,
   PageHeading,
   RegistryHealthItemPanel,
   RegistryReadinessItemPanel,
@@ -49,6 +50,31 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   const productHealth = findRegistryHealthItem(snapshot, "products", product.id);
   const productReadiness = findRegistryReadinessItem(snapshot, "products", product.id);
+  const modules = product.relationships?.modules ?? product.modules;
+  const installations = product.relationships?.installations ?? product.installations;
+  const workspaceLinks = new Set(installations.map((installation) => installation.workspaceId).filter(Boolean)).size;
+  const projectLinks = new Set(installations.map((installation) => installation.projectId).filter(Boolean)).size;
+  const ownerLinks = installations.slice(0, 3).flatMap((installation) => {
+    const targets = buildCrossProductLinkTargets({
+      installationId: installation.id,
+      workspaceId: installation.workspaceId,
+      projectId: installation.projectId
+    });
+
+    return [
+      {
+        href: targets.oisInstallation,
+        label: `Open installation ${installation.productCode}`,
+        detail: installation.project?.name ?? installation.projectId
+      },
+      {
+        href: targets.pitsProject,
+        label: `Linked to PITS ${installation.project?.name ?? installation.projectId}`,
+        detail: "Cross-product staging link",
+        external: true
+      }
+    ];
+  });
 
   return (
     <OisConsoleShell active="products" snapshot={snapshot}>
@@ -64,18 +90,31 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
             ["Code", product.code],
             ["Lifecycle", product.lifecycle],
             ["Version", product.version],
-            ["Modules", product.relationships?.modules.length ?? product.modules.length],
-            ["Installations", product.relationships?.installations.length ?? product.installations.length]
+            ["Modules", modules.length],
+            ["Installations", installations.length]
           ]}
         />
       </section>
+
+      <OwnerEntityUatSummary
+        title="Owner-facing UAT summary"
+        health={productHealth}
+        readiness={productReadiness}
+        linkedFacts={[
+          `${modules.length} module link(s)`,
+          `${installations.length} installation link(s)`,
+          `${workspaceLinks} workspace link(s)`,
+          `${projectLinks} project link(s)`
+        ]}
+        links={ownerLinks}
+      />
 
       <RegistryReadinessItemPanel title="Product Governance / Readiness" item={productReadiness} />
 
       <RegistryHealthItemPanel title="Product Runtime Health" item={productHealth} />
 
       <section className="list-grid" aria-label="Product modules">
-        {(product.relationships?.modules ?? product.modules).map((module) => (
+        {modules.map((module) => (
           <article className="panel compact-panel" key={module.id}>
             <span className="eyebrow">{module.layerCode}</span>
             <h3>
@@ -92,7 +131,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       <RelatedLinksPanel
         title="Related Installation Links"
         description="OIS Console installation details and cross-product PITS project links from registry relationships."
-        links={(product.relationships?.installations ?? product.installations).flatMap((installation) => {
+        links={installations.flatMap((installation) => {
           const targets = buildCrossProductLinkTargets({
             installationId: installation.id,
             workspaceId: installation.workspaceId,

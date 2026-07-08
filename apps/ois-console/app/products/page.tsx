@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { getPlatformRegistrySnapshot } from "@ois/shared-ui";
+import { findRegistryHealthItem, findRegistryReadinessItem, getPlatformRegistrySnapshot } from "@ois/shared-ui";
 import {
   CountGrid,
   DataBoundaryPanel,
   OisConsoleShell,
+  OwnerRegistryCockpit,
   PageHeading,
+  RegistryCardUatSummary,
   RegistryGovernancePanel,
   RegistryHealthPanel,
   RegistryStatusPanel,
@@ -21,6 +23,7 @@ export default async function ProductsPage() {
       <PageHeading eyebrow="Product Catalog" title="Products & Modules">
         Product and module baseline for the current public staging runtime.
       </PageHeading>
+      <OwnerRegistryCockpit snapshot={snapshot} />
       <section className="panel">
         <div className="panel-heading">
           <div>
@@ -33,18 +36,28 @@ export default async function ProductsPage() {
       </section>
       <section className="list-grid" aria-label="Product areas">
         {snapshot.products.length > 0 ? (
-          snapshot.products.map((product) => (
-            <article className="panel compact-panel" key={product.id}>
-              <span className="eyebrow">{product.code}</span>
-              <h3>
-                <Link href={`/products/${product.id}`}>{product.name}</Link>
-              </h3>
-              <p className="muted">
-                {product.lifecycle} product with {product.modules.length} module(s) and {product.installations.length} installation(s).
-              </p>
-              <strong>Version {product.version}</strong>
-            </article>
-          ))
+          snapshot.products.map((product) => {
+            const workspaceLinks = new Set(product.installations.map((installation) => installation.workspaceId).filter(Boolean)).size;
+            const projectLinks = new Set(product.installations.map((installation) => installation.projectId).filter(Boolean)).size;
+
+            return (
+              <article className="panel compact-panel" key={product.id}>
+                <span className="eyebrow">{product.code}</span>
+                <h3>
+                  <Link href={`/products/${product.id}`}>{product.name}</Link>
+                </h3>
+                <p className="muted">
+                  {product.lifecycle} product with {product.modules.length} module(s) and {product.installations.length} installation(s).
+                </p>
+                <RegistryCardUatSummary
+                  health={findRegistryHealthItem(snapshot, "products", product.id)}
+                  readiness={findRegistryReadinessItem(snapshot, "products", product.id)}
+                  linkedLabel={`${workspaceLinks} workspace link(s), ${projectLinks} project link(s), ${product.modules.length} module link(s), ${product.installations.length} installation link(s)`}
+                />
+                <strong>Version {product.version}</strong>
+              </article>
+            );
+          })
         ) : (
           <article className="panel compact-panel">
             <span className="eyebrow">Registry fallback</span>
@@ -64,6 +77,11 @@ export default async function ProductsPage() {
               <p className="muted">
                 {module.moduleType} in {module.layerCode}; scope {module.scope}; realm {module.realmCode}.
               </p>
+              <RegistryCardUatSummary
+                health={findRegistryHealthItem(snapshot, "modules", module.id)}
+                readiness={findRegistryReadinessItem(snapshot, "modules", module.id)}
+                linkedLabel={`Linked product ${module.product?.name ?? module.productCode}`}
+              />
               <strong>{module.lifecycle}</strong>
             </article>
           ))

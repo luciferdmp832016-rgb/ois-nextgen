@@ -2,6 +2,7 @@ import { getPlatformRegistrySnapshot } from "@ois/shared-ui";
 import {
   DataBoundaryPanel,
   OisConsoleShell,
+  OwnerRegistryCockpit,
   PageHeading,
   PlatformOverviewCard,
   RegistryGovernancePanel,
@@ -20,6 +21,7 @@ export default async function RuntimePage() {
       <PageHeading eyebrow="Runtime" title="Runtime Status">
         Public staging runtime baseline for OIS Console, Core API and Platform Kernel reads.
       </PageHeading>
+      <OwnerRegistryCockpit snapshot={snapshot} />
       <section className="dashboard-grid">
         <RuntimeStatusCard snapshot={snapshot} />
         <RegistryGovernancePanel snapshot={snapshot} />

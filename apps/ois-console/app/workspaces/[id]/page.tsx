@@ -13,6 +13,7 @@ import {
   DetailSourceMarker,
   DetailStatusPanel,
   OisConsoleShell,
+  OwnerEntityUatSummary,
   PageHeading,
   RegistryHealthItemPanel,
   RegistryReadinessItemPanel,
@@ -49,8 +50,19 @@ export default async function WorkspaceDetailPage({ params }: WorkspaceDetailPag
 
   const products = workspace.relationships?.products ?? [];
   const projects = workspace.relationships?.projects ?? workspace.projects;
+  const modules = workspace.relationships?.modules ?? [];
+  const installations = workspace.relationships?.installations ?? workspace.installations;
   const workspaceHealth = findRegistryHealthItem(snapshot, "workspaces", workspace.id);
   const workspaceReadiness = findRegistryReadinessItem(snapshot, "workspaces", workspace.id);
+  const ownerLinks = projects.slice(0, 3).map((project) => {
+    const targets = buildCrossProductLinkTargets({ projectId: project.id });
+    return {
+      href: targets.pitsProject,
+      label: `Linked to PITS ${project.name}`,
+      detail: project.code,
+      external: true
+    };
+  });
 
   return (
     <OisConsoleShell active="workspaces" snapshot={snapshot}>
@@ -71,6 +83,19 @@ export default async function WorkspaceDetailPage({ params }: WorkspaceDetailPag
           ]}
         />
       </section>
+
+      <OwnerEntityUatSummary
+        title="Owner-facing UAT summary"
+        health={workspaceHealth}
+        readiness={workspaceReadiness}
+        linkedFacts={[
+          `${projects.length} project link(s)`,
+          `${products.length} product link(s)`,
+          `${modules.length} module link(s)`,
+          `${installations.length} installation link(s)`
+        ]}
+        links={ownerLinks}
+      />
 
       <RegistryReadinessItemPanel title="Workspace Governance / Readiness" item={workspaceReadiness} />
 

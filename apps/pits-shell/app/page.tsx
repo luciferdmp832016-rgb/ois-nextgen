@@ -3,6 +3,7 @@ import {
   DataBoundaryPanel,
   InstallationRegistryPanel,
   PageHeading,
+  PitsRegistryCockpit,
   PitsShell,
   PlatformCountsPanel,
   ProjectOverviewCards,
@@ -22,6 +23,7 @@ export default async function Page() {
       <PageHeading eyebrow="PITS_SHELL" title="Project Runtime Overview">
         Product runtime baseline for project selection, installation status and Core API health.
       </PageHeading>
+      <PitsRegistryCockpit snapshot={snapshot} />
       <ProjectOverviewCards snapshot={snapshot} />
       <section className="content-grid">
         <ProjectSelector snapshot={snapshot} />

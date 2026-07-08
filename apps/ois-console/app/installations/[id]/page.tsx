@@ -12,6 +12,7 @@ import {
   DetailSourceMarker,
   DetailStatusPanel,
   OisConsoleShell,
+  OwnerEntityUatSummary,
   PageHeading,
   RegistryHealthItemPanel,
   RegistryReadinessItemPanel,
@@ -57,6 +58,7 @@ export default async function InstallationDetailPage({ params }: InstallationDet
   });
   const installationHealth = findRegistryHealthItem(snapshot, "installations", installation.id);
   const installationReadiness = findRegistryReadinessItem(snapshot, "installations", installation.id);
+  const modules = installation.relationships?.modules ?? [];
 
   return (
     <OisConsoleShell active="products" snapshot={snapshot}>
@@ -77,6 +79,36 @@ export default async function InstallationDetailPage({ params }: InstallationDet
           ]}
         />
       </section>
+
+      <OwnerEntityUatSummary
+        title="Owner-facing UAT summary"
+        health={installationHealth}
+        readiness={installationReadiness}
+        linkedFacts={[
+          `Linked product ${installation.product?.name ?? installation.productCode}`,
+          `Linked workspace ${installation.workspace?.name ?? installation.workspaceId}`,
+          `Linked project ${installation.project?.name ?? installation.projectId}`,
+          `${modules.length} module link(s)`
+        ]}
+        links={[
+          {
+            href: targets.oisProduct,
+            label: `Open product ${installation.product?.name ?? installation.productCode}`,
+            detail: installation.productCode
+          },
+          {
+            href: targets.oisWorkspace,
+            label: `Open workspace ${installation.workspace?.name ?? installation.workspaceId}`,
+            detail: installation.workspace?.code
+          },
+          {
+            href: targets.pitsProject,
+            label: `Linked to PITS ${installation.project?.name ?? installation.projectId}`,
+            detail: "Cross-product staging link",
+            external: true
+          }
+        ]}
+      />
 
       <RegistryReadinessItemPanel title="Installation Governance / Readiness" item={installationReadiness} />
 
@@ -102,7 +134,7 @@ export default async function InstallationDetailPage({ params }: InstallationDet
             detail: "Cross-product staging link",
             external: true
           },
-          ...(installation.relationships?.modules ?? []).map((module) => ({
+          ...modules.map((module) => ({
             href: `/modules/${module.id}`,
             label: module.code,
             detail: module.moduleType

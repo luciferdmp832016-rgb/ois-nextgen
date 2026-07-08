@@ -511,6 +511,10 @@ describe("OIS Console product shell", () => {
     expect(html).toContain("OIS Console");
     expect(html).toContain("OIS_CONSOLE");
     expect(html).toContain("Product Administration Overview");
+    expect(html).toContain("Owner Registry Cockpit / Registry Runtime Summary");
+    expect(html).toContain("Missing runtime URL");
+    expect(html).toContain("Forbidden link guard");
+    expect(html).toContain("Ready to operate");
     expect(html).toContain("Dashboard");
     expect(html).toContain("Products");
     expect(html).toContain("Workspaces");
@@ -533,22 +537,39 @@ describe("OIS Console product shell", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/health`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/overview`, { cache: "no-store" });
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry`, { cache: "no-store" });
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry/health`, { cache: "no-store" });
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/registry/readiness`, { cache: "no-store" });
   });
 
   it.each([
     [
       "dashboard",
       DashboardPage,
-      ["Platform Overview", "Control plane areas", "Registry Governance / Readiness", "Registry Runtime Health", "Registry ready", "/products/prod_pits"]
+      [
+        "Platform Overview",
+        "Owner Registry Cockpit / Registry Runtime Summary",
+        "Missing runtime URL",
+        "Forbidden link guard",
+        "Control plane areas",
+        "Registry Governance / Readiness",
+        "Registry Runtime Health",
+        "Registry ready",
+        "/products/prod_pits"
+      ]
     ],
     [
       "products",
       ProductsPage,
       [
         "Products &amp; Modules",
+        "Owner Registry Cockpit / Registry Runtime Summary",
         "Product &amp; Module Overview",
         "Registry Governance / Readiness",
         "Registry Runtime Health",
+        "Runtime health:",
+        "Readiness:",
+        "Linked to PITS",
         "PITS_RUNTIME_SHELL",
         "/products/prod_pits"
       ]
@@ -558,15 +579,30 @@ describe("OIS Console product shell", () => {
       WorkspacesPage,
       [
         "Organizations, Workspaces &amp; Projects",
+        "Owner Registry Cockpit / Registry Runtime Summary",
         "Workspace Overview",
         "Registry Governance / Readiness",
         "Registry Runtime Health",
+        "Runtime health:",
+        "Readiness:",
+        "No issue detected",
         "PMC Org Demo",
         "Emerald Precinct Demo",
         "/workspaces/ws_pmc_org_demo"
       ]
     ],
-    ["runtime", RuntimePage, ["Runtime Status", "Health ready", "Registry Governance / Readiness", "Registry Runtime Health", "Registry ready"]]
+    [
+      "runtime",
+      RuntimePage,
+      [
+        "Runtime Status",
+        "Owner Registry Cockpit / Registry Runtime Summary",
+        "Health ready",
+        "Registry Governance / Readiness",
+        "Registry Runtime Health",
+        "Registry ready"
+      ]
+    ]
   ] satisfies Array<[string, RouteComponent, string[]]>)("renders the %s route shell", async (_name, Component, markers) => {
     mockCoreApiFetch();
 
@@ -595,6 +631,10 @@ describe("OIS Console product shell", () => {
     const html = renderToStaticMarkup(await ProductDetailPage({ params: Promise.resolve({ id: "prod_pits" }) }));
 
     expect(html).toContain("Product Detail Source");
+    expect(html).toContain("Owner-facing UAT summary");
+    expect(html).toContain("Runtime health");
+    expect(html).toContain("Readiness");
+    expect(html).toContain("No issue detected");
     expect(html).toContain("Product Governance / Readiness");
     expect(html).toContain("What is missing?");
     expect(html).toContain("Product Runtime Health");
@@ -625,6 +665,7 @@ describe("OIS Console product shell", () => {
       "ws_pmc_org_demo",
       [
         "Workspace Detail Source",
+        "Owner-facing UAT summary",
         "Workspace Governance / Readiness",
         "Workspace Runtime Health",
         "https://pits-ng.dmp247.com/projects/prj_emerald_precinct_demo"
@@ -634,7 +675,14 @@ describe("OIS Console product shell", () => {
       "module",
       ModuleDetailPage,
       "module_pits_runtime_shell",
-      ["Module Detail Source", "Module Governance / Readiness", "Module Runtime Health", "/products/prod_pits", "inst_pits_emerald"]
+      [
+        "Module Detail Source",
+        "Owner-facing UAT summary",
+        "Module Governance / Readiness",
+        "Module Runtime Health",
+        "/products/prod_pits",
+        "inst_pits_emerald"
+      ]
     ],
     [
       "installation",
@@ -642,6 +690,7 @@ describe("OIS Console product shell", () => {
       "inst_pits_emerald",
       [
         "Installation Detail Source",
+        "Owner-facing UAT summary",
         "Installation Governance / Readiness",
         "Installation Runtime Health",
         "/products/prod_pits",
