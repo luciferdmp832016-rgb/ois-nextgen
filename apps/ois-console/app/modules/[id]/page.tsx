@@ -7,6 +7,7 @@ import {
   DataBoundaryPanel,
   DetailFacts,
   DetailFallbackPanel,
+  DetailSourceMarker,
   DetailStatusPanel,
   OisConsoleShell,
   PageHeading,
@@ -31,6 +32,7 @@ export default async function ModuleDetailPage({ params }: ModuleDetailPageProps
         <PageHeading title="Module Not Found" eyebrow="Module Registry Detail">
           The requested module was not returned by the read-only Core API registry.
         </PageHeading>
+        <DetailSourceMarker label="Module Detail Source" />
         <section className="dashboard-grid">
           <DetailStatusPanel detail={detail} label="Module Detail" />
           <DetailFallbackPanel title="Module not linked yet" message={detail.errorMessage ?? "Core API returned no module detail."} />
@@ -45,6 +47,7 @@ export default async function ModuleDetailPage({ params }: ModuleDetailPageProps
       <PageHeading title={module.code} eyebrow={module.productCode}>
         Read-only module detail with product and installation relationships.
       </PageHeading>
+      <DetailSourceMarker label="Module Detail Source" />
 
       <section className="panel">
         <DetailFacts

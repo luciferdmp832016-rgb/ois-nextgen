@@ -27,6 +27,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 1A-R2 makes the manual orphan UI port cleanup permanent so OIS/PITS systemd restarts can recover when stale Next.js listeners hold ports 3000/3001.
 - Stage 1B adds read-only Platform Registry Core API endpoints and binds OIS/PITS product shell pages to Core API registry data instead of hardcoded cards.
 - Stage 1C adds read-only Platform Registry detail endpoints and cross-product links between OIS Console and PITS Shell.
+- Stage 1C-R1 hotfixes the detail route HTML marker contract after Abacus runtime verification found detail pages returning HTTP 200 without the expected grep-safe markers.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -259,6 +260,8 @@ Stage 1A-R2 result: UI orphan port cleanup is ready. Recommended next stage: Sta
 Stage 1B result: read-only Platform Registry API data binding is ready. Recommended next stage: Stage 1B-R1 - Owner Runtime Sync And Registry Endpoint Verification.
 
 Stage 1C result: Product Registry detail cross-linking is ready. Recommended next stage: Stage 1C-R1 - Owner Runtime Sync And Detail Endpoint Verification.
+
+Stage 1C-R1 result: Product Registry detail UI marker hotfix is ready. Recommended next stage: Stage 1C-R2 - Owner Runtime Sync And Marker Verification Evidence.
 
 ## Stage 0N Resource Boundaries
 
@@ -1685,6 +1688,58 @@ Stage 1C safety:
 - No `ois.dmp247.com` or `oisys.abacusai.app` change.
 - No legacy resources touched.
 
+## Stage 1C-R1 Detail UI Marker Runtime Hotfix
+
+Stage 1C-R1 fixes the detail route marker contract after owner Abacus runtime verification showed:
+
+- Core API detail endpoints passed.
+- UI production route manifests passed.
+- systemd services were active.
+- `cloudflared` was active.
+- OIS/PITS root, list and runtime pages passed.
+- Local/public detail route checks returned HTTP 200 but failed because expected markers were missing.
+
+Required marker contract:
+
+| UI route | Required marker |
+|---|---|
+| OIS Console `/products/[id]` | `Product Detail Source` |
+| OIS Console `/workspaces/[id]` | `Workspace Detail Source` |
+| OIS Console `/modules/[id]` | `Module Detail Source` |
+| OIS Console `/installations/[id]` | `Installation Detail Source` |
+| PITS Shell `/projects/[id]` | `Project Detail Source` |
+
+Stage 1C-R1 renders each marker as visible server-rendered text and as `data-detail-source`, while leaving the existing ops marker checks unchanged.
+
+Owner runtime sync after Stage 1C-R1 merge:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+git fetch origin
+git checkout stage-0b-complete-handoff-ingestion
+git pull --ff-only
+PUBLIC_STAGING_RESTART_SCOPE=all bash ops/abacus/runtime-sync.sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
+Expected owner runtime label after Abacus pass: `PRODUCT_REGISTRY_DETAIL_CROSS_LINKING_RUNTIME_VERIFIED`.
+
+Stage 1C-R1 safety:
+
+- No Cloudflare dashboard change.
+- No DNS change.
+- No migrations.
+- No seed.
+- No `prisma db push`.
+- No credentials committed.
+- No UI `DATABASE_URL`.
+- No Prisma import in UI shells.
+- No write/mutation endpoints.
+- No `/auth/demo-login` change.
+- No `ois.dmp247.com` or `oisys.abacusai.app` change.
+- No legacy resources touched.
+
 ## Stage 0F-R2 Readiness Matrix
 
 | Area | Minimum staging-only input | Stage 0F-R2 status |
@@ -1760,6 +1815,7 @@ Stage 1A-R1 adds ops/test/docs hotfixes only. It did not deploy from Codex, modi
 Stage 1A-R2 adds safe UI orphan port cleanup ops/docs only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, kill Core API/cloudflared or touch legacy resources.
 Stage 1B adds read-only Platform Registry API endpoints, Core API-backed UI data binding, tests, ops checks and documentation only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, add write endpoints or touch legacy resources.
 Stage 1C adds read-only Product Registry detail APIs, OIS/PITS dynamic detail routes, cross-product staging links, tests, ops checks and documentation only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, add write endpoints, call `/auth/demo-login` or touch legacy resources.
+Stage 1C-R1 adds explicit UI detail route markers, tests and documentation only. It did not deploy from Codex, modify Cloudflare dashboard, modify DNS, run migrations, run seed, run `prisma db push`, commit credentials, use UI `DATABASE_URL`, import Prisma into UI shells, add write endpoints, call `/auth/demo-login` or touch legacy resources.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -1809,6 +1865,7 @@ Stage 1A-R1 changes the Stage 1A new-route status to blocked pending owner re-sy
 Stage 1A-R2 changes the Stage 1A new routes to verified based on owner/manual Abacus evidence after orphan UI port cleanup. It adds no new endpoints.
 Stage 1B adds planned read-only Core API registry endpoints `/platform/products`, `/platform/workspaces`, `/platform/projects`, `/platform/modules`, `/platform/installations` and `/platform/registry`. It changes OIS/PITS product shell pages in source to use registry data, but public verification is pending owner runtime sync.
 Stage 1C adds planned read-only Core API registry detail endpoints `/platform/products/{id}`, `/platform/products/code/{code}`, `/platform/workspaces/{id}`, `/platform/projects/{id}`, `/platform/modules/{id}` and `/platform/installations/{id}`. It adds planned OIS detail routes `/products/{id}`, `/workspaces/{id}`, `/modules/{id}` and `/installations/{id}`, plus planned PITS detail route `/projects/{id}`. Public verification is pending owner runtime sync.
+Stage 1C-R1 adds no endpoints. It changes the expected Stage 1C detail UI route response body by rendering explicit marker text and `data-detail-source` attributes for the existing OIS/PITS detail route checks.
 
 ## Stop Conditions
 
@@ -1840,6 +1897,7 @@ Stage 1C adds planned read-only Core API registry detail endpoints `/platform/pr
 - A Product Registry detail endpoint adds writes, side effects, direct legacy DB references, production resource references, row-data inspection beyond the approved registry shape or a mutation-style route.
 - A product-shell cross-link points to `ois.dmp247.com`, `oisys.abacusai.app`, an unapproved production domain or any legacy resource.
 - Dynamic OIS/PITS detail route manifest verification fails before public staging service restart.
+- A Stage 1C detail UI route returns HTTP 200 but omits its required `Detail Source` marker.
 - Any additional seed execution, `/auth/demo-login`, write endpoint or row-data inspection is attempted without later owner approval.
 - A workflow tries to use hosted-app service registration or external custom-domain publication instead of the verified SuperComputer nginx/systemd path without owner approval.
 - Direct external SSH is required while the Abacus SSH relay still times out before authentication; use Web Terminal fallback instead.

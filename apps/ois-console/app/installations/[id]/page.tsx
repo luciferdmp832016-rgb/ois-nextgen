@@ -7,6 +7,7 @@ import {
   DataBoundaryPanel,
   DetailFacts,
   DetailFallbackPanel,
+  DetailSourceMarker,
   DetailStatusPanel,
   OisConsoleShell,
   PageHeading,
@@ -31,6 +32,7 @@ export default async function InstallationDetailPage({ params }: InstallationDet
         <PageHeading title="Installation Not Found" eyebrow="Installation Registry Detail">
           The requested installation was not returned by the read-only Core API registry.
         </PageHeading>
+        <DetailSourceMarker label="Installation Detail Source" />
         <section className="dashboard-grid">
           <DetailStatusPanel detail={detail} label="Installation Detail" />
           <DetailFallbackPanel
@@ -55,6 +57,7 @@ export default async function InstallationDetailPage({ params }: InstallationDet
       <PageHeading title={`${installation.productCode} Installation`} eyebrow={installation.id}>
         Read-only installation detail with product, workspace, project and module relationships.
       </PageHeading>
+      <DetailSourceMarker label="Installation Detail Source" />
 
       <section className="panel">
         <DetailFacts

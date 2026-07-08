@@ -8,6 +8,7 @@ import {
   DataBoundaryPanel,
   DetailFacts,
   DetailFallbackPanel,
+  DetailSourceMarker,
   DetailStatusPanel,
   OisConsoleShell,
   PageHeading,
@@ -32,6 +33,7 @@ export default async function WorkspaceDetailPage({ params }: WorkspaceDetailPag
         <PageHeading title="Workspace Not Found" eyebrow="Workspace Registry Detail">
           The requested workspace was not returned by the read-only Core API registry.
         </PageHeading>
+        <DetailSourceMarker label="Workspace Detail Source" />
         <section className="dashboard-grid">
           <DetailStatusPanel detail={detail} label="Workspace Detail" />
           <DetailFallbackPanel title="Workspace not linked yet" message={detail.errorMessage ?? "Core API returned no workspace detail."} />
@@ -49,6 +51,7 @@ export default async function WorkspaceDetailPage({ params }: WorkspaceDetailPag
       <PageHeading title={workspace.name} eyebrow={workspace.code}>
         Read-only workspace detail with related products, modules, installations and PITS project links.
       </PageHeading>
+      <DetailSourceMarker label="Workspace Detail Source" />
 
       <section className="panel">
         <DetailFacts
