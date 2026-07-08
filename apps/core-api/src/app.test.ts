@@ -832,10 +832,10 @@ describe("platform registry read-only endpoints", () => {
         },
         summary: {
           products: 2,
-          surfaces: 15,
-          visiblePages: 11,
-          testableNow: 10,
-          realProductFunctionsAvailable: 1,
+          surfaces: 16,
+          visiblePages: 12,
+          testableNow: 11,
+          realProductFunctionsAvailable: 2,
           controlPlaneOnly: 5
         }
       });
@@ -878,8 +878,11 @@ describe("platform registry read-only endpoints", () => {
         ])
       );
       expect(pitsProduct).toMatchObject({
-        currentState: expect.stringContaining("Project registry shell and readiness shell"),
-        recommendedNextJourneys: expect.arrayContaining(["Owner-test the PITS Project Workboard read-only functional slice"])
+        currentState: expect.stringContaining("Stage 2B work item detail"),
+        recommendedNextJourneys: expect.arrayContaining([
+          "Owner-test the PITS Project Workboard read-only functional slice",
+          "Owner-test PITS Work Item Detail and Dry-run Action Preview"
+        ])
       });
       expect(pitsProduct?.surfaces).toEqual(
         expect.arrayContaining([
@@ -895,6 +898,15 @@ describe("platform registry read-only endpoints", () => {
             testableNow: true,
             realProductFunction: true,
             currentReality: expect.stringContaining("read-only PITS workboard functional slice")
+          }),
+          expect.objectContaining({
+            id: "pits:work-item-detail-dry-run",
+            category: "AVAILABLE_FOR_BROWSER_UAT",
+            testableNow: true,
+            realProductFunction: true,
+            nextUserLevelTestPath:
+              "https://pits-ng.dmp247.com/projects/prj_emerald_precinct_demo/work-items/pits-emerald_precinct_demo-open-site-access",
+            currentReality: expect.stringContaining("dry-run action preview")
           }),
           expect.objectContaining({
             id: "pits:future-issue-task-workflow",
@@ -1016,6 +1028,160 @@ describe("platform registry read-only endpoints", () => {
     }
   });
 
+  it("returns deterministic read-only PITS work item detail data", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({
+        method: "GET",
+        url: "/platform/pits/projects/prj_emerald_precinct_demo/work-items/pits-emerald_precinct_demo-open-site-access"
+      });
+      const body = response.json();
+      const serialized = JSON.stringify(body);
+
+      expect(response.statusCode).toBe(200);
+      expect(body).toMatchObject({
+        metadata: {
+          source: "default-db",
+          mode: "read-only",
+          environment: "staging"
+        },
+        runtime: {
+          coreApiBaseUrl: "https://ois-nextgen.abacusai.cloud",
+          pitsShellBaseUrl: "https://pits-ng.dmp247.com",
+          workItemDetailMode: "read-only-dry-run-preview",
+          stage: "Stage 2B",
+          note: "Work Item Detail and Dry-run Action Preview are preview only. No data will be changed."
+        },
+        workItemDetail: {
+          projectId: "prj_emerald_precinct_demo",
+          projectCode: "EMERALD_PRECINCT_DEMO",
+          projectName: "Emerald Precinct Demo",
+          itemId: "pits-emerald_precinct_demo-open-site-access",
+          readOnly: true,
+          dryRunOnly: true,
+          markers: expect.arrayContaining([
+            "Work Item Detail",
+            "Dry-run Action Preview",
+            "Preview only",
+            "No data will be changed",
+            "Requires audit trail",
+            "Requires confirmation",
+            "Requires rollback plan"
+          ])
+        },
+        item: {
+          id: "pits-emerald_precinct_demo-open-site-access",
+          title: "Confirm site access package",
+          status: "OPEN",
+          priority: "HIGH",
+          owner: "Project operator",
+          dueDate: "2026-07-12",
+          readOnlyNotice: "Preview only. No data will be changed.",
+          availableDryRunActions: expect.arrayContaining([
+            expect.objectContaining({ actionType: "CHANGE_STATUS", label: "Change status preview" }),
+            expect.objectContaining({ actionType: "ASSIGN_OWNER", label: "Assign owner preview" }),
+            expect.objectContaining({ actionType: "ADD_NOTE", label: "Add note preview" }),
+            expect.objectContaining({ actionType: "SET_PRIORITY", label: "Set priority preview" }),
+            expect.objectContaining({ actionType: "RESOLVE_BLOCKER", label: "Resolve blocker preview" })
+          ])
+        },
+        dryRunPreviews: expect.arrayContaining([
+          expect.objectContaining({
+            actionType: "CHANGE_STATUS",
+            allowedInCurrentStage: false,
+            mode: "DRY_RUN_ONLY",
+            noDataChanged: true,
+            auditRequired: true,
+            confirmationRequired: true,
+            rollbackRequired: true
+          })
+        ]),
+        readOnlyBoundary: {
+          mutationEndpointsAdded: false,
+          writePermission: "NOT_ALLOWED_IN_STAGE_2B",
+          notice: "Preview only. No data will be changed."
+        }
+      });
+      expect(serialized).toContain("Requires future write boundary");
+      expect(serialized).toContain("No data will be changed");
+      expect(serialized).not.toContain("localhost");
+      expect(serialized).not.toContain("127.0.0.1");
+      expect(serialized).not.toContain("ois.dmp247.com");
+      expect(serialized).not.toContain("oisys.abacusai.app");
+      expect(mock.writeCalls).toEqual([]);
+      expect(mock.userAccount.findUnique).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns deterministic non-mutating PITS dry-run action preview data", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({
+        method: "GET",
+        url: "/platform/pits/projects/prj_emerald_precinct_demo/work-items/pits-emerald_precinct_demo-open-site-access/action-preview?actionType=CHANGE_STATUS&proposedValue=IN_PROGRESS"
+      });
+      const body = response.json();
+      const serialized = JSON.stringify(body);
+
+      expect(response.statusCode).toBe(200);
+      expect(body).toMatchObject({
+        metadata: {
+          source: "default-db",
+          mode: "read-only"
+        },
+        runtime: {
+          dryRunMode: "DRY_RUN_ONLY",
+          stage: "Stage 2B",
+          note: "Dry-run Action Preview is non-mutating. No data will be changed."
+        },
+        actionPreview: {
+          projectId: "prj_emerald_precinct_demo",
+          itemId: "pits-emerald_precinct_demo-open-site-access",
+          requestedActionType: "CHANGE_STATUS",
+          allowedInCurrentStage: false,
+          noDataChanged: true,
+          markers: expect.arrayContaining([
+            "Dry-run Action Preview",
+            "Preview only",
+            "No data will be changed",
+            "Requires audit trail",
+            "Requires confirmation",
+            "Requires rollback plan"
+          ])
+        },
+        preview: {
+          actionType: "CHANGE_STATUS",
+          allowedInCurrentStage: false,
+          mode: "DRY_RUN_ONLY",
+          currentValue: "OPEN",
+          proposedValue: "IN_PROGRESS",
+          requiredRole: "PROJECT_OPERATOR",
+          auditRequired: true,
+          confirmationRequired: true,
+          rollbackRequired: true,
+          noDataChanged: true
+        },
+        noDataChanged: true
+      });
+      expect(body.previews).toHaveLength(1);
+      expect(serialized).toContain("Requires future write boundary");
+      expect(serialized).not.toContain("localhost");
+      expect(serialized).not.toContain("127.0.0.1");
+      expect(serialized).not.toContain("ois.dmp247.com");
+      expect(serialized).not.toContain("oisys.abacusai.app");
+      expect(mock.writeCalls).toEqual([]);
+      expect(mock.userAccount.findUnique).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
   it("does not add owner review, admin boundary or product UAT mutation endpoints", () => {
     const source = readFileSync(new URL("./app.ts", import.meta.url), "utf8");
 
@@ -1071,6 +1237,8 @@ describe("platform registry read-only endpoints", () => {
     ["/platform/workspaces/missing", "workspace", "id"],
     ["/platform/projects/missing", "project", "id"],
     ["/platform/pits/projects/missing/workboard", "project", "id"],
+    ["/platform/pits/projects/prj_emerald_precinct_demo/work-items/missing", "workItem", "itemId"],
+    ["/platform/pits/projects/prj_emerald_precinct_demo/work-items/missing/action-preview", "workItem", "itemId"],
     ["/platform/modules/missing", "module", "id"],
     ["/platform/installations/missing", "installation", "id"]
   ] satisfies Array<[string, string, string]>)("returns controlled 404 for %s", async (url, entity, lookupKey) => {

@@ -471,6 +471,23 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
     relatedProjectId: string;
     updatedAt: string;
   };
+  type PitsDryRunActionType = "CHANGE_STATUS" | "ASSIGN_OWNER" | "ADD_NOTE" | "SET_PRIORITY" | "RESOLVE_BLOCKER";
+  type PitsDryRunActionPreview = {
+    actionType: PitsDryRunActionType;
+    label: string;
+    allowedInCurrentStage: false;
+    mode: "DRY_RUN_ONLY";
+    currentValue: string;
+    proposedValue: string;
+    expectedImpact: string;
+    requiredRole: string;
+    auditRequired: true;
+    confirmationRequired: true;
+    rollbackRequired: true;
+    blockedReason: string;
+    safetyGates: string[];
+    noDataChanged: true;
+  };
   type ProjectRegistryEntity = RegistrySnapshot["projects"][number];
   type ProductUatSurface = {
     id: string;
@@ -2010,6 +2027,11 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
     const firstProject = registry.projects[0] ?? null;
     const firstWorkspace = registry.workspaces[0] ?? null;
     const firstPitsInstallation = registry.installations.find((installation) => installation.productCode === "PITS") ?? registry.installations[0] ?? null;
+    const firstWorkItemId = firstProject ? createPitsWorkItems(firstProject)[0]?.id ?? null : null;
+    const firstWorkItemDetailPath =
+      firstProject && firstWorkItemId
+        ? pitsShellUrl(`/projects/${encodeURIComponent(firstProject.id)}/work-items/${encodeURIComponent(firstWorkItemId)}`)
+        : null;
     const categoryDefinitions: Array<{ category: ProductUatCategory; label: string; description: string }> = [
       {
         category: "AVAILABLE_FOR_BROWSER_UAT",
@@ -2284,6 +2306,26 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
         evidence: ["PITS Project Workboard", "Read-only functional slice", "Work items"]
       }),
       surface({
+        id: "pits:work-item-detail-dry-run",
+        productCode: "PITS",
+        productName: pitsProductName,
+        surfaceName: "PITS Work Item Detail and Dry-run Action Preview",
+        route: firstWorkItemDetailPath,
+        entityType: "project",
+        entityId: firstProject?.id ?? null,
+        category: "AVAILABLE_FOR_BROWSER_UAT",
+        testableNow: Boolean(firstWorkItemDetailPath),
+        realProductFunction: true,
+        ownerUatStatus: firstWorkItemDetailPath ? "READY_FOR_BROWSER_UAT" : "NOT_IMPLEMENTED_YET",
+        currentUserTest: "Open a work item detail and inspect dry-run action previews without changing data.",
+        currentReality: "Stage 2B provides read-only work item detail and deterministic dry-run action preview.",
+        functionalGap: "No real status, owner, note, priority or blocker mutation is implemented.",
+        blockers: ["BLOCKED_BY_WRITE_BOUNDARY"],
+        recommendedNextStep: "Owner-test dry-run previews, then define the future write-boundary acceptance criteria.",
+        nextUserLevelTestPath: firstWorkItemDetailPath,
+        evidence: ["Work Item Detail", "Dry-run Action Preview", "No data will be changed"]
+      }),
+      surface({
         id: "pits:runtime-readiness-boundaries",
         productCode: "PITS",
         productName: pitsProductName,
@@ -2388,9 +2430,9 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
         "Choose document, meeting or knowledge as the first OIS product workflow",
         "Keep admin/write actions disabled until a later approved stage"
       ]),
-      buildProduct("PITS", pitsProductName, pitsSurfaces, "Project registry shell and readiness shell plus Stage 2A read-only workboard; not a true project workflow app with writes yet.", [
+      buildProduct("PITS", pitsProductName, pitsSurfaces, "Project registry shell, Stage 2A read-only workboard and Stage 2B work item detail/dry-run preview; writes remain blocked.", [
         "Owner-test the PITS Project Workboard read-only functional slice",
-        "Define persisted issue/task workflow detail after data model approval",
+        "Owner-test PITS Work Item Detail and Dry-run Action Preview",
         "Keep project status writes disabled until audit/write boundaries are approved"
       ])
     ];
@@ -2515,6 +2557,229 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
         updatedAt: "2026-07-08T13:00:00.000Z"
       }
     ];
+  }
+
+  const pitsDryRunActionLabels: Record<PitsDryRunActionType, string> = {
+    CHANGE_STATUS: "Change status preview",
+    ASSIGN_OWNER: "Assign owner preview",
+    ADD_NOTE: "Add note preview",
+    SET_PRIORITY: "Set priority preview",
+    RESOLVE_BLOCKER: "Resolve blocker preview"
+  };
+  const pitsDryRunActionTypes = Object.keys(pitsDryRunActionLabels) as PitsDryRunActionType[];
+  const pitsDryRunSafetyGates = [
+    "Requires future write boundary",
+    "Requires audit trail",
+    "Requires confirmation",
+    "Requires rollback plan",
+    "No data will be changed in Stage 2B"
+  ];
+
+  function isPitsDryRunActionType(value: string | undefined): value is PitsDryRunActionType {
+    return Boolean(value && pitsDryRunActionTypes.includes(value as PitsDryRunActionType));
+  }
+
+  function getPitsDryRunCurrentValue(item: PitsWorkItem, actionType: PitsDryRunActionType) {
+    if (actionType === "CHANGE_STATUS") {
+      return item.status;
+    }
+
+    if (actionType === "ASSIGN_OWNER") {
+      return item.owner;
+    }
+
+    if (actionType === "ADD_NOTE") {
+      return "No persisted note field is available in Stage 2B.";
+    }
+
+    if (actionType === "SET_PRIORITY") {
+      return item.priority;
+    }
+
+    return item.blockers.length > 0 ? item.blockers.join("; ") : "No blocker is currently recorded.";
+  }
+
+  function getPitsDryRunProposedValue(item: PitsWorkItem, actionType: PitsDryRunActionType, requestedValue?: string) {
+    if (requestedValue) {
+      return requestedValue;
+    }
+
+    if (actionType === "CHANGE_STATUS") {
+      return item.status === "DONE" ? "OPEN" : "DONE";
+    }
+
+    if (actionType === "ASSIGN_OWNER") {
+      return "Owner delegate";
+    }
+
+    if (actionType === "ADD_NOTE") {
+      return "Dry-run note: owner reviewed this item.";
+    }
+
+    if (actionType === "SET_PRIORITY") {
+      return item.priority === "CRITICAL" ? "HIGH" : "CRITICAL";
+    }
+
+    return item.blockers.length > 0 ? "Preview blocker resolution request for owner review." : "No blocker resolution available for this item.";
+  }
+
+  function getPitsDryRunExpectedImpact(actionType: PitsDryRunActionType) {
+    if (actionType === "CHANGE_STATUS") {
+      return "Would move the work item to another status column after a future audited write boundary exists.";
+    }
+
+    if (actionType === "ASSIGN_OWNER") {
+      return "Would reassign responsibility after future permission checks and audit logging are approved.";
+    }
+
+    if (actionType === "ADD_NOTE") {
+      return "Would append an auditable project note after note storage and write rules exist.";
+    }
+
+    if (actionType === "SET_PRIORITY") {
+      return "Would change escalation priority after confirmation and rollback requirements are met.";
+    }
+
+    return "Would record blocker resolution evidence after future workflow writes are enabled.";
+  }
+
+  function getPitsDryRunRequiredRole(actionType: PitsDryRunActionType) {
+    if (actionType === "ASSIGN_OWNER" || actionType === "SET_PRIORITY") {
+      return "PROJECT_MANAGER";
+    }
+
+    if (actionType === "RESOLVE_BLOCKER") {
+      return "SAFETY_LEAD";
+    }
+
+    return "PROJECT_OPERATOR";
+  }
+
+  function createPitsDryRunActionPreviews(item: PitsWorkItem, requestedActionType?: PitsDryRunActionType, requestedValue?: string): PitsDryRunActionPreview[] {
+    const actionTypes = requestedActionType ? [requestedActionType] : pitsDryRunActionTypes;
+
+    return actionTypes.map((actionType) => ({
+      actionType,
+      label: pitsDryRunActionLabels[actionType],
+      allowedInCurrentStage: false,
+      mode: "DRY_RUN_ONLY",
+      currentValue: getPitsDryRunCurrentValue(item, actionType),
+      proposedValue: getPitsDryRunProposedValue(item, actionType, requestedActionType === actionType ? requestedValue : undefined),
+      expectedImpact: getPitsDryRunExpectedImpact(actionType),
+      requiredRole: getPitsDryRunRequiredRole(actionType),
+      auditRequired: true,
+      confirmationRequired: true,
+      rollbackRequired: true,
+      blockedReason: "Stage 2B is dry-run only. Requires future write boundary before any status, owner, note, priority or blocker change can execute.",
+      safetyGates: pitsDryRunSafetyGates,
+      noDataChanged: true
+    }));
+  }
+
+  function createPitsWorkItemDescription(project: ProjectRegistryEntity, item: PitsWorkItem) {
+    return `${item.title} belongs to ${project.name}. Stage 2B lets the owner inspect this work item and preview future actions without mutating project data.`;
+  }
+
+  function buildPitsWorkItemDetail(registry: RegistrySnapshot, project: ProjectRegistryEntity, item: PitsWorkItem) {
+    const dryRunPreviews = createPitsDryRunActionPreviews(item);
+
+    return {
+      metadata: registry.metadata,
+      runtime: {
+        ...publicRuntimeConfig,
+        workItemDetailMode: "read-only-dry-run-preview",
+        stage: "Stage 2B",
+        note: "Work Item Detail and Dry-run Action Preview are preview only. No data will be changed."
+      },
+      workItemDetail: {
+        projectId: project.id,
+        projectCode: project.code,
+        projectName: project.name,
+        itemId: item.id,
+        readOnly: true,
+        dryRunOnly: true,
+        markers: [
+          "Work Item Detail",
+          "Dry-run Action Preview",
+          "Preview only",
+          "No data will be changed",
+          "Requires audit trail",
+          "Requires confirmation",
+          "Requires rollback plan"
+        ]
+      },
+      item: {
+        ...item,
+        description: createPitsWorkItemDescription(project, item),
+        readOnlyNotice: "Preview only. No data will be changed.",
+        relatedEntities: [
+          { type: "project", id: project.id, name: project.name },
+          { type: "workboard", id: `${project.id}:workboard`, name: "PITS Project Workboard" },
+          { type: "product", id: "PITS", name: "PITS" }
+        ],
+        availableDryRunActions: dryRunPreviews.map((preview) => ({
+          actionType: preview.actionType,
+          label: preview.label,
+          currentValue: preview.currentValue,
+          proposedValue: preview.proposedValue,
+          previewRoute: `/platform/pits/projects/${encodeURIComponent(project.id)}/work-items/${encodeURIComponent(item.id)}/action-preview?actionType=${encodeURIComponent(preview.actionType)}`
+        }))
+      },
+      dryRunPreviews,
+      readOnlyBoundary: {
+        mutationEndpointsAdded: false,
+        writePermission: "NOT_ALLOWED_IN_STAGE_2B",
+        notice: "Preview only. No data will be changed.",
+        disabledActions: [
+          "Change status - Preview only",
+          "Assign owner - Preview only",
+          "Add note - Preview only",
+          "Set priority - Preview only",
+          "Resolve blocker - Preview only"
+        ],
+        futureWriteBoundary: "Requires future write boundary"
+      }
+    };
+  }
+
+  function buildPitsDryRunActionPreview(
+    registry: RegistrySnapshot,
+    project: ProjectRegistryEntity,
+    item: PitsWorkItem,
+    requestedActionType?: PitsDryRunActionType,
+    requestedValue?: string
+  ) {
+    const previews = createPitsDryRunActionPreviews(item, requestedActionType, requestedValue);
+
+    return {
+      metadata: registry.metadata,
+      runtime: {
+        ...publicRuntimeConfig,
+        dryRunMode: "DRY_RUN_ONLY",
+        stage: "Stage 2B",
+        note: "Dry-run Action Preview is non-mutating. No data will be changed."
+      },
+      actionPreview: {
+        projectId: project.id,
+        projectCode: project.code,
+        projectName: project.name,
+        itemId: item.id,
+        requestedActionType: requestedActionType ?? null,
+        allowedInCurrentStage: false,
+        noDataChanged: true,
+        markers: [
+          "Dry-run Action Preview",
+          "Preview only",
+          "No data will be changed",
+          "Requires audit trail",
+          "Requires confirmation",
+          "Requires rollback plan"
+        ]
+      },
+      previews,
+      preview: requestedActionType ? previews[0] : null,
+      noDataChanged: true
+    };
   }
 
   function buildPitsProjectWorkboard(registry: RegistrySnapshot, project: ProjectRegistryEntity) {
@@ -2903,6 +3168,58 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
               }
             }
           }
+        },
+        "/platform/pits/projects/{projectId}/work-items/{itemId}": {
+          get: {
+            tags: ["pits"],
+            responses: {
+              "200": {
+                description: "Read-only PITS work item detail with dry-run preview metadata",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["metadata", "runtime", "workItemDetail", "item", "dryRunPreviews", "readOnlyBoundary"],
+                      properties: {
+                        metadata: { type: "object" },
+                        runtime: { type: "object" },
+                        workItemDetail: { type: "object" },
+                        item: { type: "object" },
+                        dryRunPreviews: { type: "array", items: { type: "object" } },
+                        readOnlyBoundary: { type: "object" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "/platform/pits/projects/{projectId}/work-items/{itemId}/action-preview": {
+          get: {
+            tags: ["pits"],
+            responses: {
+              "200": {
+                description: "Non-mutating PITS dry-run action preview",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      required: ["metadata", "runtime", "actionPreview", "previews", "noDataChanged"],
+                      properties: {
+                        metadata: { type: "object" },
+                        runtime: { type: "object" },
+                        actionPreview: { type: "object" },
+                        previews: { type: "array", items: { type: "object" } },
+                        preview: { type: "object", nullable: true },
+                        noDataChanged: { type: "boolean" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -3077,6 +3394,54 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
     }
 
     return buildPitsProjectWorkboard(registry, project);
+  });
+
+  app.get("/platform/pits/projects/:projectId/work-items/:itemId", async (request, reply) => {
+    const params = request.params as { projectId: string; itemId: string };
+    const { registry, project } = await readProjectDetailById(params.projectId);
+
+    if (!project) {
+      return registryNotFound(reply, "project", { id: params.projectId });
+    }
+
+    const item = createPitsWorkItems(project).find((workItem) => workItem.id === params.itemId);
+
+    if (!item) {
+      return registryNotFound(reply, "workItem", { projectId: params.projectId, itemId: params.itemId });
+    }
+
+    return buildPitsWorkItemDetail(registry, project, item);
+  });
+
+  app.get("/platform/pits/projects/:projectId/work-items/:itemId/action-preview", async (request, reply) => {
+    const params = request.params as { projectId: string; itemId: string };
+    const query = request.query as { actionType?: string; proposedValue?: string };
+    const { registry, project } = await readProjectDetailById(params.projectId);
+
+    if (!project) {
+      return registryNotFound(reply, "project", { id: params.projectId });
+    }
+
+    const item = createPitsWorkItems(project).find((workItem) => workItem.id === params.itemId);
+
+    if (!item) {
+      return registryNotFound(reply, "workItem", { projectId: params.projectId, itemId: params.itemId });
+    }
+
+    if (query.actionType && !isPitsDryRunActionType(query.actionType)) {
+      return reply.code(400).send({
+        metadata: registry.metadata,
+        error: {
+          code: "INVALID_DRY_RUN_ACTION",
+          message: "Unknown dry-run action type",
+          allowedActionTypes: pitsDryRunActionTypes
+        }
+      });
+    }
+
+    const requestedActionType = isPitsDryRunActionType(query.actionType) ? query.actionType : undefined;
+
+    return buildPitsDryRunActionPreview(registry, project, item, requestedActionType, query.proposedValue);
   });
 
   app.get("/platform/products/code/:code", async (request, reply) => {

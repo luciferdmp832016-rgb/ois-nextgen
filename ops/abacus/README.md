@@ -454,6 +454,21 @@ bash ops/abacus/status-public-staging-runtime.sh
 bash ops/abacus/check-public-staging-endpoints.sh
 ```
 
+Stage 2B PITS Work Item Detail and Dry-run Action Preview checks:
+
+- Core API adds read-only `/platform/pits/projects/<project-id>/work-items/<item-id>`.
+- Core API adds read-only `/platform/pits/projects/<project-id>/work-items/<item-id>/action-preview`.
+- PITS Shell adds `/projects/<project-id>/work-items/<item-id>`.
+- Checks verify `Work Item Detail`, `Dry-run Action Preview`, `Preview only`, `No data will be changed`, `Requires audit trail`, `Requires confirmation`, `Requires rollback plan`, `DRY_RUN_ONLY`, `noDataChanged=true` and `NOT_ALLOWED_IN_STAGE_2B`.
+- No status/owner/note/priority/blocker mutation, write endpoint, schema change, migration, seed, `prisma db push`, UI `DATABASE_URL`, Prisma UI import, `/auth/demo-login` change or legacy resource touch is allowed.
+
+Verify Stage 2B after source sync:
+
+```sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
 ## PITS Shell Upload Bundle
 
 Stage 0T-D-R1 adds a direct source upload bundle path for PITS Shell because Abacus App Shell deployment reported that external GitHub clone is blocked.
