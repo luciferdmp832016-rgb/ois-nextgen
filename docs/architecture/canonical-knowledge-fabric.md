@@ -23,3 +23,7 @@ Stage 2G defines the OIS Canonical Knowledge Fabric as the governed source of re
 ## Boundary
 
 Stage 2G allows read-only knowledge APIs and audited mapping preparation only. There is no canonical knowledge mutation endpoint, no widget direct canonical write and no auto-promotion.
+
+## Stage 2G-R1 Endpoint Marker Contract
+
+Knowledge context, Learning layer mapping and KEIHB projection list responses include global `knowledgeLayerTaxonomy` / `availableLayers` metadata with all canonical layer keys. Scoped result fields remain truthful: context `layers` is the requested subset, mappings expose their mapped target layers and KEIHB bundles expose per-bundle `includedLayerKeys`.

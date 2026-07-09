@@ -2,6 +2,8 @@
 
 Verdict: `CANONICAL_KNOWLEDGE_FABRIC_KEIHB_LAYER_INTEGRATION_READY`
 
+R1 hotfix verdict: `STAGE_2G_R1_KNOWLEDGE_FABRIC_ENDPOINT_MARKER_CONTRACT_HOTFIX_READY`
+
 ## Scope
 
 Stage 2G adds the platform foundation for canonical knowledge reads, evidence links, Learning Candidate to Knowledge Layer mapping, KEIHB projection bundles and an architecture mindmap manifest.
@@ -20,10 +22,17 @@ Stage 2G adds the platform foundation for canonical knowledge reads, evidence li
 
 - No `prisma db push`.
 - No production database or production credential use.
+- No Stage 2G-R1 schema change or migration.
 - No Product UI Prisma import.
 - No OIS Agent Widget direct canonical knowledge write.
 - No auto-promotion from Learning Candidate to canonical knowledge.
 - The only Stage 2G mutation is audited `OisKnowledgeLayerMapping` preparation.
+
+## Stage 2G-R1 Hotfix
+
+Root cause: Abacus local/public smoke checks expected the KL-0 taxonomy marker on knowledge context, Learning layer mapping and KEIHB bundle list responses, but those routes only returned scoped data. Context returned the requested layer subset, mappings returned mapped target layers and KEIHB returned bundle-specific layer membership.
+
+Fix: those responses now include global `knowledgeLayerTaxonomy` and `availableLayers` metadata with KL-0 through KL-5. KEIHB bundles continue to expose truthful per-bundle `includedLayerKeys`; the global taxonomy does not imply every bundle includes every layer.
 
 ## Published Endpoint Delta
 

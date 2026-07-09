@@ -1829,6 +1829,8 @@ describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
       const body = response.json();
 
       expect(response.statusCode).toBe(200);
+      expect(body.knowledgeLayerTaxonomy.layerKeys).toEqual(knowledgeLayerKeys);
+      expect(body.availableLayers.map((layer: { key: string }) => layer.key)).toEqual(knowledgeLayerKeys);
       expect(body.layerKeys).toEqual(knowledgeLayerKeys);
       expect(body.layers).toHaveLength(6);
       expect(body.productConsumptionMap).toEqual(expect.arrayContaining([expect.objectContaining({ productKey: "KEIHB" })]));
@@ -1896,6 +1898,7 @@ describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
       expect(response.statusCode).toBe(200);
       expect(body.noCanonicalKnowledgeWrite).toBe(true);
       expect(body.autoPromotionEnabled).toBe(false);
+      expect(body.knowledgeLayerTaxonomy.layerKeys).toContain("KL_0_LEGAL_REGULATORY_CORE");
       expect(body.mapping).toMatchObject({
         learningCandidateId: stage2GRows.candidate.id,
         targetLayerKey: "KL_3_PRODUCT_KNOWLEDGE_PACK",
@@ -1905,6 +1908,8 @@ describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
       });
       expect(writeOps).toEqual(["oisKnowledgeLayerMapping.create", "auditRecord.create"]);
       expect(mock.delegates.oisCanonicalKnowledgeItem.create).not.toHaveBeenCalled();
+      expect(mock.delegates.oisCanonicalKnowledgeItem.update).not.toHaveBeenCalled();
+      expect(mock.delegates.oisCanonicalKnowledgeItem.upsert).not.toHaveBeenCalled();
       expect(mock.delegates.oisKnowledgeEvidenceLink.create).not.toHaveBeenCalled();
     } finally {
       await app.close();
@@ -1924,12 +1929,15 @@ describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
       const candidateBody = candidateResponse.json();
 
       expect(candidateResponse.statusCode).toBe(200);
+      expect(candidateBody.knowledgeLayerTaxonomy.layerKeys).toContain("KL_0_LEGAL_REGULATORY_CORE");
       expect(candidateBody.mappings).toEqual(expect.arrayContaining([expect.objectContaining({ id: stage2GRows.mapping.id })]));
 
       const listResponse = await app.inject({ method: "GET", url: "/platform/learning/layer-mappings" });
       const listBody = listResponse.json();
 
       expect(listResponse.statusCode).toBe(200);
+      expect(listBody.knowledgeLayerTaxonomy.layerKeys).toEqual(knowledgeLayerKeys);
+      expect(listBody.availableLayers.map((layer: { key: string }) => layer.key)).toEqual(knowledgeLayerKeys);
       expect(listBody.mappings).toEqual(expect.arrayContaining([expect.objectContaining({ targetLayerKey: "KL_3_PRODUCT_KNOWLEDGE_PACK" })]));
       expect(mock.writeCalls).toEqual([]);
     } finally {
@@ -1946,12 +1954,20 @@ describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
       const bundlesBody = bundlesResponse.json();
 
       expect(bundlesResponse.statusCode).toBe(200);
+      expect(bundlesBody.knowledgeLayerTaxonomy.layerKeys).toEqual(knowledgeLayerKeys);
+      expect(bundlesBody.availableLayers.map((layer: { key: string }) => layer.key)).toEqual(knowledgeLayerKeys);
       expect(bundlesBody.bundles.map((bundle: { bundleKey: string }) => bundle.bundleKey)).toEqual([
         "KEIHB_BUILDING_MANAGEMENT_HANDBOOK_DEMO",
         "KEIHB_BQL_SOP_DEMO",
         "KEIHB_RESIDENT_FAQ_DEMO",
         "KEIHB_TECHNICAL_TEAM_PLAYBOOK_DEMO"
       ]);
+      expect(
+        bundlesBody.bundles.find((bundle: { bundleKey: string }) => bundle.bundleKey === "KEIHB_BQL_SOP_DEMO").includedLayerKeys
+      ).toEqual(["KL_2_ORGANIZATION_CORE", "KL_3_PRODUCT_KNOWLEDGE_PACK", "KL_4_WORKSPACE_PROJECT_OVERLAY"]);
+      expect(
+        bundlesBody.bundles.find((bundle: { bundleKey: string }) => bundle.bundleKey === "KEIHB_BQL_SOP_DEMO").includedLayerKeys
+      ).not.toContain("KL_0_LEGAL_REGULATORY_CORE");
       expect(bundlesBody.projectionBoundary).toMatchObject({
         sourceOfTruth: "OIS Knowledge Fabric",
         canonicalWriteAllowed: false
@@ -1961,7 +1977,33 @@ describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
       const previewBody = previewResponse.json();
 
       expect(previewResponse.statusCode).toBe(200);
+      expect(previewBody.knowledgeLayerTaxonomy.layerKeys).toContain("KL_0_LEGAL_REGULATORY_CORE");
       expect(previewBody.bundles[0].items.length).toBeGreaterThan(0);
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns knowledge context with global taxonomy metadata and scoped result layers", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/knowledge/context" });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body.knowledgeLayerTaxonomy.layerKeys).toEqual(knowledgeLayerKeys);
+      expect(body.availableLayers.map((layer: { key: string }) => layer.key)).toEqual(knowledgeLayerKeys);
+      expect(body.layers.map((layer: { key: string }) => layer.key)).toEqual([
+        "KL_2_ORGANIZATION_CORE",
+        "KL_3_PRODUCT_KNOWLEDGE_PACK",
+        "KL_4_WORKSPACE_PROJECT_OVERLAY"
+      ]);
+      expect(body.layers.map((layer: { key: string }) => layer.key)).not.toContain("KL_0_LEGAL_REGULATORY_CORE");
+      expect(body.noCanonicalWrite).toBe(true);
+      expect(body.boundary.autoPromotionEnabled).toBe(false);
       expect(mock.writeCalls).toEqual([]);
     } finally {
       await app.close();
@@ -1996,6 +2038,7 @@ describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
       });
       expect(body.noLlmCall).toBe(true);
       expect(body.noCanonicalWrite).toBe(true);
+      expect(body.knowledgeLayerTaxonomy.layerKeys).toContain("KL_0_LEGAL_REGULATORY_CORE");
       expect(body.boundary.agentLearningPath).toBe("Teach OIS still creates Learning Signal only.");
       expect(mock.writeCalls).toEqual([]);
     } finally {
@@ -2030,6 +2073,7 @@ describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
 
     expect(stage2FSource).not.toMatch(/oisCanonicalKnowledgeItem\.(create|update|upsert|delete)/);
     expect(stage2GSource).not.toMatch(/oisCanonicalKnowledgeItem\.(create|update|upsert|delete)/);
+    expect(stage2GSource).not.toMatch(/oisLearningCandidate\.(update|upsert)/);
     expect(stage2GSource).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/knowledge\/items/);
     expect(stage2GSource).toContain("autoPromotionEnabled: false");
     expect(stage2GSource).toContain("canonicalKnowledgeWrite: false");

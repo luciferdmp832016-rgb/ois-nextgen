@@ -65,6 +65,12 @@ export interface KnowledgeLayerDefinition {
   autoPromotionAllowedInStage2G: false;
 }
 
+export interface KnowledgeLayerTaxonomyContract {
+  taxonomyVersion: "stage-2g.v1";
+  layerKeys: KnowledgeLayerKey[];
+  availableLayers: KnowledgeLayerDefinition[];
+}
+
 export const knowledgeLayerDefinitions: KnowledgeLayerDefinition[] = [
   {
     key: "KL_0_LEGAL_REGULATORY_CORE",
@@ -127,6 +133,12 @@ export const knowledgeLayerDefinitions: KnowledgeLayerDefinition[] = [
     autoPromotionAllowedInStage2G: false
   }
 ];
+
+export const knowledgeLayerTaxonomy: KnowledgeLayerTaxonomyContract = {
+  taxonomyVersion: "stage-2g.v1",
+  layerKeys: [...knowledgeLayerKeys],
+  availableLayers: knowledgeLayerDefinitions
+};
 
 export interface CanonicalKnowledgeItemContract {
   id: string;
@@ -643,6 +655,8 @@ export function buildDeterministicKnowledgeContext(input: {
     mode: "deterministic-knowledge-context",
     noLlmCall: true,
     noCanonicalWrite: true,
+    knowledgeLayerTaxonomy,
+    availableLayers: knowledgeLayerTaxonomy.availableLayers,
     readContract: input.readContract,
     layers: knowledgeLayerDefinitions.filter((layer) => requested.has(layer.key)),
     items: filteredItems,
