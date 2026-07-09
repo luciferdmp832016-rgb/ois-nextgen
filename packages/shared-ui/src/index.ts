@@ -1,6 +1,7 @@
 export const demoBannerText = "DEMO DATA - NOT PRODUCTION";
 
 export { ModernProductShell, type ProductShellNavItem, type ProductShellProps } from "./product-shell";
+export { OisAgentWidgetShell, type OisAgentWidgetShellProps } from "./ois-agent-widget";
 export {
   createTranslator,
   defaultLocale,
@@ -1675,4 +1676,122 @@ export function getProductUatSurfacesFor(
 
 export function getProductUatPreviewSurfaces(snapshot: PlatformRegistrySnapshot, limit = 6) {
   return snapshot.productUatPayload?.products.flatMap((product) => product.surfaces).slice(0, limit) ?? [];
+}
+
+export type LearningCenterProduct = {
+  productKey: string;
+  displayName: string;
+  enabled: boolean;
+  defaultLearningScope: string;
+};
+
+export type LearningCenterSignal = {
+  id: string;
+  productKey: string;
+  sourceAuthority: string;
+  learningScope: string;
+  signalType: string;
+  normalizedText: string;
+  confidenceInitial: number;
+  status: string;
+  createdAt: string;
+};
+
+export type LearningCenterCandidate = {
+  id: string;
+  signalId: string;
+  productKey: string;
+  candidateType: string;
+  title: string;
+  summary: string;
+  sourceAuthority: string;
+  confidenceScore: number;
+  conflictStatus: string;
+  policyDecision: string;
+  status: string;
+  createdAt: string;
+};
+
+export type LearningCenterPolicy = {
+  id: string;
+  productKey: string;
+  learningScope: string;
+  signalType: string;
+  sourceAuthority: string;
+  policyMode: string;
+  confidenceThreshold: number;
+  enabled: boolean;
+};
+
+export type LearningCenterPayload = {
+  metadata: RegistryMetadata;
+  products: LearningCenterProduct[];
+  overview: {
+    totalSignals: number;
+    pendingCandidates: number;
+    autoLearnedLogs: number;
+    rejectedOrIgnored: number;
+    policyCount: number;
+  };
+  learningStream: LearningCenterSignal[];
+  pendingReview: LearningCenterCandidate[];
+  learningPolicies: LearningCenterPolicy[];
+  executiveIntentQueue: LearningCenterCandidate[];
+  productContributionMap: Array<{ productKey: string; signalCount: number; candidateCount: number }>;
+  auditLogPlaceholder: { mode: string; note: string };
+  accessGuard: { requiredRole: string; currentStageMode: string; limitation: string };
+};
+
+export type LearningCenterSnapshot = {
+  coreApiUrl: string;
+  learningCenter: ApiResult;
+  payload: LearningCenterPayload | null;
+  errorMessage: string | null;
+};
+
+export function getLearningCenterPayload(source: unknown): LearningCenterPayload | null {
+  if (
+    !isRecord(source) ||
+    !isRecord(source.overview) ||
+    !Array.isArray(source.products) ||
+    !Array.isArray(source.learningStream) ||
+    !Array.isArray(source.pendingReview) ||
+    !Array.isArray(source.learningPolicies) ||
+    !Array.isArray(source.executiveIntentQueue) ||
+    !Array.isArray(source.productContributionMap) ||
+    !isRecord(source.auditLogPlaceholder) ||
+    !isRecord(source.accessGuard)
+  ) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+
+  if (!metadata) {
+    return null;
+  }
+
+  return {
+    metadata,
+    products: source.products as LearningCenterProduct[],
+    overview: source.overview as LearningCenterPayload["overview"],
+    learningStream: source.learningStream as LearningCenterSignal[],
+    pendingReview: source.pendingReview as LearningCenterCandidate[],
+    learningPolicies: source.learningPolicies as LearningCenterPolicy[],
+    executiveIntentQueue: source.executiveIntentQueue as LearningCenterCandidate[],
+    productContributionMap: source.productContributionMap as LearningCenterPayload["productContributionMap"],
+    auditLogPlaceholder: source.auditLogPlaceholder as LearningCenterPayload["auditLogPlaceholder"],
+    accessGuard: source.accessGuard as LearningCenterPayload["accessGuard"]
+  };
+}
+
+export async function getLearningCenterSnapshot(coreApiUrl = getCoreApiUrl()): Promise<LearningCenterSnapshot> {
+  const learningCenter = await fetchCoreApi("/platform/learning/center", coreApiUrl);
+
+  return {
+    coreApiUrl,
+    learningCenter,
+    payload: getLearningCenterPayload(learningCenter.data),
+    errorMessage: getRegistryErrorMessage(learningCenter.data) ?? learningCenter.error
+  };
 }

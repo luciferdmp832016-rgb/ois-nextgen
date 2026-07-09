@@ -61,7 +61,11 @@ importers:
         specifier: ^3.2.4
         version: 3.2.6(@types/node@22.20.0)(jiti@2.7.0)(tsx@4.22.5)(yaml@2.9.0)
 
-  apps/core-api: {}
+  apps/core-api:
+    dependencies:
+      '@ois/agent-runtime':
+        specifier: workspace:*
+        version: link:../../packages/agent-runtime
 
   apps/ois-console:
     dependencies:
@@ -78,6 +82,8 @@ importers:
   apps/worker: {}
 
   domains/organization: {}
+
+  packages/agent-runtime: {}
 
   packages/architecture-contracts: {}
 

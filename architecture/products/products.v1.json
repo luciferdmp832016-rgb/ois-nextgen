@@ -6,5 +6,14 @@
     { "code": "CS_AGENT", "name": "csAgent", "plane": "PRODUCT_EXPERIENCE_PLANE", "lifecycle": "PLANNED" },
     { "code": "KEIHB", "name": "KEIHB", "plane": "PRODUCT_EXPERIENCE_PLANE", "lifecycle": "PLANNED" },
     { "code": "ICR", "name": "ICR", "plane": "PRODUCT_EXPERIENCE_PLANE", "lifecycle": "PLANNED" }
+  ],
+  "poweredByOisProductKeys": [
+    { "productKey": "OIS_PLATFORM", "displayName": "OIS Platform", "productType": "CORE_PLATFORM", "defaultLearningScope": "PLATFORM", "lifecycle": "ACTIVE" },
+    { "productKey": "PITS", "displayName": "PITS", "productType": "ECOSYSTEM_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "ACTIVE" },
+    { "productKey": "KEIHB", "displayName": "KEIHB", "productType": "FUTURE_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "PLANNED" },
+    { "productKey": "ICR", "displayName": "ICR", "productType": "FUTURE_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "PLANNED" },
+    { "productKey": "CSAGENT", "displayName": "CSAgent", "productType": "FUTURE_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "PLANNED" },
+    { "productKey": "FUTURE_PRODUCT", "displayName": "Future Product", "productType": "FUTURE_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "PLANNED" },
+    { "productKey": "CUSTOM", "displayName": "Custom", "productType": "CUSTOM_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "PLANNED" }
   ]
 }

@@ -41,6 +41,8 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 2B adds read-only PITS Work Item Detail and Dry-run Action Preview, backed by Core API `/platform/pits/projects/{projectId}/work-items/{itemId}` and `/action-preview`.
 - Stage 2C adds read-only OIS/PITS Product Flow Preview routes and product UX blueprint docs; it adds no Core API endpoint.
 - Stage 2D adds shared English/Tiếng Việt localization, shell language selectors and visual OIS/PITS Product Flow Preview pages; it adds no Core API endpoint.
+- Stage 2E adds read-only PITS Action Request list/detail/preview contracts and PITS action-request panel markers; it does not execute product mutations.
+- Stage 2F adds the OIS Agent Runtime and Self-Improvement Engine foundation, backed by a versioned Prisma migration, audit-backed Learning Signal/Candidate routes, SuperAdmin Learning Center and OIS Agent Widget. It does not promote widget input into canonical Knowledge Layer records.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -169,6 +171,8 @@ Stage 2D localization foundation and visual product-flow preview result: OIS and
 Stage 2D-R1 localization coverage, Vietnamese font and runtime marker hotfix result: OIS/PITS shared shells now preserve the language-neutral `Core API source:` runtime marker via `data-ops-marker="core-api-source"`, broaden visible English/Tiếng Việt coverage across runtime, dashboard, project, workboard, work item and dry-run labels, use Vietnamese-safe system font/line-height safeguards and add read-only `/localization` catalog routes. Final result is `LOCALIZATION_COVERAGE_FONT_RUNTIME_MARKER_HOTFIX_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
 
 Stage 2E PITS work item action request and audit-safe write boundary result: Core API now exposes read-only `/platform/pits/projects/{projectId}/work-items/{itemId}/action-requests`, `/platform/pits/projects/{projectId}/work-items/{itemId}/action-requests/{requestId}` and `/platform/pits/projects/{projectId}/work-items/{itemId}/action-request-preview`. PITS Shell keeps `/projects/{id}/work-items/{itemId}` and adds `PITS Action Request`, `Action request only`, `No direct mutation`, `Pending review`, `Requires audit trail`, `Requires confirmation` and `Requires rollback plan` markers without executable mutation controls. Final result is `PITS_ACTION_REQUEST_AUDIT_SAFE_WRITE_BOUNDARY_READY`; public HTTP 200 verification requires owner runtime sync and browser/UAT.
+
+Stage 2F OIS Agent Runtime and Self-Improvement Engine foundation result: Core API now exposes source-ready `/platform/ecosystem-products`, `/platform/learning/signals`, `/platform/learning/candidates`, `/platform/learning/policies`, `/platform/learning/center`, `/platform/agent/chat` and `/platform/agent/learning-submissions`. OIS Console adds `/learning-center` and mounts the OIS Agent Widget with Ask, Teach OIS, Evidence and Status tabs. The migration is `202607090001_stage_2f_agent_runtime_self_improvement`; validation passed locally against the non-production `ois_nextgen` database. Final result is `OIS_AGENT_RUNTIME_SELF_IMPROVEMENT_FOUNDATION_READY`; public HTTP verification requires owner runtime sync, migration deploy and browser/UAT.
 
 Stage 1C Product Registry detail cross-linking result: Core API now exposes source-ready read-only detail endpoints for products, product code lookup, workspaces, projects, modules and installations. OIS Console adds product/workspace/module/installation detail routes, PITS Shell adds project detail routes, and shared UI helpers build staging-only links between `https://ois-ng.dmp247.com` and `https://pits-ng.dmp247.com`. Final result is `PRODUCT_REGISTRY_DETAIL_CROSS_LINKING_READY`; public HTTP 200 verification requires owner runtime sync.
 
@@ -2264,6 +2268,8 @@ Stage 2A adds the read-only PITS Project Workboard functional slice via `/platfo
 Stage 2B adds read-only PITS Work Item Detail and Dry-run Action Preview via `/platform/pits/projects/{projectId}/work-items/{itemId}`, `/platform/pits/projects/{projectId}/work-items/{itemId}/action-preview` and PITS `/projects/{id}/work-items/{itemId}`. It did not add work item writes, task lifecycle mutations, status/owner/note/priority/blocker mutations, schema changes, migrations, seed, `prisma db push`, auth changes, deploy from Codex, Cloudflare/DNS changes, credentials, UI `DATABASE_URL`, Prisma UI imports, `/auth/demo-login` changes or legacy-resource touch.
 Stage 2C adds OIS/PITS product UX blueprint docs and read-only `/product-flow` routes. It did not add Core API endpoints, LLM calls, product writes, status/owner/note/priority/blocker mutations, schema changes, migrations, seed, `prisma db push`, auth changes, deploy from Codex, Cloudflare/DNS changes, credentials, UI `DATABASE_URL`, Prisma UI imports, `/auth/demo-login` changes or legacy-resource touch.
 Stage 2D adds shared localization docs, language selectors and visual OIS/PITS product-flow previews. It did not add Core API endpoints, LLM calls, product writes, status/owner/note/priority/blocker mutations, schema changes, migrations, seed, `prisma db push`, auth changes, deploy from Codex, Cloudflare/DNS changes, credentials, UI `DATABASE_URL`, Prisma UI imports, `/auth/demo-login` changes or legacy-resource touch.
+Stage 2E adds PITS Action Request preview contracts and UI markers. It did not add direct product mutations, uncontrolled writes, schema changes, migrations, seed, `prisma db push`, auth changes, deploy from Codex, Cloudflare/DNS changes, credentials, UI `DATABASE_URL`, Prisma UI imports, `/auth/demo-login` changes or legacy-resource touch.
+Stage 2F adds a versioned migration, seed updates and audit-backed learning/agent foundation endpoints. It did not add production credentials, production database access, `prisma db push`, direct canonical Knowledge Layer promotion, LLM/OpenRouter runtime calls, UI Prisma imports, UI `DATABASE_URL`, Cloudflare/DNS changes, deploy from Codex, `/auth/demo-login` changes or legacy-resource touch.
 
 1. Confirm release ref and commit SHA.
 2. Apply Prisma migrations using deploy mode only.
@@ -2297,6 +2303,10 @@ Stage 2D adds shared localization docs, language selectors and visual OIS/PITS p
 - OIS/PITS roots render `Localization Foundation`, `Language Settings`, `English` and `Tiếng Việt` after Stage 2D owner runtime sync.
 - OIS `/product-flow` renders `OIS Product UX Preview`, visual screen cards, `Primary user`, `Main action`, `Current stage status` and `Screen mock` after Stage 2D owner runtime sync.
 - PITS `/product-flow` renders `PITS Product UX Preview`, `PITS Home`, `Projects List`, `Project Workboard`, `Runtime/Admin`, visual screen cards, `Primary user`, `Main action`, `Current stage status` and `Screen mock` after Stage 2D owner runtime sync.
+- Core API `/platform/ecosystem-products` returns the Powered by OIS product registry after Stage 2F owner runtime sync and migration deploy.
+- Core API `/platform/learning/center` returns the SuperAdmin Learning Center payload with overview, learning stream, pending review, policies, executive queue, product contribution map and audit placeholder after Stage 2F owner runtime sync.
+- OIS `/learning-center` renders `OIS Learning Center`, `Learning Stream`, `Pending Review`, `Learning Policies`, `Executive Intent Queue`, `Product Contribution Map` and `Audit Log Placeholder` after Stage 2F owner runtime sync.
+- OIS pages render the floating `Powered by OIS` Agent Widget with `Ask`, `Teach OIS`, `Evidence` and `Status` tabs after Stage 2F owner runtime sync.
 - Core API `/docs` renders Swagger UI.
 - OIS Console `/` renders `OIS Console`.
 - PITS Shell `/` renders `PITS Shell`.
@@ -2346,6 +2356,8 @@ Stage 2A adds `https://ois-nextgen.abacusai.cloud/platform/pits/projects/<projec
 Stage 2B adds `https://ois-nextgen.abacusai.cloud/platform/pits/projects/<project-id>/work-items/<item-id>` and `https://ois-nextgen.abacusai.cloud/platform/pits/projects/<project-id>/work-items/<item-id>/action-preview` as read-only PITS detail/dry-run endpoints, plus `https://pits-ng.dmp247.com/projects/<project-id>/work-items/<item-id>` as the direct browser route. Public verification is pending owner runtime sync and owner browser/UAT.
 Stage 2C adds `https://ois-ng.dmp247.com/product-flow` and `https://pits-ng.dmp247.com/product-flow` as read-only Product Flow Preview routes. No Core API endpoint is added. Public verification is pending owner runtime sync and owner browser/UAT.
 Stage 2D changes the existing product-flow route response bodies by adding localization selectors, English/Tiếng Việt copy and visual screen-flow cards. No Core API endpoint is added. Public verification is pending owner runtime sync and owner browser/UAT.
+Stage 2E adds source-ready PITS Action Request endpoints and PITS Work Item Detail panel markers. Public verification is pending owner runtime sync and owner browser/UAT.
+Stage 2F adds source-ready Core API learning/agent endpoints plus OIS `/learning-center` and the OIS Agent Widget. Public verification is pending owner runtime sync, migration deploy and owner browser/UAT.
 
 ## Stop Conditions
 

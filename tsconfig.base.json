@@ -16,6 +16,7 @@
     "baseUrl": ".",
     "paths": {
       "@ois/architecture-contracts": ["packages/architecture-contracts/src/index.ts"],
+      "@ois/agent-runtime": ["packages/agent-runtime/src/index.ts"],
       "@ois/tenant-context": ["packages/tenant-context/src/index.ts"],
       "@ois/identity-access": ["packages/identity-access/src/index.ts"],
       "@ois/product-registry": ["packages/product-registry/src/index.ts"],

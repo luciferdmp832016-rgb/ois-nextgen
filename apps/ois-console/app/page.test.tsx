@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Page from "./page";
 import DashboardPage from "./dashboard/page";
 import InstallationDetailPage from "./installations/[id]/page";
+import LearningCenterPage from "./learning-center/page";
 import LocalizationPage from "./localization/page";
 import ModuleDetailPage from "./modules/[id]/page";
 import ProductFlowPage from "./product-flow/page";
@@ -725,6 +726,101 @@ const productUatPayload = {
   ]
 };
 
+const learningCenterPayload = {
+  metadata: registryPayload.metadata,
+  products: [
+    {
+      productKey: "OIS_PLATFORM",
+      displayName: "OIS Platform",
+      enabled: true,
+      defaultLearningScope: "PLATFORM"
+    },
+    {
+      productKey: "PITS",
+      displayName: "PITS",
+      enabled: true,
+      defaultLearningScope: "ORGANIZATION"
+    }
+  ],
+  overview: {
+    totalSignals: 2,
+    pendingCandidates: 1,
+    autoLearnedLogs: 1,
+    rejectedOrIgnored: 0,
+    policyCount: 2
+  },
+  learningStream: [
+    {
+      id: "learning_signal_widget",
+      productKey: "OIS_PLATFORM",
+      sourceAuthority: "END_USER",
+      learningScope: "ORGANIZATION",
+      signalType: "USER_CORRECTION",
+      normalizedText: "The project nickname should be Emerald Precinct.",
+      confidenceInitial: 0.35,
+      status: "RECEIVED",
+      createdAt: "2026-07-09T00:00:00.000Z"
+    }
+  ],
+  pendingReview: [
+    {
+      id: "learning_candidate_exec",
+      signalId: "learning_signal_exec",
+      productKey: "OIS_PLATFORM",
+      candidateType: "STRATEGIC_PRIORITY",
+      title: "STRATEGIC PRIORITY candidate",
+      summary: "CEO directive: prioritize legal risk review.",
+      sourceAuthority: "CEO",
+      confidenceScore: 0.8,
+      conflictStatus: "NO_CONFLICT",
+      policyDecision: "ASK_REVIEW",
+      status: "PENDING_REVIEW",
+      createdAt: "2026-07-09T00:00:00.000Z"
+    }
+  ],
+  learningPolicies: [
+    {
+      id: "learning_policy_ois_platform_ceo",
+      productKey: "OIS_PLATFORM",
+      learningScope: "PLATFORM",
+      signalType: "STRATEGIC_INTENT",
+      sourceAuthority: "CEO",
+      policyMode: "ALWAYS_ASK",
+      confidenceThreshold: 0.9,
+      enabled: true
+    }
+  ],
+  executiveIntentQueue: [
+    {
+      id: "learning_candidate_exec",
+      signalId: "learning_signal_exec",
+      productKey: "OIS_PLATFORM",
+      candidateType: "STRATEGIC_PRIORITY",
+      title: "STRATEGIC PRIORITY candidate",
+      summary: "CEO directive: prioritize legal risk review.",
+      sourceAuthority: "CEO",
+      confidenceScore: 0.8,
+      conflictStatus: "NO_CONFLICT",
+      policyDecision: "ASK_REVIEW",
+      status: "PENDING_REVIEW",
+      createdAt: "2026-07-09T00:00:00.000Z"
+    }
+  ],
+  productContributionMap: [
+    { productKey: "OIS_PLATFORM", signalCount: 1, candidateCount: 1 },
+    { productKey: "PITS", signalCount: 1, candidateCount: 0 }
+  ],
+  auditLogPlaceholder: {
+    mode: "existing-audit-records",
+    note: "Learning writes create AuditRecord entries; Stage 2F UI shows this placeholder until a dedicated audit stream filter is added."
+  },
+  accessGuard: {
+    requiredRole: "SUPERADMIN_OR_ADMIN",
+    currentStageMode: "READ_ONLY_PREVIEW_WITH_API_ROLE_CHECKS",
+    limitation: "No session middleware exists yet, so SuperAdmin enforcement is documented and mutation endpoints require explicit admin role payloads."
+  }
+};
+
 const productDetailPayload = {
   metadata: registryPayload.metadata,
   product: {
@@ -791,6 +887,7 @@ function mockCoreApiFetch(overrides?: {
   ownerReview?: unknown;
   adminBoundary?: unknown;
   productUat?: unknown;
+  learningCenter?: unknown;
 }) {
   const fetchMock = vi.fn(async (input: Parameters<typeof fetch>[0]) => {
     const url = input instanceof Request ? input.url : String(input);
@@ -825,6 +922,10 @@ function mockCoreApiFetch(overrides?: {
 
     if (url === `${coreApiUrl}/platform/product-uat`) {
       return jsonResponse(overrides?.productUat ?? productUatPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/learning/center`) {
+      return jsonResponse(overrides?.learningCenter ?? learningCenterPayload);
     }
 
     if (url === `${coreApiUrl}/platform/products/prod_pits`) {
@@ -935,6 +1036,7 @@ describe("OIS Console product shell", () => {
     expect(html).toContain("Product Flow");
     expect(html).toContain("Products");
     expect(html).toContain("Workspaces");
+    expect(html).toContain("Learning");
     expect(html).toContain("Runtime");
     expect(html).toContain(coreApiUrl);
     expect(html).toContain("Core API healthy");
@@ -1108,6 +1210,24 @@ describe("OIS Console product shell", () => {
         "PMC Org Demo",
         "Emerald Precinct Demo",
         "/workspaces/ws_pmc_org_demo"
+      ]
+    ],
+    [
+      "learning center",
+      LearningCenterPage,
+      [
+        "OIS Learning Center",
+        "SuperAdmin Access Guard",
+        "Learning Overview",
+        "Learning Stream",
+        "Pending Review",
+        "Learning Policies",
+        "Executive Intent Queue",
+        "Product Contribution Map",
+        "Audit Log Placeholder",
+        "SUPERADMIN_OR_ADMIN",
+        "OIS_PLATFORM",
+        "Learning writes create AuditRecord entries"
       ]
     ],
     [
