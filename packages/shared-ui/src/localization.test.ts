@@ -43,6 +43,11 @@ describe("shared localization foundation", () => {
 
   it("localizes exact visible UI labels without changing unknown stable values", () => {
     expect(localizeDisplayText("Runtime Status", "vi")).toBe("Trạng thái runtime");
+    expect(localizeDisplayText("PITS Action Request", "vi")).toBe("Yeu cau hanh dong PITS");
+    expect(localizeDisplayText("Action request only", "vi")).toBe("Chi tao yeu cau hanh dong");
+    expect(localizeDisplayText("No direct mutation", "vi")).toBe("Khong thay doi truc tiep");
+    expect(localizeDisplayText("Pending review", "vi")).toBe("Dang cho ra soat");
+    expect(localizeDisplayText("Requires confirmation", "vi")).toBe("Can xac nhan");
     expect(localizeDisplayText("Core API source:", "vi")).toBe("Core API source:");
     expect(localizeDisplayText("OIS_CONSOLE", "vi")).toBe("OIS_CONSOLE");
   });
@@ -56,5 +61,10 @@ describe("shared localization foundation", () => {
     expect(catalog.manualEditLocation).toBe("packages/shared-ui/src/localization.ts");
     expect(catalog.namespaces.map((namespace) => namespace.namespace)).toContain("panel");
     expect(catalog.namespaces.map((namespace) => namespace.namespace)).toContain("status");
+    expect(catalog.namespaces.map((namespace) => namespace.namespace)).toContain("message");
+    expect(translations["panel.actionRequest.title"]).toMatchObject({
+      en: "PITS Action Request",
+      vi: "Yeu cau hanh dong PITS"
+    });
   });
 });

@@ -1057,6 +1057,87 @@ const workItemActionPreviewPayload = {
   noDataChanged: true
 };
 
+const actionRequestStatusByType = {
+  CHANGE_STATUS: "PENDING_REVIEW",
+  ASSIGN_OWNER: "DRAFT",
+  ADD_NOTE: "PENDING_REVIEW",
+  SET_PRIORITY: "BLOCKED_BY_SAFETY_GATE",
+  RESOLVE_BLOCKER: "BLOCKED_BY_SAFETY_GATE"
+};
+
+const actionRequests = dryRunPreviews.map((preview) => ({
+  requestId: `par-prj_emerald_precinct_demo-${workItemId}-${preview.actionType.toLowerCase().replace(/_/g, "-")}`,
+  projectId: "prj_emerald_precinct_demo",
+  workItemId,
+  actionType: preview.actionType,
+  requestedBy: "owner-review-runtime",
+  requestedAt: "2026-07-09T00:00:00.000Z",
+  currentValue: preview.currentValue,
+  proposedValue: preview.proposedValue,
+  status: actionRequestStatusByType[preview.actionType as keyof typeof actionRequestStatusByType],
+  auditRequired: true,
+  confirmationRequired: true,
+  rollbackRequired: true,
+  permissionRequired: preview.requiredRole,
+  safetyGates: [
+    "Action request only",
+    "Work item is not changed yet",
+    "No direct mutation",
+    "Requires audit trail",
+    "Requires confirmation",
+    "Requires rollback plan",
+    "Requires owner or admin confirmation",
+    ...preview.safetyGates
+  ],
+  expectedImpact: preview.expectedImpact,
+  rollbackPlan: "No source work item is changed in Stage 2E. The staged request can be rejected or discarded without rollback.",
+  noDirectMutation: true
+}));
+
+const workItemActionRequestsPayload = {
+  metadata: registryPayload.metadata,
+  runtime: {
+    coreApiBaseUrl: coreApiUrl,
+    oisConsoleBaseUrl: oisPublicBaseUrl,
+    pitsShellBaseUrl: pitsPublicBaseUrl,
+    actionRequestMode: "read-only-action-request-boundary",
+    stage: "Stage 2E",
+    note: "PITS Action Request is staged only. No direct mutation is enabled."
+  },
+  actionRequestList: {
+    projectId: "prj_emerald_precinct_demo",
+    projectCode: "EMERALD_PRECINCT_DEMO",
+    projectName: "Emerald Precinct Demo",
+    workItemId,
+    supportedActions: ["CHANGE_STATUS", "ASSIGN_OWNER", "ADD_NOTE", "SET_PRIORITY", "RESOLVE_BLOCKER"],
+    actionRequestOnly: true,
+    noDirectMutation: true,
+    markers: [
+      "PITS Action Request",
+      "Action request only",
+      "No direct mutation",
+      "Pending review",
+      "Requires audit trail",
+      "Requires confirmation",
+      "Requires rollback plan"
+    ]
+  },
+  requests: actionRequests,
+  readOnlyBoundary: {
+    mutationEndpointsAdded: false,
+    writePermission: "NOT_ALLOWED_IN_STAGE_2E",
+    notice: "Action request only. Work item is not changed yet.",
+    disabledActions: [
+      "Create action request - Read-only deterministic preview",
+      "Stage for review - Read-only deterministic preview",
+      "Approve action request - Requires future audited write boundary",
+      "Apply work item change - Not available in Stage 2E"
+    ],
+    futureWriteBoundary: "Requires audit trail, confirmation, permission check and rollback plan before any mutation."
+  },
+  noDirectMutation: true
+};
+
 type RouteComponent = () => Promise<ReactElement>;
 
 function jsonResponse(payload: unknown, status = 200) {
@@ -1122,11 +1203,19 @@ function mockCoreApiFetch() {
       return jsonResponse(workItemActionPreviewPayload);
     }
 
+    if (url === `${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/work-items/${workItemId}/action-requests`) {
+      return jsonResponse(workItemActionRequestsPayload);
+    }
+
     if (url === `${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/work-items/missing`) {
       return jsonResponse({ metadata: registryPayload.metadata, error: { code: "NOT_FOUND", message: "workItem not found" } }, 404);
     }
 
     if (url === `${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/work-items/missing/action-preview`) {
+      return jsonResponse({ metadata: registryPayload.metadata, error: { code: "NOT_FOUND", message: "workItem not found" } }, 404);
+    }
+
+    if (url === `${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/work-items/missing/action-requests`) {
       return jsonResponse({ metadata: registryPayload.metadata, error: { code: "NOT_FOUND", message: "workItem not found" } }, 404);
     }
 
@@ -1545,15 +1634,29 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("Requires rollback plan");
     expect(html).toContain("Requires future write boundary");
     expect(html).toContain("Available dry-run actions");
+    expect(html).toContain("PITS Action Request");
+    expect(html).toContain("Action request only");
+    expect(html).toContain("No direct mutation");
+    expect(html).toContain("Pending review");
+    expect(html).toContain("Blocked by safety gate");
+    expect(html).toContain("Work item is not changed yet");
+    expect(html).toContain("Requires owner or admin confirmation");
+    expect(html).toContain("Expected impact");
+    expect(html).toContain("Rollback plan");
+    expect(html).toContain("Preview request");
+    expect(html).toContain("Stage for review");
     expect(html).not.toContain("<button>Create work item");
     expect(html).not.toContain("<button>Edit work item");
     expect(html).not.toContain("<button>Delete work item");
     expect(html).not.toContain("<button>Change status");
     expect(html).not.toContain("<button>Assign owner");
     expect(html).not.toContain("<button>Add note");
+    expect(html).not.toContain("<button>Create action request");
+    expect(html).not.toContain("<button>Stage for review");
     expect(html).not.toContain(dbEnvKey);
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/work-items/${workItemId}`, { cache: "no-store" });
     expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/work-items/${workItemId}/action-preview`, { cache: "no-store" });
+    expect(fetchMock).toHaveBeenCalledWith(`${coreApiUrl}/platform/pits/projects/prj_emerald_precinct_demo/work-items/${workItemId}/action-requests`, { cache: "no-store" });
   });
 
   it("renders project detail fallback for a controlled Core API 404", async () => {

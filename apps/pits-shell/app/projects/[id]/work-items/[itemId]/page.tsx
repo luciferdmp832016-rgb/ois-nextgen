@@ -1,10 +1,11 @@
-import { getPlatformRegistrySnapshot, getPitsWorkItemActionPreview, getPitsWorkItemDetail } from "@ois/shared-ui";
+import { getPlatformRegistrySnapshot, getPitsWorkItemActionPreview, getPitsWorkItemActionRequests, getPitsWorkItemDetail } from "@ois/shared-ui";
 import {
   DataBoundaryPanel,
   DetailFallbackPanel,
   DetailStatusPanel,
   DryRunActionPreviewPanel,
   PageHeading,
+  PitsActionRequestPanel,
   PitsShell,
   RuntimeStatusCard,
   WorkItemDetailPanel
@@ -19,9 +20,10 @@ type WorkItemDetailPageProps = {
 export default async function WorkItemDetailPage({ params }: WorkItemDetailPageProps) {
   const { id, itemId } = await params;
   const snapshot = await getPlatformRegistrySnapshot();
-  const [detail, actionPreview] = await Promise.all([
+  const [detail, actionPreview, actionRequests] = await Promise.all([
     getPitsWorkItemDetail(id, itemId, snapshot.coreApiUrl),
-    getPitsWorkItemActionPreview(id, itemId, snapshot.coreApiUrl)
+    getPitsWorkItemActionPreview(id, itemId, snapshot.coreApiUrl),
+    getPitsWorkItemActionRequests(id, itemId, snapshot.coreApiUrl)
   ]);
   const payload = detail.payload;
 
@@ -47,6 +49,7 @@ export default async function WorkItemDetailPage({ params }: WorkItemDetailPageP
       </PageHeading>
       <WorkItemDetailPanel payload={payload} />
       <DryRunActionPreviewPanel detailPayload={payload} payload={actionPreview.payload} />
+      <PitsActionRequestPanel detailPayload={payload} payload={actionRequests.payload} />
       <section className="dashboard-grid">
         <RuntimeStatusCard snapshot={snapshot} />
         <DataBoundaryPanel />

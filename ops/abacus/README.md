@@ -24,7 +24,7 @@ bash ops/abacus/status.sh
 | `install-ui-shell-systemd-services.sh` | Installs and starts durable systemd services for OIS Console and PITS Shell public staging shells. | Yes, UI systemd units only. |
 | `uninstall-ui-shell-systemd-services.sh` | Stops, disables and removes only the OIS Console/PITS Shell public staging systemd units. Requires `--confirm`. | Yes, UI systemd units only. |
 | `restart-public-staging-runtime.sh` | Restarts Core API, stops OIS/PITS UI services, stops legacy temporary UI demo processes, removes only orphan listeners on `3000/tcp` and `3001/tcp`, starts UI services, then verifies local/public staging endpoints. Does not restart `cloudflared` unless `--include-cloudflared` is passed. | Yes, service restart and UI port cleanup only. |
-| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs, public staging URLs, Stage 1B registry endpoints, Stage 1C registry detail routes, Stage 1D health markers, Stage 1E readiness markers, Stage 1F cockpit/UAT markers, Stage 1G shell markers, Stage 1H owner-first design markers, Stage 1I owner-review safe action-boundary markers, Stage 1J audit/admin permission model markers, Stage 1K product UAT/gap-map markers, Stage 2A/2B PITS workboard/detail markers and Stage 2D localization/product-flow markers. | No. Read-only. |
+| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs, public staging URLs, Stage 1B registry endpoints, Stage 1C registry detail routes, Stage 1D health markers, Stage 1E readiness markers, Stage 1F cockpit/UAT markers, Stage 1G shell markers, Stage 1H owner-first design markers, Stage 1I owner-review safe action-boundary markers, Stage 1J audit/admin permission model markers, Stage 1K product UAT/gap-map markers, Stage 2A/2B PITS workboard/detail markers, Stage 2D localization/product-flow markers and Stage 2E action-request markers. | No. Read-only. |
 | `check-public-staging-endpoints.sh` | Checks public Core API, registry, registry health, registry readiness, owner review, admin boundary, product UAT, PITS workboard/detail, OIS/PITS product-flow and OIS/PITS staging endpoints for HTTP 200, product markers, Core API URL, seeded counts, Stage 1F cockpit/UAT markers, Stage 1G shell markers, Stage 1H owner-first design markers, Stage 1I safe action-boundary markers, Stage 1J admin/audit permission markers, Stage 1K product journey/gap-map markers, Stage 2A/2B workboard/detail markers, Stage 2D localization/product-flow markers and forbidden localhost/legacy links on read-only surfaces. | No. Read-only. |
 | `verify-ui-route-manifests.sh` | Checks production `.next` route manifests and server entries for every Stage 1A route plus Stage 1C dynamic detail routes, Stage 2A/2B PITS routes and Stage 2D product-flow routes. | No. Read-only build artifact check. |
 | `enable-product-subdomain-demo-routes.sh` | Adds a dedicated nginx host-routing config for `ois-ng.dmp247.com` -> port 3000 and `pits-ng.dmp247.com` -> port 3001. | Yes, nginx config only. |
@@ -499,6 +499,22 @@ Stage 2D-R1 Localization Coverage, Vietnamese Font and Runtime Marker checks:
 - OIS/PITS shared shells use Vietnamese-safe system fonts and preserve read-only localization behavior without browser editing or persistence.
 
 Verify Stage 2D after source sync:
+
+```sh
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+```
+
+Stage 2E PITS Work Item Action Request and audit-safe write boundary checks:
+
+- Core API adds read-only `/platform/pits/projects/<project-id>/work-items/<item-id>/action-requests`.
+- Core API adds read-only `/platform/pits/projects/<project-id>/work-items/<item-id>/action-requests/<request-id>`.
+- Core API adds read-only `/platform/pits/projects/<project-id>/work-items/<item-id>/action-request-preview`.
+- PITS Shell keeps `/projects/<project-id>/work-items/<item-id>` and adds an action-request panel.
+- Checks verify `PITS Action Request`, `Action request only`, `No direct mutation`, `Pending review`, `Requires audit trail`, `Requires confirmation`, `Requires rollback plan`, `noDirectMutation=true` and `NOT_ALLOWED_IN_STAGE_2E`.
+- No uncontrolled write endpoint, direct work item mutation, schema change, migration, seed, `prisma db push`, UI `DATABASE_URL`, Prisma UI import, `/auth/demo-login` change or legacy resource touch is allowed.
+
+Verify Stage 2E after source sync:
 
 ```sh
 bash ops/abacus/status-public-staging-runtime.sh

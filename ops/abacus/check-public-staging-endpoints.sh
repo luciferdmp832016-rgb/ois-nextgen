@@ -98,6 +98,34 @@ pits_dry_run_endpoint_markers=(
   '"Requires confirmation"'
   '"Requires rollback plan"'
 )
+pits_action_request_endpoint_markers=(
+  '"source":"default-db"'
+  '"mode":"read-only"'
+  '"actionRequestMode":"read-only-action-request-boundary"'
+  '"PITS Action Request"'
+  '"Action request only"'
+  '"No direct mutation"'
+  '"Pending review"'
+  '"Requires audit trail"'
+  '"Requires confirmation"'
+  '"Requires rollback plan"'
+  '"noDirectMutation":true'
+  '"NOT_ALLOWED_IN_STAGE_2E"'
+)
+pits_action_request_preview_endpoint_markers=(
+  '"source":"default-db"'
+  '"mode":"read-only"'
+  '"actionRequestPreviewMode":"read-only-action-request-preview"'
+  '"PITS Action Request"'
+  '"Action request only"'
+  '"No direct mutation"'
+  '"Pending review"'
+  '"Requires audit trail"'
+  '"Requires confirmation"'
+  '"Requires rollback plan"'
+  '"sourceItemUnchanged"'
+  '"noDirectMutation":true'
+)
 pits_work_item_detail_ui_markers=(
   "Work Item Detail"
   "Dry-run Action Preview"
@@ -111,6 +139,13 @@ pits_work_item_detail_ui_markers=(
   "Add note preview"
   "Set priority preview"
   "Resolve blocker preview"
+  "PITS Action Request"
+  "Action request only"
+  "No direct mutation"
+  "Pending review"
+  "Requires audit trail"
+  "Requires confirmation"
+  "Requires rollback plan"
 )
 
 record_failure() {
@@ -154,6 +189,8 @@ check_core() {
     local registry_work_item_id="pits-${registry_project_base_id}-open-site-access"
     check_route "PUBLIC_STAGING_PITS_WORK_ITEM_DETAIL" "$CORE_API_URL/platform/pits/projects/$REGISTRY_PROJECT_ID/work-items/$registry_work_item_id" "${pits_work_item_detail_endpoint_markers[@]}"
     check_route "PUBLIC_STAGING_PITS_DRY_RUN_ACTION_PREVIEW" "$CORE_API_URL/platform/pits/projects/$REGISTRY_PROJECT_ID/work-items/$registry_work_item_id/action-preview" "${pits_dry_run_endpoint_markers[@]}"
+    check_route "PUBLIC_STAGING_PITS_ACTION_REQUESTS" "$CORE_API_URL/platform/pits/projects/$REGISTRY_PROJECT_ID/work-items/$registry_work_item_id/action-requests" "${pits_action_request_endpoint_markers[@]}"
+    check_route "PUBLIC_STAGING_PITS_ACTION_REQUEST_PREVIEW" "$CORE_API_URL/platform/pits/projects/$REGISTRY_PROJECT_ID/work-items/$registry_work_item_id/action-request-preview" "${pits_action_request_preview_endpoint_markers[@]}"
     check_route "PUBLIC_STAGING_MODULE_DETAIL" "$CORE_API_URL/platform/modules/$REGISTRY_MODULE_ID" '"source":"default-db"' '"mode":"read-only"' '"module"' '"relationships"'
     check_route "PUBLIC_STAGING_INSTALLATION_DETAIL" "$CORE_API_URL/platform/installations/$REGISTRY_INSTALLATION_ID" '"source":"default-db"' '"mode":"read-only"' '"installation"' '"relationships"'
     check_controlled_404 "PUBLIC_STAGING_PRODUCT_DETAIL_404" "$CORE_API_URL/platform/products/stage-1c-missing-product" '"code":"NOT_FOUND"' '"entity":"product"'

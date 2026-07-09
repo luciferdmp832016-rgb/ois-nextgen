@@ -98,6 +98,34 @@ pits_dry_run_endpoint_markers=(
   '"Requires confirmation"'
   '"Requires rollback plan"'
 )
+pits_action_request_endpoint_markers=(
+  '"source":"default-db"'
+  '"mode":"read-only"'
+  '"actionRequestMode":"read-only-action-request-boundary"'
+  '"PITS Action Request"'
+  '"Action request only"'
+  '"No direct mutation"'
+  '"Pending review"'
+  '"Requires audit trail"'
+  '"Requires confirmation"'
+  '"Requires rollback plan"'
+  '"noDirectMutation":true'
+  '"NOT_ALLOWED_IN_STAGE_2E"'
+)
+pits_action_request_preview_endpoint_markers=(
+  '"source":"default-db"'
+  '"mode":"read-only"'
+  '"actionRequestPreviewMode":"read-only-action-request-preview"'
+  '"PITS Action Request"'
+  '"Action request only"'
+  '"No direct mutation"'
+  '"Pending review"'
+  '"Requires audit trail"'
+  '"Requires confirmation"'
+  '"Requires rollback plan"'
+  '"sourceItemUnchanged"'
+  '"noDirectMutation":true'
+)
 pits_work_item_detail_ui_markers=(
   "Work Item Detail"
   "Dry-run Action Preview"
@@ -111,6 +139,13 @@ pits_work_item_detail_ui_markers=(
   "Add note preview"
   "Set priority preview"
   "Resolve blocker preview"
+  "PITS Action Request"
+  "Action request only"
+  "No direct mutation"
+  "Pending review"
+  "Requires audit trail"
+  "Requires confirmation"
+  "Requires rollback plan"
 )
 
 section() {
@@ -332,6 +367,8 @@ if [ -n "$REGISTRY_PRODUCT_ID" ] && [ -n "$REGISTRY_WORKSPACE_ID" ] && [ -n "$RE
   check_route "LOCAL_PITS_PROJECT_WORKBOARD_ENDPOINT" "$CORE_API_LOCAL_BASE/platform/pits/projects/$REGISTRY_PROJECT_ID/workboard" "${pits_workboard_endpoint_markers[@]}"
   check_route "LOCAL_PITS_WORK_ITEM_DETAIL_ENDPOINT" "$CORE_API_LOCAL_BASE/platform/pits/projects/$REGISTRY_PROJECT_ID/work-items/$registry_work_item_id" "${pits_work_item_detail_endpoint_markers[@]}"
   check_route "LOCAL_PITS_DRY_RUN_ACTION_PREVIEW_ENDPOINT" "$CORE_API_LOCAL_BASE/platform/pits/projects/$REGISTRY_PROJECT_ID/work-items/$registry_work_item_id/action-preview" "${pits_dry_run_endpoint_markers[@]}"
+  check_route "LOCAL_PITS_ACTION_REQUESTS_ENDPOINT" "$CORE_API_LOCAL_BASE/platform/pits/projects/$REGISTRY_PROJECT_ID/work-items/$registry_work_item_id/action-requests" "${pits_action_request_endpoint_markers[@]}"
+  check_route "LOCAL_PITS_ACTION_REQUEST_PREVIEW_ENDPOINT" "$CORE_API_LOCAL_BASE/platform/pits/projects/$REGISTRY_PROJECT_ID/work-items/$registry_work_item_id/action-request-preview" "${pits_action_request_preview_endpoint_markers[@]}"
   check_route "PITS_SHELL_LOCAL_PROJECT_DETAIL" "$PITS_SHELL_LOCAL_URL/projects/$REGISTRY_PROJECT_ID" "Project Detail Source" "Owner-facing project UAT summary" "Owner Review Queue" "Safe Action Boundary" "Action is read-only preview only" "Admin Boundary" "Audit Required" "Permission Model" "Preview only - not executable yet" "Blocked in current stage" "Project readiness" "Project Governance / Readiness" "What is missing?" "No issue detected" "Project Runtime Health" "$OIS_CONSOLE_PUBLIC_URL/products/$REGISTRY_PRODUCT_ID" "$OIS_CONSOLE_PUBLIC_URL/workspaces/$REGISTRY_WORKSPACE_ID"
   check_route "PITS_SHELL_LOCAL_PRODUCT_UAT_PROJECT_DETAIL" "$PITS_SHELL_LOCAL_URL/projects/$REGISTRY_PROJECT_ID" "Project Product UAT Baseline" "${product_uat_ui_markers[@]}" "project detail/readiness shell" "Future issue and task workflow"
   check_route "PITS_SHELL_LOCAL_PROJECT_WORKBOARD" "$PITS_SHELL_LOCAL_URL/projects/$REGISTRY_PROJECT_ID/workboard" "${pits_workboard_ui_markers[@]}" "Project operator" "Safety lead" "Next action" "Preview only" "Not executable yet" "Open Work Item Detail"
@@ -368,6 +405,8 @@ if [ -n "$REGISTRY_PRODUCT_ID" ] && [ -n "$REGISTRY_WORKSPACE_ID" ] && [ -n "$RE
   registry_work_item_id="pits-${registry_project_base_id}-open-site-access"
   check_route "PUBLIC_STAGING_PITS_WORK_ITEM_DETAIL" "$CORE_API_URL/platform/pits/projects/$REGISTRY_PROJECT_ID/work-items/$registry_work_item_id" "${pits_work_item_detail_endpoint_markers[@]}"
   check_route "PUBLIC_STAGING_PITS_DRY_RUN_ACTION_PREVIEW" "$CORE_API_URL/platform/pits/projects/$REGISTRY_PROJECT_ID/work-items/$registry_work_item_id/action-preview" "${pits_dry_run_endpoint_markers[@]}"
+  check_route "PUBLIC_STAGING_PITS_ACTION_REQUESTS" "$CORE_API_URL/platform/pits/projects/$REGISTRY_PROJECT_ID/work-items/$registry_work_item_id/action-requests" "${pits_action_request_endpoint_markers[@]}"
+  check_route "PUBLIC_STAGING_PITS_ACTION_REQUEST_PREVIEW" "$CORE_API_URL/platform/pits/projects/$REGISTRY_PROJECT_ID/work-items/$registry_work_item_id/action-request-preview" "${pits_action_request_preview_endpoint_markers[@]}"
   check_route "PUBLIC_STAGING_MODULE_DETAIL" "$CORE_API_URL/platform/modules/$REGISTRY_MODULE_ID" '"source":"default-db"' '"mode":"read-only"' '"module"' '"relationships"'
   check_route "PUBLIC_STAGING_INSTALLATION_DETAIL" "$CORE_API_URL/platform/installations/$REGISTRY_INSTALLATION_ID" '"source":"default-db"' '"mode":"read-only"' '"installation"' '"relationships"'
   check_controlled_404 "PUBLIC_STAGING_PRODUCT_DETAIL_404" "$CORE_API_URL/platform/products/stage-1c-missing-product" '"code":"NOT_FOUND"' '"entity":"product"'

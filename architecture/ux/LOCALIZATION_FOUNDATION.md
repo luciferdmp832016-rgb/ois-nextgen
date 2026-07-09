@@ -32,6 +32,8 @@ Initial copy covers navigation, dashboard, projects, workboard, work item, statu
 
 Stage 2D-R1 expands visible UI coverage across page headings, runtime cards, dashboard/overview counts, owner registry cockpit labels, PITS project selector, workboard, work item detail and dry-run preview labels. Stable internal IDs, product IDs, workspace IDs, route names, status codes and API response codes remain language-neutral.
 
+Stage 2E extends the shared catalog with PITS action-request labels for `PITS Action Request`, `Action request only`, `No direct mutation`, `Pending review`, confirmation/audit/rollback gates and request detail fields. Stable action types, route paths, request IDs and API status codes remain language-neutral.
+
 ## Stable Marker Rule
 
 Localized visible copy is paired with stable language-neutral markers for runtime smoke checks and owner UAT. Stage 2D preserves:
