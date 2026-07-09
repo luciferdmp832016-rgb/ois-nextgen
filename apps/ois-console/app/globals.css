@@ -11,6 +11,7 @@
   --green: #0f766e;
   --amber: #b45309;
   --red: #b91c1c;
+  --font-ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Noto Sans", "Helvetica Neue", Arial, sans-serif;
 }
 
 * {
@@ -21,7 +22,11 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-ui);
+  font-synthesis: weight style;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -33,7 +38,15 @@ h1,
 h2,
 h3,
 p {
+  line-height: 1.45;
   margin-top: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
 .modern-shell {
@@ -448,7 +461,6 @@ p {
 .eyebrow,
 .demo {
   letter-spacing: 0;
-  text-transform: uppercase;
   font-size: 12px;
   font-weight: 800;
 }
@@ -465,6 +477,10 @@ p {
   margin: 6px 0 0;
   color: var(--muted);
   overflow-wrap: anywhere;
+}
+
+.source-line-label {
+  font-weight: 800;
 }
 
 .language-selector {
@@ -490,11 +506,33 @@ p {
   background: transparent;
   border: 0;
   color: var(--ink);
-  font: inherit;
+  font-family: var(--font-ui);
   font-size: 12px;
   font-weight: 800;
   min-width: 112px;
   padding: 2px 4px;
+}
+
+.localization-catalog {
+  display: grid;
+  gap: 16px;
+}
+
+.localization-catalog-facts,
+.localization-namespace-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.localization-namespace-card {
+  min-width: 0;
+}
+
+.localization-namespace-card h4,
+.localization-namespace-card p,
+.localization-catalog dd {
+  overflow-wrap: anywhere;
 }
 
 .visually-hidden {

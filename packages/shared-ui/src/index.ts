@@ -4,18 +4,29 @@ export { ModernProductShell, type ProductShellNavItem, type ProductShellProps } 
 export {
   createTranslator,
   defaultLocale,
+  getLocalizationCatalog,
   isSupportedLocale,
   localeDisplayNames,
+  localizationManualEditPath,
+  localizeDisplayText,
   localizeNavLabel,
   localizeStatusCode,
   normalizeLocale,
   supportedLocales,
   translate,
   translations,
+  type LocalizationCatalog,
+  type LocalizationNamespaceSummary,
   type Locale,
   type TranslationKey
 } from "./localization";
-export { LanguageSelector, LocalizationProvider, useLocalization } from "./localization-context";
+export {
+  LanguageSelector,
+  LocalizationCatalogPanel,
+  LocalizationProvider,
+  LocalizedText,
+  useLocalization
+} from "./localization-context";
 
 export const defaultCoreApiUrl = "https://ois-nextgen.abacusai.cloud";
 export const defaultOisPublicBaseUrl = "https://ois-ng.dmp247.com";

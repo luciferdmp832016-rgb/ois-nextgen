@@ -58,6 +58,50 @@ export const translations = {
     en: "Product Flow",
     vi: "Luồng sản phẩm"
   },
+  "common.localization": {
+    en: "Localization",
+    vi: "Bản địa hóa"
+  },
+  "common.localizationCatalog": {
+    en: "Localization Catalog",
+    vi: "Danh mục bản địa hóa"
+  },
+  "common.availableLocales": {
+    en: "Available locales",
+    vi: "Ngôn ngữ có sẵn"
+  },
+  "common.currentLocale": {
+    en: "Current locale",
+    vi: "Ngôn ngữ hiện tại"
+  },
+  "common.translationNamespaces": {
+    en: "Translation namespaces",
+    vi: "Nhóm bản dịch"
+  },
+  "common.missingKeys": {
+    en: "Missing keys",
+    vi: "Khóa còn thiếu"
+  },
+  "common.fallbackKeys": {
+    en: "Fallback keys",
+    vi: "Khóa dùng fallback"
+  },
+  "common.sampleKeys": {
+    en: "Sample keys",
+    vi: "Khóa mẫu"
+  },
+  "common.manualEditLocation": {
+    en: "Manual edit location",
+    vi: "Vị trí chỉnh sửa thủ công"
+  },
+  "common.browserEditingDisabled": {
+    en: "Browser editing is not enabled yet",
+    vi: "Chưa bật chỉnh sửa trong trình duyệt"
+  },
+  "common.readOnlyCatalogIntro": {
+    en: "Read-only catalog for reviewing language packs, namespace coverage and fallback counts before owner UAT.",
+    vi: "Danh mục chỉ đọc để rà soát gói ngôn ngữ, phạm vi nhóm bản dịch và số lượng fallback trước UAT của chủ sở hữu."
+  },
   "common.productFlowPreview": {
     en: "Product Flow Preview",
     vi: "Xem trước luồng sản phẩm"
@@ -186,6 +230,10 @@ export const translations = {
     en: "No write endpoints added",
     vi: "Không thêm endpoint ghi dữ liệu"
   },
+  "common.noDataMutationEnabled": {
+    en: "No mutation or browser editing is enabled from this catalog.",
+    vi: "Danh mục này không bật mutation hoặc chỉnh sửa trong trình duyệt."
+  },
   "common.ownerApprovalRequired": {
     en: "Owner approval required",
     vi: "Cần chủ sở hữu phê duyệt"
@@ -233,6 +281,502 @@ export const translations = {
   "shell.needsOwnerReview": {
     en: "Needs owner review",
     vi: "Cần chủ sở hữu rà soát"
+  },
+  "page.whatThisIs": {
+    en: "What this is",
+    vi: "Đây là gì"
+  },
+  "page.health": {
+    en: "Health",
+    vi: "Sức khỏe"
+  },
+  "page.readiness": {
+    en: "Readiness",
+    vi: "Mức sẵn sàng"
+  },
+  "page.missing": {
+    en: "Missing",
+    vi: "Còn thiếu"
+  },
+  "page.next": {
+    en: "Next",
+    vi: "Tiếp theo"
+  },
+  "page.ois.overview.title": {
+    en: "Product Administration Overview",
+    vi: "Tổng quan quản trị sản phẩm"
+  },
+  "page.ois.overview.description": {
+    en: "Control-plane baseline for workspaces, products, modules and runtime health.",
+    vi: "Đường cơ sở quản trị cho không gian làm việc, sản phẩm, module và sức khỏe runtime."
+  },
+  "page.ois.dashboard.title": {
+    en: "Platform Overview",
+    vi: "Tổng quan nền tảng"
+  },
+  "page.ois.dashboard.description": {
+    en: "Administration dashboard for the current staging Platform Kernel baseline.",
+    vi: "Bảng quản trị cho đường cơ sở Platform Kernel trên staging hiện tại."
+  },
+  "page.ois.runtime.description": {
+    en: "Public staging runtime baseline for OIS Console, Core API and Platform Kernel reads.",
+    vi: "Đường cơ sở runtime staging công khai cho OIS Console, Core API và lượt đọc Platform Kernel."
+  },
+  "page.ois.products.title": {
+    en: "Products & Modules",
+    vi: "Sản phẩm và module"
+  },
+  "page.ois.products.description": {
+    en: "Product and module baseline for the current public staging runtime.",
+    vi: "Đường cơ sở sản phẩm và module cho runtime staging công khai hiện tại."
+  },
+  "page.pits.overview.title": {
+    en: "Project Runtime Overview",
+    vi: "Tổng quan runtime dự án"
+  },
+  "page.pits.overview.description": {
+    en: "Product runtime baseline for project selection, installation status and Core API health.",
+    vi: "Đường cơ sở runtime sản phẩm cho chọn dự án, trạng thái cài đặt và sức khỏe Core API."
+  },
+  "page.pits.projects.description": {
+    en: "Select from seeded staging projects that read shared platform state through Core API.",
+    vi: "Chọn từ các dự án staging mẫu đọc trạng thái nền tảng dùng chung qua Core API."
+  },
+  "page.pits.runtime.description": {
+    en: "PITS Shell runtime baseline for public staging, Core API health and Platform Kernel counts.",
+    vi: "Đường cơ sở runtime PITS Shell cho staging công khai, sức khỏe Core API và số liệu Platform Kernel."
+  },
+  "page.pits.workboard.description": {
+    en: "Read-only functional slice for project work items, priorities, owners, due dates and next actions.",
+    vi: "Lát cắt chức năng chỉ đọc cho hạng mục công việc, ưu tiên, người phụ trách, hạn và hành động tiếp theo."
+  },
+  "page.pits.workItem.description": {
+    en: "Read-only PITS work item detail with dry-run action preview. Preview only; no data will be changed.",
+    vi: "Chi tiết hạng mục PITS chỉ đọc với xem trước hành động chạy thử. Chỉ xem trước; không dữ liệu nào bị thay đổi."
+  },
+  "panel.ownerRegistry.title": {
+    en: "Owner Registry Cockpit / Registry Runtime Summary",
+    vi: "Buồng lái registry của chủ sở hữu / tóm tắt runtime registry"
+  },
+  "panel.ownerRegistry.description": {
+    en: "Read-only browser cockpit showing what is ready, what needs owner review, what is missing and the next detail link to open.",
+    vi: "Buồng lái trình duyệt chỉ đọc cho biết mục đã sẵn sàng, mục cần chủ sở hữu rà soát, mục còn thiếu và liên kết chi tiết tiếp theo."
+  },
+  "panel.pitsRegistry.title": {
+    en: "PITS Registry Cockpit / Project Runtime Summary",
+    vi: "Buồng lái registry PITS / tóm tắt runtime dự án"
+  },
+  "panel.pitsRegistry.description": {
+    en: "Read-only project cockpit showing what is ready, what needs owner review, what is missing and the next detail link to open.",
+    vi: "Buồng lái dự án chỉ đọc cho biết mục đã sẵn sàng, mục cần chủ sở hữu rà soát, mục còn thiếu và liên kết chi tiết tiếp theo."
+  },
+  "panel.platformOverview.title": {
+    en: "Platform Overview Counts",
+    vi: "Số liệu tổng quan nền tảng"
+  },
+  "panel.platformOverview.description": {
+    en: "Seeded counts read from Core API /platform/overview.",
+    vi: "Số liệu mẫu đọc từ Core API /platform/overview."
+  },
+  "panel.platformOverview.pitsDescription": {
+    en: "Seeded staging counts from Core API /platform/overview.",
+    vi: "Số liệu staging mẫu từ Core API /platform/overview."
+  },
+  "panel.productModule.title": {
+    en: "Product & Module Overview",
+    vi: "Tổng quan sản phẩm và module"
+  },
+  "panel.productModule.description": {
+    en: "Current product catalog baseline from the shared Core API.",
+    vi: "Đường cơ sở danh mục sản phẩm hiện tại từ Core API dùng chung."
+  },
+  "panel.runtimeStatus.title": {
+    en: "Runtime Status",
+    vi: "Trạng thái runtime"
+  },
+  "panel.runtimeStatus.oisDescription": {
+    en: "Public staging shell status through Core API only.",
+    vi: "Trạng thái shell staging công khai chỉ qua Core API."
+  },
+  "panel.runtimeStatus.pitsDescription": {
+    en: "PITS reads platform data through Core API only.",
+    vi: "PITS chỉ đọc dữ liệu nền tảng qua Core API."
+  },
+  "panel.dataBoundary.title": {
+    en: "Data Access Boundary",
+    vi: "Ranh giới truy cập dữ liệu"
+  },
+  "panel.dataBoundary.description": {
+    en: "UI shell reads product status through Core API only. DB-backed demo data is accessed only through the Core API.",
+    vi: "UI shell chỉ đọc trạng thái sản phẩm qua Core API. Dữ liệu demo từ DB chỉ được truy cập qua Core API."
+  },
+  "panel.registryGovernance.title": {
+    en: "Registry Governance / Readiness",
+    vi: "Quản trị registry / mức sẵn sàng"
+  },
+  "panel.registryGovernance.oisDescription": {
+    en: "Owner-facing readiness from Core API /platform/registry/readiness.",
+    vi: "Mức sẵn sàng cho chủ sở hữu từ Core API /platform/registry/readiness."
+  },
+  "panel.registryGovernance.pitsDescription": {
+    en: "Project readiness from Core API /platform/registry/readiness.",
+    vi: "Mức sẵn sàng dự án từ Core API /platform/registry/readiness."
+  },
+  "panel.registryHealth.title": {
+    en: "Registry Runtime Health",
+    vi: "Sức khỏe runtime registry"
+  },
+  "panel.registryHealth.oisDescription": {
+    en: "Owner-facing configured, linked and staging URL status from Core API /platform/registry/health.",
+    vi: "Trạng thái URL đã cấu hình, đã liên kết và staging cho chủ sở hữu từ Core API /platform/registry/health."
+  },
+  "panel.registryHealth.pitsDescription": {
+    en: "Project runtime availability from Core API /platform/registry/health.",
+    vi: "Khả dụng runtime dự án từ Core API /platform/registry/health."
+  },
+  "panel.projectSelector.title": {
+    en: "Project Selector",
+    vi: "Bộ chọn dự án"
+  },
+  "panel.projectSelector.description": {
+    en: "PITS is no longer only a registry/readiness shell; Stage 2A adds a read-only workboard and Stage 2B adds work item detail with dry-run preview.",
+    vi: "PITS không còn chỉ là shell registry/mức sẵn sàng; Stage 2A thêm bảng công việc chỉ đọc và Stage 2B thêm chi tiết hạng mục với xem trước chạy thử."
+  },
+  "panel.installationRegistry.title": {
+    en: "Project Installation Registry",
+    vi: "Registry cài đặt dự án"
+  },
+  "panel.installationRegistry.description": {
+    en: "PITS installation mapping read from Core API /platform/registry.",
+    vi: "Ánh xạ cài đặt PITS đọc từ Core API /platform/registry."
+  },
+  "panel.workboard.title": {
+    en: "PITS Project Workboard",
+    vi: "Bảng công việc dự án PITS"
+  },
+  "panel.workboard.description": {
+    en: "Project workboard data is unavailable from Core API.",
+    vi: "Dữ liệu bảng công việc dự án không có từ Core API."
+  },
+  "panel.workboard.boundaryDescription": {
+    en: "Work items can be inspected in Stage 2A. Editing, deletion and status changes remain disabled.",
+    vi: "Có thể kiểm tra hạng mục công việc trong Stage 2A. Chỉnh sửa, xóa và đổi trạng thái vẫn bị tắt."
+  },
+  "panel.workItemDetail.title": {
+    en: "Work Item Detail",
+    vi: "Chi tiết hạng mục công việc"
+  },
+  "panel.workItemDetail.description": {
+    en: "Work item detail data is unavailable from Core API.",
+    vi: "Dữ liệu chi tiết hạng mục công việc không có từ Core API."
+  },
+  "panel.dryRun.title": {
+    en: "Dry-run Action Preview",
+    vi: "Xem trước hành động chạy thử"
+  },
+  "panel.dryRun.description": {
+    en: "Preview only. No data will be changed. Future execution requires audit, confirmation and rollback gates.",
+    vi: "Chỉ xem trước. Không dữ liệu nào bị thay đổi. Lần thực thi tương lai cần audit, xác nhận và cổng rollback."
+  },
+  "status.readyToOperate": {
+    en: "Ready to operate",
+    vi: "Sẵn sàng vận hành"
+  },
+  "status.noIssueDetected": {
+    en: "No issue detected",
+    vi: "Không phát hiện vấn đề"
+  },
+  "status.incomplete": {
+    en: "Incomplete",
+    vi: "Chưa hoàn tất"
+  },
+  "status.healthReady": {
+    en: "Health ready",
+    vi: "Sức khỏe sẵn sàng"
+  },
+  "status.registryReady": {
+    en: "Registry ready",
+    vi: "Registry sẵn sàng"
+  },
+  "status.overviewReady": {
+    en: "Overview ready",
+    vi: "Tổng quan sẵn sàng"
+  },
+  "status.detailReady": {
+    en: "Detail ready",
+    vi: "Chi tiết sẵn sàng"
+  },
+  "status.missingLink": {
+    en: "Missing link",
+    vi: "Thiếu liên kết"
+  },
+  "status.previewUnavailable": {
+    en: "Preview unavailable",
+    vi: "Không có bản xem trước"
+  },
+  "status.notExecutableYet": {
+    en: "Not executable yet",
+    vi: "Chưa thể thực thi"
+  },
+  "status.readOnlyFunctionalSlice": {
+    en: "Read-only functional slice",
+    vi: "Lát cắt chức năng chỉ đọc"
+  },
+  "status.healthy": {
+    en: "Healthy",
+    vi: "Ổn định"
+  },
+  "status.configured": {
+    en: "Configured",
+    vi: "Đã cấu hình"
+  },
+  "status.linked": {
+    en: "Linked",
+    vi: "Đã liên kết"
+  },
+  "status.reachable": {
+    en: "Reachable",
+    vi: "Có thể truy cập"
+  },
+  "status.degraded": {
+    en: "Degraded",
+    vi: "Suy giảm"
+  },
+  "status.unavailable": {
+    en: "Unavailable",
+    vi: "Không khả dụng"
+  },
+  "status.notApplicable": {
+    en: "Not applicable",
+    vi: "Không áp dụng"
+  },
+  "status.missingUrl": {
+    en: "Missing URL",
+    vi: "Thiếu URL"
+  },
+  "status.readOnlyPreview": {
+    en: "Read-only preview",
+    vi: "Bản xem trước chỉ đọc"
+  },
+  "status.ownerReviewRequired": {
+    en: "Owner review required",
+    vi: "Cần chủ sở hữu rà soát"
+  },
+  "status.futureAdminAction": {
+    en: "Future admin action",
+    vi: "Hành động quản trị tương lai"
+  },
+  "status.blockedUntilAudit": {
+    en: "Blocked until audit",
+    vi: "Bị chặn đến khi audit"
+  },
+  "status.allowedReadOnly": {
+    en: "Allowed read-only",
+    vi: "Cho phép chỉ đọc"
+  },
+  "status.requiresOwnerApproval": {
+    en: "Requires owner approval",
+    vi: "Cần chủ sở hữu phê duyệt"
+  },
+  "status.requiresAdminPermission": {
+    en: "Requires admin permission",
+    vi: "Cần quyền quản trị"
+  },
+  "status.requiresAuditTrail": {
+    en: "Requires audit trail",
+    vi: "Cần nhật ký audit"
+  },
+  "status.requiresRollbackPlan": {
+    en: "Requires rollback plan",
+    vi: "Cần kế hoạch rollback"
+  },
+  "status.blockedCurrentStage": {
+    en: "Blocked in current stage",
+    vi: "Bị chặn trong giai đoạn hiện tại"
+  },
+  "label.totalProducts": {
+    en: "Total products",
+    vi: "Tổng số sản phẩm"
+  },
+  "label.totalWorkspaces": {
+    en: "Total workspaces",
+    vi: "Tổng số không gian làm việc"
+  },
+  "label.totalProjects": {
+    en: "Total projects",
+    vi: "Tổng số dự án"
+  },
+  "label.totalModules": {
+    en: "Total modules",
+    vi: "Tổng số module"
+  },
+  "label.totalInstallations": {
+    en: "Total installations",
+    vi: "Tổng số cài đặt"
+  },
+  "label.healthSummary": {
+    en: "Health summary",
+    vi: "Tóm tắt sức khỏe"
+  },
+  "label.readinessSummary": {
+    en: "Readiness summary",
+    vi: "Tóm tắt mức sẵn sàng"
+  },
+  "label.readyIncompleteBlocked": {
+    en: "Ready / incomplete / blocked",
+    vi: "Sẵn sàng / chưa hoàn tất / bị chặn"
+  },
+  "label.missingRuntimeUrl": {
+    en: "Missing runtime URL",
+    vi: "Thiếu URL runtime"
+  },
+  "label.forbiddenLinkGuard": {
+    en: "Forbidden link guard",
+    vi: "Kiểm tra liên kết bị cấm"
+  },
+  "label.quickDetailLinks": {
+    en: "Quick detail links",
+    vi: "Liên kết chi tiết nhanh"
+  },
+  "label.quickProjectLinks": {
+    en: "Quick project links",
+    vi: "Liên kết dự án nhanh"
+  },
+  "label.ownerUatLinks": {
+    en: "Owner UAT links",
+    vi: "Liên kết UAT của chủ sở hữu"
+  },
+  "label.service": {
+    en: "Service",
+    vi: "Dịch vụ"
+  },
+  "label.stage": {
+    en: "Stage",
+    vi: "Giai đoạn"
+  },
+  "label.source": {
+    en: "Source",
+    vi: "Nguồn"
+  },
+  "label.mode": {
+    en: "Mode",
+    vi: "Chế độ"
+  },
+  "label.environment": {
+    en: "Environment",
+    vi: "Môi trường"
+  },
+  "label.due": {
+    en: "Due",
+    vi: "Hạn"
+  },
+  "label.totalItems": {
+    en: "Total items",
+    vi: "Tổng hạng mục"
+  },
+  "label.highPriority": {
+    en: "High priority",
+    vi: "Ưu tiên cao"
+  },
+  "label.nextRecommendedAction": {
+    en: "Next recommended action",
+    vi: "Hành động khuyến nghị tiếp theo"
+  },
+  "label.currentValue": {
+    en: "Current value",
+    vi: "Giá trị hiện tại"
+  },
+  "label.proposedValue": {
+    en: "Proposed value",
+    vi: "Giá trị đề xuất"
+  },
+  "label.requiredRole": {
+    en: "Required role",
+    vi: "Vai trò yêu cầu"
+  },
+  "label.whatWouldHappen": {
+    en: "What would happen?",
+    vi: "Điều gì sẽ xảy ra?"
+  },
+  "label.whyBlockedNow": {
+    en: "Why is it blocked now?",
+    vi: "Vì sao hiện bị chặn?"
+  },
+  "label.availableDryRunActions": {
+    en: "Available dry-run actions",
+    vi: "Hành động chạy thử có sẵn"
+  },
+  "label.blockers": {
+    en: "Blockers",
+    vi: "Điểm chặn"
+  },
+  "label.readOnlyBoundary": {
+    en: "Read-only boundary",
+    vi: "Ranh giới chỉ đọc"
+  },
+  "label.relatedProject": {
+    en: "Related project",
+    vi: "Dự án liên quan"
+  },
+  "label.projectReadiness": {
+    en: "Project readiness",
+    vi: "Mức sẵn sàng dự án"
+  },
+  "message.noReadOnlyWorkItems": {
+    en: "No read-only work items are mapped for this status.",
+    vi: "Không có hạng mục công việc chỉ đọc nào được ánh xạ cho trạng thái này."
+  },
+  "message.workboardGrouped": {
+    en: "work items grouped by workflow status. This is the first real PITS user-level browser workflow.",
+    vi: "hạng mục công việc được nhóm theo trạng thái luồng. Đây là luồng trình duyệt cấp người dùng PITS đầu tiên."
+  },
+  "count.industries": {
+    en: "Industries",
+    vi: "Ngành"
+  },
+  "count.organizations": {
+    en: "Organizations",
+    vi: "Tổ chức"
+  },
+  "count.workspaces": {
+    en: "Workspaces",
+    vi: "Không gian làm việc"
+  },
+  "count.projects": {
+    en: "Projects",
+    vi: "Dự án"
+  },
+  "count.products": {
+    en: "Products",
+    vi: "Sản phẩm"
+  },
+  "count.installations": {
+    en: "Installations",
+    vi: "Cài đặt"
+  },
+  "count.modules": {
+    en: "Modules",
+    vi: "Module"
+  },
+  "count.auditRecords": {
+    en: "Audit Records",
+    vi: "Bản ghi audit"
+  },
+  "priority.low": {
+    en: "Low",
+    vi: "Thấp"
+  },
+  "priority.medium": {
+    en: "Medium",
+    vi: "Trung bình"
+  },
+  "priority.high": {
+    en: "High",
+    vi: "Cao"
+  },
+  "priority.critical": {
+    en: "Critical",
+    vi: "Khẩn cấp"
   },
   "flow.uxDraftEyebrow": {
     en: "UX Draft / Product Flow Preview",
@@ -537,7 +1081,8 @@ const navTranslationKeys: Record<string, TranslationKey> = {
   projects: "common.projects",
   workspaces: "common.workspaces",
   runtime: "common.runtime",
-  "product-flow": "common.productFlow"
+  "product-flow": "common.productFlow",
+  localization: "common.localization"
 };
 
 const statusTranslationKeys: Record<string, TranslationKey> = {
@@ -546,6 +1091,16 @@ const statusTranslationKeys: Record<string, TranslationKey> = {
   BLOCKED: "common.blocked",
   DONE: "common.done"
 };
+
+export const localizationManualEditPath = "packages/shared-ui/src/localization.ts";
+
+const translationEntries = Object.entries(translations) as Array<[TranslationKey, Record<Locale, string>]>;
+
+const displayTextTranslationKeys = translationEntries.reduce<Record<string, TranslationKey>>((keys, [key, entry]) => {
+  keys[entry.en] = key;
+
+  return keys;
+}, {});
 
 export function isSupportedLocale(value: string | null | undefined): value is Locale {
   return supportedLocales.includes(value as Locale);
@@ -579,4 +1134,65 @@ export function localizeStatusCode(code: string, locale: Locale): string {
   const key = statusTranslationKeys[code];
 
   return key ? translate(key, locale) : code;
+}
+
+export function localizeDisplayText(text: string, locale: Locale): string {
+  const key = displayTextTranslationKeys[text];
+
+  return key ? translate(key, locale) : text;
+}
+
+export type LocalizationNamespaceSummary = {
+  namespace: string;
+  totalKeys: number;
+  missingKeys: number;
+  fallbackKeys: number;
+  sampleKeys: TranslationKey[];
+};
+
+export type LocalizationCatalog = {
+  currentLocale: Locale;
+  availableLocales: Locale[];
+  totalKeys: number;
+  missingKeyCount: number;
+  fallbackKeyCount: number;
+  manualEditLocation: string;
+  namespaces: LocalizationNamespaceSummary[];
+};
+
+export function getLocalizationCatalog(locale: Locale = defaultLocale): LocalizationCatalog {
+  const namespaceMap = new Map<string, Array<[TranslationKey, Record<Locale, string>]>>();
+
+  for (const entry of translationEntries) {
+    const namespace = entry[0].split(".")[0] ?? "common";
+    const namespaceEntries = namespaceMap.get(namespace) ?? [];
+    namespaceEntries.push(entry);
+    namespaceMap.set(namespace, namespaceEntries);
+  }
+
+  const namespaces = Array.from(namespaceMap.entries())
+    .map<LocalizationNamespaceSummary>(([namespace, entries]) => {
+      const missingKeys = entries.filter(([, entry]) => !entry[locale]).length;
+      const fallbackKeys =
+        locale === defaultLocale ? 0 : entries.filter(([, entry]) => Boolean(entry[locale]) && entry[locale] === entry[defaultLocale]).length;
+
+      return {
+        namespace,
+        totalKeys: entries.length,
+        missingKeys,
+        fallbackKeys,
+        sampleKeys: entries.slice(0, 4).map(([key]) => key)
+      };
+    })
+    .sort((left, right) => left.namespace.localeCompare(right.namespace));
+
+  return {
+    currentLocale: locale,
+    availableLocales: [...supportedLocales],
+    totalKeys: translationEntries.length,
+    missingKeyCount: namespaces.reduce((total, namespace) => total + namespace.missingKeys, 0),
+    fallbackKeyCount: namespaces.reduce((total, namespace) => total + namespace.fallbackKeys, 0),
+    manualEditLocation: localizationManualEditPath,
+    namespaces
+  };
 }

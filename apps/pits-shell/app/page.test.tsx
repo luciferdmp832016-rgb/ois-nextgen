@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import Page from "./page";
+import LocalizationPage from "./localization/page";
 import ProductFlowPage from "./product-flow/page";
 import ProjectsPage from "./projects/page";
 import ProjectDetailPage from "./projects/[id]/page";
@@ -1280,6 +1281,21 @@ describe("PITS Shell product shell", () => {
       ]
     ],
     [
+      "localization",
+      LocalizationPage,
+      [
+        "Localization Catalog",
+        "Read-only Localization Catalog",
+        "Available locales",
+        "Translation namespaces",
+        "Missing keys",
+        "Fallback keys",
+        "packages/shared-ui/src/localization.ts",
+        "Browser editing is not enabled yet",
+        "No mutation or browser editing is enabled from this catalog."
+      ]
+    ],
+    [
       "projects",
       ProjectsPage,
       [
@@ -1378,6 +1394,8 @@ describe("PITS Shell product shell", () => {
     expect(html).toContain("Language Settings");
     expect(html).toContain("English");
     expect(html).toContain("Tiếng Việt");
+    expect(html).toContain('data-ops-marker="core-api-source"');
+    expect(html).toContain("Core API source:");
     for (const marker of markers) {
       expect(html).toContain(marker);
     }

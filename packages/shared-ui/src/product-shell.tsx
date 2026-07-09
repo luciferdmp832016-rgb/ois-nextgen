@@ -139,7 +139,10 @@ function ModernProductShellFrame({
             <div>
               <div className="demo">{demoBanner}</div>
               <p className="source-line">
-                {t("shell.coreApiSource")}: {coreApiUrl}
+                <span className="visually-hidden" data-ops-marker="core-api-source">
+                  Core API source:
+                </span>
+                <span className="source-line-label">{t("shell.coreApiSource")}:</span> {coreApiUrl}
               </p>
             </div>
           </div>
