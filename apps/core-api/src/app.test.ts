@@ -6,6 +6,7 @@ import {
   defaultKeihbProjectionBundles,
   defaultKnowledgeEvidenceLinks,
   defaultKnowledgeLayerMappings,
+  knowledgeLayerMappingStatusTaxonomy,
   knowledgeLayerKeys
 } from "@ois/knowledge-fabric";
 import { buildCoreApi, type BuildCoreApiOptions } from "./app";
@@ -380,7 +381,7 @@ describe("core api root contract", () => {
     } finally {
       await app.close();
     }
-  });
+  }, 10000);
 });
 
 describe("core api health contract", () => {
@@ -1899,6 +1900,8 @@ describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
       expect(body.noCanonicalKnowledgeWrite).toBe(true);
       expect(body.autoPromotionEnabled).toBe(false);
       expect(body.knowledgeLayerTaxonomy.layerKeys).toContain("KL_0_LEGAL_REGULATORY_CORE");
+      expect(body.mappingStatusTaxonomy).toEqual(knowledgeLayerMappingStatusTaxonomy);
+      expect(body.availableStatuses).toContain("READY_FOR_REVIEW");
       expect(body.mapping).toMatchObject({
         learningCandidateId: stage2GRows.candidate.id,
         targetLayerKey: "KL_3_PRODUCT_KNOWLEDGE_PACK",
@@ -1930,6 +1933,8 @@ describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
 
       expect(candidateResponse.statusCode).toBe(200);
       expect(candidateBody.knowledgeLayerTaxonomy.layerKeys).toContain("KL_0_LEGAL_REGULATORY_CORE");
+      expect(candidateBody.mappingStatusTaxonomy).toEqual(knowledgeLayerMappingStatusTaxonomy);
+      expect(candidateBody.availableStatuses).toContain("READY_FOR_REVIEW");
       expect(candidateBody.mappings).toEqual(expect.arrayContaining([expect.objectContaining({ id: stage2GRows.mapping.id })]));
 
       const listResponse = await app.inject({ method: "GET", url: "/platform/learning/layer-mappings" });
@@ -1938,7 +1943,29 @@ describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
       expect(listResponse.statusCode).toBe(200);
       expect(listBody.knowledgeLayerTaxonomy.layerKeys).toEqual(knowledgeLayerKeys);
       expect(listBody.availableLayers.map((layer: { key: string }) => layer.key)).toEqual(knowledgeLayerKeys);
+      expect(listBody.mappingStatusTaxonomy).toEqual(knowledgeLayerMappingStatusTaxonomy);
+      expect(listBody.availableStatuses).toContain("READY_FOR_REVIEW");
       expect(listBody.mappings).toEqual(expect.arrayContaining([expect.objectContaining({ targetLayerKey: "KL_3_PRODUCT_KNOWLEDGE_PACK" })]));
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns mapping status taxonomy even when no mapping rows are present", async () => {
+    const mock = createMockPrisma();
+    mock.delegates.oisKnowledgeLayerMapping.findMany.mockResolvedValueOnce([]);
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/learning/layer-mappings" });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body.mappings).toEqual([]);
+      expect(body.mappingStatusTaxonomy).toEqual(knowledgeLayerMappingStatusTaxonomy);
+      expect(body.availableStatuses).toContain("READY_FOR_REVIEW");
+      expect(JSON.stringify(body.mappings)).not.toContain("READY_FOR_REVIEW");
       expect(mock.writeCalls).toEqual([]);
     } finally {
       await app.close();

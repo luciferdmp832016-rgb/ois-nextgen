@@ -51,6 +51,8 @@ export const knowledgeLayerMappingStatuses = [
 ] as const;
 export type KnowledgeLayerMappingStatus = (typeof knowledgeLayerMappingStatuses)[number];
 
+export const knowledgeLayerMappingStatusTaxonomy: KnowledgeLayerMappingStatus[] = [...knowledgeLayerMappingStatuses];
+
 export const knowledgeProjectionStatuses = ["DRAFT", "PUBLISHED", "ARCHIVED"] as const;
 export type KnowledgeProjectionStatus = (typeof knowledgeProjectionStatuses)[number];
 

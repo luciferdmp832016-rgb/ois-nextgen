@@ -1911,6 +1911,8 @@ export type KnowledgeLayerMappingsPayload = {
   boundary: Record<string, unknown>;
   knowledgeLayerTaxonomy?: KnowledgeLayerTaxonomy | undefined;
   availableLayers?: KnowledgeLayerDefinition[] | undefined;
+  mappingStatusTaxonomy?: string[] | undefined;
+  availableStatuses?: string[] | undefined;
   mappings: KnowledgeLayerMapping[];
 };
 
@@ -2049,6 +2051,8 @@ export function getKnowledgeLayerMappingsPayload(source: unknown): KnowledgeLaye
     boundary: source.boundary,
     knowledgeLayerTaxonomy: isRecord(source.knowledgeLayerTaxonomy) ? (source.knowledgeLayerTaxonomy as KnowledgeLayerTaxonomy) : undefined,
     availableLayers: Array.isArray(source.availableLayers) ? (source.availableLayers as KnowledgeLayerDefinition[]) : undefined,
+    mappingStatusTaxonomy: Array.isArray(source.mappingStatusTaxonomy) ? (source.mappingStatusTaxonomy as string[]) : undefined,
+    availableStatuses: Array.isArray(source.availableStatuses) ? (source.availableStatuses as string[]) : undefined,
     mappings: source.mappings as KnowledgeLayerMapping[]
   };
 }
