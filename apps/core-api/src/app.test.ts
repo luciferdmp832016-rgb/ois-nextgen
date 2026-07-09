@@ -9,7 +9,12 @@ import {
   knowledgeLayerMappingStatusTaxonomy,
   knowledgeLayerKeys
 } from "@ois/knowledge-fabric";
-import { oimaCapabilityCodes, oimaSafetyBoundaries, oimaSourceModes } from "@ois/architecture-contracts";
+import {
+  oimaCapabilityCodes,
+  oimaSafetyBoundaries,
+  oimaSourceModes,
+  universalKnowledgeApiContract
+} from "@ois/architecture-contracts";
 import { buildCoreApi, type BuildCoreApiOptions } from "./app";
 
 type MockPrisma = NonNullable<BuildCoreApiOptions["prisma"]>;
@@ -1832,6 +1837,8 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
       expect(body.product.safetyBoundaries).toEqual(oimaSafetyBoundaries);
       expect(body.product.knowledgeIntegration).toMatchObject({
         sourceOfTruth: "OIS Canonical Knowledge Fabric",
+        universalKnowledgeApiDisplayName: "Universal Knowledge API",
+        universalKnowledgeApiLabel: "OIS Universal Knowledge API",
         noSeparateKnowledgeSourceOfTruth: true
       });
       expect(mock.writeCalls).toEqual([]);
@@ -1868,7 +1875,9 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
       });
       expect(overviewBody.capabilityCodes).toEqual(oimaCapabilityCodes);
       expect(overviewBody.knowledgeIntegration.knowledgeLayerTaxonomy.layerKeys).toContain("KL_0_LEGAL_REGULATORY_CORE");
+      expect(overviewBody.knowledgeIntegration.universalKnowledgeApiDisplayName).toBe("Universal Knowledge API");
       expect(overviewBody.knowledgeIntegration.universalKnowledgeApiLabel).toBe("OIS Universal Knowledge API");
+      expect(overviewBody.knowledgeIntegration.universalKnowledgeApiContract).toEqual(universalKnowledgeApiContract);
       expect(sourceModeBody.sourceModeRules).toMatchObject({
         primarySourceMode: "TRANSCRIPT_ONLY",
         transcriptOnlyWorksWithoutAudio: true,

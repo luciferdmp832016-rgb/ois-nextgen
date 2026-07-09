@@ -8,7 +8,8 @@ import {
   oimaRoadmap,
   oimaSafetyBoundaries,
   oimaSourceModeContracts,
-  oimaSourceModes
+  oimaSourceModes,
+  universalKnowledgeApiContract
 } from "@ois/architecture-contracts";
 import { knowledgeLayerTaxonomy } from "@ois/knowledge-fabric";
 
@@ -84,8 +85,10 @@ function knowledgeIntegration() {
     sourceOfTruth: "OIS Canonical Knowledge Fabric",
     knowledgeLayerTaxonomy,
     availableLayers: knowledgeLayerTaxonomy.availableLayers,
-    universalKnowledgeApi: "/platform/knowledge/context",
-    universalKnowledgeApiLabel: "OIS Universal Knowledge API",
+    universalKnowledgeApi: universalKnowledgeApiContract.endpoint,
+    universalKnowledgeApiDisplayName: universalKnowledgeApiContract.displayName,
+    universalKnowledgeApiLabel: universalKnowledgeApiContract.label,
+    universalKnowledgeApiContract,
     agentKnowledgeContextApi: "/platform/agent/knowledge-context",
     oimaDoesNotOwnCanonicalKnowledge: true,
     noSeparateKnowledgeSourceOfTruth: true
