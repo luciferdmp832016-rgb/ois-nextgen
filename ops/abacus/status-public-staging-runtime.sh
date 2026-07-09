@@ -109,10 +109,18 @@ knowledge_ui_markers=(
   "No auto-promotion in Stage 2G"
 )
 oima_endpoint_markers=(
+  '"productCode":"OIMA"'
   '"productKey":"OIMA"'
+  '"productName":"Organizational Intelligence Meeting Agent"'
   '"displayName":"OIMA'
   '"productType":"MEETING_INTELLIGENCE_PRODUCT"'
   '"implementationStatus":"PRODUCT_BOUNDARY_READY"'
+  '"currentRuntimeCapabilities"'
+  '"plannedRuntimeCapabilities"'
+  '"OVERVIEW"'
+  '"PRODUCT_BOUNDARY"'
+  '"KNOWLEDGE_API_LINKAGE"'
+  '"MEETING_INTAKE"'
   '"TRANSCRIPT_ONLY"'
   '"AUDIO_ONLY"'
   '"TRANSCRIPT_AND_AUDIO"'
@@ -127,12 +135,25 @@ oima_ui_markers=(
   "OIMA"
   "Organizational Intelligence Meeting Agent"
   "Powered by OIS Product"
+  "OIMA Product Overview"
+  "OIMA-0 shell ready"
+  "OIS is the organizational intelligence backbone. OIMA is the meeting intelligence product powered by OIS."
   "Product Boundary"
   "Source Mode Contract"
   "Safety Boundary"
   "OIS Core Reuse Map"
   "OIMA Roadmap"
   "Placeholder Product Surfaces"
+  "OIMA Product Surface Empty States"
+  "Meeting Library"
+  "Upload Meeting"
+  "Agent Analysis"
+  "Clarification Review"
+  "Dashboard"
+  "Self-Improvement Center"
+  "Listener Mode"
+  "Planned / not runtime"
+  "No fake meeting data"
   "TRANSCRIPT_ONLY"
   "MEETING_INTELLIGENCE_PRODUCT"
   "PRODUCT_BOUNDARY_READY"
@@ -403,9 +424,9 @@ check_route "LOCAL_PRODUCT_UAT" "$CORE_API_LOCAL_BASE/platform/product-uat" "${p
 check_route "LOCAL_ECOSYSTEM_PRODUCTS" "$CORE_API_LOCAL_BASE/platform/ecosystem-products" '"source":"default-db"' '"mode":"read-only"' '"OIMA"' '"MEETING_INTELLIGENCE_PRODUCT"'
 check_route "LOCAL_LEARNING_CENTER" "$CORE_API_LOCAL_BASE/platform/learning/center" "${learning_center_endpoint_markers[@]}"
 check_route "LOCAL_OIMA_PRODUCT_CODE" "$CORE_API_LOCAL_BASE/platform/products/code/OIMA" "${oima_endpoint_markers[@]}" '"relationships"' '"OIS Canonical Knowledge Fabric"'
-check_route "LOCAL_OIMA_OVERVIEW" "$CORE_API_LOCAL_BASE/platform/oima/overview" "${oima_endpoint_markers[@]}" '"OIS Canonical Knowledge Fabric"' '"universalKnowledgeApiDisplayName":"Universal Knowledge API"' '"universalKnowledgeApiLabel":"OIS Universal Knowledge API"'
+check_route "LOCAL_OIMA_OVERVIEW" "$CORE_API_LOCAL_BASE/platform/oima/overview" "${oima_endpoint_markers[@]}" '"OIS Canonical Knowledge Fabric"' '"universalKnowledgeApiDisplayName":"Universal Knowledge API"' '"universalKnowledgeApiLabel":"OIS Universal Knowledge API"' '"emptyStateSurfaces"' '"runtimeEnabled":false'
 check_route "LOCAL_OIMA_SOURCE_MODES" "$CORE_API_LOCAL_BASE/platform/oima/source-modes" "${oima_endpoint_markers[@]}" '"primarySourceMode":"TRANSCRIPT_ONLY"' '"audioDoesNotBlockAnalysis":true'
-check_route "LOCAL_OIMA_ROADMAP" "$CORE_API_LOCAL_BASE/platform/oima/roadmap" "${oima_endpoint_markers[@]}" '"roadmap"' '"Stage 2H"' '"OIMA-0"' '"OIMA-9"'
+check_route "LOCAL_OIMA_ROADMAP" "$CORE_API_LOCAL_BASE/platform/oima/roadmap" "${oima_endpoint_markers[@]}" '"roadmap"' '"Stage 2I"' '"PRODUCT_SHELL_HARDENED"' '"OIMA-0"' '"OIMA-1"' '"OIMA-9"'
 check_route "LOCAL_OIMA_BOUNDARY" "$CORE_API_LOCAL_BASE/platform/oima/boundary" "${oima_endpoint_markers[@]}" '"noCanonicalKnowledgeWrite":true' '"autoPromotionEnabled":false'
 check_route "LOCAL_KNOWLEDGE_LAYERS" "$CORE_API_LOCAL_BASE/platform/knowledge/layers" "${knowledge_endpoint_markers[@]}" '"layers"' '"productConsumptionMap"'
 check_route "LOCAL_KNOWLEDGE_ITEMS" "$CORE_API_LOCAL_BASE/platform/knowledge/items" "${knowledge_endpoint_markers[@]}" '"items"' '"summary"'
@@ -501,9 +522,9 @@ check_route "PUBLIC_STAGING_PRODUCT_UAT" "$CORE_API_URL/platform/product-uat" "$
 check_route "PUBLIC_STAGING_ECOSYSTEM_PRODUCTS" "$CORE_API_URL/platform/ecosystem-products" '"source":"default-db"' '"mode":"read-only"' '"OIMA"' '"MEETING_INTELLIGENCE_PRODUCT"'
 check_route "PUBLIC_STAGING_LEARNING_CENTER" "$CORE_API_URL/platform/learning/center" "${learning_center_endpoint_markers[@]}"
 check_route "PUBLIC_STAGING_OIMA_PRODUCT_CODE" "$CORE_API_URL/platform/products/code/OIMA" "${oima_endpoint_markers[@]}" '"relationships"' '"OIS Canonical Knowledge Fabric"'
-check_route "PUBLIC_STAGING_OIMA_OVERVIEW" "$CORE_API_URL/platform/oima/overview" "${oima_endpoint_markers[@]}" '"OIS Canonical Knowledge Fabric"' '"universalKnowledgeApiDisplayName":"Universal Knowledge API"' '"universalKnowledgeApiLabel":"OIS Universal Knowledge API"'
+check_route "PUBLIC_STAGING_OIMA_OVERVIEW" "$CORE_API_URL/platform/oima/overview" "${oima_endpoint_markers[@]}" '"OIS Canonical Knowledge Fabric"' '"universalKnowledgeApiDisplayName":"Universal Knowledge API"' '"universalKnowledgeApiLabel":"OIS Universal Knowledge API"' '"emptyStateSurfaces"' '"runtimeEnabled":false'
 check_route "PUBLIC_STAGING_OIMA_SOURCE_MODES" "$CORE_API_URL/platform/oima/source-modes" "${oima_endpoint_markers[@]}" '"primarySourceMode":"TRANSCRIPT_ONLY"' '"audioDoesNotBlockAnalysis":true'
-check_route "PUBLIC_STAGING_OIMA_ROADMAP" "$CORE_API_URL/platform/oima/roadmap" "${oima_endpoint_markers[@]}" '"roadmap"' '"Stage 2H"' '"OIMA-0"' '"OIMA-9"'
+check_route "PUBLIC_STAGING_OIMA_ROADMAP" "$CORE_API_URL/platform/oima/roadmap" "${oima_endpoint_markers[@]}" '"roadmap"' '"Stage 2I"' '"PRODUCT_SHELL_HARDENED"' '"OIMA-0"' '"OIMA-1"' '"OIMA-9"'
 check_route "PUBLIC_STAGING_OIMA_BOUNDARY" "$CORE_API_URL/platform/oima/boundary" "${oima_endpoint_markers[@]}" '"noCanonicalKnowledgeWrite":true' '"autoPromotionEnabled":false'
 check_route "PUBLIC_STAGING_KNOWLEDGE_LAYERS" "$CORE_API_URL/platform/knowledge/layers" "${knowledge_endpoint_markers[@]}" '"layers"' '"productConsumptionMap"'
 check_route "PUBLIC_STAGING_KNOWLEDGE_ITEMS" "$CORE_API_URL/platform/knowledge/items" "${knowledge_endpoint_markers[@]}" '"items"' '"summary"'

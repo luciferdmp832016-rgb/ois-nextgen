@@ -49,6 +49,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 2H adds OIMA as a distinct Powered by OIS meeting intelligence product boundary, backed by ADR 0006, a versioned enum migration, deterministic `/platform/oima/*` contract endpoints, `/platform/products/code/OIMA` and OIS `/oima`. It does not add meeting upload, transcript storage, audio processing, Listener Mode runtime or LLM calls.
 - Stage 2H-R1 fixes public staging smoke contract drift after OIMA deployment: overview/root shell count checks now validate minimum seeded counts instead of stale exact Stage 0Q counts, `/platform/products/code/OIMA` exposes `displayName`, and `/platform/oima/overview` exposes `OIS Universal Knowledge API` explicitly.
 - Stage 2H-R2 fixes the remaining OIMA overview marker contract by exposing `universalKnowledgeApiDisplayName: "Universal Knowledge API"` separately from `universalKnowledgeApiLabel: "OIS Universal Knowledge API"` and making smoke checks validate those explicit fields. It adds no migration, seed, meeting runtime, upload, audio, Listener Mode or LLM behavior.
+- Stage 2I / OIMA-0 hardens the OIMA product shell and boundary contract by exposing `productCode`, `productName`, current/planned runtime capabilities and empty-state product surfaces while keeping meeting upload, transcript processing, audio processing, Listener Mode runtime, voice clone and LLM calls out of scope. It adds no migration or seed requirement.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -2315,8 +2316,8 @@ Stage 2F adds a versioned migration, seed updates and audit-backed learning/agen
 - OIS pages render the floating `Powered by OIS` Agent Widget with `Ask`, `Teach OIS`, `Evidence` and `Status` tabs after Stage 2F owner runtime sync.
 - Core API `/platform/knowledge/layers`, `/platform/knowledge/items`, `/platform/knowledge/evidence`, `/platform/knowledge/context`, `/platform/learning/layer-mappings`, `/platform/knowledge/keihb/bundles` and `/platform/architecture/mindmap` return Stage 2G read payloads after owner runtime sync and migration deploy. After Stage 2G-R1, context, mapping and KEIHB bundle responses must include `knowledgeLayerTaxonomy`, `availableLayers` and `KL_0_LEGAL_REGULATORY_CORE` markers. After Stage 2G-R2, `/platform/learning/layer-mappings` must also include `mappingStatusTaxonomy`, `availableStatuses` and `READY_FOR_REVIEW`.
 - OIS `/knowledge-fabric` renders `OIS Knowledge Fabric`, `Universal Knowledge Read Contract`, `Knowledge Layers Overview`, `Canonical Knowledge Items`, `Evidence Links`, `KEIHB Bundles` and `Architecture Map / Mindmap` after Stage 2G owner runtime sync.
-- Core API `/platform/products/code/OIMA`, `/platform/oima/overview`, `/platform/oima/source-modes`, `/platform/oima/roadmap` and `/platform/oima/boundary` return Stage 2H OIMA product boundary payloads after owner runtime sync and migration deploy. After Stage 2H-R2, `/platform/oima/overview` must include `universalKnowledgeApiDisplayName: "Universal Knowledge API"` and `universalKnowledgeApiLabel: "OIS Universal Knowledge API"`.
-- OIS `/oima` renders `OIMA`, `Product Boundary`, `Source Mode Contract`, `Safety Boundary`, `OIS Core Reuse Map`, `OIMA Roadmap`, `TRANSCRIPT_ONLY`, `MEETING_INTELLIGENCE_PRODUCT` and `PRODUCT_BOUNDARY_READY` after Stage 2H owner runtime sync.
+- Core API `/platform/products/code/OIMA`, `/platform/oima/overview`, `/platform/oima/source-modes`, `/platform/oima/roadmap` and `/platform/oima/boundary` return Stage 2H OIMA product boundary payloads after owner runtime sync and migration deploy. After Stage 2I, `/platform/oima/overview` must include `productCode`, `productName`, `currentRuntimeCapabilities`, `plannedRuntimeCapabilities`, `emptyStateSurfaces`, `universalKnowledgeApiDisplayName: "Universal Knowledge API"` and `universalKnowledgeApiLabel: "OIS Universal Knowledge API"`.
+- OIS `/oima` renders `OIMA Product Overview`, `OIMA-0 shell ready`, `Product Boundary`, `Source Mode Contract`, `Safety Boundary`, `OIS Core Reuse Map`, `OIMA Roadmap`, `OIMA Product Surface Empty States`, the seven planned/not-runtime product surface empty states, `TRANSCRIPT_ONLY`, `MEETING_INTELLIGENCE_PRODUCT` and `PRODUCT_BOUNDARY_READY` after Stage 2I owner runtime sync.
 - Core API `/docs` renders Swagger UI.
 - OIS Console `/` renders `OIS Console`.
 - PITS Shell `/` renders `PITS Shell`.
@@ -2372,6 +2373,7 @@ Stage 2G adds source-ready Core API knowledge fabric, KEIHB projection, agent kn
 Stage 2H adds source-ready Core API OIMA product boundary endpoints plus OIS `/oima`. Public verification is pending owner runtime sync, migration deploy and owner browser/UAT.
 Stage 2H-R1 adds no migration and no seed requirement. Redeploy Core API/OIS/PITS code and rerun public/local smoke scripts to verify the corrected count and OIMA marker contracts.
 Stage 2H-R2 adds no migration and no seed requirement. Redeploy Core API plus the updated ops scripts, then rerun public/local smoke scripts to verify the explicit Universal Knowledge API display-name contract.
+Stage 2I / OIMA-0 adds no migration and no seed requirement. Redeploy Core API/OIS Console plus updated ops scripts, then rerun public/local smoke scripts to verify the hardened OIMA product shell and boundary metadata.
 
 ## Stop Conditions
 

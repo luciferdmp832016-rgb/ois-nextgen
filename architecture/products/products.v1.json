@@ -17,6 +17,29 @@
     { "productKey": "FUTURE_PRODUCT", "displayName": "Future Product", "productType": "FUTURE_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "PLANNED" },
     { "productKey": "CUSTOM", "displayName": "Custom", "productType": "CUSTOM_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "PLANNED" }
   ],
+  "oimaProductBoundaryMetadata": {
+    "stage": "Stage 2I / OIMA-0",
+    "sourceReadyStage": "Stage 2H",
+    "productCode": "OIMA",
+    "productName": "Organizational Intelligence Meeting Agent",
+    "poweredBy": "OIS",
+    "sourceModes": ["TRANSCRIPT_ONLY", "AUDIO_ONLY", "TRANSCRIPT_AND_AUDIO", "LISTENER_CAPTURED"],
+    "currentRuntimeCapabilities": ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE"],
+    "plannedRuntimeCapabilities": [
+      "MEETING_INTAKE",
+      "TRANSCRIPT_PROCESSING",
+      "AUDIO_PROCESSING",
+      "OFFLINE_AGENT_ANALYSIS",
+      "SUBJECT_CLARIFICATION",
+      "SELF_IMPROVEMENT",
+      "LISTENER_MODE"
+    ],
+    "primaryInput": "TRANSCRIPT",
+    "audioInput": "OPTIONAL_FUTURE_ENRICHMENT",
+    "listenerMode": "FUTURE_PERMISSIONED_RECORDING_ONLY",
+    "liveSpeakingAgent": "OUT_OF_SCOPE",
+    "voiceClone": "OUT_OF_SCOPE"
+  },
   "knowledgeLayerConsumption": [
     {
       "productKey": "OIS_PLATFORM",

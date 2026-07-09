@@ -1,10 +1,10 @@
 # OIMA Roadmap
 
-## OIMA-0: Product Shell & Boundary
+## OIMA-0: Product Shell & Boundary Hardening
 
-Phase: Stage 2H
+Phase: Stage 2I
 
-Status: `PRODUCT_BOUNDARY_READY`
+Status: `PRODUCT_SHELL_HARDENED`
 
 Delivered:
 
@@ -17,16 +17,20 @@ Delivered:
   - `/platform/oima/roadmap`
   - `/platform/oima/boundary`
 - OIS Console `/oima` product boundary shell.
+- OIMA product overview.
+- Explicit current/planned runtime capability contract.
+- Empty-state cards for Meeting Library, Upload Meeting, Agent Analysis, Clarification Review, Dashboard, Self-Improvement Center and Listener Mode.
 - Architecture map, docs, ADR and Abacus smoke-check coverage.
 
 ## OIMA-1: Meeting Intake
 
-Phase: Stage 2I
+Phase: Next recommended stage
 
 Planned:
 
 - Versioned Prisma schema for meeting records and transcript artifacts.
 - Tenant/workspace scoping and audit requirements.
+- Transcript remains the primary input path.
 - No production data or real AI calls.
 
 ## OIMA-2: Transcript Processing
@@ -91,4 +95,5 @@ Planned:
 Planned:
 
 - Listener-captured records for listen/record/analyze only.
+- Future Listener Mode may record meetings only with permission.
 - No live speaking agent, voice clone, impersonation or autonomous decisions.
