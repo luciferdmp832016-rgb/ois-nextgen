@@ -74,7 +74,14 @@ export const capabilityCodes = [
   "learning:signal:create",
   "learning:candidate:review",
   "learning:policy:manage",
-  "agent:runtime:access"
+  "agent:runtime:access",
+  "knowledge:layers:read",
+  "knowledge:items:read",
+  "knowledge:evidence:read",
+  "knowledge:context:read",
+  "knowledge:mapping:prepare",
+  "knowledge:keihb:bundle:read",
+  "architecture:mindmap:read"
 ] as const;
 export type CapabilityCode = (typeof capabilityCodes)[number];
 
@@ -151,5 +158,32 @@ export const stageAModules: ModuleContract[] = [
     realm: "SYSTEM_SERVICE",
     lifecycle: "ACTIVE",
     type: "PLATFORM_KERNEL"
+  },
+  {
+    code: "CANONICAL_KNOWLEDGE_FABRIC",
+    product: "OIS",
+    layer: "L8_ENTERPRISE_KNOWLEDGE_FABRIC",
+    scope: "PLATFORM",
+    realm: "SYSTEM_SERVICE",
+    lifecycle: "ACTIVE",
+    type: "DOMAIN_SERVICE"
+  },
+  {
+    code: "KEIHB_KNOWLEDGE_PROJECTION",
+    product: "KEIHB",
+    layer: "L8_ENTERPRISE_KNOWLEDGE_FABRIC",
+    scope: "ORGANIZATION",
+    realm: "OIS_ORGANIZATION_USER",
+    lifecycle: "ACTIVE",
+    type: "DOMAIN_SERVICE"
+  },
+  {
+    code: "OIS_KNOWLEDGE_FABRIC_PAGE",
+    product: "OIS",
+    layer: "L8_ENTERPRISE_KNOWLEDGE_FABRIC",
+    scope: "ORGANIZATION",
+    realm: "OIS_ORGANIZATION_USER",
+    lifecycle: "ACTIVE",
+    type: "CONTROL_PLANE_VIEW"
   }
 ];

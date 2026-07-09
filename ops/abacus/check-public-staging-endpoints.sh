@@ -50,6 +50,48 @@ product_flow_ui_markers=(
   "Current stage status"
   "Screen mock"
 )
+learning_center_endpoint_markers=(
+  '"source":"default-db"'
+  '"mode":"read-only"'
+  '"products"'
+  '"overview"'
+  '"learningStream"'
+  '"pendingReview"'
+  '"learningPolicies"'
+  '"executiveIntentQueue"'
+  '"accessGuard"'
+)
+learning_center_ui_markers=(
+  "OIS Learning Center"
+  "SuperAdmin Access Guard"
+  "Learning Overview"
+  "Learning Stream"
+  "Learning Policies"
+  "Executive Intent Queue"
+  "Knowledge Fabric Integration"
+  "Target Knowledge Layer"
+  "No auto-promotion"
+)
+knowledge_endpoint_markers=(
+  '"source":"default-db"'
+  '"mode":"read-only"'
+  '"Stage 2G"'
+  '"autoPromotionEnabled":false'
+  '"KL_0_LEGAL_REGULATORY_CORE"'
+  '"KL_3_PRODUCT_KNOWLEDGE_PACK"'
+)
+knowledge_ui_markers=(
+  "OIS Knowledge Fabric"
+  "Universal Knowledge Read Contract"
+  "Knowledge Layers Overview"
+  "Canonical Knowledge Items"
+  "Evidence Links"
+  "Learning Candidate to Knowledge Layer Mappings"
+  "KEIHB Bundles"
+  "Product Consumption Map"
+  "Architecture Map / Mindmap"
+  "No auto-promotion in Stage 2G"
+)
 pits_workboard_endpoint_markers=(
   '"source":"default-db"'
   '"mode":"read-only"'
@@ -177,6 +219,14 @@ check_core() {
   check_route "PUBLIC_STAGING_OWNER_REVIEW" "$CORE_API_URL/platform/owner-review" '"source":"default-db"' '"mode":"read-only"' '"reviewMode":"read-only-owner-review"' '"Owner Review Queue"' '"Safe Action Boundary"' '"Read-only preview"' '"Future admin action requires audit"' '"NOT_ALLOWED_IN_STAGE_1I"'
   check_route "PUBLIC_STAGING_ADMIN_BOUNDARY" "$CORE_API_URL/platform/admin-boundary" '"source":"default-db"' '"mode":"read-only"' '"boundaryMode":"read-only-admin-permission-model"' '"Admin Boundary"' '"Audit Required"' '"Permission Model"' '"Preview only"' '"Blocked in current stage"' '"BLOCKED_IN_CURRENT_STAGE"'
   check_route "PUBLIC_STAGING_PRODUCT_UAT" "$CORE_API_URL/platform/product-uat" "${product_uat_endpoint_markers[@]}"
+  check_route "PUBLIC_STAGING_LEARNING_CENTER" "$CORE_API_URL/platform/learning/center" "${learning_center_endpoint_markers[@]}"
+  check_route "PUBLIC_STAGING_KNOWLEDGE_LAYERS" "$CORE_API_URL/platform/knowledge/layers" "${knowledge_endpoint_markers[@]}" '"layers"' '"productConsumptionMap"'
+  check_route "PUBLIC_STAGING_KNOWLEDGE_ITEMS" "$CORE_API_URL/platform/knowledge/items" "${knowledge_endpoint_markers[@]}" '"items"' '"summary"'
+  check_route "PUBLIC_STAGING_KNOWLEDGE_EVIDENCE" "$CORE_API_URL/platform/knowledge/evidence" '"source":"default-db"' '"mode":"read-only"' '"evidenceLinks"' '"totalLinks"'
+  check_route "PUBLIC_STAGING_KNOWLEDGE_CONTEXT" "$CORE_API_URL/platform/knowledge/context" "${knowledge_endpoint_markers[@]}" '"deterministic-knowledge-context"' '"noCanonicalWrite":true'
+  check_route "PUBLIC_STAGING_KNOWLEDGE_LAYER_MAPPINGS" "$CORE_API_URL/platform/learning/layer-mappings" "${knowledge_endpoint_markers[@]}" '"mappings"' '"READY_FOR_REVIEW"'
+  check_route "PUBLIC_STAGING_KEIHB_BUNDLES" "$CORE_API_URL/platform/knowledge/keihb/bundles" "${knowledge_endpoint_markers[@]}" '"KEIHB"' '"projectionBoundary"'
+  check_route "PUBLIC_STAGING_ARCHITECTURE_MINDMAP" "$CORE_API_URL/platform/architecture/mindmap" "${knowledge_endpoint_markers[@]}" '"OIS Ecosystem Architecture Map"' '"apiContracts"'
 
   if public_staging_discover_registry_ids "$CORE_API_URL"; then
     printf 'PUBLIC_STAGING_REGISTRY_IDS_READY %s\n' "$PUBLIC_STAGING_DETAIL"
@@ -301,6 +351,8 @@ check_route "OIS_CONSOLE_PUBLIC_DASHBOARD" "$OIS_CONSOLE_PUBLIC_URL/dashboard" "
 check_route "OIS_CONSOLE_PUBLIC_PRODUCT_UAT_DASHBOARD" "$OIS_CONSOLE_PUBLIC_URL/dashboard" "Product User Journey / UAT Baseline" "${product_uat_ui_markers[@]}"
 check_route "OIS_CONSOLE_PUBLIC_PRODUCTS" "$OIS_CONSOLE_PUBLIC_URL/products" "Products &amp; Modules" "Product &amp; Module Overview" "Owner Registry Cockpit / Registry Runtime Summary" "Registry Governance / Readiness" "Registry Runtime Health" "Runtime health:" "Readiness:" "Linked to PITS" "PITS_RUNTIME_SHELL" "OIS_CONSOLE"
 check_route "OIS_CONSOLE_PUBLIC_WORKSPACES" "$OIS_CONSOLE_PUBLIC_URL/workspaces" "Organizations, Workspaces &amp; Projects" "Workspace Overview" "Owner Registry Cockpit / Registry Runtime Summary" "Registry Governance / Readiness" "Registry Runtime Health" "Runtime health:" "Readiness:" "PMC Org Demo" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_PUBLIC_LEARNING_CENTER" "$OIS_CONSOLE_PUBLIC_URL/learning-center" "${learning_center_ui_markers[@]}" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_PUBLIC_KNOWLEDGE_FABRIC" "$OIS_CONSOLE_PUBLIC_URL/knowledge-fabric" "${knowledge_ui_markers[@]}" "OIS_CONSOLE"
 check_route "OIS_CONSOLE_PUBLIC_RUNTIME" "$OIS_CONSOLE_PUBLIC_URL/runtime" "Runtime Status" "Owner Registry Cockpit / Registry Runtime Summary" "Safe Action Boundary" "Read-only preview" "Future admin action requires audit" "Audit / Permission / Admin Boundary" "Audit Required" "Permission Model" "Preview only" "Blocked in current stage" "Registry Governance / Readiness" "Registry Runtime Health" "Core API source:" "OIS_CONSOLE"
 check_route "OIS_CONSOLE_PUBLIC_PRODUCT_UAT_RUNTIME" "$OIS_CONSOLE_PUBLIC_URL/runtime" "Product Capability / UAT Status" "${product_uat_ui_markers[@]}"
 check_root_shell "PITS_SHELL_PUBLIC_ROOT" "$PITS_SHELL_PUBLIC_URL" "PITS_SHELL" "PITS Shell"
@@ -317,6 +369,8 @@ check_route "PITS_SHELL_PUBLIC_PRODUCT_UAT_RUNTIME" "$PITS_SHELL_PUBLIC_URL/runt
 check_absent_markers "OIS_CONSOLE_PUBLIC_DASHBOARD_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/dashboard" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "OIS_CONSOLE_PUBLIC_PRODUCT_FLOW_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/product-flow" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "OIS_CONSOLE_PUBLIC_LOCALIZATION_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/localization" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
+check_absent_markers "OIS_CONSOLE_PUBLIC_LEARNING_CENTER_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/learning-center" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
+check_absent_markers "OIS_CONSOLE_PUBLIC_KNOWLEDGE_FABRIC_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/knowledge-fabric" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "PITS_SHELL_PUBLIC_PROJECTS_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/projects" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "PITS_SHELL_PUBLIC_PRODUCT_FLOW_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/product-flow" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "PITS_SHELL_PUBLIC_LOCALIZATION_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/localization" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"

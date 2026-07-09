@@ -1,5 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
+import {
+  architectureMindmapManifest,
+  defaultCanonicalKnowledgeItems,
+  defaultKeihbProjectionBundles,
+  defaultKnowledgeEvidenceLinks,
+  defaultKnowledgeLayerMappings,
+  knowledgeLayerKeys
+} from "@ois/knowledge-fabric";
 import { buildCoreApi, type BuildCoreApiOptions } from "./app";
 
 type MockPrisma = NonNullable<BuildCoreApiOptions["prisma"]>;
@@ -233,6 +241,31 @@ const stage2FRows = {
   }
 } as const;
 
+const stage2GRows = {
+  candidate: {
+    ...stage2FRows.candidate,
+    id: "learning_candidate_stage_2g_keihb_sop_demo",
+    productKey: "KEIHB",
+    candidateType: "SOP_UPDATE",
+    title: "Demo KEIHB SOP bundle candidate",
+    summary: "Map the KEIHB SOP learning candidate to a future product knowledge pack review.",
+    proposedKnowledgeJson: {
+      canonicalWriteAllowed: false,
+      stage: "Stage 2G",
+      noAutoPromotion: true
+    },
+    affectedProducts: ["OIS_PLATFORM", "KEIHB", "PITS"],
+    affectedEntities: [{ type: "Workspace", id: "ws_pmc_org_demo" }],
+    confidenceScore: 0.72,
+    policyDecision: "ASK_REVIEW",
+    status: "PENDING_REVIEW"
+  },
+  item: defaultCanonicalKnowledgeItems[3]!,
+  evidence: defaultKnowledgeEvidenceLinks[1]!,
+  mapping: defaultKnowledgeLayerMappings[0]!,
+  bundle: defaultKeihbProjectionBundles[0]!
+} as const;
+
 function createWriteGuard(name: string, writeCalls: string[]) {
   return vi.fn(() => {
     writeCalls.push(name);
@@ -285,6 +318,19 @@ function createMockPrisma(counts = overviewCounts) {
     oisLearningCandidate: {
       ...createCountDelegate("oisLearningCandidate", 0, readCalls, writeCalls, [stage2FRows.candidate]),
       findUnique: vi.fn(async () => stage2FRows.candidate)
+    },
+    oisCanonicalKnowledgeItem: {
+      ...createCountDelegate("oisCanonicalKnowledgeItem", 0, readCalls, writeCalls, defaultCanonicalKnowledgeItems),
+      findUnique: vi.fn(async (args: { where: { id: string } }) => defaultCanonicalKnowledgeItems.find((item) => item.id === args.where.id) ?? null)
+    },
+    oisKnowledgeEvidenceLink: createCountDelegate("oisKnowledgeEvidenceLink", 0, readCalls, writeCalls, defaultKnowledgeEvidenceLinks),
+    oisKnowledgeLayerMapping: {
+      ...createCountDelegate("oisKnowledgeLayerMapping", 0, readCalls, writeCalls, defaultKnowledgeLayerMappings),
+      findUnique: vi.fn(async (args: { where: { id: string } }) => defaultKnowledgeLayerMappings.find((mapping) => mapping.id === args.where.id) ?? null)
+    },
+    oisKnowledgeProjectionBundle: {
+      ...createCountDelegate("oisKnowledgeProjectionBundle", 0, readCalls, writeCalls, defaultKeihbProjectionBundles),
+      findUnique: vi.fn(async (args: { where: { id: string } }) => defaultKeihbProjectionBundles.find((bundle) => bundle.id === args.where.id) ?? null)
     },
     oisAgentSession: createCountDelegate("oisAgentSession", 0, readCalls, writeCalls),
     oisAgentMessage: createCountDelegate("oisAgentMessage", 0, readCalls, writeCalls),
@@ -1443,6 +1489,9 @@ describe("platform registry read-only endpoints", () => {
     expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/product-capabilities/);
     expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/pits\/projects/);
     expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/pits\/projects/);
+    expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/knowledge\/items/);
+    expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/knowledge\/evidence/);
+    expect(source).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/knowledge\/keihb/);
   });
 
   it.each([
@@ -1743,6 +1792,247 @@ describe("Stage 2F OIS Agent Runtime and Self-Improvement endpoints", () => {
     } finally {
       await app.close();
     }
+  });
+});
+
+describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
+  function enableStage2GMappingWrites(mock: ReturnType<typeof createMockPrisma>, writeOps: string[]) {
+    (mock.delegates.auditRecord.create as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("auditRecord.create");
+      return args.data;
+    });
+    (mock.delegates.oisKnowledgeLayerMapping.create as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("oisKnowledgeLayerMapping.create");
+      return {
+        ...stage2GRows.mapping,
+        ...args.data,
+        createdAt: "2026-07-09T00:00:00.000Z",
+        updatedAt: "2026-07-09T00:00:00.000Z"
+      };
+    });
+    (mock.delegates.oisKnowledgeLayerMapping.update as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("oisKnowledgeLayerMapping.update");
+      return {
+        ...stage2GRows.mapping,
+        ...args.data,
+        updatedAt: "2026-07-09T00:00:00.000Z"
+      };
+    });
+  }
+
+  it("lists KL-0 through KL-5 knowledge layers with product consumption mapping", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/knowledge/layers" });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body.layerKeys).toEqual(knowledgeLayerKeys);
+      expect(body.layers).toHaveLength(6);
+      expect(body.productConsumptionMap).toEqual(expect.arrayContaining([expect.objectContaining({ productKey: "KEIHB" })]));
+      expect(body.boundary).toMatchObject({
+        stage: "Stage 2G",
+        autoPromotionEnabled: false,
+        widgetDirectCanonicalWriteAllowed: false
+      });
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns canonical knowledge items, detail evidence and evidence links read-only", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const listResponse = await app.inject({ method: "GET", url: "/platform/knowledge/items" });
+      const listBody = listResponse.json();
+
+      expect(listResponse.statusCode).toBe(200);
+      expect(listBody.summary.byLayer.map((entry: { layerKey: string }) => entry.layerKey)).toEqual(knowledgeLayerKeys);
+      expect(listBody.items).toEqual(expect.arrayContaining([expect.objectContaining({ id: stage2GRows.item.id })]));
+
+      const detailResponse = await app.inject({ method: "GET", url: `/platform/knowledge/items/${stage2GRows.item.id}` });
+      const detailBody = detailResponse.json();
+
+      expect(detailResponse.statusCode).toBe(200);
+      expect(detailBody.item).toMatchObject({ id: stage2GRows.item.id, layerKey: "KL_3_PRODUCT_KNOWLEDGE_PACK" });
+      expect(detailBody.evidenceLinks).toEqual(expect.arrayContaining([expect.objectContaining({ id: stage2GRows.evidence.id })]));
+
+      const evidenceResponse = await app.inject({ method: "GET", url: "/platform/knowledge/evidence" });
+      const evidenceBody = evidenceResponse.json();
+
+      expect(evidenceResponse.statusCode).toBe(200);
+      expect(evidenceBody.summary.totalLinks).toBe(defaultKnowledgeEvidenceLinks.length);
+      expect(evidenceBody.evidenceLinks).toEqual(expect.arrayContaining([expect.objectContaining({ id: stage2GRows.evidence.id })]));
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("prepares a learning candidate layer mapping with audit and without canonical promotion", async () => {
+    const mock = createMockPrisma();
+    const writeOps: string[] = [];
+    enableStage2GMappingWrites(mock, writeOps);
+    mock.delegates.oisLearningCandidate.findUnique.mockResolvedValue(stage2GRows.candidate as any);
+    mock.delegates.oisKnowledgeLayerMapping.findMany.mockResolvedValueOnce([]);
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: `/platform/learning/candidates/${stage2GRows.candidate.id}/layer-mapping`,
+        payload: {
+          actorId: "user_super_admin_demo",
+          actorRole: "SUPERADMIN"
+        }
+      });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body.noCanonicalKnowledgeWrite).toBe(true);
+      expect(body.autoPromotionEnabled).toBe(false);
+      expect(body.mapping).toMatchObject({
+        learningCandidateId: stage2GRows.candidate.id,
+        targetLayerKey: "KL_3_PRODUCT_KNOWLEDGE_PACK",
+        targetItemType: "SOP",
+        proposedAction: "CREATE",
+        status: "READY_FOR_REVIEW"
+      });
+      expect(writeOps).toEqual(["oisKnowledgeLayerMapping.create", "auditRecord.create"]);
+      expect(mock.delegates.oisCanonicalKnowledgeItem.create).not.toHaveBeenCalled();
+      expect(mock.delegates.oisKnowledgeEvidenceLink.create).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns candidate mapping lists without writes", async () => {
+    const mock = createMockPrisma();
+    mock.delegates.oisLearningCandidate.findUnique.mockResolvedValue(stage2GRows.candidate as any);
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const candidateResponse = await app.inject({
+        method: "GET",
+        url: `/platform/learning/candidates/${stage2GRows.candidate.id}/layer-mapping`
+      });
+      const candidateBody = candidateResponse.json();
+
+      expect(candidateResponse.statusCode).toBe(200);
+      expect(candidateBody.mappings).toEqual(expect.arrayContaining([expect.objectContaining({ id: stage2GRows.mapping.id })]));
+
+      const listResponse = await app.inject({ method: "GET", url: "/platform/learning/layer-mappings" });
+      const listBody = listResponse.json();
+
+      expect(listResponse.statusCode).toBe(200);
+      expect(listBody.mappings).toEqual(expect.arrayContaining([expect.objectContaining({ targetLayerKey: "KL_3_PRODUCT_KNOWLEDGE_PACK" })]));
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns KEIHB projection bundles and preview as publishing projections only", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const bundlesResponse = await app.inject({ method: "GET", url: "/platform/knowledge/keihb/bundles" });
+      const bundlesBody = bundlesResponse.json();
+
+      expect(bundlesResponse.statusCode).toBe(200);
+      expect(bundlesBody.bundles.map((bundle: { bundleKey: string }) => bundle.bundleKey)).toEqual([
+        "KEIHB_BUILDING_MANAGEMENT_HANDBOOK_DEMO",
+        "KEIHB_BQL_SOP_DEMO",
+        "KEIHB_RESIDENT_FAQ_DEMO",
+        "KEIHB_TECHNICAL_TEAM_PLAYBOOK_DEMO"
+      ]);
+      expect(bundlesBody.projectionBoundary).toMatchObject({
+        sourceOfTruth: "OIS Knowledge Fabric",
+        canonicalWriteAllowed: false
+      });
+
+      const previewResponse = await app.inject({ method: "GET", url: "/platform/knowledge/keihb/preview" });
+      const previewBody = previewResponse.json();
+
+      expect(previewResponse.statusCode).toBe(200);
+      expect(previewBody.bundles[0].items.length).toBeGreaterThan(0);
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns deterministic agent knowledge context without LLM calls or canonical writes", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: "/platform/agent/knowledge-context",
+        payload: {
+          productKey: "OIS_PLATFORM",
+          organizationId: "org_pmc_demo",
+          workspaceId: "ws_pmc_org_demo",
+          requestedLayers: ["KL_2_ORGANIZATION_CORE", "KL_3_PRODUCT_KNOWLEDGE_PACK"],
+          includeEvidence: true,
+          includeDrafts: true
+        }
+      });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body.runtime).toMatchObject({
+        mode: "deterministic-agent-knowledge-context",
+        noLlmCall: true,
+        noCanonicalWrite: true,
+        autoPromotionEnabled: false
+      });
+      expect(body.noLlmCall).toBe(true);
+      expect(body.noCanonicalWrite).toBe(true);
+      expect(body.boundary.agentLearningPath).toBe("Teach OIS still creates Learning Signal only.");
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns the architecture mindmap manifest for future agent navigation", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/architecture/mindmap" });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body.mindmap).toMatchObject({
+        stage: "Stage 2G",
+        title: architectureMindmapManifest.title
+      });
+      expect(body.mindmap.apiContracts).toContain("/platform/agent/knowledge-context");
+      expect(body.source.file).toBe("architecture/mindmap/ois-ecosystem-map.v1.json");
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("keeps widgets and Stage 2G APIs away from canonical item mutation and auto-promotion", () => {
+    const stage2FSource = readFileSync(new URL("./stage-2f.ts", import.meta.url), "utf8");
+    const stage2GSource = readFileSync(new URL("./stage-2g.ts", import.meta.url), "utf8");
+
+    expect(stage2FSource).not.toMatch(/oisCanonicalKnowledgeItem\.(create|update|upsert|delete)/);
+    expect(stage2GSource).not.toMatch(/oisCanonicalKnowledgeItem\.(create|update|upsert|delete)/);
+    expect(stage2GSource).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/knowledge\/items/);
+    expect(stage2GSource).toContain("autoPromotionEnabled: false");
+    expect(stage2GSource).toContain("canonicalKnowledgeWrite: false");
   });
 });
 

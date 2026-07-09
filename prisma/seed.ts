@@ -1,6 +1,12 @@
 import { createHash } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 import { defaultLearningPolicies, ecosystemProductRegistry } from "../packages/agent-runtime/src/index";
+import {
+  defaultCanonicalKnowledgeItems,
+  defaultKeihbProjectionBundles,
+  defaultKnowledgeEvidenceLinks,
+  defaultKnowledgeLayerMappings
+} from "../packages/knowledge-fabric/src/index";
 
 const prisma = new PrismaClient();
 
@@ -196,6 +202,246 @@ async function main(): Promise<void> {
     );
   }
 
+  await ensureRecord(
+    prisma.oisLearningSignal,
+    { id: "learning_signal_stage_2g_keihb_sop_demo" },
+    {
+      id: "learning_signal_stage_2g_keihb_sop_demo",
+      organizationId: ids.organization,
+      workspaceId: ids.workspace,
+      productKey: "KEIHB",
+      sourceType: "WIDGET",
+      sourceAuthority: "SUPERADMIN",
+      learningScope: "ORGANIZATION",
+      signalType: "SOP_CORRECTION",
+      rawText: "Publish approved building operations SOPs through KEIHB bundles after review.",
+      normalizedText: "Publish approved building operations SOPs through KEIHB bundles after review.",
+      contextJson: {
+        demoOnly: true,
+        evidence: ["stage-2g-seed", "keihb-projection-contract"],
+        note: "Learning Signal only; no canonical promotion."
+      },
+      relatedEntityRefs: [{ type: "Workspace", id: ids.workspace }],
+      submittedBy: "Stage 2G seed",
+      userId: "user_super_admin_demo",
+      confidenceInitial: 0.72,
+      status: "CANDIDATE_CREATED"
+    },
+    {
+      contextJson: {
+        demoOnly: true,
+        evidence: ["stage-2g-seed", "keihb-projection-contract"],
+        note: "Learning Signal only; no canonical promotion."
+      },
+      status: "CANDIDATE_CREATED"
+    }
+  );
+
+  await ensureRecord(
+    prisma.oisLearningCandidate,
+    { id: "learning_candidate_stage_2g_keihb_sop_demo" },
+    {
+      id: "learning_candidate_stage_2g_keihb_sop_demo",
+      signalId: "learning_signal_stage_2g_keihb_sop_demo",
+      organizationId: ids.organization,
+      workspaceId: ids.workspace,
+      productKey: "KEIHB",
+      learningScope: "ORGANIZATION",
+      candidateType: "SOP_UPDATE",
+      title: "Demo KEIHB SOP bundle candidate",
+      summary: "Map the KEIHB SOP learning candidate to a future product knowledge pack review.",
+      proposedKnowledgeJson: {
+        canonicalWriteAllowed: false,
+        stage: "Stage 2G",
+        noAutoPromotion: true,
+        sourceOfTruth: "OIS Knowledge Fabric"
+      },
+      affectedProducts: ["OIS_PLATFORM", "KEIHB", "PITS"],
+      affectedEntities: [{ type: "Workspace", id: ids.workspace }],
+      sourceAuthority: "SUPERADMIN",
+      confidenceScore: 0.72,
+      confidenceBreakdownJson: {
+        base: 0.35,
+        sourceAuthorityBoost: 0.2,
+        evidenceBoost: 0.1,
+        entityMatchBoost: 0.07,
+        conflictPenalty: 0,
+        sensitivityNote: "Demo seed; no sensitivity override applied."
+      },
+      conflictStatus: "NO_CONFLICT",
+      policyDecision: "ASK_REVIEW",
+      status: "PENDING_REVIEW",
+      evidenceJson: {
+        provenance: [{ signalId: "learning_signal_stage_2g_keihb_sop_demo", sourceAuthority: "SUPERADMIN" }],
+        notes: ["Stage 2G mapping seed only; no canonical knowledge promotion."]
+      }
+    },
+    {
+      proposedKnowledgeJson: {
+        canonicalWriteAllowed: false,
+        stage: "Stage 2G",
+        noAutoPromotion: true,
+        sourceOfTruth: "OIS Knowledge Fabric"
+      },
+      policyDecision: "ASK_REVIEW",
+      status: "PENDING_REVIEW",
+      evidenceJson: {
+        provenance: [{ signalId: "learning_signal_stage_2g_keihb_sop_demo", sourceAuthority: "SUPERADMIN" }],
+        notes: ["Stage 2G mapping seed only; no canonical knowledge promotion."]
+      }
+    }
+  );
+
+  for (const item of defaultCanonicalKnowledgeItems) {
+    await ensureRecord(
+      prisma.oisCanonicalKnowledgeItem,
+      { id: item.id },
+      {
+        id: item.id,
+        layerKey: item.layerKey,
+        scope: item.scope,
+        itemType: item.itemType,
+        title: item.title,
+        summary: item.summary,
+        contentJson: item.contentJson,
+        status: item.status,
+        version: item.version,
+        locale: item.locale,
+        organizationId: item.organizationId,
+        workspaceId: item.workspaceId,
+        industryCode: item.industryCode,
+        productKey: item.productKey,
+        entityRefs: item.entityRefs,
+        relatedEntityIds: item.relatedEntityIds,
+        sensitivityLevel: item.sensitivityLevel,
+        confidenceScore: item.confidenceScore,
+        sourceAuthority: item.sourceAuthority,
+        createdFromCandidateId: item.createdFromCandidateId
+      },
+      {
+        layerKey: item.layerKey,
+        scope: item.scope,
+        itemType: item.itemType,
+        title: item.title,
+        summary: item.summary,
+        contentJson: item.contentJson,
+        status: item.status,
+        version: item.version,
+        locale: item.locale,
+        organizationId: item.organizationId,
+        workspaceId: item.workspaceId,
+        industryCode: item.industryCode,
+        productKey: item.productKey,
+        entityRefs: item.entityRefs,
+        relatedEntityIds: item.relatedEntityIds,
+        sensitivityLevel: item.sensitivityLevel,
+        confidenceScore: item.confidenceScore,
+        sourceAuthority: item.sourceAuthority,
+        createdFromCandidateId: item.createdFromCandidateId
+      }
+    );
+  }
+
+  for (const evidence of defaultKnowledgeEvidenceLinks) {
+    await ensureRecord(
+      prisma.oisKnowledgeEvidenceLink,
+      { id: evidence.id },
+      {
+        id: evidence.id,
+        knowledgeItemId: evidence.knowledgeItemId,
+        learningCandidateId: evidence.learningCandidateId,
+        sourceType: evidence.sourceType,
+        sourceRef: evidence.sourceRef,
+        sourceTitle: evidence.sourceTitle,
+        excerpt: evidence.excerpt,
+        excerptHash: evidence.excerptHash,
+        evidenceWeight: evidence.evidenceWeight,
+        sourceAuthority: evidence.sourceAuthority
+      },
+      {
+        knowledgeItemId: evidence.knowledgeItemId,
+        learningCandidateId: evidence.learningCandidateId,
+        sourceType: evidence.sourceType,
+        sourceRef: evidence.sourceRef,
+        sourceTitle: evidence.sourceTitle,
+        excerpt: evidence.excerpt,
+        excerptHash: evidence.excerptHash,
+        evidenceWeight: evidence.evidenceWeight,
+        sourceAuthority: evidence.sourceAuthority
+      }
+    );
+  }
+
+  for (const mapping of defaultKnowledgeLayerMappings) {
+    await ensureRecord(
+      prisma.oisKnowledgeLayerMapping,
+      { id: mapping.id },
+      {
+        id: mapping.id,
+        learningCandidateId: mapping.learningCandidateId,
+        targetLayerKey: mapping.targetLayerKey,
+        targetItemType: mapping.targetItemType,
+        proposedAction: mapping.proposedAction,
+        proposedTitle: mapping.proposedTitle,
+        proposedSummary: mapping.proposedSummary,
+        proposedContentJson: mapping.proposedContentJson,
+        affectedProducts: mapping.affectedProducts,
+        affectedEntities: mapping.affectedEntities,
+        confidenceScore: mapping.confidenceScore,
+        policyDecision: mapping.policyDecision,
+        status: mapping.status
+      },
+      {
+        targetLayerKey: mapping.targetLayerKey,
+        targetItemType: mapping.targetItemType,
+        proposedAction: mapping.proposedAction,
+        proposedTitle: mapping.proposedTitle,
+        proposedSummary: mapping.proposedSummary,
+        proposedContentJson: mapping.proposedContentJson,
+        affectedProducts: mapping.affectedProducts,
+        affectedEntities: mapping.affectedEntities,
+        confidenceScore: mapping.confidenceScore,
+        policyDecision: mapping.policyDecision,
+        status: mapping.status
+      }
+    );
+  }
+
+  for (const bundle of defaultKeihbProjectionBundles) {
+    await ensureRecord(
+      prisma.oisKnowledgeProjectionBundle,
+      { id: bundle.id },
+      {
+        id: bundle.id,
+        bundleKey: bundle.bundleKey,
+        displayName: bundle.displayName,
+        productKey: bundle.productKey,
+        targetAudience: bundle.targetAudience,
+        role: bundle.role,
+        locale: bundle.locale,
+        includedLayerKeys: bundle.includedLayerKeys,
+        includedItemIds: bundle.includedItemIds,
+        selectionRules: bundle.selectionRules,
+        snapshotVersion: bundle.snapshotVersion,
+        status: bundle.status,
+        manifestJson: bundle.manifestJson
+      },
+      {
+        displayName: bundle.displayName,
+        productKey: bundle.productKey,
+        targetAudience: bundle.targetAudience,
+        role: bundle.role,
+        locale: bundle.locale,
+        includedLayerKeys: bundle.includedLayerKeys,
+        includedItemIds: bundle.includedItemIds,
+        selectionRules: bundle.selectionRules,
+        snapshotVersion: bundle.snapshotVersion,
+        status: bundle.status,
+        manifestJson: bundle.manifestJson
+      }
+    );
+  }
+
   for (const realm of [
     { id: "realm_ois_org_user", code: "OIS_ORGANIZATION_USER", name: "OIS Organization User" },
     { id: "realm_pits_project_user", code: "PITS_PROJECT_USER", name: "PITS Project User" },
@@ -351,6 +597,36 @@ async function main(): Promise<void> {
       scope: "PLATFORM",
       realmCode: "SYSTEM_SERVICE",
       moduleType: "PLATFORM_KERNEL"
+    },
+    {
+      id: "module_canonical_knowledge_fabric",
+      code: "CANONICAL_KNOWLEDGE_FABRIC",
+      productId: ids.products.OIS,
+      productCode: "OIS",
+      layerCode: "L8_ENTERPRISE_KNOWLEDGE_FABRIC",
+      scope: "PLATFORM",
+      realmCode: "SYSTEM_SERVICE",
+      moduleType: "DOMAIN_SERVICE"
+    },
+    {
+      id: "module_keihb_knowledge_projection",
+      code: "KEIHB_KNOWLEDGE_PROJECTION",
+      productId: ids.products.KEIHB,
+      productCode: "KEIHB",
+      layerCode: "L8_ENTERPRISE_KNOWLEDGE_FABRIC",
+      scope: "ORGANIZATION",
+      realmCode: "OIS_ORGANIZATION_USER",
+      moduleType: "DOMAIN_SERVICE"
+    },
+    {
+      id: "module_ois_knowledge_fabric_page",
+      code: "OIS_KNOWLEDGE_FABRIC_PAGE",
+      productId: ids.products.OIS,
+      productCode: "OIS",
+      layerCode: "L8_ENTERPRISE_KNOWLEDGE_FABRIC",
+      scope: "ORGANIZATION",
+      realmCode: "OIS_ORGANIZATION_USER",
+      moduleType: "CONTROL_PLANE_VIEW"
     }
   ] as const) {
     await ensureRecord(prisma.moduleDefinition, { id: module.id }, module, { lifecycle: "ACTIVE" });
@@ -439,6 +715,35 @@ async function main(): Promise<void> {
       metadata: { idempotent: true, demoOnly: true }
     },
     { metadata: { idempotent: true, demoOnly: true } }
+  );
+
+  await ensureRecord(
+    prisma.auditRecord,
+    { id: "audit_stage_2g_seed" },
+    {
+      id: "audit_stage_2g_seed",
+      organizationId: ids.organization,
+      workspaceId: ids.workspace,
+      actorId: "user_super_admin_demo",
+      action: "BOOTSTRAP_STAGE_2G_KNOWLEDGE_FABRIC_SEED",
+      targetType: "OisCanonicalKnowledgeItem",
+      targetId: "knowledge_item_kl3_keihb_sop_pack_demo",
+      sensitive: true,
+      metadata: {
+        idempotent: true,
+        demoOnly: true,
+        noAutoPromotion: true,
+        noWidgetDirectCanonicalWrite: true
+      }
+    },
+    {
+      metadata: {
+        idempotent: true,
+        demoOnly: true,
+        noAutoPromotion: true,
+        noWidgetDirectCanonicalWrite: true
+      }
+    }
   );
 
   await ensureRecord(

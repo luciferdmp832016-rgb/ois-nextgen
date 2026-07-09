@@ -66,6 +66,9 @@ importers:
       '@ois/agent-runtime':
         specifier: workspace:*
         version: link:../../packages/agent-runtime
+      '@ois/knowledge-fabric':
+        specifier: workspace:*
+        version: link:../../packages/knowledge-fabric
 
   apps/ois-console:
     dependencies:
@@ -94,6 +97,12 @@ importers:
   packages/files: {}
 
   packages/identity-access: {}
+
+  packages/knowledge-fabric:
+    dependencies:
+      '@ois/agent-runtime':
+        specifier: workspace:*
+        version: link:../agent-runtime
 
   packages/notifications: {}
 

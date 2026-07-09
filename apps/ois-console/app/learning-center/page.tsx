@@ -1,4 +1,10 @@
-import { getLearningCenterSnapshot, getPlatformRegistrySnapshot, type LearningCenterPayload } from "@ois/shared-ui";
+import {
+  getKnowledgeFabricSnapshot,
+  getLearningCenterSnapshot,
+  getPlatformRegistrySnapshot,
+  type KnowledgeFabricSnapshot,
+  type LearningCenterPayload
+} from "@ois/shared-ui";
 import { OisConsoleShell, PageHeading, StatusBadge } from "../shell";
 
 export const dynamic = "force-dynamic";
@@ -156,8 +162,49 @@ function ProductContributionMap({ payload }: { payload: LearningCenterPayload })
   );
 }
 
+function KnowledgeFabricIntegration({ snapshot }: { snapshot: KnowledgeFabricSnapshot }) {
+  const mappings = snapshot.mappingsPayload?.mappings ?? [];
+  const bundles = snapshot.keihbBundlesPayload?.bundles ?? [];
+  const firstMapping = mappings[0];
+
+  return (
+    <section className="panel" data-learning-center="Knowledge Fabric Integration">
+      <div className="panel-heading">
+        <div>
+          <h3>Knowledge Fabric Integration</h3>
+          <p className="muted">Stage 2G maps Learning Candidates toward knowledge layers while keeping promotion disabled.</p>
+        </div>
+        <StatusBadge ok={Boolean(snapshot.layersPayload)} label="Stage 2G read path" />
+      </div>
+      <dl className="owner-fact-grid">
+        <div>
+          <dt>Layer mappings</dt>
+          <dd>{mappings.length}</dd>
+        </div>
+        <div>
+          <dt>Target Knowledge Layer</dt>
+          <dd>{firstMapping?.targetLayerKey ?? "Needs review"}</dd>
+        </div>
+        <div>
+          <dt>KEIHB bundles</dt>
+          <dd>{bundles.length}</dd>
+        </div>
+        <div>
+          <dt>Promotion mode</dt>
+          <dd>No auto-promotion</dd>
+        </div>
+      </dl>
+      <p className="muted">KEIHB impact is projection-only: handbook, SOP, playbook and FAQ bundles read from OIS Knowledge Fabric.</p>
+    </section>
+  );
+}
+
 export default async function LearningCenterPage() {
-  const [registrySnapshot, learningSnapshot] = await Promise.all([getPlatformRegistrySnapshot(), getLearningCenterSnapshot()]);
+  const [registrySnapshot, learningSnapshot, knowledgeSnapshot] = await Promise.all([
+    getPlatformRegistrySnapshot(),
+    getLearningCenterSnapshot(),
+    getKnowledgeFabricSnapshot()
+  ]);
   const payload = learningSnapshot.payload;
 
   return (
@@ -181,6 +228,7 @@ export default async function LearningCenterPage() {
           <CandidateList candidates={payload.pendingReview} title="Pending Review" />
           <LearningPolicies payload={payload} />
           <CandidateList candidates={payload.executiveIntentQueue} title="Executive Intent Queue" />
+          <KnowledgeFabricIntegration snapshot={knowledgeSnapshot} />
           <ProductContributionMap payload={payload} />
           <section className="panel" data-learning-center="Audit Log placeholder">
             <div className="panel-heading">
