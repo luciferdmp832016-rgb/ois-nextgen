@@ -13,6 +13,7 @@ import {
   knowledgeLayerDefinitions,
   knowledgeLayerKeys,
   knowledgeLayerTaxonomy,
+  knowledgeLayerMappingStatusTaxonomy,
   knowledgeLayerMappingStatuses,
   knowledgePromotionActions,
   productKnowledgeConsumptionMap,
@@ -544,6 +545,8 @@ export function registerStage2GRoutes(app: FastifyInstance, prisma: Stage2GPrism
       candidateId: candidate.id,
       knowledgeLayerTaxonomy,
       availableLayers: knowledgeLayerTaxonomy.availableLayers,
+      mappingStatusTaxonomy: knowledgeLayerMappingStatusTaxonomy,
+      availableStatuses: knowledgeLayerMappingStatusTaxonomy,
       mapping: mappingContract,
       noCanonicalKnowledgeWrite: true,
       autoPromotionEnabled: false
@@ -570,6 +573,8 @@ export function registerStage2GRoutes(app: FastifyInstance, prisma: Stage2GPrism
       candidate,
       knowledgeLayerTaxonomy,
       availableLayers: knowledgeLayerTaxonomy.availableLayers,
+      mappingStatusTaxonomy: knowledgeLayerMappingStatusTaxonomy,
+      availableStatuses: knowledgeLayerMappingStatusTaxonomy,
       mappings: mappings.map(toKnowledgeLayerMapping)
     };
   });
@@ -579,6 +584,8 @@ export function registerStage2GRoutes(app: FastifyInstance, prisma: Stage2GPrism
     boundary: stage2GBoundary,
     knowledgeLayerTaxonomy,
     availableLayers: knowledgeLayerTaxonomy.availableLayers,
+    mappingStatusTaxonomy: knowledgeLayerMappingStatusTaxonomy,
+    availableStatuses: knowledgeLayerMappingStatusTaxonomy,
     mappings: (await prisma.oisKnowledgeLayerMapping.findMany({ orderBy: { createdAt: "desc" }, take: 100 })).map(toKnowledgeLayerMapping)
   }));
 

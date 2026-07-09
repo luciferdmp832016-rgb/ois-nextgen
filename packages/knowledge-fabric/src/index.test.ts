@@ -8,6 +8,8 @@ import {
   defaultKeihbProjectionBundles,
   defaultKnowledgeEvidenceLinks,
   inferKnowledgeLayerForCandidate,
+  knowledgeLayerMappingStatusTaxonomy,
+  knowledgeLayerMappingStatuses,
   knowledgeLayerDefinitions,
   knowledgeLayerKeys,
   knowledgeLayerTaxonomy
@@ -44,6 +46,11 @@ describe("canonical knowledge seed contracts", () => {
 });
 
 describe("learning candidate to knowledge layer mapping", () => {
+  it("declares mapping status taxonomy without implying active row state", () => {
+    expect(knowledgeLayerMappingStatusTaxonomy).toEqual(knowledgeLayerMappingStatuses);
+    expect(knowledgeLayerMappingStatusTaxonomy).toContain("READY_FOR_REVIEW");
+  });
+
   it("maps SOP candidates into product knowledge packs without promotion", () => {
     const candidate = {
       id: "candidate_1",

@@ -45,6 +45,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 2F adds the OIS Agent Runtime and Self-Improvement Engine foundation, backed by a versioned Prisma migration, audit-backed Learning Signal/Candidate routes, SuperAdmin Learning Center and OIS Agent Widget. It does not promote widget input into canonical Knowledge Layer records.
 - Stage 2G adds the Canonical Knowledge Fabric and KEIHB projection foundation, backed by ADR 0005, a versioned Prisma migration, seeded demo knowledge items/evidence/mappings/bundles, OIS `/knowledge-fabric` and deterministic knowledge-context routes. It does not enable auto-promotion or canonical knowledge mutation endpoints.
 - Stage 2G-R1 fixes the Knowledge Fabric endpoint marker contract by returning global `knowledgeLayerTaxonomy` / `availableLayers` metadata on context, Learning layer mapping and KEIHB bundle responses while preserving scoped result truthfulness.
+- Stage 2G-R2 fixes the Learning layer mapping status marker contract by returning global `mappingStatusTaxonomy` / `availableStatuses` metadata on mapping responses while preserving actual row statuses.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -2309,7 +2310,7 @@ Stage 2F adds a versioned migration, seed updates and audit-backed learning/agen
 - Core API `/platform/learning/center` returns the SuperAdmin Learning Center payload with overview, learning stream, pending review, policies, executive queue, product contribution map and audit placeholder after Stage 2F owner runtime sync.
 - OIS `/learning-center` renders `OIS Learning Center`, `Learning Stream`, `Pending Review`, `Learning Policies`, `Executive Intent Queue`, `Product Contribution Map` and `Audit Log Placeholder` after Stage 2F owner runtime sync.
 - OIS pages render the floating `Powered by OIS` Agent Widget with `Ask`, `Teach OIS`, `Evidence` and `Status` tabs after Stage 2F owner runtime sync.
-- Core API `/platform/knowledge/layers`, `/platform/knowledge/items`, `/platform/knowledge/evidence`, `/platform/knowledge/context`, `/platform/learning/layer-mappings`, `/platform/knowledge/keihb/bundles` and `/platform/architecture/mindmap` return Stage 2G read payloads after owner runtime sync and migration deploy. After Stage 2G-R1, context, mapping and KEIHB bundle responses must include `knowledgeLayerTaxonomy`, `availableLayers` and `KL_0_LEGAL_REGULATORY_CORE` markers.
+- Core API `/platform/knowledge/layers`, `/platform/knowledge/items`, `/platform/knowledge/evidence`, `/platform/knowledge/context`, `/platform/learning/layer-mappings`, `/platform/knowledge/keihb/bundles` and `/platform/architecture/mindmap` return Stage 2G read payloads after owner runtime sync and migration deploy. After Stage 2G-R1, context, mapping and KEIHB bundle responses must include `knowledgeLayerTaxonomy`, `availableLayers` and `KL_0_LEGAL_REGULATORY_CORE` markers. After Stage 2G-R2, `/platform/learning/layer-mappings` must also include `mappingStatusTaxonomy`, `availableStatuses` and `READY_FOR_REVIEW`.
 - OIS `/knowledge-fabric` renders `OIS Knowledge Fabric`, `Universal Knowledge Read Contract`, `Knowledge Layers Overview`, `Canonical Knowledge Items`, `Evidence Links`, `KEIHB Bundles` and `Architecture Map / Mindmap` after Stage 2G owner runtime sync.
 - Core API `/docs` renders Swagger UI.
 - OIS Console `/` renders `OIS Console`.
@@ -2362,7 +2363,7 @@ Stage 2C adds `https://ois-ng.dmp247.com/product-flow` and `https://pits-ng.dmp2
 Stage 2D changes the existing product-flow route response bodies by adding localization selectors, English/Tiếng Việt copy and visual screen-flow cards. No Core API endpoint is added. Public verification is pending owner runtime sync and owner browser/UAT.
 Stage 2E adds source-ready PITS Action Request endpoints and PITS Work Item Detail panel markers. Public verification is pending owner runtime sync and owner browser/UAT.
 Stage 2F adds source-ready Core API learning/agent endpoints plus OIS `/learning-center` and the OIS Agent Widget. Public verification is pending owner runtime sync, migration deploy and owner browser/UAT.
-Stage 2G adds source-ready Core API knowledge fabric, KEIHB projection, agent knowledge-context and architecture mindmap endpoints plus OIS `/knowledge-fabric`. Stage 2G-R1 adds the endpoint marker contract hotfix for global taxonomy metadata on context, mapping and KEIHB bundle responses. Public verification is pending owner runtime sync, migration deploy and owner browser/UAT.
+Stage 2G adds source-ready Core API knowledge fabric, KEIHB projection, agent knowledge-context and architecture mindmap endpoints plus OIS `/knowledge-fabric`. Stage 2G-R1 adds the endpoint marker contract hotfix for global taxonomy metadata on context, mapping and KEIHB bundle responses. Stage 2G-R2 adds explicit mapping status taxonomy metadata on Learning layer mapping responses. Public verification is pending owner runtime sync, migration deploy and owner browser/UAT.
 
 ## Stop Conditions
 

@@ -27,3 +27,7 @@ Stage 2G allows read-only knowledge APIs and audited mapping preparation only. T
 ## Stage 2G-R1 Endpoint Marker Contract
 
 Knowledge context, Learning layer mapping and KEIHB projection list responses include global `knowledgeLayerTaxonomy` / `availableLayers` metadata with all canonical layer keys. Scoped result fields remain truthful: context `layers` is the requested subset, mappings expose their mapped target layers and KEIHB bundles expose per-bundle `includedLayerKeys`.
+
+## Stage 2G-R2 Mapping Status Contract
+
+Learning layer mapping responses include `mappingStatusTaxonomy` and `availableStatuses` with every allowed mapping status: `DRAFT_MAPPING`, `READY_FOR_REVIEW`, `APPROVED_FOR_FUTURE_PROMOTION`, `REJECTED` and `BLOCKED`. Mapping rows still report their actual persisted `status`; the status taxonomy does not imply any current row is ready for review.

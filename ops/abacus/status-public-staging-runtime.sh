@@ -86,6 +86,16 @@ knowledge_taxonomy_markers=(
   '"availableLayers"'
   '"taxonomyVersion":"stage-2g.v1"'
 )
+knowledge_mapping_status_markers=(
+  "${knowledge_taxonomy_markers[@]}"
+  '"mappingStatusTaxonomy"'
+  '"availableStatuses"'
+  '"DRAFT_MAPPING"'
+  '"READY_FOR_REVIEW"'
+  '"APPROVED_FOR_FUTURE_PROMOTION"'
+  '"REJECTED"'
+  '"BLOCKED"'
+)
 knowledge_ui_markers=(
   "OIS Knowledge Fabric"
   "Universal Knowledge Read Contract"
@@ -366,7 +376,7 @@ check_route "LOCAL_KNOWLEDGE_LAYERS" "$CORE_API_LOCAL_BASE/platform/knowledge/la
 check_route "LOCAL_KNOWLEDGE_ITEMS" "$CORE_API_LOCAL_BASE/platform/knowledge/items" "${knowledge_endpoint_markers[@]}" '"items"' '"summary"'
 check_route "LOCAL_KNOWLEDGE_EVIDENCE" "$CORE_API_LOCAL_BASE/platform/knowledge/evidence" '"source":"default-db"' '"mode":"read-only"' '"evidenceLinks"' '"totalLinks"'
 check_route "LOCAL_KNOWLEDGE_CONTEXT" "$CORE_API_LOCAL_BASE/platform/knowledge/context" "${knowledge_taxonomy_markers[@]}" '"deterministic-knowledge-context"' '"noCanonicalWrite":true'
-check_route "LOCAL_KNOWLEDGE_LAYER_MAPPINGS" "$CORE_API_LOCAL_BASE/platform/learning/layer-mappings" "${knowledge_taxonomy_markers[@]}" '"mappings"' '"READY_FOR_REVIEW"'
+check_route "LOCAL_KNOWLEDGE_LAYER_MAPPINGS" "$CORE_API_LOCAL_BASE/platform/learning/layer-mappings" "${knowledge_mapping_status_markers[@]}" '"mappings"'
 check_route "LOCAL_KEIHB_BUNDLES" "$CORE_API_LOCAL_BASE/platform/knowledge/keihb/bundles" "${knowledge_taxonomy_markers[@]}" '"KEIHB"' '"projectionBoundary"'
 check_route "LOCAL_ARCHITECTURE_MINDMAP" "$CORE_API_LOCAL_BASE/platform/architecture/mindmap" "${knowledge_endpoint_markers[@]}" '"OIS Ecosystem Architecture Map"' '"apiContracts"'
 check_absent_markers "LOCAL_REGISTRY_READINESS_LINK_BOUNDARY" "$CORE_API_LOCAL_BASE/platform/registry/readiness" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
@@ -456,7 +466,7 @@ check_route "PUBLIC_STAGING_KNOWLEDGE_LAYERS" "$CORE_API_URL/platform/knowledge/
 check_route "PUBLIC_STAGING_KNOWLEDGE_ITEMS" "$CORE_API_URL/platform/knowledge/items" "${knowledge_endpoint_markers[@]}" '"items"' '"summary"'
 check_route "PUBLIC_STAGING_KNOWLEDGE_EVIDENCE" "$CORE_API_URL/platform/knowledge/evidence" '"source":"default-db"' '"mode":"read-only"' '"evidenceLinks"' '"totalLinks"'
 check_route "PUBLIC_STAGING_KNOWLEDGE_CONTEXT" "$CORE_API_URL/platform/knowledge/context" "${knowledge_taxonomy_markers[@]}" '"deterministic-knowledge-context"' '"noCanonicalWrite":true'
-check_route "PUBLIC_STAGING_KNOWLEDGE_LAYER_MAPPINGS" "$CORE_API_URL/platform/learning/layer-mappings" "${knowledge_taxonomy_markers[@]}" '"mappings"' '"READY_FOR_REVIEW"'
+check_route "PUBLIC_STAGING_KNOWLEDGE_LAYER_MAPPINGS" "$CORE_API_URL/platform/learning/layer-mappings" "${knowledge_mapping_status_markers[@]}" '"mappings"'
 check_route "PUBLIC_STAGING_KEIHB_BUNDLES" "$CORE_API_URL/platform/knowledge/keihb/bundles" "${knowledge_taxonomy_markers[@]}" '"KEIHB"' '"projectionBoundary"'
 check_route "PUBLIC_STAGING_ARCHITECTURE_MINDMAP" "$CORE_API_URL/platform/architecture/mindmap" "${knowledge_endpoint_markers[@]}" '"OIS Ecosystem Architecture Map"' '"apiContracts"'
 check_absent_markers "PUBLIC_STAGING_REGISTRY_READINESS_LINK_BOUNDARY" "$CORE_API_URL/platform/registry/readiness" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
