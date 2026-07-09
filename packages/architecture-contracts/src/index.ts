@@ -247,6 +247,15 @@ export const oimaCoreReuseMap = {
 } as const;
 export type OimaCoreReuseMap = typeof oimaCoreReuseMap;
 
+export const universalKnowledgeApiContract = {
+  code: "UNIVERSAL_KNOWLEDGE_API",
+  displayName: "Universal Knowledge API",
+  label: "OIS Universal Knowledge API",
+  endpoint: "/platform/knowledge/context",
+  sourceOfTruth: "OIS Canonical Knowledge Fabric"
+} as const;
+export type UniversalKnowledgeApiContract = typeof universalKnowledgeApiContract;
+
 export const oimaSourceModeContracts = [
   {
     mode: "TRANSCRIPT_ONLY",
