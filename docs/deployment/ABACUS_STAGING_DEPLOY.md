@@ -46,6 +46,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 2G adds the Canonical Knowledge Fabric and KEIHB projection foundation, backed by ADR 0005, a versioned Prisma migration, seeded demo knowledge items/evidence/mappings/bundles, OIS `/knowledge-fabric` and deterministic knowledge-context routes. It does not enable auto-promotion or canonical knowledge mutation endpoints.
 - Stage 2G-R1 fixes the Knowledge Fabric endpoint marker contract by returning global `knowledgeLayerTaxonomy` / `availableLayers` metadata on context, Learning layer mapping and KEIHB bundle responses while preserving scoped result truthfulness.
 - Stage 2G-R2 fixes the Learning layer mapping status marker contract by returning global `mappingStatusTaxonomy` / `availableStatuses` metadata on mapping responses while preserving actual row statuses.
+- Stage 2H adds OIMA as a distinct Powered by OIS meeting intelligence product boundary, backed by ADR 0006, a versioned enum migration, deterministic `/platform/oima/*` contract endpoints, `/platform/products/code/OIMA` and OIS `/oima`. It does not add meeting upload, transcript storage, audio processing, Listener Mode runtime or LLM calls.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -2312,6 +2313,8 @@ Stage 2F adds a versioned migration, seed updates and audit-backed learning/agen
 - OIS pages render the floating `Powered by OIS` Agent Widget with `Ask`, `Teach OIS`, `Evidence` and `Status` tabs after Stage 2F owner runtime sync.
 - Core API `/platform/knowledge/layers`, `/platform/knowledge/items`, `/platform/knowledge/evidence`, `/platform/knowledge/context`, `/platform/learning/layer-mappings`, `/platform/knowledge/keihb/bundles` and `/platform/architecture/mindmap` return Stage 2G read payloads after owner runtime sync and migration deploy. After Stage 2G-R1, context, mapping and KEIHB bundle responses must include `knowledgeLayerTaxonomy`, `availableLayers` and `KL_0_LEGAL_REGULATORY_CORE` markers. After Stage 2G-R2, `/platform/learning/layer-mappings` must also include `mappingStatusTaxonomy`, `availableStatuses` and `READY_FOR_REVIEW`.
 - OIS `/knowledge-fabric` renders `OIS Knowledge Fabric`, `Universal Knowledge Read Contract`, `Knowledge Layers Overview`, `Canonical Knowledge Items`, `Evidence Links`, `KEIHB Bundles` and `Architecture Map / Mindmap` after Stage 2G owner runtime sync.
+- Core API `/platform/products/code/OIMA`, `/platform/oima/overview`, `/platform/oima/source-modes`, `/platform/oima/roadmap` and `/platform/oima/boundary` return Stage 2H OIMA product boundary payloads after owner runtime sync and migration deploy.
+- OIS `/oima` renders `OIMA`, `Product Boundary`, `Source Mode Contract`, `Safety Boundary`, `OIS Core Reuse Map`, `OIMA Roadmap`, `TRANSCRIPT_ONLY`, `MEETING_INTELLIGENCE_PRODUCT` and `PRODUCT_BOUNDARY_READY` after Stage 2H owner runtime sync.
 - Core API `/docs` renders Swagger UI.
 - OIS Console `/` renders `OIS Console`.
 - PITS Shell `/` renders `PITS Shell`.
@@ -2364,12 +2367,15 @@ Stage 2D changes the existing product-flow route response bodies by adding local
 Stage 2E adds source-ready PITS Action Request endpoints and PITS Work Item Detail panel markers. Public verification is pending owner runtime sync and owner browser/UAT.
 Stage 2F adds source-ready Core API learning/agent endpoints plus OIS `/learning-center` and the OIS Agent Widget. Public verification is pending owner runtime sync, migration deploy and owner browser/UAT.
 Stage 2G adds source-ready Core API knowledge fabric, KEIHB projection, agent knowledge-context and architecture mindmap endpoints plus OIS `/knowledge-fabric`. Stage 2G-R1 adds the endpoint marker contract hotfix for global taxonomy metadata on context, mapping and KEIHB bundle responses. Stage 2G-R2 adds explicit mapping status taxonomy metadata on Learning layer mapping responses. Public verification is pending owner runtime sync, migration deploy and owner browser/UAT.
+Stage 2H adds source-ready Core API OIMA product boundary endpoints plus OIS `/oima`. Public verification is pending owner runtime sync, migration deploy and owner browser/UAT.
 
 ## Stop Conditions
 
 - Missing migration evidence.
 - Stage 2G runtime sync is attempted without applying the versioned migration and rerunning the idempotent seed on the non-production staging database.
+- Stage 2H runtime sync is attempted without applying versioned migration `202607090003_stage_2h_oima_product_boundary` and rerunning the idempotent seed on the non-production staging database.
 - A knowledge route enables auto-promotion, a canonical knowledge mutation endpoint or widget direct canonical writes.
+- An OIMA route enables meeting upload, transcript storage, audio processing, Listener Mode runtime, live speaking, voice clone, impersonation, autonomous decisions, real LLM/OpenRouter calls or direct canonical knowledge writes.
 - Abacus access is limited to project/chat/task editing and does not expose staging env/secrets/deploy configuration.
 - Staging-only mock database mode, mock storage mode, staging subdomain/path or AI provider config is missing.
 - Stage 0F-R3 owner checklist is incomplete or contains real secret values.

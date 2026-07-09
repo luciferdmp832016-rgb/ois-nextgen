@@ -108,6 +108,35 @@ knowledge_ui_markers=(
   "Architecture Map / Mindmap"
   "No auto-promotion in Stage 2G"
 )
+oima_endpoint_markers=(
+  '"productKey":"OIMA"'
+  '"displayName":"OIMA'
+  '"productType":"MEETING_INTELLIGENCE_PRODUCT"'
+  '"implementationStatus":"PRODUCT_BOUNDARY_READY"'
+  '"TRANSCRIPT_ONLY"'
+  '"AUDIO_ONLY"'
+  '"TRANSCRIPT_AND_AUDIO"'
+  '"LISTENER_CAPTURED"'
+  '"NO_LIVE_SPEAKING_AGENT"'
+  '"NO_VOICE_CLONE"'
+  '"NO_IMPERSONATION"'
+  '"NO_AUTONOMOUS_DECISION"'
+  '"TRANSCRIPT_FIRST_AUDIO_OPTIONAL"'
+)
+oima_ui_markers=(
+  "OIMA"
+  "Organizational Intelligence Meeting Agent"
+  "Powered by OIS Product"
+  "Product Boundary"
+  "Source Mode Contract"
+  "Safety Boundary"
+  "OIS Core Reuse Map"
+  "OIMA Roadmap"
+  "Placeholder Product Surfaces"
+  "TRANSCRIPT_ONLY"
+  "MEETING_INTELLIGENCE_PRODUCT"
+  "PRODUCT_BOUNDARY_READY"
+)
 pits_workboard_endpoint_markers=(
   '"source":"default-db"'
   '"mode":"read-only"'
@@ -235,7 +264,13 @@ check_core() {
   check_route "PUBLIC_STAGING_OWNER_REVIEW" "$CORE_API_URL/platform/owner-review" '"source":"default-db"' '"mode":"read-only"' '"reviewMode":"read-only-owner-review"' '"Owner Review Queue"' '"Safe Action Boundary"' '"Read-only preview"' '"Future admin action requires audit"' '"NOT_ALLOWED_IN_STAGE_1I"'
   check_route "PUBLIC_STAGING_ADMIN_BOUNDARY" "$CORE_API_URL/platform/admin-boundary" '"source":"default-db"' '"mode":"read-only"' '"boundaryMode":"read-only-admin-permission-model"' '"Admin Boundary"' '"Audit Required"' '"Permission Model"' '"Preview only"' '"Blocked in current stage"' '"BLOCKED_IN_CURRENT_STAGE"'
   check_route "PUBLIC_STAGING_PRODUCT_UAT" "$CORE_API_URL/platform/product-uat" "${product_uat_endpoint_markers[@]}"
+  check_route "PUBLIC_STAGING_ECOSYSTEM_PRODUCTS" "$CORE_API_URL/platform/ecosystem-products" '"source":"default-db"' '"mode":"read-only"' '"OIMA"' '"MEETING_INTELLIGENCE_PRODUCT"'
   check_route "PUBLIC_STAGING_LEARNING_CENTER" "$CORE_API_URL/platform/learning/center" "${learning_center_endpoint_markers[@]}"
+  check_route "PUBLIC_STAGING_OIMA_PRODUCT_CODE" "$CORE_API_URL/platform/products/code/OIMA" "${oima_endpoint_markers[@]}" '"relationships"' '"OIS Canonical Knowledge Fabric"'
+  check_route "PUBLIC_STAGING_OIMA_OVERVIEW" "$CORE_API_URL/platform/oima/overview" "${oima_endpoint_markers[@]}" '"OIS Canonical Knowledge Fabric"' '"Universal Knowledge API"'
+  check_route "PUBLIC_STAGING_OIMA_SOURCE_MODES" "$CORE_API_URL/platform/oima/source-modes" "${oima_endpoint_markers[@]}" '"primarySourceMode":"TRANSCRIPT_ONLY"' '"audioDoesNotBlockAnalysis":true'
+  check_route "PUBLIC_STAGING_OIMA_ROADMAP" "$CORE_API_URL/platform/oima/roadmap" "${oima_endpoint_markers[@]}" '"roadmap"' '"Stage 2H"' '"OIMA-0"' '"OIMA-9"'
+  check_route "PUBLIC_STAGING_OIMA_BOUNDARY" "$CORE_API_URL/platform/oima/boundary" "${oima_endpoint_markers[@]}" '"noCanonicalKnowledgeWrite":true' '"autoPromotionEnabled":false'
   check_route "PUBLIC_STAGING_KNOWLEDGE_LAYERS" "$CORE_API_URL/platform/knowledge/layers" "${knowledge_endpoint_markers[@]}" '"layers"' '"productConsumptionMap"'
   check_route "PUBLIC_STAGING_KNOWLEDGE_ITEMS" "$CORE_API_URL/platform/knowledge/items" "${knowledge_endpoint_markers[@]}" '"items"' '"summary"'
   check_route "PUBLIC_STAGING_KNOWLEDGE_EVIDENCE" "$CORE_API_URL/platform/knowledge/evidence" '"source":"default-db"' '"mode":"read-only"' '"evidenceLinks"' '"totalLinks"'
@@ -369,6 +404,7 @@ check_route "OIS_CONSOLE_PUBLIC_PRODUCTS" "$OIS_CONSOLE_PUBLIC_URL/products" "Pr
 check_route "OIS_CONSOLE_PUBLIC_WORKSPACES" "$OIS_CONSOLE_PUBLIC_URL/workspaces" "Organizations, Workspaces &amp; Projects" "Workspace Overview" "Owner Registry Cockpit / Registry Runtime Summary" "Registry Governance / Readiness" "Registry Runtime Health" "Runtime health:" "Readiness:" "PMC Org Demo" "OIS_CONSOLE"
 check_route "OIS_CONSOLE_PUBLIC_LEARNING_CENTER" "$OIS_CONSOLE_PUBLIC_URL/learning-center" "${learning_center_ui_markers[@]}" "OIS_CONSOLE"
 check_route "OIS_CONSOLE_PUBLIC_KNOWLEDGE_FABRIC" "$OIS_CONSOLE_PUBLIC_URL/knowledge-fabric" "${knowledge_ui_markers[@]}" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_PUBLIC_OIMA" "$OIS_CONSOLE_PUBLIC_URL/oima" "${oima_ui_markers[@]}" "OIS_CONSOLE" "OIMA-0" "OIMA-9"
 check_route "OIS_CONSOLE_PUBLIC_RUNTIME" "$OIS_CONSOLE_PUBLIC_URL/runtime" "Runtime Status" "Owner Registry Cockpit / Registry Runtime Summary" "Safe Action Boundary" "Read-only preview" "Future admin action requires audit" "Audit / Permission / Admin Boundary" "Audit Required" "Permission Model" "Preview only" "Blocked in current stage" "Registry Governance / Readiness" "Registry Runtime Health" "Core API source:" "OIS_CONSOLE"
 check_route "OIS_CONSOLE_PUBLIC_PRODUCT_UAT_RUNTIME" "$OIS_CONSOLE_PUBLIC_URL/runtime" "Product Capability / UAT Status" "${product_uat_ui_markers[@]}"
 check_root_shell "PITS_SHELL_PUBLIC_ROOT" "$PITS_SHELL_PUBLIC_URL" "PITS_SHELL" "PITS Shell"
@@ -387,6 +423,7 @@ check_absent_markers "OIS_CONSOLE_PUBLIC_PRODUCT_FLOW_LINK_BOUNDARY" "$OIS_CONSO
 check_absent_markers "OIS_CONSOLE_PUBLIC_LOCALIZATION_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/localization" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "OIS_CONSOLE_PUBLIC_LEARNING_CENTER_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/learning-center" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "OIS_CONSOLE_PUBLIC_KNOWLEDGE_FABRIC_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/knowledge-fabric" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
+check_absent_markers "OIS_CONSOLE_PUBLIC_OIMA_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/oima" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "PITS_SHELL_PUBLIC_PROJECTS_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/projects" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "PITS_SHELL_PUBLIC_PRODUCT_FLOW_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/product-flow" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "PITS_SHELL_PUBLIC_LOCALIZATION_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/localization" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"

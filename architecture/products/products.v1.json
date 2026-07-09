@@ -10,6 +10,7 @@
   "poweredByOisProductKeys": [
     { "productKey": "OIS_PLATFORM", "displayName": "OIS Platform", "productType": "CORE_PLATFORM", "defaultLearningScope": "PLATFORM", "lifecycle": "ACTIVE" },
     { "productKey": "PITS", "displayName": "PITS", "productType": "ECOSYSTEM_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "ACTIVE" },
+    { "productKey": "OIMA", "displayName": "OIMA — Organizational Intelligence Meeting Agent", "productType": "MEETING_INTELLIGENCE_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "ACTIVE" },
     { "productKey": "KEIHB", "displayName": "KEIHB", "productType": "FUTURE_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "PLANNED" },
     { "productKey": "ICR", "displayName": "ICR", "productType": "FUTURE_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "PLANNED" },
     { "productKey": "CSAGENT", "displayName": "CSAgent", "productType": "FUTURE_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "PLANNED" },
@@ -46,6 +47,19 @@
       "consumesLayers": ["KL_2_ORGANIZATION_CORE", "KL_3_PRODUCT_KNOWLEDGE_PACK", "KL_4_WORKSPACE_PROJECT_OVERLAY"],
       "contributesToLayers": ["KL_4_WORKSPACE_PROJECT_OVERLAY", "KL_5_LIVE_OPERATIONAL_SIGNALS"],
       "role": "Project runtime consumer and operational signal contributor"
+    },
+    {
+      "productKey": "OIMA",
+      "consumesLayers": [
+        "KL_0_LEGAL_REGULATORY_CORE",
+        "KL_1_INDUSTRY_CORE",
+        "KL_2_ORGANIZATION_CORE",
+        "KL_3_PRODUCT_KNOWLEDGE_PACK",
+        "KL_4_WORKSPACE_PROJECT_OVERLAY",
+        "KL_5_LIVE_OPERATIONAL_SIGNALS"
+      ],
+      "contributesToLayers": ["KL_5_LIVE_OPERATIONAL_SIGNALS"],
+      "role": "Meeting intelligence product that reads OIS Knowledge Fabric and contributes reviewed operational signals"
     }
   ]
 }

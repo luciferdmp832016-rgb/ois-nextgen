@@ -187,3 +187,200 @@ export const stageAModules: ModuleContract[] = [
     type: "CONTROL_PLANE_VIEW"
   }
 ];
+
+export const oimaSourceModes = ["TRANSCRIPT_ONLY", "AUDIO_ONLY", "TRANSCRIPT_AND_AUDIO", "LISTENER_CAPTURED"] as const;
+export type OimaSourceMode = (typeof oimaSourceModes)[number];
+
+export const oimaMeetingStatuses = [
+  "DRAFT",
+  "INTAKE_READY",
+  "TRANSCRIPT_UPLOADED",
+  "AUDIO_ATTACHED",
+  "PROCESSING_READY",
+  "PROCESSING",
+  "ANALYSIS_READY",
+  "NEEDS_CLARIFICATION",
+  "REVIEWED",
+  "ARCHIVED",
+  "ERROR"
+] as const;
+export type OimaMeetingStatus = (typeof oimaMeetingStatuses)[number];
+
+export const oimaAnalysisModes = ["OFFLINE_ANALYSIS", "LISTENER_CAPTURED_ANALYSIS_FUTURE"] as const;
+export type OimaAnalysisMode = (typeof oimaAnalysisModes)[number];
+
+export const oimaSafetyBoundaries = [
+  "NO_LIVE_SPEAKING_AGENT",
+  "NO_VOICE_CLONE",
+  "NO_IMPERSONATION",
+  "NO_AUTONOMOUS_DECISION",
+  "TRANSCRIPT_FIRST_AUDIO_OPTIONAL"
+] as const;
+export type OimaSafetyBoundary = (typeof oimaSafetyBoundaries)[number];
+
+export const oimaCapabilityCodes = [
+  "MEETING_LIBRARY",
+  "MEETING_INTAKE",
+  "TRANSCRIPT_FIRST_PIPELINE",
+  "AUDIO_OPTIONAL_ENRICHMENT",
+  "MEETING_TRANSCRIPT_PROCESSING",
+  "OFFLINE_MEETING_ANALYSIS",
+  "SUBJECT_CLARIFICATION",
+  "DECISION_ACTION_RISK_EXTRACTION",
+  "MEETING_DASHBOARD",
+  "MONTHLY_OPERATING_REPORT",
+  "MEETING_SELF_IMPROVEMENT_REVIEW",
+  "LISTENER_MODE_FUTURE"
+] as const;
+export type OimaCapabilityCode = (typeof oimaCapabilityCodes)[number];
+
+export const oimaCoreReuseMap = {
+  workspace: "OIS Core Workspace",
+  rbac: "OIS Core RBAC / future permission model",
+  canonicalEntities: "OIS Core Canonical Entity Registry",
+  knowledgeFabric: "OIS Canonical Knowledge Fabric KL-0 to KL-5",
+  universalKnowledgeApi: "OIS Universal Knowledge API",
+  agentRuntime: "OIS Agent Runtime deterministic/offline analysis boundary",
+  learningGovernance: "OIS Learning Signal / Candidate / Policy / Audit",
+  audit: "OIS audit trail for sensitive future writes",
+  meetingProductUx: "OIMA-owned meeting product experience"
+} as const;
+export type OimaCoreReuseMap = typeof oimaCoreReuseMap;
+
+export const oimaSourceModeContracts = [
+  {
+    mode: "TRANSCRIPT_ONLY",
+    primary: true,
+    transcriptRequired: true,
+    audioRequired: false,
+    listenerMode: false,
+    status: "PRIMARY_STAGE_2H_FOUNDATION",
+    description: "Primary OIMA foundation. Meeting analysis must work from a transcript without audio."
+  },
+  {
+    mode: "AUDIO_ONLY",
+    primary: false,
+    transcriptRequired: false,
+    audioRequired: true,
+    listenerMode: false,
+    status: "FUTURE_ENRICHMENT",
+    description: "Future audio intake may derive or enrich transcript evidence, but it does not block transcript-first analysis."
+  },
+  {
+    mode: "TRANSCRIPT_AND_AUDIO",
+    primary: false,
+    transcriptRequired: true,
+    audioRequired: false,
+    listenerMode: false,
+    status: "FUTURE_ENRICHMENT",
+    description: "Future combined mode may improve speaker confidence while preserving transcript as the canonical intake path."
+  },
+  {
+    mode: "LISTENER_CAPTURED",
+    primary: false,
+    transcriptRequired: false,
+    audioRequired: true,
+    listenerMode: true,
+    status: "FUTURE_ONLY",
+    description: "Future Listener Mode is limited to listen, record and analyze; it is not a live speaking participant."
+  }
+] as const satisfies ReadonlyArray<{
+  mode: OimaSourceMode;
+  primary: boolean;
+  transcriptRequired: boolean;
+  audioRequired: boolean;
+  listenerMode: boolean;
+  status: string;
+  description: string;
+}>;
+
+export const oimaRoadmap = [
+  {
+    stage: "OIMA-0",
+    phase: "Stage 2H",
+    status: "PRODUCT_BOUNDARY_READY",
+    title: "Product Shell & Boundary",
+    scope: "Registry entry, contracts, deterministic overview APIs, shell UI and docs."
+  },
+  {
+    stage: "OIMA-1",
+    phase: "Stage 2I",
+    status: "PLANNED",
+    title: "Meeting Intake",
+    scope: "Versioned schema for meeting records, transcript artifacts, evidence provenance and tenant scoping."
+  },
+  {
+    stage: "OIMA-2",
+    phase: "Stage 2J",
+    status: "PLANNED",
+    title: "Transcript Processing",
+    scope: "Deterministic transcript parsing, subject clarification queue and review-ready extraction contracts."
+  },
+  {
+    stage: "OIMA-3",
+    phase: "Future",
+    status: "PLANNED",
+    title: "OIS Agent Offline Analysis",
+    scope: "Evidence-backed offline analysis contracts; no real LLM/OpenRouter call in Stage 2H."
+  },
+  {
+    stage: "OIMA-4",
+    phase: "Future",
+    status: "PLANNED",
+    title: "Subject Clarification",
+    scope: "Clarification workflow for ambiguous subjects, owners and meeting context."
+  },
+  {
+    stage: "OIMA-5",
+    phase: "Future",
+    status: "PLANNED",
+    title: "Dashboard & Monthly Report",
+    scope: "Meeting dashboard and monthly operating report surfaces."
+  },
+  {
+    stage: "OIMA-6",
+    phase: "Future",
+    status: "PLANNED",
+    title: "Self-Improvement Review",
+    scope: "Reviewed learning candidates only; no automatic canonical knowledge promotion."
+  },
+  {
+    stage: "OIMA-7",
+    phase: "Future",
+    status: "PLANNED",
+    title: "Optional Audio Intelligence",
+    scope: "Optional audio enrichment may improve confidence but must not block transcript-first analysis."
+  },
+  {
+    stage: "OIMA-8",
+    phase: "Future",
+    status: "PLANNED",
+    title: "Voice Sample Speaker Identity",
+    scope: "Future speaker identity support only with explicit governance; no voice clone or impersonation."
+  },
+  {
+    stage: "OIMA-9",
+    phase: "Future",
+    status: "PLANNED",
+    title: "Listener Mode",
+    scope: "Future listen/record/analyze only; no live speaking agent or autonomous meeting participant."
+  }
+] as const;
+
+export const oimaProductContract = {
+  productKey: "OIMA",
+  displayName: "OIMA — Organizational Intelligence Meeting Agent",
+  productType: "MEETING_INTELLIGENCE_PRODUCT",
+  poweredBy: "OIS",
+  implementationStatus: "PRODUCT_BOUNDARY_READY",
+  tagline: "OIS understands the organization. OIMA understands the meeting.",
+  vietnamesePositioning: "OIS hiểu tổ chức. OIMA hiểu cuộc họp.",
+  capabilityCodes: oimaCapabilityCodes,
+  sourceModes: oimaSourceModes,
+  sourceModeContracts: oimaSourceModeContracts,
+  meetingStatuses: oimaMeetingStatuses,
+  analysisModes: oimaAnalysisModes,
+  safetyBoundaries: oimaSafetyBoundaries,
+  coreReuseMap: oimaCoreReuseMap,
+  roadmap: oimaRoadmap
+} as const;
