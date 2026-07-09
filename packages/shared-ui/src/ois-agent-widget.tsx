@@ -116,8 +116,16 @@ export function OisAgentWidgetShell({
             </div>
           ) : null}
           {tab === "ask" ? <p className="muted">{answer}</p> : null}
-          {tab === "evidence" ? <p className="muted">Evidence placeholder: governed learning candidate provenance appears here in later stages.</p> : null}
-          {tab === "status" ? <p className="muted">Learning status placeholder: Signal - Candidate - Policy - Review.</p> : null}
+          {tab === "evidence" ? (
+            <p className="muted">
+              Knowledge context available through Universal Knowledge API. Evidence remains provenance-first; no LLM claim is trusted without links.
+            </p>
+          ) : null}
+          {tab === "status" ? (
+            <p className="muted">
+              Read path: {productKey} can request KL context. Teach OIS still creates Learning Signal only; no canonical knowledge write or auto-promotion.
+            </p>
+          ) : null}
           <footer>
             <span>{status}</span>
             <span>{currentRoute}</span>

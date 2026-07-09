@@ -186,6 +186,69 @@ enum OisAgentFeedbackType {
   ESCALATED
 }
 
+enum OisKnowledgeLayerKey {
+  KL_0_LEGAL_REGULATORY_CORE
+  KL_1_INDUSTRY_CORE
+  KL_2_ORGANIZATION_CORE
+  KL_3_PRODUCT_KNOWLEDGE_PACK
+  KL_4_WORKSPACE_PROJECT_OVERLAY
+  KL_5_LIVE_OPERATIONAL_SIGNALS
+}
+
+enum OisKnowledgeItemType {
+  FACT
+  POLICY
+  SOP
+  FAQ
+  PLAYBOOK
+  CHECKLIST
+  EXECUTIVE_INTENT
+  DECISION_RULE
+  RISK_PATTERN
+  INDUSTRY_PATTERN
+  PRODUCT_RULE
+  WORKSPACE_OVERLAY
+  LIVE_SIGNAL_SUMMARY
+  OTHER
+}
+
+enum OisKnowledgeItemStatus {
+  DRAFT
+  ACTIVE
+  DEPRECATED
+  ARCHIVED
+}
+
+enum OisSensitivityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  RESTRICTED
+}
+
+enum OisKnowledgePromotionAction {
+  CREATE
+  UPDATE
+  DEPRECATE
+  MERGE
+  LINK_ONLY
+  LOG_ONLY
+}
+
+enum OisKnowledgeLayerMappingStatus {
+  DRAFT_MAPPING
+  READY_FOR_REVIEW
+  APPROVED_FOR_FUTURE_PROMOTION
+  REJECTED
+  BLOCKED
+}
+
+enum OisKnowledgeProjectionStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 model Industry {
   id            String          @id
   code          String          @unique
@@ -461,6 +524,98 @@ model OisAgentLearningSubmission {
   @@index([organizationId, workspaceId, productKey])
   @@index([signalId])
   @@index([sessionId])
+}
+
+model OisCanonicalKnowledgeItem {
+  id                     String                 @id
+  layerKey               OisKnowledgeLayerKey
+  scope                  OisLearningScope
+  itemType               OisKnowledgeItemType
+  title                  String
+  summary                String
+  contentJson            Json                   @default("{}")
+  status                 OisKnowledgeItemStatus @default(DRAFT)
+  version                Int                    @default(1)
+  locale                 String                 @default("en")
+  organizationId         String?
+  workspaceId            String?
+  industryCode           String?
+  productKey             String?
+  entityRefs             Json                   @default("[]")
+  relatedEntityIds       String[]
+  sensitivityLevel       OisSensitivityLevel    @default(LOW)
+  confidenceScore        Float                  @default(0)
+  sourceAuthority        OisSourceAuthority
+  createdFromCandidateId String?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+
+  @@index([layerKey, scope, status])
+  @@index([organizationId, workspaceId, productKey])
+  @@index([industryCode, productKey])
+  @@index([createdFromCandidateId])
+}
+
+model OisKnowledgeEvidenceLink {
+  id                  String                @id
+  knowledgeItemId     String?
+  learningCandidateId String?
+  sourceType          OisLearningSourceType
+  sourceRef           String
+  sourceTitle         String
+  excerpt             String
+  excerptHash         String
+  evidenceWeight      Float                 @default(0.5)
+  sourceAuthority     OisSourceAuthority
+  createdAt           DateTime              @default(now())
+
+  @@index([knowledgeItemId])
+  @@index([learningCandidateId])
+  @@index([sourceType, sourceAuthority])
+}
+
+model OisKnowledgeLayerMapping {
+  id                  String                         @id
+  learningCandidateId String
+  targetLayerKey      OisKnowledgeLayerKey
+  targetItemType      OisKnowledgeItemType
+  proposedAction      OisKnowledgePromotionAction
+  proposedTitle       String
+  proposedSummary     String
+  proposedContentJson Json                           @default("{}")
+  affectedProducts    String[]
+  affectedEntities    Json                           @default("[]")
+  confidenceScore     Float                          @default(0)
+  policyDecision      OisLearningPolicyDecision
+  status              OisKnowledgeLayerMappingStatus @default(DRAFT_MAPPING)
+  createdAt           DateTime                       @default(now())
+  updatedAt           DateTime                       @updatedAt
+
+  @@unique([learningCandidateId, targetLayerKey, targetItemType, proposedAction])
+  @@index([learningCandidateId])
+  @@index([targetLayerKey, targetItemType, status])
+  @@index([policyDecision, status])
+}
+
+model OisKnowledgeProjectionBundle {
+  id                String                       @id
+  bundleKey         String                       @unique
+  displayName       String
+  productKey        String
+  targetAudience    String
+  role              String
+  locale            String                       @default("en")
+  includedLayerKeys String[]
+  includedItemIds   String[]
+  selectionRules    Json                         @default("{}")
+  snapshotVersion   Int                          @default(1)
+  status            OisKnowledgeProjectionStatus @default(DRAFT)
+  manifestJson      Json                         @default("{}")
+  createdAt         DateTime                     @default(now())
+  updatedAt         DateTime                     @updatedAt
+
+  @@index([productKey, status])
+  @@index([locale, role])
 }
 
 model ProductInstallation {

@@ -16,6 +16,13 @@
     "learning:signal:create",
     "learning:candidate:review",
     "learning:policy:manage",
-    "agent:runtime:access"
+    "agent:runtime:access",
+    "knowledge:layers:read",
+    "knowledge:items:read",
+    "knowledge:evidence:read",
+    "knowledge:context:read",
+    "knowledge:mapping:prepare",
+    "knowledge:keihb:bundle:read",
+    "architecture:mindmap:read"
   ]
 }

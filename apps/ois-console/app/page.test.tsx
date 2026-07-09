@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Page from "./page";
 import DashboardPage from "./dashboard/page";
 import InstallationDetailPage from "./installations/[id]/page";
+import KnowledgeFabricPage from "./knowledge-fabric/page";
 import LearningCenterPage from "./learning-center/page";
 import LocalizationPage from "./localization/page";
 import ModuleDetailPage from "./modules/[id]/page";
@@ -821,6 +822,326 @@ const learningCenterPayload = {
   }
 };
 
+const knowledgeBoundary = {
+  stage: "Stage 2G",
+  mode: "deterministic-knowledge-fabric-foundation",
+  canonicalWriteEndpointsAdded: false,
+  autoPromotionEnabled: false,
+  widgetDirectCanonicalWriteAllowed: false
+};
+
+const knowledgeLayerKeys = [
+  "KL_0_LEGAL_REGULATORY_CORE",
+  "KL_1_INDUSTRY_CORE",
+  "KL_2_ORGANIZATION_CORE",
+  "KL_3_PRODUCT_KNOWLEDGE_PACK",
+  "KL_4_WORKSPACE_PROJECT_OVERLAY",
+  "KL_5_LIVE_OPERATIONAL_SIGNALS"
+];
+
+const knowledgeLayersPayload = {
+  metadata: registryPayload.metadata,
+  boundary: knowledgeBoundary,
+  layerKeys: knowledgeLayerKeys,
+  layers: [
+    {
+      key: "KL_0_LEGAL_REGULATORY_CORE",
+      order: 0,
+      displayName: "Legal / Regulatory Core",
+      description: "Laws, regulations and compliance references requiring strong approval.",
+      examples: ["legal regulation"],
+      evidenceRequirement: "STRONG_APPROVAL_REQUIRED",
+      autoPromotionAllowedInStage2G: false
+    },
+    {
+      key: "KL_1_INDUSTRY_CORE",
+      order: 1,
+      displayName: "Industry Core",
+      description: "Industry practices, benchmarks and anonymized playbooks.",
+      examples: ["handover best practice"],
+      evidenceRequirement: "EVIDENCE_REQUIRED",
+      autoPromotionAllowedInStage2G: false
+    },
+    {
+      key: "KL_2_ORGANIZATION_CORE",
+      order: 2,
+      displayName: "Organization Core",
+      description: "Organization policies, executive intent and authority model.",
+      examples: ["CEO directive"],
+      evidenceRequirement: "STRONG_APPROVAL_REQUIRED",
+      autoPromotionAllowedInStage2G: false
+    },
+    {
+      key: "KL_3_PRODUCT_KNOWLEDGE_PACK",
+      order: 3,
+      displayName: "Product Knowledge Pack",
+      description: "Product-specific knowledge packs for Powered by OIS products.",
+      examples: ["KEIHB handbook pack"],
+      evidenceRequirement: "EVIDENCE_REQUIRED",
+      autoPromotionAllowedInStage2G: false
+    },
+    {
+      key: "KL_4_WORKSPACE_PROJECT_OVERLAY",
+      order: 4,
+      displayName: "Workspace / Project Overlay",
+      description: "Workspace, project and local exception overlays.",
+      examples: ["project SOP"],
+      evidenceRequirement: "EVIDENCE_REQUIRED",
+      autoPromotionAllowedInStage2G: false
+    },
+    {
+      key: "KL_5_LIVE_OPERATIONAL_SIGNALS",
+      order: 5,
+      displayName: "Live Operational Signals",
+      description: "Live operational signals that are not canonical truth by themselves.",
+      examples: ["agent correction"],
+      evidenceRequirement: "SIGNAL_ONLY",
+      autoPromotionAllowedInStage2G: false
+    }
+  ],
+  productConsumptionMap: [
+    {
+      productKey: "OIS_PLATFORM",
+      consumesLayers: knowledgeLayerKeys,
+      contributesToLayers: ["KL_2_ORGANIZATION_CORE", "KL_5_LIVE_OPERATIONAL_SIGNALS"],
+      role: "Canonical owner and control-plane reader"
+    },
+    {
+      productKey: "KEIHB",
+      consumesLayers: ["KL_0_LEGAL_REGULATORY_CORE", "KL_1_INDUSTRY_CORE", "KL_2_ORGANIZATION_CORE", "KL_3_PRODUCT_KNOWLEDGE_PACK"],
+      contributesToLayers: ["KL_3_PRODUCT_KNOWLEDGE_PACK", "KL_5_LIVE_OPERATIONAL_SIGNALS"],
+      role: "Knowledge publishing product / handbook projection"
+    },
+    {
+      productKey: "PITS",
+      consumesLayers: ["KL_2_ORGANIZATION_CORE", "KL_3_PRODUCT_KNOWLEDGE_PACK", "KL_4_WORKSPACE_PROJECT_OVERLAY"],
+      contributesToLayers: ["KL_4_WORKSPACE_PROJECT_OVERLAY", "KL_5_LIVE_OPERATIONAL_SIGNALS"],
+      role: "Project runtime consumer and operational signal contributor"
+    }
+  ]
+};
+
+const knowledgeItemsPayload = {
+  metadata: registryPayload.metadata,
+  boundary: knowledgeBoundary,
+  summary: {
+    totalItems: 2,
+    activeItems: 1,
+    draftItems: 1,
+    byLayer: knowledgeLayersPayload.layers.map((layer) => ({
+      layerKey: layer.key,
+      displayName: layer.displayName,
+      count: layer.key === "KL_3_PRODUCT_KNOWLEDGE_PACK" || layer.key === "KL_4_WORKSPACE_PROJECT_OVERLAY" ? 1 : 0
+    }))
+  },
+  items: [
+    {
+      id: "knowledge_item_kl3_keihb_sop_pack_demo",
+      layerKey: "KL_3_PRODUCT_KNOWLEDGE_PACK",
+      scope: "ORGANIZATION",
+      itemType: "SOP",
+      title: "Demo KEIHB SOP publishing pack",
+      summary: "KEIHB publishes approved OIS Knowledge Fabric items as handbook, SOP, playbook and FAQ bundles.",
+      status: "DRAFT",
+      version: 1,
+      locale: "en",
+      organizationId: "org_pmc_demo",
+      workspaceId: "ws_pmc_org_demo",
+      industryCode: "BUILDING_MANAGEMENT",
+      productKey: "KEIHB",
+      sensitivityLevel: "MEDIUM",
+      confidenceScore: 0.7,
+      sourceAuthority: "SUPERADMIN",
+      createdFromCandidateId: null
+    },
+    {
+      id: "knowledge_item_kl4_emerald_overlay_demo",
+      layerKey: "KL_4_WORKSPACE_PROJECT_OVERLAY",
+      scope: "ORGANIZATION",
+      itemType: "WORKSPACE_OVERLAY",
+      title: "Demo Emerald Precinct local overlay",
+      summary: "Project-specific operating notes remain overlays and do not become industry truth.",
+      status: "ACTIVE",
+      version: 1,
+      locale: "en",
+      organizationId: "org_pmc_demo",
+      workspaceId: "ws_pmc_org_demo",
+      industryCode: null,
+      productKey: "PITS",
+      sensitivityLevel: "LOW",
+      confidenceScore: 0.74,
+      sourceAuthority: "ADMIN",
+      createdFromCandidateId: null
+    }
+  ]
+};
+
+const knowledgeEvidencePayload = {
+  metadata: registryPayload.metadata,
+  boundary: knowledgeBoundary,
+  summary: {
+    totalLinks: 2,
+    itemLinks: 1,
+    candidateLinks: 1
+  },
+  evidenceLinks: [
+    {
+      id: "knowledge_evidence_stage_2g_regulatory_demo",
+      knowledgeItemId: "knowledge_item_kl3_keihb_sop_pack_demo",
+      learningCandidateId: null,
+      sourceType: "DOCUMENT",
+      sourceRef: "demo://stage-2g/regulatory-reference",
+      sourceTitle: "Demo regulatory reference",
+      excerpt: "Regulatory knowledge requires strong evidence and approval before publication.",
+      excerptHash: "stage2g-regulatory-demo",
+      evidenceWeight: 0.9,
+      sourceAuthority: "SUPERADMIN"
+    },
+    {
+      id: "knowledge_evidence_stage_2g_keihb_candidate_demo",
+      knowledgeItemId: null,
+      learningCandidateId: "learning_candidate_stage_2g_keihb_sop_demo",
+      sourceType: "WIDGET",
+      sourceRef: "learning_signal_stage_2g_keihb_sop_demo",
+      sourceTitle: "Demo KEIHB SOP learning signal",
+      excerpt: "Publish approved building operations SOPs through KEIHB bundles after review.",
+      excerptHash: "stage2g-keihb-candidate-demo",
+      evidenceWeight: 0.72,
+      sourceAuthority: "SUPERADMIN"
+    }
+  ]
+};
+
+const knowledgeMappingsPayload = {
+  metadata: registryPayload.metadata,
+  boundary: knowledgeBoundary,
+  mappings: [
+    {
+      id: "knowledge_mapping_stage_2g_keihb_sop_demo",
+      learningCandidateId: "learning_candidate_stage_2g_keihb_sop_demo",
+      targetLayerKey: "KL_3_PRODUCT_KNOWLEDGE_PACK",
+      targetItemType: "SOP",
+      proposedAction: "CREATE",
+      proposedTitle: "Demo KEIHB SOP bundle candidate",
+      proposedSummary: "Map the KEIHB SOP learning candidate to a future product knowledge pack review.",
+      affectedProducts: ["OIS_PLATFORM", "KEIHB", "PITS"],
+      confidenceScore: 0.72,
+      policyDecision: "ASK_REVIEW",
+      status: "READY_FOR_REVIEW"
+    }
+  ]
+};
+
+const keihbBundlesPayload = {
+  metadata: registryPayload.metadata,
+  boundary: knowledgeBoundary,
+  projectionBoundary: {
+    sourceOfTruth: "OIS Knowledge Fabric",
+    productKey: "KEIHB",
+    publishingOnly: true,
+    canonicalWriteAllowed: false
+  },
+  bundles: [
+    {
+      id: "knowledge_bundle_keihb_building_management_handbook_demo",
+      bundleKey: "KEIHB_BUILDING_MANAGEMENT_HANDBOOK_DEMO",
+      displayName: "KEIHB Building Management Handbook Demo",
+      productKey: "KEIHB",
+      targetAudience: "Building management team",
+      role: "BQL",
+      locale: "en",
+      includedLayerKeys: ["KL_0_LEGAL_REGULATORY_CORE", "KL_1_INDUSTRY_CORE", "KL_2_ORGANIZATION_CORE"],
+      includedItemIds: ["knowledge_item_kl3_keihb_sop_pack_demo"],
+      snapshotVersion: 1,
+      status: "DRAFT"
+    },
+    {
+      id: "knowledge_bundle_keihb_bql_sop_demo",
+      bundleKey: "KEIHB_BQL_SOP_DEMO",
+      displayName: "KEIHB BQL SOP Demo",
+      productKey: "KEIHB",
+      targetAudience: "BQL",
+      role: "BQL",
+      locale: "en",
+      includedLayerKeys: ["KL_2_ORGANIZATION_CORE", "KL_3_PRODUCT_KNOWLEDGE_PACK", "KL_4_WORKSPACE_PROJECT_OVERLAY"],
+      includedItemIds: ["knowledge_item_kl3_keihb_sop_pack_demo", "knowledge_item_kl4_emerald_overlay_demo"],
+      snapshotVersion: 1,
+      status: "DRAFT"
+    }
+  ]
+};
+
+const knowledgeContextPayload = {
+  metadata: registryPayload.metadata,
+  mode: "deterministic-knowledge-context",
+  noLlmCall: true,
+  noCanonicalWrite: true,
+  readContract: {
+    productKey: "OIS_PLATFORM",
+    organizationId: "org_pmc_demo",
+    workspaceId: "ws_pmc_org_demo",
+    includeEvidence: true,
+    includeDrafts: true
+  },
+  layers: knowledgeLayersPayload.layers.slice(2, 4),
+  items: knowledgeItemsPayload.items,
+  evidenceLinks: knowledgeEvidencePayload.evidenceLinks,
+  boundary: {
+    agentReadPath: true,
+    agentLearningPath: "Teach OIS still creates Learning Signal only.",
+    autoPromotionEnabled: false
+  }
+};
+
+const architectureMindmapPayload = {
+  metadata: registryPayload.metadata,
+  boundary: knowledgeBoundary,
+  mindmap: {
+    manifestVersion: "1.0",
+    stage: "Stage 2G",
+    title: "OIS Ecosystem Architecture Map",
+    oisCoreLayers: ["Platform Kernel", "Product Registry", "OIS Agent Runtime", "Canonical Knowledge Fabric"],
+    ecosystemProducts: ["OIS_PLATFORM", "PITS", "KEIHB", "ICR", "CSAGENT"],
+    knowledgeLayers: knowledgeLayersPayload.layers.map((layer) => ({
+      key: layer.key,
+      displayName: layer.displayName,
+      order: layer.order,
+      evidenceRequirement: layer.evidenceRequirement
+    })),
+    flows: [
+      {
+        key: "stage_2f_learning_flow",
+        label: "Stage 2F Learning Intake",
+        nodes: ["OIS Agent Widget", "Learning Signal", "Learning Candidate", "Policy Decision", "Review / Auto-log"]
+      },
+      {
+        key: "stage_2g_knowledge_fabric_flow",
+        label: "Stage 2G Knowledge Fabric",
+        nodes: ["Knowledge Layer Mapping", "Canonical Knowledge Item", "Evidence Link", "Universal Knowledge API", "KEIHB Projection Bundle"]
+      }
+    ],
+    apiContracts: [
+      "/platform/knowledge/layers",
+      "/platform/knowledge/items",
+      "/platform/knowledge/context",
+      "/platform/learning/layer-mappings",
+      "/platform/knowledge/keihb/bundles",
+      "/platform/agent/knowledge-context",
+      "/platform/architecture/mindmap"
+    ],
+    governanceCheckpoints: [
+      "No widget direct canonical write",
+      "No auto-promotion in Stage 2G",
+      "Evidence required for canonical claims",
+      "KEIHB is projection/publishing product only"
+    ]
+  },
+  source: {
+    file: "architecture/mindmap/ois-ecosystem-map.v1.json",
+    mode: "machine-readable-manifest"
+  }
+};
+
 const productDetailPayload = {
   metadata: registryPayload.metadata,
   product: {
@@ -888,6 +1209,13 @@ function mockCoreApiFetch(overrides?: {
   adminBoundary?: unknown;
   productUat?: unknown;
   learningCenter?: unknown;
+  knowledgeLayers?: unknown;
+  knowledgeItems?: unknown;
+  knowledgeEvidence?: unknown;
+  knowledgeMappings?: unknown;
+  keihbBundles?: unknown;
+  knowledgeContext?: unknown;
+  architectureMindmap?: unknown;
 }) {
   const fetchMock = vi.fn(async (input: Parameters<typeof fetch>[0]) => {
     const url = input instanceof Request ? input.url : String(input);
@@ -926,6 +1254,34 @@ function mockCoreApiFetch(overrides?: {
 
     if (url === `${coreApiUrl}/platform/learning/center`) {
       return jsonResponse(overrides?.learningCenter ?? learningCenterPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/knowledge/layers`) {
+      return jsonResponse(overrides?.knowledgeLayers ?? knowledgeLayersPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/knowledge/items`) {
+      return jsonResponse(overrides?.knowledgeItems ?? knowledgeItemsPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/knowledge/evidence`) {
+      return jsonResponse(overrides?.knowledgeEvidence ?? knowledgeEvidencePayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/learning/layer-mappings`) {
+      return jsonResponse(overrides?.knowledgeMappings ?? knowledgeMappingsPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/knowledge/keihb/bundles`) {
+      return jsonResponse(overrides?.keihbBundles ?? keihbBundlesPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/knowledge/context?productKey=OIS_PLATFORM&includeDrafts=true&includeEvidence=true`) {
+      return jsonResponse(overrides?.knowledgeContext ?? knowledgeContextPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/architecture/mindmap`) {
+      return jsonResponse(overrides?.architectureMindmap ?? architectureMindmapPayload);
     }
 
     if (url === `${coreApiUrl}/platform/products/prod_pits`) {
@@ -1037,6 +1393,7 @@ describe("OIS Console product shell", () => {
     expect(html).toContain("Products");
     expect(html).toContain("Workspaces");
     expect(html).toContain("Learning");
+    expect(html).toContain("Knowledge");
     expect(html).toContain("Runtime");
     expect(html).toContain(coreApiUrl);
     expect(html).toContain("Core API healthy");
@@ -1223,11 +1580,38 @@ describe("OIS Console product shell", () => {
         "Pending Review",
         "Learning Policies",
         "Executive Intent Queue",
+        "Knowledge Fabric Integration",
+        "Stage 2G maps Learning Candidates",
+        "Target Knowledge Layer",
+        "KL_3_PRODUCT_KNOWLEDGE_PACK",
         "Product Contribution Map",
         "Audit Log Placeholder",
         "SUPERADMIN_OR_ADMIN",
         "OIS_PLATFORM",
         "Learning writes create AuditRecord entries"
+      ]
+    ],
+    [
+      "knowledge fabric",
+      KnowledgeFabricPage,
+      [
+        "OIS Knowledge Fabric",
+        "Universal Knowledge Read Contract",
+        "Knowledge Layers Overview",
+        "KL-0 LEGAL REGULATORY CORE",
+        "Canonical Knowledge Items",
+        "Demo KEIHB SOP publishing pack",
+        "Evidence Links",
+        "Demo KEIHB SOP learning signal",
+        "Learning Candidate to Knowledge Layer Mappings",
+        "KEIHB Bundles",
+        "KEIHB Building Management Handbook Demo",
+        "Product Consumption Map",
+        "Knowledge publishing product / handbook projection",
+        "Architecture Map / Mindmap",
+        "OIS Ecosystem Architecture Map",
+        "No auto-promotion in Stage 2G",
+        "Read only"
       ]
     ],
     [

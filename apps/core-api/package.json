@@ -10,6 +10,7 @@
     "typecheck": "tsc -p ../../tsconfig.check.json --noEmit"
   },
   "dependencies": {
-    "@ois/agent-runtime": "workspace:*"
+    "@ois/agent-runtime": "workspace:*",
+    "@ois/knowledge-fabric": "workspace:*"
   }
 }

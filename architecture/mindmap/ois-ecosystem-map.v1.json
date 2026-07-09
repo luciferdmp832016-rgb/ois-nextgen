@@ -1,0 +1,80 @@
+{
+  "manifestVersion": "1.0",
+  "stage": "Stage 2G",
+  "title": "OIS Ecosystem Architecture Map",
+  "oisCoreLayers": [
+    "Platform Kernel",
+    "Product Registry",
+    "OIS Agent Runtime",
+    "Self-Improvement Engine",
+    "Canonical Knowledge Fabric",
+    "Universal Knowledge API"
+  ],
+  "ecosystemProducts": ["OIS_PLATFORM", "PITS", "KEIHB", "ICR", "CSAGENT", "FUTURE_PRODUCT", "CUSTOM"],
+  "knowledgeLayers": [
+    {
+      "key": "KL_0_LEGAL_REGULATORY_CORE",
+      "displayName": "Legal / Regulatory Core",
+      "order": 0,
+      "evidenceRequirement": "STRONG_APPROVAL_REQUIRED"
+    },
+    {
+      "key": "KL_1_INDUSTRY_CORE",
+      "displayName": "Industry Core",
+      "order": 1,
+      "evidenceRequirement": "EVIDENCE_REQUIRED"
+    },
+    {
+      "key": "KL_2_ORGANIZATION_CORE",
+      "displayName": "Organization Core",
+      "order": 2,
+      "evidenceRequirement": "STRONG_APPROVAL_REQUIRED"
+    },
+    {
+      "key": "KL_3_PRODUCT_KNOWLEDGE_PACK",
+      "displayName": "Product Knowledge Pack",
+      "order": 3,
+      "evidenceRequirement": "EVIDENCE_REQUIRED"
+    },
+    {
+      "key": "KL_4_WORKSPACE_PROJECT_OVERLAY",
+      "displayName": "Workspace / Project Overlay",
+      "order": 4,
+      "evidenceRequirement": "EVIDENCE_REQUIRED"
+    },
+    {
+      "key": "KL_5_LIVE_OPERATIONAL_SIGNALS",
+      "displayName": "Live Operational Signals",
+      "order": 5,
+      "evidenceRequirement": "SIGNAL_ONLY"
+    }
+  ],
+  "flows": [
+    {
+      "key": "stage_2f_learning_flow",
+      "label": "Stage 2F Learning Intake",
+      "nodes": ["OIS Agent Widget", "Learning Signal", "Learning Candidate", "Policy Decision", "Review / Auto-log"]
+    },
+    {
+      "key": "stage_2g_knowledge_fabric_flow",
+      "label": "Stage 2G Knowledge Fabric",
+      "nodes": ["Knowledge Layer Mapping", "Canonical Knowledge Item", "Evidence Link", "Universal Knowledge API", "KEIHB Projection Bundle"]
+    }
+  ],
+  "apiContracts": [
+    "/platform/knowledge/layers",
+    "/platform/knowledge/items",
+    "/platform/knowledge/context",
+    "/platform/learning/layer-mappings",
+    "/platform/knowledge/keihb/bundles",
+    "/platform/agent/knowledge-context",
+    "/platform/architecture/mindmap"
+  ],
+  "governanceCheckpoints": [
+    "No widget direct canonical write",
+    "No auto-promotion in Stage 2G",
+    "Evidence required for canonical claims",
+    "KEIHB is projection/publishing product only",
+    "Future promotion requires review and rollback gates"
+  ]
+}

@@ -4,6 +4,7 @@ import swaggerUi from "@fastify/swagger-ui";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { registerStage2FRoutes, type Stage2FPrisma } from "./stage-2f";
+import { registerStage2GRoutes, type Stage2GPrisma } from "./stage-2g";
 
 const demoLoginSchema = z.object({
   email: z.string().email(),
@@ -43,7 +44,11 @@ export type CoreApiPrismaClient = Pick<
   | "oisAgentLearningSubmission"
   | "oisAgentMessage"
   | "oisAgentSession"
+  | "oisCanonicalKnowledgeItem"
   | "oisEcosystemProduct"
+  | "oisKnowledgeEvidenceLink"
+  | "oisKnowledgeLayerMapping"
+  | "oisKnowledgeProjectionBundle"
   | "oisLearningCandidate"
   | "oisLearningPolicy"
   | "oisLearningSignal"
@@ -3870,6 +3875,7 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
   });
 
   registerStage2FRoutes(app, prisma as unknown as Stage2FPrisma, registryMetadata);
+  registerStage2GRoutes(app, prisma as unknown as Stage2GPrisma, registryMetadata);
 
   app.addHook("onClose", async () => {
     await prisma.$disconnect();

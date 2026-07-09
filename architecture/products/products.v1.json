@@ -15,5 +15,37 @@
     { "productKey": "CSAGENT", "displayName": "CSAgent", "productType": "FUTURE_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "PLANNED" },
     { "productKey": "FUTURE_PRODUCT", "displayName": "Future Product", "productType": "FUTURE_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "PLANNED" },
     { "productKey": "CUSTOM", "displayName": "Custom", "productType": "CUSTOM_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "PLANNED" }
+  ],
+  "knowledgeLayerConsumption": [
+    {
+      "productKey": "OIS_PLATFORM",
+      "consumesLayers": [
+        "KL_0_LEGAL_REGULATORY_CORE",
+        "KL_1_INDUSTRY_CORE",
+        "KL_2_ORGANIZATION_CORE",
+        "KL_3_PRODUCT_KNOWLEDGE_PACK",
+        "KL_4_WORKSPACE_PROJECT_OVERLAY",
+        "KL_5_LIVE_OPERATIONAL_SIGNALS"
+      ],
+      "contributesToLayers": ["KL_2_ORGANIZATION_CORE", "KL_5_LIVE_OPERATIONAL_SIGNALS"],
+      "role": "Canonical owner and control-plane reader"
+    },
+    {
+      "productKey": "KEIHB",
+      "consumesLayers": [
+        "KL_0_LEGAL_REGULATORY_CORE",
+        "KL_1_INDUSTRY_CORE",
+        "KL_2_ORGANIZATION_CORE",
+        "KL_3_PRODUCT_KNOWLEDGE_PACK"
+      ],
+      "contributesToLayers": ["KL_3_PRODUCT_KNOWLEDGE_PACK", "KL_5_LIVE_OPERATIONAL_SIGNALS"],
+      "role": "Knowledge publishing product / handbook projection"
+    },
+    {
+      "productKey": "PITS",
+      "consumesLayers": ["KL_2_ORGANIZATION_CORE", "KL_3_PRODUCT_KNOWLEDGE_PACK", "KL_4_WORKSPACE_PROJECT_OVERLAY"],
+      "contributesToLayers": ["KL_4_WORKSPACE_PROJECT_OVERLAY", "KL_5_LIVE_OPERATIONAL_SIGNALS"],
+      "role": "Project runtime consumer and operational signal contributor"
+    }
   ]
 }

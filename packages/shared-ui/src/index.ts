@@ -1795,3 +1795,357 @@ export async function getLearningCenterSnapshot(coreApiUrl = getCoreApiUrl()): P
     errorMessage: getRegistryErrorMessage(learningCenter.data) ?? learningCenter.error
   };
 }
+
+export type KnowledgeLayerDefinition = {
+  key: string;
+  order: number;
+  displayName: string;
+  description: string;
+  examples: string[];
+  evidenceRequirement: string;
+  autoPromotionAllowedInStage2G: boolean;
+};
+
+export type CanonicalKnowledgeItem = {
+  id: string;
+  layerKey: string;
+  scope: string;
+  itemType: string;
+  title: string;
+  summary: string;
+  status: string;
+  version: number;
+  locale: string;
+  organizationId: string | null;
+  workspaceId: string | null;
+  industryCode: string | null;
+  productKey: string | null;
+  sensitivityLevel: string;
+  confidenceScore: number;
+  sourceAuthority: string;
+  createdFromCandidateId: string | null;
+};
+
+export type KnowledgeEvidenceLink = {
+  id: string;
+  knowledgeItemId: string | null;
+  learningCandidateId: string | null;
+  sourceType: string;
+  sourceRef: string;
+  sourceTitle: string;
+  excerpt: string;
+  excerptHash: string;
+  evidenceWeight: number;
+  sourceAuthority: string;
+};
+
+export type KnowledgeLayerMapping = {
+  id: string;
+  learningCandidateId: string;
+  targetLayerKey: string;
+  targetItemType: string;
+  proposedAction: string;
+  proposedTitle: string;
+  proposedSummary: string;
+  affectedProducts: string[];
+  confidenceScore: number;
+  policyDecision: string;
+  status: string;
+};
+
+export type KnowledgeProjectionBundle = {
+  id: string;
+  bundleKey: string;
+  displayName: string;
+  productKey: string;
+  targetAudience: string;
+  role: string;
+  locale: string;
+  includedLayerKeys: string[];
+  includedItemIds: string[];
+  snapshotVersion: number;
+  status: string;
+};
+
+export type KnowledgeLayersPayload = {
+  metadata: RegistryMetadata;
+  boundary: Record<string, unknown>;
+  layerKeys: string[];
+  layers: KnowledgeLayerDefinition[];
+  productConsumptionMap: Array<{ productKey: string; consumesLayers: string[]; contributesToLayers: string[]; role: string }>;
+};
+
+export type KnowledgeItemsPayload = {
+  metadata: RegistryMetadata;
+  boundary: Record<string, unknown>;
+  summary: {
+    totalItems: number;
+    activeItems: number;
+    draftItems: number;
+    byLayer: Array<{ layerKey: string; displayName: string; count: number }>;
+  };
+  items: CanonicalKnowledgeItem[];
+};
+
+export type KnowledgeEvidencePayload = {
+  metadata: RegistryMetadata;
+  boundary: Record<string, unknown>;
+  summary: {
+    totalLinks: number;
+    itemLinks: number;
+    candidateLinks: number;
+  };
+  evidenceLinks: KnowledgeEvidenceLink[];
+};
+
+export type KnowledgeLayerMappingsPayload = {
+  metadata: RegistryMetadata;
+  boundary: Record<string, unknown>;
+  mappings: KnowledgeLayerMapping[];
+};
+
+export type KeihbBundlesPayload = {
+  metadata: RegistryMetadata;
+  boundary: Record<string, unknown>;
+  projectionBoundary: Record<string, unknown>;
+  bundles: KnowledgeProjectionBundle[];
+};
+
+export type KnowledgeContextPayload = {
+  metadata: RegistryMetadata;
+  mode: string;
+  noLlmCall: boolean;
+  noCanonicalWrite: boolean;
+  readContract: Record<string, unknown>;
+  layers: KnowledgeLayerDefinition[];
+  items: CanonicalKnowledgeItem[];
+  evidenceLinks: KnowledgeEvidenceLink[];
+  boundary: Record<string, unknown>;
+};
+
+export type ArchitectureMindmapPayload = {
+  metadata: RegistryMetadata;
+  boundary: Record<string, unknown>;
+  mindmap: {
+    manifestVersion: string;
+    stage: string;
+    title: string;
+    oisCoreLayers: string[];
+    ecosystemProducts: string[];
+    knowledgeLayers: Array<{ key: string; displayName: string; order: number; evidenceRequirement: string }>;
+    flows: Array<{ key: string; label: string; nodes: string[] }>;
+    apiContracts: string[];
+    governanceCheckpoints: string[];
+  };
+  source: Record<string, unknown>;
+};
+
+export type KnowledgeFabricSnapshot = {
+  coreApiUrl: string;
+  layers: ApiResult;
+  items: ApiResult;
+  evidence: ApiResult;
+  mappings: ApiResult;
+  keihbBundles: ApiResult;
+  context: ApiResult;
+  mindmap: ApiResult;
+  layersPayload: KnowledgeLayersPayload | null;
+  itemsPayload: KnowledgeItemsPayload | null;
+  evidencePayload: KnowledgeEvidencePayload | null;
+  mappingsPayload: KnowledgeLayerMappingsPayload | null;
+  keihbBundlesPayload: KeihbBundlesPayload | null;
+  contextPayload: KnowledgeContextPayload | null;
+  mindmapPayload: ArchitectureMindmapPayload | null;
+  errorMessage: string | null;
+};
+
+export function getKnowledgeLayersPayload(source: unknown): KnowledgeLayersPayload | null {
+  if (!isRecord(source) || !isRecord(source.boundary) || !Array.isArray(source.layerKeys) || !Array.isArray(source.layers)) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+
+  if (!metadata) {
+    return null;
+  }
+
+  return {
+    metadata,
+    boundary: source.boundary,
+    layerKeys: source.layerKeys as string[],
+    layers: source.layers as KnowledgeLayerDefinition[],
+    productConsumptionMap: getArray<KnowledgeLayersPayload["productConsumptionMap"][number]>(source, "productConsumptionMap")
+  };
+}
+
+export function getKnowledgeItemsPayload(source: unknown): KnowledgeItemsPayload | null {
+  if (!isRecord(source) || !isRecord(source.boundary) || !isRecord(source.summary) || !Array.isArray(source.items)) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+
+  if (!metadata) {
+    return null;
+  }
+
+  return {
+    metadata,
+    boundary: source.boundary,
+    summary: source.summary as KnowledgeItemsPayload["summary"],
+    items: source.items as CanonicalKnowledgeItem[]
+  };
+}
+
+export function getKnowledgeEvidencePayload(source: unknown): KnowledgeEvidencePayload | null {
+  if (!isRecord(source) || !isRecord(source.boundary) || !isRecord(source.summary) || !Array.isArray(source.evidenceLinks)) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+
+  if (!metadata) {
+    return null;
+  }
+
+  return {
+    metadata,
+    boundary: source.boundary,
+    summary: source.summary as KnowledgeEvidencePayload["summary"],
+    evidenceLinks: source.evidenceLinks as KnowledgeEvidenceLink[]
+  };
+}
+
+export function getKnowledgeLayerMappingsPayload(source: unknown): KnowledgeLayerMappingsPayload | null {
+  if (!isRecord(source) || !isRecord(source.boundary) || !Array.isArray(source.mappings)) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+
+  if (!metadata) {
+    return null;
+  }
+
+  return {
+    metadata,
+    boundary: source.boundary,
+    mappings: source.mappings as KnowledgeLayerMapping[]
+  };
+}
+
+export function getKeihbBundlesPayload(source: unknown): KeihbBundlesPayload | null {
+  if (!isRecord(source) || !isRecord(source.boundary) || !isRecord(source.projectionBoundary) || !Array.isArray(source.bundles)) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+
+  if (!metadata) {
+    return null;
+  }
+
+  return {
+    metadata,
+    boundary: source.boundary,
+    projectionBoundary: source.projectionBoundary,
+    bundles: source.bundles as KnowledgeProjectionBundle[]
+  };
+}
+
+export function getKnowledgeContextPayload(source: unknown): KnowledgeContextPayload | null {
+  if (
+    !isRecord(source) ||
+    !isRecord(source.boundary) ||
+    !isRecord(source.readContract) ||
+    !Array.isArray(source.layers) ||
+    !Array.isArray(source.items) ||
+    !Array.isArray(source.evidenceLinks)
+  ) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+
+  if (!metadata) {
+    return null;
+  }
+
+  return {
+    metadata,
+    mode: getString(source, "mode") ?? "deterministic-knowledge-context",
+    noLlmCall: Boolean(source.noLlmCall),
+    noCanonicalWrite: Boolean(source.noCanonicalWrite),
+    readContract: source.readContract,
+    layers: source.layers as KnowledgeLayerDefinition[],
+    items: source.items as CanonicalKnowledgeItem[],
+    evidenceLinks: source.evidenceLinks as KnowledgeEvidenceLink[],
+    boundary: source.boundary
+  };
+}
+
+export function getArchitectureMindmapPayload(source: unknown): ArchitectureMindmapPayload | null {
+  if (!isRecord(source) || !isRecord(source.boundary) || !isRecord(source.mindmap) || !isRecord(source.source)) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+
+  if (!metadata) {
+    return null;
+  }
+
+  return {
+    metadata,
+    boundary: source.boundary,
+    mindmap: source.mindmap as ArchitectureMindmapPayload["mindmap"],
+    source: source.source
+  };
+}
+
+export async function getKnowledgeFabricSnapshot(coreApiUrl = getCoreApiUrl()): Promise<KnowledgeFabricSnapshot> {
+  const [layers, items, evidence, mappings, keihbBundles, context, mindmap] = await Promise.all([
+    fetchCoreApi("/platform/knowledge/layers", coreApiUrl),
+    fetchCoreApi("/platform/knowledge/items", coreApiUrl),
+    fetchCoreApi("/platform/knowledge/evidence", coreApiUrl),
+    fetchCoreApi("/platform/learning/layer-mappings", coreApiUrl),
+    fetchCoreApi("/platform/knowledge/keihb/bundles", coreApiUrl),
+    fetchCoreApi("/platform/knowledge/context?productKey=OIS_PLATFORM&includeDrafts=true&includeEvidence=true", coreApiUrl),
+    fetchCoreApi("/platform/architecture/mindmap", coreApiUrl)
+  ]);
+  const errorMessage =
+    getRegistryErrorMessage(layers.data) ??
+    getRegistryErrorMessage(items.data) ??
+    getRegistryErrorMessage(evidence.data) ??
+    getRegistryErrorMessage(mappings.data) ??
+    getRegistryErrorMessage(keihbBundles.data) ??
+    getRegistryErrorMessage(context.data) ??
+    getRegistryErrorMessage(mindmap.data) ??
+    layers.error ??
+    items.error ??
+    evidence.error ??
+    mappings.error ??
+    keihbBundles.error ??
+    context.error ??
+    mindmap.error;
+
+  return {
+    coreApiUrl,
+    layers,
+    items,
+    evidence,
+    mappings,
+    keihbBundles,
+    context,
+    mindmap,
+    layersPayload: getKnowledgeLayersPayload(layers.data),
+    itemsPayload: getKnowledgeItemsPayload(items.data),
+    evidencePayload: getKnowledgeEvidencePayload(evidence.data),
+    mappingsPayload: getKnowledgeLayerMappingsPayload(mappings.data),
+    keihbBundlesPayload: getKeihbBundlesPayload(keihbBundles.data),
+    contextPayload: getKnowledgeContextPayload(context.data),
+    mindmapPayload: getArchitectureMindmapPayload(mindmap.data),
+    errorMessage
+  };
+}
