@@ -1806,6 +1806,12 @@ export type KnowledgeLayerDefinition = {
   autoPromotionAllowedInStage2G: boolean;
 };
 
+export type KnowledgeLayerTaxonomy = {
+  taxonomyVersion: string;
+  layerKeys: string[];
+  availableLayers: KnowledgeLayerDefinition[];
+};
+
 export type CanonicalKnowledgeItem = {
   id: string;
   layerKey: string;
@@ -1870,6 +1876,8 @@ export type KnowledgeProjectionBundle = {
 export type KnowledgeLayersPayload = {
   metadata: RegistryMetadata;
   boundary: Record<string, unknown>;
+  knowledgeLayerTaxonomy?: KnowledgeLayerTaxonomy | undefined;
+  availableLayers?: KnowledgeLayerDefinition[] | undefined;
   layerKeys: string[];
   layers: KnowledgeLayerDefinition[];
   productConsumptionMap: Array<{ productKey: string; consumesLayers: string[]; contributesToLayers: string[]; role: string }>;
@@ -1901,12 +1909,16 @@ export type KnowledgeEvidencePayload = {
 export type KnowledgeLayerMappingsPayload = {
   metadata: RegistryMetadata;
   boundary: Record<string, unknown>;
+  knowledgeLayerTaxonomy?: KnowledgeLayerTaxonomy | undefined;
+  availableLayers?: KnowledgeLayerDefinition[] | undefined;
   mappings: KnowledgeLayerMapping[];
 };
 
 export type KeihbBundlesPayload = {
   metadata: RegistryMetadata;
   boundary: Record<string, unknown>;
+  knowledgeLayerTaxonomy?: KnowledgeLayerTaxonomy | undefined;
+  availableLayers?: KnowledgeLayerDefinition[] | undefined;
   projectionBoundary: Record<string, unknown>;
   bundles: KnowledgeProjectionBundle[];
 };
@@ -1916,6 +1928,8 @@ export type KnowledgeContextPayload = {
   mode: string;
   noLlmCall: boolean;
   noCanonicalWrite: boolean;
+  knowledgeLayerTaxonomy?: KnowledgeLayerTaxonomy | undefined;
+  availableLayers?: KnowledgeLayerDefinition[] | undefined;
   readContract: Record<string, unknown>;
   layers: KnowledgeLayerDefinition[];
   items: CanonicalKnowledgeItem[];
@@ -1973,6 +1987,8 @@ export function getKnowledgeLayersPayload(source: unknown): KnowledgeLayersPaylo
   return {
     metadata,
     boundary: source.boundary,
+    knowledgeLayerTaxonomy: isRecord(source.knowledgeLayerTaxonomy) ? (source.knowledgeLayerTaxonomy as KnowledgeLayerTaxonomy) : undefined,
+    availableLayers: Array.isArray(source.availableLayers) ? (source.availableLayers as KnowledgeLayerDefinition[]) : undefined,
     layerKeys: source.layerKeys as string[],
     layers: source.layers as KnowledgeLayerDefinition[],
     productConsumptionMap: getArray<KnowledgeLayersPayload["productConsumptionMap"][number]>(source, "productConsumptionMap")
@@ -2031,6 +2047,8 @@ export function getKnowledgeLayerMappingsPayload(source: unknown): KnowledgeLaye
   return {
     metadata,
     boundary: source.boundary,
+    knowledgeLayerTaxonomy: isRecord(source.knowledgeLayerTaxonomy) ? (source.knowledgeLayerTaxonomy as KnowledgeLayerTaxonomy) : undefined,
+    availableLayers: Array.isArray(source.availableLayers) ? (source.availableLayers as KnowledgeLayerDefinition[]) : undefined,
     mappings: source.mappings as KnowledgeLayerMapping[]
   };
 }
@@ -2049,6 +2067,8 @@ export function getKeihbBundlesPayload(source: unknown): KeihbBundlesPayload | n
   return {
     metadata,
     boundary: source.boundary,
+    knowledgeLayerTaxonomy: isRecord(source.knowledgeLayerTaxonomy) ? (source.knowledgeLayerTaxonomy as KnowledgeLayerTaxonomy) : undefined,
+    availableLayers: Array.isArray(source.availableLayers) ? (source.availableLayers as KnowledgeLayerDefinition[]) : undefined,
     projectionBoundary: source.projectionBoundary,
     bundles: source.bundles as KnowledgeProjectionBundle[]
   };
@@ -2077,6 +2097,8 @@ export function getKnowledgeContextPayload(source: unknown): KnowledgeContextPay
     mode: getString(source, "mode") ?? "deterministic-knowledge-context",
     noLlmCall: Boolean(source.noLlmCall),
     noCanonicalWrite: Boolean(source.noCanonicalWrite),
+    knowledgeLayerTaxonomy: isRecord(source.knowledgeLayerTaxonomy) ? (source.knowledgeLayerTaxonomy as KnowledgeLayerTaxonomy) : undefined,
+    availableLayers: Array.isArray(source.availableLayers) ? (source.availableLayers as KnowledgeLayerDefinition[]) : undefined,
     readContract: source.readContract,
     layers: source.layers as KnowledgeLayerDefinition[],
     items: source.items as CanonicalKnowledgeItem[],

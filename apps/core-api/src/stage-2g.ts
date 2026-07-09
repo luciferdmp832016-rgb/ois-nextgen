@@ -12,6 +12,7 @@ import {
   knowledgeItemTypes,
   knowledgeLayerDefinitions,
   knowledgeLayerKeys,
+  knowledgeLayerTaxonomy,
   knowledgeLayerMappingStatuses,
   knowledgePromotionActions,
   productKnowledgeConsumptionMap,
@@ -416,6 +417,8 @@ export function registerStage2GRoutes(app: FastifyInstance, prisma: Stage2GPrism
   app.get("/platform/knowledge/layers", async () => ({
     metadata: registryMetadata(),
     boundary: stage2GBoundary,
+    knowledgeLayerTaxonomy,
+    availableLayers: knowledgeLayerTaxonomy.availableLayers,
     layerKeys: knowledgeLayerKeys,
     layers: knowledgeLayerDefinitions,
     productConsumptionMap: productKnowledgeConsumptionMap
@@ -539,6 +542,8 @@ export function registerStage2GRoutes(app: FastifyInstance, prisma: Stage2GPrism
       metadata: registryMetadata(),
       boundary: stage2GBoundary,
       candidateId: candidate.id,
+      knowledgeLayerTaxonomy,
+      availableLayers: knowledgeLayerTaxonomy.availableLayers,
       mapping: mappingContract,
       noCanonicalKnowledgeWrite: true,
       autoPromotionEnabled: false
@@ -563,6 +568,8 @@ export function registerStage2GRoutes(app: FastifyInstance, prisma: Stage2GPrism
       metadata: registryMetadata(),
       boundary: stage2GBoundary,
       candidate,
+      knowledgeLayerTaxonomy,
+      availableLayers: knowledgeLayerTaxonomy.availableLayers,
       mappings: mappings.map(toKnowledgeLayerMapping)
     };
   });
@@ -570,6 +577,8 @@ export function registerStage2GRoutes(app: FastifyInstance, prisma: Stage2GPrism
   app.get("/platform/learning/layer-mappings", async () => ({
     metadata: registryMetadata(),
     boundary: stage2GBoundary,
+    knowledgeLayerTaxonomy,
+    availableLayers: knowledgeLayerTaxonomy.availableLayers,
     mappings: (await prisma.oisKnowledgeLayerMapping.findMany({ orderBy: { createdAt: "desc" }, take: 100 })).map(toKnowledgeLayerMapping)
   }));
 
@@ -583,6 +592,8 @@ export function registerStage2GRoutes(app: FastifyInstance, prisma: Stage2GPrism
     return {
       metadata: registryMetadata(),
       boundary: stage2GBoundary,
+      knowledgeLayerTaxonomy,
+      availableLayers: knowledgeLayerTaxonomy.availableLayers,
       bundles: bundles.map(toProjectionBundle),
       projectionBoundary: {
         sourceOfTruth: "OIS Knowledge Fabric",
@@ -604,6 +615,8 @@ export function registerStage2GRoutes(app: FastifyInstance, prisma: Stage2GPrism
     return {
       metadata: registryMetadata(),
       boundary: stage2GBoundary,
+      knowledgeLayerTaxonomy,
+      availableLayers: knowledgeLayerTaxonomy.availableLayers,
       bundle: toProjectionBundle(bundle)
     };
   });
@@ -626,6 +639,8 @@ export function registerStage2GRoutes(app: FastifyInstance, prisma: Stage2GPrism
     return {
       metadata: registryMetadata(),
       boundary: stage2GBoundary,
+      knowledgeLayerTaxonomy,
+      availableLayers: knowledgeLayerTaxonomy.availableLayers,
       projectionBoundary: {
         sourceOfTruth: "OIS Knowledge Fabric",
         productKey: "KEIHB",

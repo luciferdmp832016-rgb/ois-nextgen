@@ -9,7 +9,8 @@ import {
   defaultKnowledgeEvidenceLinks,
   inferKnowledgeLayerForCandidate,
   knowledgeLayerDefinitions,
-  knowledgeLayerKeys
+  knowledgeLayerKeys,
+  knowledgeLayerTaxonomy
 } from "./index";
 
 describe("Stage 2G knowledge layer taxonomy", () => {
@@ -17,6 +18,11 @@ describe("Stage 2G knowledge layer taxonomy", () => {
     expect(knowledgeLayerDefinitions.map((layer) => layer.key)).toEqual(knowledgeLayerKeys);
     expect(knowledgeLayerDefinitions.map((layer) => layer.order)).toEqual([0, 1, 2, 3, 4, 5]);
     expect(knowledgeLayerDefinitions.every((layer) => layer.autoPromotionAllowedInStage2G === false)).toBe(true);
+    expect(knowledgeLayerTaxonomy).toMatchObject({
+      taxonomyVersion: "stage-2g.v1",
+      layerKeys: knowledgeLayerKeys
+    });
+    expect(knowledgeLayerTaxonomy.availableLayers.map((layer) => layer.key)).toEqual(knowledgeLayerKeys);
   });
 });
 
@@ -77,6 +83,9 @@ describe("KEIHB projection bundle contracts", () => {
     ]);
     expect(defaultKeihbProjectionBundles.every((bundle) => bundle.productKey === "KEIHB")).toBe(true);
     expect(defaultKeihbProjectionBundles.every((bundle) => bundle.manifestJson.sourceOfTruth === "OIS Knowledge Fabric")).toBe(true);
+    expect(defaultKeihbProjectionBundles.find((bundle) => bundle.bundleKey === "KEIHB_BQL_SOP_DEMO")?.includedLayerKeys).not.toContain(
+      "KL_0_LEGAL_REGULATORY_CORE"
+    );
   });
 });
 
@@ -92,6 +101,8 @@ describe("deterministic agent knowledge context", () => {
     expect(context.noCanonicalWrite).toBe(true);
     expect(context.items.length).toBeGreaterThan(0);
     expect(context.evidenceLinks.length).toBeGreaterThan(0);
+    expect(context.knowledgeLayerTaxonomy.layerKeys).toContain("KL_0_LEGAL_REGULATORY_CORE");
+    expect(context.availableLayers.map((layer) => layer.key)).toEqual(knowledgeLayerKeys);
     expect(context.boundary.autoPromotionEnabled).toBe(false);
   });
 });

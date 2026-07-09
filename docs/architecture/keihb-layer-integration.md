@@ -33,3 +33,9 @@ Each bundle records:
 - `GET /platform/knowledge/keihb/preview`
 
 These routes are deterministic and read-only.
+
+## Stage 2G-R1 Marker Contract
+
+KEIHB bundle responses expose global `knowledgeLayerTaxonomy` and `availableLayers` metadata so staging smoke checks can verify the full Canonical Knowledge Fabric taxonomy.
+
+Each bundle still exposes its own `includedLayerKeys`. A bundle only claims the layers it actually projects; the global taxonomy does not mean every KEIHB bundle includes KL-0.

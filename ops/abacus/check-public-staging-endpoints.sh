@@ -80,6 +80,12 @@ knowledge_endpoint_markers=(
   '"KL_0_LEGAL_REGULATORY_CORE"'
   '"KL_3_PRODUCT_KNOWLEDGE_PACK"'
 )
+knowledge_taxonomy_markers=(
+  "${knowledge_endpoint_markers[@]}"
+  '"knowledgeLayerTaxonomy"'
+  '"availableLayers"'
+  '"taxonomyVersion":"stage-2g.v1"'
+)
 knowledge_ui_markers=(
   "OIS Knowledge Fabric"
   "Universal Knowledge Read Contract"
@@ -223,9 +229,9 @@ check_core() {
   check_route "PUBLIC_STAGING_KNOWLEDGE_LAYERS" "$CORE_API_URL/platform/knowledge/layers" "${knowledge_endpoint_markers[@]}" '"layers"' '"productConsumptionMap"'
   check_route "PUBLIC_STAGING_KNOWLEDGE_ITEMS" "$CORE_API_URL/platform/knowledge/items" "${knowledge_endpoint_markers[@]}" '"items"' '"summary"'
   check_route "PUBLIC_STAGING_KNOWLEDGE_EVIDENCE" "$CORE_API_URL/platform/knowledge/evidence" '"source":"default-db"' '"mode":"read-only"' '"evidenceLinks"' '"totalLinks"'
-  check_route "PUBLIC_STAGING_KNOWLEDGE_CONTEXT" "$CORE_API_URL/platform/knowledge/context" "${knowledge_endpoint_markers[@]}" '"deterministic-knowledge-context"' '"noCanonicalWrite":true'
-  check_route "PUBLIC_STAGING_KNOWLEDGE_LAYER_MAPPINGS" "$CORE_API_URL/platform/learning/layer-mappings" "${knowledge_endpoint_markers[@]}" '"mappings"' '"READY_FOR_REVIEW"'
-  check_route "PUBLIC_STAGING_KEIHB_BUNDLES" "$CORE_API_URL/platform/knowledge/keihb/bundles" "${knowledge_endpoint_markers[@]}" '"KEIHB"' '"projectionBoundary"'
+  check_route "PUBLIC_STAGING_KNOWLEDGE_CONTEXT" "$CORE_API_URL/platform/knowledge/context" "${knowledge_taxonomy_markers[@]}" '"deterministic-knowledge-context"' '"noCanonicalWrite":true'
+  check_route "PUBLIC_STAGING_KNOWLEDGE_LAYER_MAPPINGS" "$CORE_API_URL/platform/learning/layer-mappings" "${knowledge_taxonomy_markers[@]}" '"mappings"' '"READY_FOR_REVIEW"'
+  check_route "PUBLIC_STAGING_KEIHB_BUNDLES" "$CORE_API_URL/platform/knowledge/keihb/bundles" "${knowledge_taxonomy_markers[@]}" '"KEIHB"' '"projectionBoundary"'
   check_route "PUBLIC_STAGING_ARCHITECTURE_MINDMAP" "$CORE_API_URL/platform/architecture/mindmap" "${knowledge_endpoint_markers[@]}" '"OIS Ecosystem Architecture Map"' '"apiContracts"'
 
   if public_staging_discover_registry_ids "$CORE_API_URL"; then

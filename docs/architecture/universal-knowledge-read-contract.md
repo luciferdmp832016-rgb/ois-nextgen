@@ -27,3 +27,13 @@ The universal knowledge read contract lets OIS-powered products and the OIS Agen
 - `POST /platform/agent/knowledge-context`
 
 The agent route is a read path. It returns `noLlmCall=true`, `noCanonicalWrite=true` and `autoPromotionEnabled=false`.
+
+## Response Contract
+
+Stage 2G-R1 standardizes knowledge-context responses with global taxonomy metadata:
+
+- `knowledgeLayerTaxonomy.layerKeys` lists all canonical layer keys from `KL_0_LEGAL_REGULATORY_CORE` through `KL_5_LIVE_OPERATIONAL_SIGNALS`.
+- `availableLayers` contains the same canonical taxonomy definitions for smoke checks and product readers.
+- `layers` remains the scoped/requested result layer subset for the current read contract.
+
+This distinction lets readiness checks verify the Canonical Knowledge Fabric contract without claiming a given context response includes every layer as selected content.
