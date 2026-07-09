@@ -250,6 +250,34 @@ enum OisKnowledgeProjectionStatus {
   ARCHIVED
 }
 
+enum OimaMeetingSourceMode {
+  TRANSCRIPT_ONLY
+  AUDIO_ONLY
+  TRANSCRIPT_AND_AUDIO
+  LISTENER_CAPTURED
+}
+
+enum OimaMeetingStatus {
+  DRAFT
+  UPLOADED
+  READY_FOR_PROCESSING
+  NEEDS_REVIEW
+  FAILED
+}
+
+enum OimaMeetingSourceFileType {
+  TRANSCRIPT
+  AUDIO
+  PARTICIPANT_LIST
+  OTHER
+}
+
+enum OimaMeetingSourceUploadStatus {
+  REGISTERED
+  UPLOADED
+  FAILED
+}
+
 model Industry {
   id            String          @id
   code          String          @unique
@@ -279,6 +307,7 @@ model Organization {
   featureFlags   FeatureFlag[]
   auditRecords   AuditRecord[]
   legacyMappings LegacyIdentityMap[]
+  oimaMeetings   OimaMeetingRecord[]
 
   @@index([industryId])
 }
@@ -300,6 +329,7 @@ model Workspace {
   featureFlags   FeatureFlag[]
   auditRecords   AuditRecord[]
   legacyMappings LegacyIdentityMap[]
+  oimaMeetings   OimaMeetingRecord[]
 
   @@unique([organizationId, code])
   @@index([organizationId])
@@ -617,6 +647,47 @@ model OisKnowledgeProjectionBundle {
 
   @@index([productKey, status])
   @@index([locale, role])
+}
+
+model OimaMeetingRecord {
+  id               String                 @id
+  organizationId   String
+  workspaceId      String
+  title            String
+  meetingDate      DateTime
+  startTime        String?
+  endTime          String?
+  sourceMode       OimaMeetingSourceMode
+  participantCount Int                    @default(0)
+  status           OimaMeetingStatus      @default(DRAFT)
+  confidenceScore  Float                  @default(0)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  organization     Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  workspace        Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
+  sourceFiles      OimaMeetingSourceFile[]
+
+  @@index([organizationId, workspaceId, meetingDate])
+  @@index([workspaceId, status, createdAt])
+  @@index([sourceMode, status])
+}
+
+model OimaMeetingSourceFile {
+  id               String                        @id
+  meetingId        String
+  fileType         OimaMeetingSourceFileType
+  originalFilename String
+  storageKey       String?
+  storageUrl       String?
+  mimeType         String?
+  sizeBytes        Int                           @default(0)
+  checksum         String?
+  uploadStatus     OimaMeetingSourceUploadStatus @default(REGISTERED)
+  createdAt        DateTime                      @default(now())
+  meeting          OimaMeetingRecord             @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+
+  @@index([meetingId, fileType])
+  @@index([uploadStatus, createdAt])
 }
 
 model ProductInstallation {

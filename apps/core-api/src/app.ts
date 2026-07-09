@@ -6,6 +6,7 @@ import { z } from "zod";
 import { registerStage2FRoutes, type Stage2FPrisma } from "./stage-2f";
 import { registerStage2GRoutes, type Stage2GPrisma } from "./stage-2g";
 import { buildOimaProductRegistryProjection, registerStage2HRoutes } from "./stage-2h";
+import { registerStage2JRoutes, type Stage2JPrisma } from "./stage-2j";
 
 const demoLoginSchema = z.object({
   email: z.string().email(),
@@ -53,6 +54,8 @@ export type CoreApiPrismaClient = Pick<
   | "oisLearningCandidate"
   | "oisLearningPolicy"
   | "oisLearningSignal"
+  | "oimaMeetingRecord"
+  | "oimaMeetingSourceFile"
   | "organization"
   | "productDefinition"
   | "productInstallation"
@@ -3885,6 +3888,7 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
   registerStage2FRoutes(app, prisma as unknown as Stage2FPrisma, registryMetadata);
   registerStage2GRoutes(app, prisma as unknown as Stage2GPrisma, registryMetadata);
   registerStage2HRoutes(app, registryMetadata);
+  registerStage2JRoutes(app, prisma as unknown as Stage2JPrisma, registryMetadata);
 
   app.addHook("onClose", async () => {
     await prisma.$disconnect();

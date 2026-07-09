@@ -18,9 +18,9 @@ Vietnamese positioning: OIS hiểu tổ chức. OIMA hiểu cuộc họp.
 
 OIMA is a distinct Powered by OIS product. It is not a feature buried inside the generic OIS Platform, and it is not a separate knowledge source of truth.
 
-Stage 2I / OIMA-0 hardens the product shell only. Current runtime capabilities are `OVERVIEW`, `PRODUCT_BOUNDARY` and `KNOWLEDGE_API_LINKAGE`.
+Stage 2J / OIMA-1 adds the meeting intake foundation. Current runtime capabilities are `OVERVIEW`, `PRODUCT_BOUNDARY`, `KNOWLEDGE_API_LINKAGE` and `MEETING_INTAKE`.
 
-Planned runtime capabilities are `MEETING_INTAKE`, `TRANSCRIPT_PROCESSING`, `AUDIO_PROCESSING`, `OFFLINE_AGENT_ANALYSIS`, `SUBJECT_CLARIFICATION`, `SELF_IMPROVEMENT` and `LISTENER_MODE`.
+Planned runtime capabilities are `TRANSCRIPT_PROCESSING`, `AUDIO_PROCESSING`, `OFFLINE_AGENT_ANALYSIS`, `SUBJECT_CLARIFICATION`, `SELF_IMPROVEMENT` and `LISTENER_MODE`.
 
 OIMA owns meeting-specific product UX:
 
@@ -51,12 +51,14 @@ OIMA reuses OIS Core:
 
 ## Source Modes
 
-`TRANSCRIPT_ONLY` is the primary OIMA foundation and must work without audio. Transcript is the primary input path.
+`TRANSCRIPT_ONLY` is the primary OIMA foundation and works without audio. Transcript source file metadata can be registered in OIMA-1.
 
-`AUDIO_ONLY` and `TRANSCRIPT_AND_AUDIO` are future enrichment modes. Audio may improve speaker identity and confidence later, but it does not block transcript-first analysis.
+`TRANSCRIPT_AND_AUDIO` can register optional audio source metadata while preserving transcript as the primary input.
+
+`AUDIO_ONLY` may be accepted as source metadata and remains review-oriented because audio processing is not runtime in OIMA-1.
 
 `LISTENER_CAPTURED` is future-only. Initial Listener Mode, when implemented, may record meetings only with permission and is limited to listen, record and analyze.
 
 ## Safety
 
-Stage 2I / OIMA-0 explicitly blocks meeting upload runtime, transcript processing, audio processing, Listener Mode runtime, live speaking agents, voice clone, impersonation, autonomous decisions, real LLM/OpenRouter calls, production secrets and `prisma db push`.
+Stage 2J / OIMA-1 explicitly blocks binary file storage, transcript processing, audio processing, OIS Agent meeting analysis, issues, decisions, actions, risks, Listener Mode runtime, live speaking agents, voice clone, impersonation, autonomous decisions, real LLM/OpenRouter calls, production secrets and `prisma db push`.

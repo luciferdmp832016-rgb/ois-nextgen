@@ -115,6 +115,7 @@ oima_endpoint_markers=(
   '"displayName":"OIMA'
   '"productType":"MEETING_INTELLIGENCE_PRODUCT"'
   '"implementationStatus":"PRODUCT_BOUNDARY_READY"'
+  '"Stage 2J / OIMA-1"'
   '"currentRuntimeCapabilities"'
   '"plannedRuntimeCapabilities"'
   '"OVERVIEW"'
@@ -136,7 +137,8 @@ oima_ui_markers=(
   "Organizational Intelligence Meeting Agent"
   "Powered by OIS Product"
   "OIMA Product Overview"
-  "OIMA-0 shell ready"
+  "OIMA-1 intake ready"
+  "Open Meeting Library"
   "OIS is the organizational intelligence backbone. OIMA is the meeting intelligence product powered by OIS."
   "Product Boundary"
   "Source Mode Contract"
@@ -147,6 +149,7 @@ oima_ui_markers=(
   "OIMA Product Surface Empty States"
   "Meeting Library"
   "Upload Meeting"
+  "Available now"
   "Agent Analysis"
   "Clarification Review"
   "Dashboard"
@@ -157,6 +160,62 @@ oima_ui_markers=(
   "TRANSCRIPT_ONLY"
   "MEETING_INTELLIGENCE_PRODUCT"
   "PRODUCT_BOUNDARY_READY"
+)
+oima_meeting_intake_endpoint_markers=(
+  '"intakeContract"'
+  '"productCode":"OIMA"'
+  '"stage":"Stage 2J / OIMA-1"'
+  '"meetingStatuses"'
+  '"DRAFT"'
+  '"UPLOADED"'
+  '"READY_FOR_PROCESSING"'
+  '"NEEDS_REVIEW"'
+  '"FAILED"'
+  '"sourceFileTypes"'
+  '"TRANSCRIPT"'
+  '"AUDIO"'
+  '"uploadStatuses"'
+  '"REGISTERED"'
+  '"meetingIntakeImplemented":true'
+  '"transcriptProcessingImplemented":false'
+  '"audioProcessingImplemented":false'
+  '"listenerModeImplemented":false'
+  '"voiceCloneImplemented":false'
+  '"realLlmCallsEnabled":false'
+  '"fakeMeetingAnalysisCreated":false'
+  '"noFakeMeetingAnalysis":true'
+  '"noLlmCalls":true'
+)
+oima_meeting_library_ui_markers=(
+  "OIMA Meeting Intake"
+  "Meeting Library"
+  "Meeting Intake Foundation"
+  "MEETING_INTAKE"
+  "TRANSCRIPT_ONLY"
+  "TRANSCRIPT_AND_AUDIO"
+  "AUDIO_ONLY metadata"
+  "LISTENER_CAPTURED planned/not-runtime"
+  "No fake meeting analysis"
+  "Registered meetings"
+  "Transcript present"
+  "Audio present"
+  "Register meeting"
+)
+oima_meeting_new_ui_markers=(
+  "Upload / Register Meeting"
+  "Create Meeting Form"
+  "Transcript Source"
+  "Optional Audio Source"
+  "TRANSCRIPT_ONLY supported"
+  "TRANSCRIPT_AND_AUDIO optional audio"
+  "AUDIO_ONLY needs review"
+  "LISTENER_CAPTURED planned/not-runtime"
+  "No transcript processing"
+  "No audio processing"
+  "No OIS Agent analysis"
+  "No voice clone"
+  "No LLM/OpenRouter calls"
+  "Register meeting"
 )
 pits_workboard_endpoint_markers=(
   '"source":"default-db"'
@@ -288,10 +347,11 @@ check_core() {
   check_route "PUBLIC_STAGING_ECOSYSTEM_PRODUCTS" "$CORE_API_URL/platform/ecosystem-products" '"source":"default-db"' '"mode":"read-only"' '"OIMA"' '"MEETING_INTELLIGENCE_PRODUCT"'
   check_route "PUBLIC_STAGING_LEARNING_CENTER" "$CORE_API_URL/platform/learning/center" "${learning_center_endpoint_markers[@]}"
   check_route "PUBLIC_STAGING_OIMA_PRODUCT_CODE" "$CORE_API_URL/platform/products/code/OIMA" "${oima_endpoint_markers[@]}" '"relationships"' '"OIS Canonical Knowledge Fabric"'
-  check_route "PUBLIC_STAGING_OIMA_OVERVIEW" "$CORE_API_URL/platform/oima/overview" "${oima_endpoint_markers[@]}" '"OIS Canonical Knowledge Fabric"' '"universalKnowledgeApiDisplayName":"Universal Knowledge API"' '"universalKnowledgeApiLabel":"OIS Universal Knowledge API"' '"emptyStateSurfaces"' '"runtimeEnabled":false'
+  check_route "PUBLIC_STAGING_OIMA_OVERVIEW" "$CORE_API_URL/platform/oima/overview" "${oima_endpoint_markers[@]}" '"OIS Canonical Knowledge Fabric"' '"universalKnowledgeApiDisplayName":"Universal Knowledge API"' '"universalKnowledgeApiLabel":"OIS Universal Knowledge API"' '"emptyStateSurfaces"' '"availableNow":true' '"runtimeEnabled":false'
   check_route "PUBLIC_STAGING_OIMA_SOURCE_MODES" "$CORE_API_URL/platform/oima/source-modes" "${oima_endpoint_markers[@]}" '"primarySourceMode":"TRANSCRIPT_ONLY"' '"audioDoesNotBlockAnalysis":true'
-  check_route "PUBLIC_STAGING_OIMA_ROADMAP" "$CORE_API_URL/platform/oima/roadmap" "${oima_endpoint_markers[@]}" '"roadmap"' '"Stage 2I"' '"PRODUCT_SHELL_HARDENED"' '"OIMA-0"' '"OIMA-1"' '"OIMA-9"'
-  check_route "PUBLIC_STAGING_OIMA_BOUNDARY" "$CORE_API_URL/platform/oima/boundary" "${oima_endpoint_markers[@]}" '"noCanonicalKnowledgeWrite":true' '"autoPromotionEnabled":false'
+  check_route "PUBLIC_STAGING_OIMA_ROADMAP" "$CORE_API_URL/platform/oima/roadmap" "${oima_endpoint_markers[@]}" '"roadmap"' '"Stage 2J"' '"RUNTIME_FOUNDATION_READY"' '"OIMA-0"' '"OIMA-1"' '"OIMA-2"' '"OIMA-9"'
+  check_route "PUBLIC_STAGING_OIMA_BOUNDARY" "$CORE_API_URL/platform/oima/boundary" "${oima_endpoint_markers[@]}" '"noCanonicalKnowledgeWrite":true' '"autoPromotionEnabled":false' '"meetingIntakeImplemented":true' '"transcriptProcessingImplemented":false'
+  check_route "PUBLIC_STAGING_OIMA_MEETINGS" "$CORE_API_URL/platform/oima/meetings" "${oima_meeting_intake_endpoint_markers[@]}" '"meetings"' '"count"'
   check_route "PUBLIC_STAGING_KNOWLEDGE_LAYERS" "$CORE_API_URL/platform/knowledge/layers" "${knowledge_endpoint_markers[@]}" '"layers"' '"productConsumptionMap"'
   check_route "PUBLIC_STAGING_KNOWLEDGE_ITEMS" "$CORE_API_URL/platform/knowledge/items" "${knowledge_endpoint_markers[@]}" '"items"' '"summary"'
   check_route "PUBLIC_STAGING_KNOWLEDGE_EVIDENCE" "$CORE_API_URL/platform/knowledge/evidence" '"source":"default-db"' '"mode":"read-only"' '"evidenceLinks"' '"totalLinks"'
@@ -425,7 +485,9 @@ check_route "OIS_CONSOLE_PUBLIC_PRODUCTS" "$OIS_CONSOLE_PUBLIC_URL/products" "Pr
 check_route "OIS_CONSOLE_PUBLIC_WORKSPACES" "$OIS_CONSOLE_PUBLIC_URL/workspaces" "Organizations, Workspaces &amp; Projects" "Workspace Overview" "Owner Registry Cockpit / Registry Runtime Summary" "Registry Governance / Readiness" "Registry Runtime Health" "Runtime health:" "Readiness:" "PMC Org Demo" "OIS_CONSOLE"
 check_route "OIS_CONSOLE_PUBLIC_LEARNING_CENTER" "$OIS_CONSOLE_PUBLIC_URL/learning-center" "${learning_center_ui_markers[@]}" "OIS_CONSOLE"
 check_route "OIS_CONSOLE_PUBLIC_KNOWLEDGE_FABRIC" "$OIS_CONSOLE_PUBLIC_URL/knowledge-fabric" "${knowledge_ui_markers[@]}" "OIS_CONSOLE"
-check_route "OIS_CONSOLE_PUBLIC_OIMA" "$OIS_CONSOLE_PUBLIC_URL/oima" "${oima_ui_markers[@]}" "OIS_CONSOLE" "OIMA-0" "OIMA-9"
+check_route "OIS_CONSOLE_PUBLIC_OIMA" "$OIS_CONSOLE_PUBLIC_URL/oima" "${oima_ui_markers[@]}" "OIS_CONSOLE" "OIMA-0" "OIMA-1" "OIMA-2" "OIMA-9"
+check_route "OIS_CONSOLE_PUBLIC_OIMA_MEETINGS" "$OIS_CONSOLE_PUBLIC_URL/oima/meetings" "${oima_meeting_library_ui_markers[@]}" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_PUBLIC_OIMA_MEETINGS_NEW" "$OIS_CONSOLE_PUBLIC_URL/oima/meetings/new" "${oima_meeting_new_ui_markers[@]}" "OIS_CONSOLE"
 check_route "OIS_CONSOLE_PUBLIC_RUNTIME" "$OIS_CONSOLE_PUBLIC_URL/runtime" "Runtime Status" "Owner Registry Cockpit / Registry Runtime Summary" "Safe Action Boundary" "Read-only preview" "Future admin action requires audit" "Audit / Permission / Admin Boundary" "Audit Required" "Permission Model" "Preview only" "Blocked in current stage" "Registry Governance / Readiness" "Registry Runtime Health" "Core API source:" "OIS_CONSOLE"
 check_route "OIS_CONSOLE_PUBLIC_PRODUCT_UAT_RUNTIME" "$OIS_CONSOLE_PUBLIC_URL/runtime" "Product Capability / UAT Status" "${product_uat_ui_markers[@]}"
 check_root_shell "PITS_SHELL_PUBLIC_ROOT" "$PITS_SHELL_PUBLIC_URL" "PITS_SHELL" "PITS Shell"
@@ -445,6 +507,8 @@ check_absent_markers "OIS_CONSOLE_PUBLIC_LOCALIZATION_LINK_BOUNDARY" "$OIS_CONSO
 check_absent_markers "OIS_CONSOLE_PUBLIC_LEARNING_CENTER_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/learning-center" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "OIS_CONSOLE_PUBLIC_KNOWLEDGE_FABRIC_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/knowledge-fabric" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "OIS_CONSOLE_PUBLIC_OIMA_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/oima" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
+check_absent_markers "OIS_CONSOLE_PUBLIC_OIMA_MEETINGS_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/oima/meetings" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
+check_absent_markers "OIS_CONSOLE_PUBLIC_OIMA_MEETINGS_NEW_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/oima/meetings/new" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "PITS_SHELL_PUBLIC_PROJECTS_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/projects" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "PITS_SHELL_PUBLIC_PRODUCT_FLOW_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/product-flow" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "PITS_SHELL_PUBLIC_LOCALIZATION_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/localization" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"

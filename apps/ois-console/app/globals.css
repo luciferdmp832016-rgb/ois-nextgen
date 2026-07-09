@@ -1018,11 +1018,93 @@ label {
   font-size: 14px;
 }
 
-input {
+input,
+select,
+textarea {
   border: 1px solid var(--line);
   border-radius: 8px;
+  background: #ffffff;
+  color: var(--ink);
   padding: 11px 12px;
   font: inherit;
+  min-width: 0;
+  width: 100%;
+}
+
+.oima-table-wrap {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.oima-table {
+  border-collapse: collapse;
+  min-width: 880px;
+  width: 100%;
+}
+
+.oima-table th,
+.oima-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.oima-table th {
+  background: #f8fafc;
+  color: #344554;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.oima-table td {
+  font-size: 14px;
+}
+
+.oima-form-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.oima-intake-form {
+  display: grid;
+  gap: 14px;
+}
+
+.oima-form-section {
+  margin: 0;
+}
+
+.oima-form-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.oima-submit-state {
+  color: var(--muted);
+  font-weight: 800;
+  margin: 0;
+}
+
+.oima-submit-state.success {
+  color: var(--green);
+}
+
+.oima-submit-state.error {
+  color: var(--red);
+}
+
+.oima-inline-action,
+.oima-primary-button {
+  display: inline-flex;
+  font-weight: 900;
+  justify-content: center;
+  max-width: max-content;
+  width: auto;
 }
 
 .button {

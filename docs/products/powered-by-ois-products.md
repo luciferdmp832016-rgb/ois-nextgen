@@ -13,6 +13,8 @@ Stage 2F introduces a canonical product registry for OIS-powered products.
 | FUTURE_PRODUCT | Future Product | Future product | Extension slot. |
 | CUSTOM | Custom | Custom product | Custom adapter slot. |
 
+Stage 2J update: OIMA meeting intake foundation is ready. OIMA now supports audited meeting records and source file metadata registration while transcript processing, audio processing, Listener Mode, voice clone, fake analytics and LLM/OpenRouter calls remain out of scope.
+
 ## Product Role
 
 Products can:
@@ -33,7 +35,7 @@ Products cannot:
 
 New OIS-powered products can be added as registry rows and adapter contracts without redesigning the schema.
 
-## OIMA Stage 2I / OIMA-0 Boundary
+## OIMA Stage 2J / OIMA-1 Meeting Intake
 
 OIMA is the meeting intelligence product powered by OIS.
 
@@ -43,8 +45,8 @@ Vietnamese positioning: OIS hiểu tổ chức. OIMA hiểu cuộc họp.
 
 OIMA reuses OIS Workspace, future RBAC, Product Registry, Canonical Entity Registry, Knowledge Fabric, Universal Knowledge API, OIS Agent Runtime, Learning Governance and Audit. OIMA owns meeting-specific UX but does not own canonical organizational knowledge.
 
-Stage 2I / OIMA-0 hardens the product shell. Current OIMA runtime capabilities are `OVERVIEW`, `PRODUCT_BOUNDARY` and `KNOWLEDGE_API_LINKAGE`.
+Stage 2J / OIMA-1 adds audited meeting intake records and source file metadata registration. Current OIMA runtime capabilities are `OVERVIEW`, `PRODUCT_BOUNDARY`, `KNOWLEDGE_API_LINKAGE` and `MEETING_INTAKE`.
 
-Planned runtime capabilities are `MEETING_INTAKE`, `TRANSCRIPT_PROCESSING`, `AUDIO_PROCESSING`, `OFFLINE_AGENT_ANALYSIS`, `SUBJECT_CLARIFICATION`, `SELF_IMPROVEMENT` and `LISTENER_MODE`.
+Planned runtime capabilities are `TRANSCRIPT_PROCESSING`, `AUDIO_PROCESSING`, `OFFLINE_AGENT_ANALYSIS`, `SUBJECT_CLARIFICATION`, `SELF_IMPROVEMENT` and `LISTENER_MODE`.
 
-Transcript is the primary input path. Audio is optional future enrichment. Future Listener Mode may record meetings only with permission. Live speaking and voice clone are explicitly out of scope.
+Transcript is the primary input path. Audio metadata is optional. Future Listener Mode may record meetings only with permission. Live speaking, voice clone, fake analytics and LLM/OpenRouter calls are explicitly out of scope.

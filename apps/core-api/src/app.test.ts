@@ -13,6 +13,9 @@ import {
   oimaCapabilityCodes,
   oimaCurrentRuntimeCapabilities,
   oimaEmptyStateSurfaces,
+  oimaMeetingSourceFileTypes,
+  oimaMeetingSourceUploadStatuses,
+  oimaMeetingStatuses,
   oimaPlannedRuntimeCapabilities,
   oimaProductBoundaryMetadata,
   oimaSafetyBoundaries,
@@ -277,6 +280,52 @@ const stage2GRows = {
   bundle: defaultKeihbProjectionBundles[0]!
 } as const;
 
+const stage2JRows = {
+  meeting: {
+    id: "oima_meeting_stage_2j_demo",
+    organizationId: "org_pmc_demo",
+    workspaceId: "ws_pmc_org_demo",
+    title: "OIMA Stage 2J Transcript Intake",
+    meetingDate: "2026-07-09T00:00:00.000Z",
+    startTime: "09:00",
+    endTime: "09:45",
+    sourceMode: "TRANSCRIPT_ONLY",
+    participantCount: 4,
+    status: "READY_FOR_PROCESSING",
+    confidenceScore: 0,
+    createdAt: "2026-07-09T01:00:00.000Z",
+    updatedAt: "2026-07-09T01:00:00.000Z",
+    sourceFiles: [
+      {
+        id: "oima_source_file_stage_2j_transcript",
+        meetingId: "oima_meeting_stage_2j_demo",
+        fileType: "TRANSCRIPT",
+        originalFilename: "stage-2j-transcript.txt",
+        storageKey: "oima/intake/stage-2j-transcript.txt",
+        storageUrl: null,
+        mimeType: "text/plain",
+        sizeBytes: 2048,
+        checksum: "sha256-demo-transcript",
+        uploadStatus: "REGISTERED",
+        createdAt: "2026-07-09T01:00:00.000Z"
+      }
+    ]
+  },
+  audioFile: {
+    id: "oima_source_file_stage_2j_audio",
+    meetingId: "oima_meeting_stage_2j_demo",
+    fileType: "AUDIO",
+    originalFilename: "stage-2j-audio.mp3",
+    storageKey: "oima/intake/stage-2j-audio.mp3",
+    storageUrl: null,
+    mimeType: "audio/mpeg",
+    sizeBytes: 4096,
+    checksum: "sha256-demo-audio",
+    uploadStatus: "REGISTERED",
+    createdAt: "2026-07-09T01:05:00.000Z"
+  }
+} as const;
+
 function createWriteGuard(name: string, writeCalls: string[]) {
   return vi.fn(() => {
     writeCalls.push(name);
@@ -311,7 +360,10 @@ function createMockPrisma(counts = overviewCounts) {
   const delegates = {
     industry: createCountDelegate("industry", counts.industries, readCalls, writeCalls),
     organization: createCountDelegate("organization", counts.organizations, readCalls, writeCalls, [registryRows.organization]),
-    workspace: createCountDelegate("workspace", counts.workspaces, readCalls, writeCalls, [registryRows.workspace]),
+    workspace: {
+      ...createCountDelegate("workspace", counts.workspaces, readCalls, writeCalls, [registryRows.workspace]),
+      findUnique: vi.fn(async (args: { where: { id: string } }) => (args.where.id === registryRows.workspace.id ? registryRows.workspace : null))
+    },
     project: createCountDelegate("project", counts.projects, readCalls, writeCalls, [registryRows.project]),
     productDefinition: createCountDelegate("productDefinition", counts.products, readCalls, writeCalls, [registryRows.product]),
     productInstallation: {
@@ -346,7 +398,12 @@ function createMockPrisma(counts = overviewCounts) {
     oisAgentSession: createCountDelegate("oisAgentSession", 0, readCalls, writeCalls),
     oisAgentMessage: createCountDelegate("oisAgentMessage", 0, readCalls, writeCalls),
     oisAgentFeedback: createCountDelegate("oisAgentFeedback", 0, readCalls, writeCalls),
-    oisAgentLearningSubmission: createCountDelegate("oisAgentLearningSubmission", 0, readCalls, writeCalls)
+    oisAgentLearningSubmission: createCountDelegate("oisAgentLearningSubmission", 0, readCalls, writeCalls),
+    oimaMeetingRecord: {
+      ...createCountDelegate("oimaMeetingRecord", 0, readCalls, writeCalls, [stage2JRows.meeting]),
+      findUnique: vi.fn(async (args: { where: { id: string } }) => (args.where.id === stage2JRows.meeting.id ? stage2JRows.meeting : null))
+    },
+    oimaMeetingSourceFile: createCountDelegate("oimaMeetingSourceFile", 0, readCalls, writeCalls, [stage2JRows.audioFile])
   };
 
   const userAccount = {
@@ -1845,9 +1902,12 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
       expect(body.product.plannedRuntimeCapabilities).toEqual(oimaPlannedRuntimeCapabilities);
       expect(body.product.productBoundaryMetadata).toEqual(oimaProductBoundaryMetadata);
       expect(body.product.productShell).toMatchObject({
-        status: "PRODUCT_SHELL_HARDENED",
-        meetingRuntimeDataIncluded: false,
-        nextRecommendedStage: "OIMA-1 Meeting Intake"
+        status: "MEETING_INTAKE_FOUNDATION_READY",
+        meetingRuntimeDataIncluded: true,
+        meetingIntakeImplemented: true,
+        sourceFileMetadataRegistrationImplemented: true,
+        transcriptProcessingImplemented: false,
+        nextRecommendedStage: "OIMA-2 Transcript Processing"
       });
       expect(body.product.emptyStateSurfaces).toEqual(oimaEmptyStateSurfaces);
       expect(body.product.sourceModes).toEqual(oimaSourceModes);
@@ -1906,7 +1966,10 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
         "Self-Improvement Center",
         "Listener Mode"
       ]);
-      expect(overviewBody.emptyStateSurfaces.every((surface: { availableNow: boolean; runtimeEnabled: boolean }) => !surface.availableNow && !surface.runtimeEnabled)).toBe(
+      expect(overviewBody.emptyStateSurfaces.slice(0, 2).every((surface: { availableNow: boolean; runtimeEnabled: boolean }) => surface.availableNow && surface.runtimeEnabled)).toBe(
+        true
+      );
+      expect(overviewBody.emptyStateSurfaces.slice(2).every((surface: { availableNow: boolean; runtimeEnabled: boolean }) => !surface.availableNow && !surface.runtimeEnabled)).toBe(
         true
       );
       expect(overviewBody.knowledgeIntegration.knowledgeLayerTaxonomy.layerKeys).toContain("KL_0_LEGAL_REGULATORY_CORE");
@@ -1925,6 +1988,7 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
       expect(roadmapBody.roadmap).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ stage: "OIMA-0", phase: "Stage 2I", status: "PRODUCT_SHELL_HARDENED" }),
+          expect.objectContaining({ stage: "OIMA-1", phase: "Stage 2J", status: "RUNTIME_FOUNDATION_READY" }),
           expect.objectContaining({ stage: "OIMA-9", title: "Listener Mode", status: "PLANNED" })
         ])
       );
@@ -1936,14 +2000,19 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
       expect(boundaryBody.boundary).toMatchObject({
         realLlmCallsEnabled: false,
         uploadPipelineImplemented: false,
-        meetingStorageImplemented: false,
+        meetingStorageImplemented: true,
+        meetingIntakeImplemented: true,
+        sourceFileMetadataRegistrationImplemented: true,
         listenerModeStatus: "FUTURE_ONLY",
-        productShellStatus: "PRODUCT_SHELL_HARDENED",
+        productShellStatus: "MEETING_INTAKE_FOUNDATION_READY",
         noLiveSpeakingAgent: true,
         noVoiceClone: true,
         noImpersonation: true
       });
       expect(boundaryBody.productShell).toMatchObject({
+        meetingRuntimeDataIncluded: true,
+        meetingIntakeImplemented: true,
+        sourceFileMetadataRegistrationImplemented: true,
         uploadRuntimeImplemented: false,
         transcriptProcessingImplemented: false,
         audioProcessingImplemented: false,
@@ -2017,6 +2086,237 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
       expect(body.noCanonicalKnowledgeWrite).toBe(true);
       expect(body.signal).toMatchObject({ productKey: "OIMA", status: "RECEIVED" });
       expect(writeOps).toEqual(["oisLearningSignal.create", "auditRecord.create", "oisAgentLearningSubmission.create", "auditRecord.create"]);
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+describe("Stage 2J OIMA Meeting Intake endpoints", () => {
+  function enableStage2JWrites(mock: ReturnType<typeof createMockPrisma>, writeOps: string[]) {
+    (mock.delegates.auditRecord.create as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("auditRecord.create");
+      return args.data;
+    });
+    (mock.delegates.oimaMeetingRecord.create as any).mockImplementation(async (args: { data: Record<string, any> }) => {
+      writeOps.push("oimaMeetingRecord.create");
+      const sourceFiles = (args.data.sourceFiles?.create ?? []).map((file: Record<string, unknown>) => ({
+        ...file,
+        meetingId: args.data.id,
+        createdAt: "2026-07-09T02:00:00.000Z"
+      }));
+
+      return {
+        ...stage2JRows.meeting,
+        ...args.data,
+        startTime: args.data.startTime ?? null,
+        endTime: args.data.endTime ?? null,
+        sourceFiles,
+        createdAt: "2026-07-09T02:00:00.000Z",
+        updatedAt: "2026-07-09T02:00:00.000Z"
+      };
+    });
+    (mock.delegates.oimaMeetingRecord.update as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("oimaMeetingRecord.update");
+      return {
+        ...stage2JRows.meeting,
+        ...args.data,
+        sourceFiles: stage2JRows.meeting.sourceFiles,
+        updatedAt: "2026-07-09T02:05:00.000Z"
+      };
+    });
+    (mock.delegates.oimaMeetingSourceFile.create as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("oimaMeetingSourceFile.create");
+      return {
+        ...stage2JRows.audioFile,
+        ...args.data,
+        createdAt: "2026-07-09T02:05:00.000Z"
+      };
+    });
+  }
+
+  it("lists OIMA meeting intake records with source availability and truthful runtime metadata", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/oima/meetings" });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body.intakeContract).toMatchObject({
+        productCode: "OIMA",
+        stage: "Stage 2J / OIMA-1",
+        transcriptFirst: true,
+        audioOptional: true
+      });
+      expect(body.intakeContract.meetingStatuses).toEqual(oimaMeetingStatuses);
+      expect(body.intakeContract.sourceFileTypes).toEqual(oimaMeetingSourceFileTypes);
+      expect(body.intakeContract.uploadStatuses).toEqual(oimaMeetingSourceUploadStatuses);
+      expect(body.intakeContract.runtimeBoundary).toMatchObject({
+        meetingIntakeImplemented: true,
+        transcriptProcessingImplemented: false,
+        audioProcessingImplemented: false,
+        listenerModeImplemented: false,
+        voiceCloneImplemented: false,
+        realLlmCallsEnabled: false,
+        fakeMeetingAnalysisCreated: false
+      });
+      expect(body.meetings[0]).toMatchObject({
+        id: stage2JRows.meeting.id,
+        title: stage2JRows.meeting.title,
+        meetingDate: "2026-07-09",
+        sourceMode: "TRANSCRIPT_ONLY",
+        status: "READY_FOR_PROCESSING",
+        transcriptPresent: true,
+        audioPresent: false
+      });
+      expect(body.noFakeMeetingAnalysis).toBe(true);
+      expect(body.noLlmCalls).toBe(true);
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("creates a transcript-first meeting and audits the sensitive intake write", async () => {
+    const mock = createMockPrisma();
+    const writeOps: string[] = [];
+    enableStage2JWrites(mock, writeOps);
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: "/platform/oima/meetings",
+        payload: {
+          organizationId: "org_pmc_demo",
+          workspaceId: "ws_pmc_org_demo",
+          title: "Transcript-first intake test",
+          meetingDate: "2026-07-09",
+          startTime: "10:00",
+          endTime: "10:30",
+          sourceMode: "TRANSCRIPT_ONLY",
+          participantCount: 3,
+          sourceFiles: [
+            {
+              fileType: "TRANSCRIPT",
+              originalFilename: "transcript.txt",
+              storageKey: "oima/intake/transcript.txt",
+              mimeType: "text/plain",
+              sizeBytes: 1234,
+              checksum: "sha256-transcript"
+            }
+          ]
+        }
+      });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(201);
+      expect(body.meeting).toMatchObject({
+        title: "Transcript-first intake test",
+        sourceMode: "TRANSCRIPT_ONLY",
+        status: "READY_FOR_PROCESSING",
+        transcriptPresent: true,
+        audioPresent: false,
+        confidenceScore: 0
+      });
+      expect(body.processingStatusPlaceholders).toEqual(["Transcript Processing", "OIS Agent Analysis", "Clarification Review", "Dashboard"]);
+      expect(body.noFakeMeetingAnalysis).toBe(true);
+      expect(body.noLlmCalls).toBe(true);
+      expect(writeOps).toEqual(["oimaMeetingRecord.create", "auditRecord.create"]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("registers optional audio metadata for a transcript-and-audio meeting without audio processing", async () => {
+    const mock = createMockPrisma();
+    const writeOps: string[] = [];
+    enableStage2JWrites(mock, writeOps);
+    const existing = {
+      ...stage2JRows.meeting,
+      sourceMode: "TRANSCRIPT_AND_AUDIO"
+    };
+    mock.delegates.oimaMeetingRecord.findUnique.mockResolvedValue(existing as any);
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: `/platform/oima/meetings/${stage2JRows.meeting.id}/source-files`,
+        payload: {
+          fileType: "AUDIO",
+          originalFilename: "meeting-audio.mp3",
+          storageKey: "oima/intake/meeting-audio.mp3",
+          mimeType: "audio/mpeg",
+          sizeBytes: 4567,
+          checksum: "sha256-audio"
+        }
+      });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(201);
+      expect(body.sourceFile).toMatchObject({
+        fileType: "AUDIO",
+        originalFilename: "meeting-audio.mp3",
+        uploadStatus: "REGISTERED"
+      });
+      expect(body.intakeContract.runtimeBoundary.audioProcessingImplemented).toBe(false);
+      expect(body.noFakeMeetingAnalysis).toBe(true);
+      expect(writeOps).toEqual(["oimaMeetingSourceFile.create", "auditRecord.create"]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns meeting detail with planned processing and analysis placeholders", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: `/platform/oima/meetings/${stage2JRows.meeting.id}` });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body.meeting).toMatchObject({
+        id: stage2JRows.meeting.id,
+        transcriptPresent: true,
+        audioPresent: false,
+        status: "READY_FOR_PROCESSING"
+      });
+      expect(body.plannedNextSteps).toEqual(["Transcript Processing", "OIS Agent Analysis", "Clarification Review", "Dashboard"]);
+      expect(body.noFakeMeetingAnalysis).toBe(true);
+      expect(body.noLlmCalls).toBe(true);
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("rejects listener-captured meeting creation because Listener Mode is planned/not-runtime", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: "/platform/oima/meetings",
+        payload: {
+          organizationId: "org_pmc_demo",
+          workspaceId: "ws_pmc_org_demo",
+          title: "Listener mode should wait",
+          meetingDate: "2026-07-09",
+          sourceMode: "LISTENER_CAPTURED",
+          participantCount: 2
+        }
+      });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(400);
+      expect(body.error.code).toBe("OIMA_SOURCE_MODE_NOT_SUPPORTED");
+      expect(JSON.stringify(body)).toContain("LISTENER_CAPTURED remains planned/not-runtime");
+      expect(mock.writeCalls).toEqual([]);
     } finally {
       await app.close();
     }
@@ -2327,13 +2627,18 @@ describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
     const stage2FSource = readFileSync(new URL("./stage-2f.ts", import.meta.url), "utf8");
     const stage2GSource = readFileSync(new URL("./stage-2g.ts", import.meta.url), "utf8");
     const stage2HSource = readFileSync(new URL("./stage-2h.ts", import.meta.url), "utf8");
+    const stage2JSource = readFileSync(new URL("./stage-2j.ts", import.meta.url), "utf8");
 
     expect(stage2FSource).not.toMatch(/oisCanonicalKnowledgeItem\.(create|update|upsert|delete)/);
     expect(stage2GSource).not.toMatch(/oisCanonicalKnowledgeItem\.(create|update|upsert|delete)/);
     expect(stage2HSource).not.toMatch(/oisCanonicalKnowledgeItem\.(create|update|upsert|delete)/);
+    expect(stage2JSource).not.toMatch(/oisCanonicalKnowledgeItem\.(create|update|upsert|delete)/);
     expect(stage2HSource).not.toMatch(/app\.(post|put|patch|delete)/);
     expect(stage2GSource).not.toMatch(/oisLearningCandidate\.(update|upsert)/);
     expect(stage2GSource).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/knowledge\/items/);
+    expect(stage2JSource).not.toMatch(/OPENROUTER_API_KEY|VOICE_CLONE_ENABLED|LIVE_SPEAKING_ENABLED/);
+    expect(stage2JSource).toContain("fakeMeetingAnalysisCreated: false");
+    expect(stage2JSource).toContain("realLlmCallsEnabled: false");
     expect(stage2GSource).toContain("autoPromotionEnabled: false");
     expect(stage2GSource).toContain("canonicalKnowledgeWrite: false");
   });
