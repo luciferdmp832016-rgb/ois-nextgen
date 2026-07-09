@@ -110,10 +110,12 @@ verify_local_product_routes() {
   public_staging_wait_for_route "LOCAL_ROUTE_READY" "OIS_CONSOLE_LOCAL_DASHBOARD" "$OIS_CONSOLE_LOCAL_URL/dashboard" "Platform Overview" "DEMO DATA - NOT PRODUCTION" || record_failure "OIS Console local dashboard route timeout"
   public_staging_wait_for_route "LOCAL_ROUTE_READY" "OIS_CONSOLE_LOCAL_PRODUCTS" "$OIS_CONSOLE_LOCAL_URL/products" "Products &amp; Modules" "Product &amp; Module Overview" "PITS_RUNTIME_SHELL" "OIS_CONSOLE" || record_failure "OIS Console local products route timeout"
   public_staging_wait_for_route "LOCAL_ROUTE_READY" "OIS_CONSOLE_LOCAL_WORKSPACES" "$OIS_CONSOLE_LOCAL_URL/workspaces" "Organizations, Workspaces &amp; Projects" "Workspace Overview" "PMC Org Demo" "OIS_CONSOLE" || record_failure "OIS Console local workspaces route timeout"
+  public_staging_wait_for_route "LOCAL_ROUTE_READY" "OIS_CONSOLE_LOCAL_LOCALIZATION" "$OIS_CONSOLE_LOCAL_URL/localization" "Localization Catalog" "Read-only Localization Catalog" "Browser editing is not enabled yet" "OIS_CONSOLE" || record_failure "OIS Console local localization route timeout"
   public_staging_wait_for_route "LOCAL_ROUTE_READY" "OIS_CONSOLE_LOCAL_RUNTIME" "$OIS_CONSOLE_LOCAL_URL/runtime" "Runtime Status" "Core API source:" "OIS_CONSOLE" || record_failure "OIS Console local runtime route timeout"
 
   public_staging_wait_for_root_shell "LOCAL_UI_READY" "PITS_SHELL_LOCAL" "$PITS_SHELL_LOCAL_URL" "PITS_SHELL" "PITS Shell" || record_failure "PITS Shell local readiness timeout"
   public_staging_wait_for_route "LOCAL_ROUTE_READY" "PITS_SHELL_LOCAL_PROJECTS" "$PITS_SHELL_LOCAL_URL/projects" "Project Selector" "EMERALD_PRECINCT_DEMO" "DEMO DATA - NOT PRODUCTION" || record_failure "PITS Shell local projects route timeout"
+  public_staging_wait_for_route "LOCAL_ROUTE_READY" "PITS_SHELL_LOCAL_LOCALIZATION" "$PITS_SHELL_LOCAL_URL/localization" "Localization Catalog" "Read-only Localization Catalog" "Browser editing is not enabled yet" "PITS_SHELL" || record_failure "PITS Shell local localization route timeout"
   public_staging_wait_for_route "LOCAL_ROUTE_READY" "PITS_SHELL_LOCAL_RUNTIME" "$PITS_SHELL_LOCAL_URL/runtime" "Runtime Status" "Core API source:" "PITS_SHELL" || record_failure "PITS Shell local runtime route timeout"
 }
 

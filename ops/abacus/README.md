@@ -492,6 +492,12 @@ Stage 2D Localization Foundation and Visual Product Flow Preview checks:
 - Checks preserve Stage 2A workboard and Stage 2B work item detail/dry-run markers.
 - No Core API endpoint, LLM call, status/owner/note/priority/blocker mutation, write endpoint, schema change, migration, seed, `prisma db push`, UI `DATABASE_URL`, Prisma UI import, `/auth/demo-login` change or legacy resource touch is allowed.
 
+Stage 2D-R1 Localization Coverage, Vietnamese Font and Runtime Marker checks:
+
+- OIS/PITS `/runtime` routes must include the stable language-neutral `Core API source:` marker.
+- OIS/PITS `/localization` routes must render `Localization Catalog`, `Read-only Localization Catalog`, `Available locales`, `Translation namespaces`, `Missing keys`, `Fallback keys`, `packages/shared-ui/src/localization.ts` and `Browser editing is not enabled yet`.
+- OIS/PITS shared shells use Vietnamese-safe system fonts and preserve read-only localization behavior without browser editing or persistence.
+
 Verify Stage 2D after source sync:
 
 ```sh

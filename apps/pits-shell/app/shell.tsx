@@ -14,6 +14,7 @@ import {
   getProductUatSurfacesFor,
   getReadinessGaps,
   kernelFields,
+  LocalizedText,
   ModernProductShell,
   type AdminBoundaryAction,
   type AdminPermissionState,
@@ -42,6 +43,7 @@ const navItems = [
   { id: "overview", href: "/", label: "Overview", shortLabel: "Ov" },
   { id: "product-flow", href: "/product-flow", label: "Product Flow", shortLabel: "Fx" },
   { id: "projects", href: "/projects", label: "Projects", shortLabel: "Pr" },
+  { id: "localization", href: "/localization", label: "Localization", shortLabel: "L10n" },
   { id: "runtime", href: "/runtime", label: "Runtime", shortLabel: "Rt" }
 ];
 
@@ -56,6 +58,10 @@ const countLabels: Record<KernelField, string> = {
   auditRecords: "Audit Records"
 };
 const controlPlaneOnlyText = ["Control", "plane only"].join("-");
+
+function L({ text }: { text: string }) {
+  return <LocalizedText text={text} />;
+}
 
 export function PitsShell({
   active,
@@ -93,15 +99,29 @@ export function PageHeading({ title, eyebrow, children }: { title: string; eyebr
       data-owner-design-system="Owner-first Design System"
       data-visual-hierarchy="Visual Hierarchy Standard"
     >
-      <span className="eyebrow">{eyebrow}</span>
-      <h2>{title}</h2>
-      {children ? <p>{children}</p> : null}
+      <span className="eyebrow">
+        <L text={eyebrow} />
+      </span>
+      <h2>
+        <L text={title} />
+      </h2>
+      {children ? <p>{typeof children === "string" ? <L text={children} /> : children}</p> : null}
       <div className="owner-page-cues" aria-label="Owner page cues">
-        <span>What this is</span>
-        <span>Health</span>
-        <span>Readiness</span>
-        <span>Missing</span>
-        <span>Next</span>
+        <span>
+          <L text="What this is" />
+        </span>
+        <span>
+          <L text="Health" />
+        </span>
+        <span>
+          <L text="Readiness" />
+        </span>
+        <span>
+          <L text="Missing" />
+        </span>
+        <span>
+          <L text="Next" />
+        </span>
       </div>
     </section>
   );
@@ -136,7 +156,7 @@ function ownerStatusTone(ok: boolean, label: string) {
 export function StatusBadge({ ok, label }: { ok: boolean; label: string }) {
   return (
     <span className={`status ${ownerStatusTone(ok, label)}`} data-owner-status="Owner-friendly Status Badges">
-      {label}
+      <L text={label} />
     </span>
   );
 }
@@ -151,7 +171,7 @@ function HealthBadge({ status }: { status: RegistryHealthStatus }) {
 
   return (
     <span className={className} data-owner-status="Owner-friendly Status Badges">
-      {status}
+      <L text={status} />
     </span>
   );
 }
@@ -254,60 +274,86 @@ export function PitsRegistryCockpit({ snapshot }: { snapshot: PlatformRegistrySn
     <section className="panel owner-cockpit" data-owner-cockpit="PITS Registry Cockpit / Project Runtime Summary">
       <div className="panel-heading">
         <div>
-          <h3>PITS Registry Cockpit / Project Runtime Summary</h3>
-          <p className="muted">Read-only project cockpit showing what is ready, what needs owner review, what is missing and the next detail link to open.</p>
+          <h3>
+            <L text="PITS Registry Cockpit / Project Runtime Summary" />
+          </h3>
+          <p className="muted">
+            <L text="Read-only project cockpit showing what is ready, what needs owner review, what is missing and the next detail link to open." />
+          </p>
         </div>
         <StatusBadge ok={isReady} label={isReady ? "Ready to operate" : "Needs owner review"} />
       </div>
       <dl className="owner-fact-grid" aria-label="PITS registry counts">
         <div>
-          <dt>Total projects</dt>
+          <dt>
+            <L text="Total projects" />
+          </dt>
           <dd>{snapshot.projects.length}</dd>
         </div>
         <div>
-          <dt>Total products</dt>
+          <dt>
+            <L text="Total products" />
+          </dt>
           <dd>{snapshot.products.length}</dd>
         </div>
         <div>
-          <dt>Total workspaces</dt>
+          <dt>
+            <L text="Total workspaces" />
+          </dt>
           <dd>{snapshot.workspaces.length}</dd>
         </div>
         <div>
-          <dt>Total installations</dt>
+          <dt>
+            <L text="Total installations" />
+          </dt>
           <dd>{snapshot.installations.length}</dd>
         </div>
         <div>
-          <dt>Health summary</dt>
+          <dt>
+            <L text="Health summary" />
+          </dt>
           <dd>{healthSummary ? `${healthSummary.healthy} healthy / ${healthSummary.degraded} needs review` : "Needs owner review"}</dd>
         </div>
         <div>
-          <dt>Project readiness</dt>
+          <dt>
+            <L text="Project readiness" />
+          </dt>
           <dd>{readinessSummary ? getOwnerReadinessLabel(readinessSummary.status) : "Incomplete"}</dd>
         </div>
         <div>
-          <dt>Ready / incomplete / blocked</dt>
+          <dt>
+            <L text="Ready / incomplete / blocked" />
+          </dt>
           <dd>{readinessSummary ? `${readinessSummary.ready} / ${readinessSummary.incomplete} / ${readinessSummary.blocked}` : "Incomplete"}</dd>
         </div>
       </dl>
       <div className="owner-guard-grid" aria-label="PITS readiness guards">
         <div>
-          <span>Missing link</span>
+          <span>
+            <L text="Missing link" />
+          </span>
           <strong>{missingLinkCount}</strong>
           <StatusBadge ok={missingLinkCount === 0} label={missingLinkCount === 0 ? "No issue detected" : "Needs owner review"} />
         </div>
         <div>
-          <span>Missing runtime URL</span>
+          <span>
+            <L text="Missing runtime URL" />
+          </span>
           <strong>{missingRuntimeUrlCount}</strong>
           <StatusBadge ok={missingRuntimeUrlCount === 0} label={missingRuntimeUrlCount === 0 ? "No issue detected" : "Needs owner review"} />
         </div>
         <div>
-          <span>Forbidden link guard</span>
+          <span>
+            <L text="Forbidden link guard" />
+          </span>
           <strong>{forbiddenIssueCount}</strong>
           <StatusBadge ok={forbiddenIssueCount === 0} label={forbiddenIssueCount === 0 ? "No issue detected" : "Blocked"} />
         </div>
       </div>
       <div className="owner-quick-links">
-        <h4>Quick project links</h4>
+        <h4>
+          <L text="Quick project links" />
+        </h4>
         <OwnerLinkList links={quickLinks} />
       </div>
     </section>
@@ -770,7 +816,7 @@ function firstDeterministicWorkItemHref(projectId: string) {
 export function PriorityBadge({ priority }: { priority: PitsWorkItemPriority }) {
   return (
     <span className={`priority-badge priority-${priority.toLowerCase()}`} data-priority={priority}>
-      {priorityLabels[priority]}
+      <L text={priorityLabels[priority]} />
     </span>
   );
 }
@@ -788,15 +834,21 @@ export function WorkItemCard({ item, detailHref }: { item: PitsWorkItem; detailH
       <p>{item.summary}</p>
       <dl className="work-item-facts">
         <div>
-          <dt>Owner</dt>
+          <dt>
+            <L text="Owner" />
+          </dt>
           <dd>{item.owner}</dd>
         </div>
         <div>
-          <dt>Due</dt>
+          <dt>
+            <L text="Due" />
+          </dt>
           <dd>{item.dueDate}</dd>
         </div>
         <div>
-          <dt>Next action</dt>
+          <dt>
+            <L text="Next action" />
+          </dt>
           <dd>{item.nextAction}</dd>
         </div>
       </dl>
@@ -823,7 +875,9 @@ export function WorkflowStatusColumn({ group }: { group: PitsWorkboardPayload["s
       <div className="panel-heading">
         <div>
           <span className="eyebrow">{group.status}</span>
-          <h4>{workboardStatusLabels[group.status] ?? group.label}</h4>
+          <h4>
+            <L text={workboardStatusLabels[group.status] ?? group.label} />
+          </h4>
         </div>
         <span className="pill">{group.items.length}</span>
       </div>
@@ -834,7 +888,9 @@ export function WorkflowStatusColumn({ group }: { group: PitsWorkboardPayload["s
           <article className="work-item-card owner-empty-state">
             <span className="eyebrow">No items</span>
             <h4>{group.label}</h4>
-            <p className="muted">No read-only work items are mapped for this status.</p>
+            <p className="muted">
+              <L text="No read-only work items are mapped for this status." />
+            </p>
           </article>
         )}
       </div>
@@ -846,9 +902,13 @@ export function ReadOnlyFunctionalSliceNotice({ payload }: { payload: PitsWorkbo
   return (
     <section className="read-only-functional-slice" aria-label="Read-only functional slice boundary">
       <div>
-        <span className="eyebrow">Read-only boundary</span>
+        <span className="eyebrow">
+          <L text="Read-only boundary" />
+        </span>
         <h4>{payload.readOnlyBoundary.notice}</h4>
-        <p className="muted">Work items can be inspected in Stage 2A. Editing, deletion and status changes remain disabled.</p>
+        <p className="muted">
+          <L text="Work items can be inspected in Stage 2A. Editing, deletion and status changes remain disabled." />
+        </p>
       </div>
       <div className="owner-review-marker-row">
         {payload.readOnlyBoundary.disabledActions.map((action) => (
@@ -864,32 +924,46 @@ export function WorkboardSummaryPanel({ payload }: { payload: PitsWorkboardPaylo
     <section className="workboard-summary-panel" aria-label="Workboard summary">
       <dl className="owner-fact-grid">
         <div>
-          <dt>Total items</dt>
+          <dt>
+            <L text="Total items" />
+          </dt>
           <dd>{payload.summary.totalItems}</dd>
         </div>
         <div>
-          <dt>Open</dt>
+          <dt>
+            <L text="Open" />
+          </dt>
           <dd>{payload.summary.openCount}</dd>
         </div>
         <div>
-          <dt>In progress</dt>
+          <dt>
+            <L text="In progress" />
+          </dt>
           <dd>{payload.summary.inProgressCount}</dd>
         </div>
         <div>
-          <dt>Blocked</dt>
+          <dt>
+            <L text="Blocked" />
+          </dt>
           <dd>{payload.summary.blockedCount}</dd>
         </div>
         <div>
-          <dt>Done</dt>
+          <dt>
+            <L text="Done" />
+          </dt>
           <dd>{payload.summary.doneCount}</dd>
         </div>
         <div>
-          <dt>High priority</dt>
+          <dt>
+            <L text="High priority" />
+          </dt>
           <dd>{payload.summary.highPriorityCount}</dd>
         </div>
       </dl>
       <section className="suggested-actions" aria-label="Next recommended workboard action">
-        <h5>Next recommended action</h5>
+        <h5>
+          <L text="Next recommended action" />
+        </h5>
         <p>{payload.summary.nextRecommendedAction}</p>
       </section>
     </section>
@@ -908,8 +982,12 @@ export function PitsProjectWorkboardPanel({
       <section className="panel workboard-panel owner-empty-state" data-pits-workboard="PITS Project Workboard">
         <div className="panel-heading">
           <div>
-            <h3>{title}</h3>
-            <p className="muted">Project workboard data is unavailable from Core API.</p>
+            <h3>
+              <L text={title} />
+            </h3>
+            <p className="muted">
+              <L text="Project workboard data is unavailable from Core API." />
+            </p>
           </div>
           <StatusBadge ok={false} label="Needs owner review" />
         </div>
@@ -923,9 +1001,11 @@ export function PitsProjectWorkboardPanel({
       <div className="panel-heading">
         <div>
           <span className="eyebrow">{payload.workboard.projectCode}</span>
-          <h3>{title}</h3>
+          <h3>
+            <L text={title} />
+          </h3>
           <p className="muted">
-            {payload.workboard.projectName} work items grouped by workflow status. This is the first real PITS user-level browser workflow.
+            {payload.workboard.projectName} <L text="work items grouped by workflow status. This is the first real PITS user-level browser workflow." />
           </p>
         </div>
         <StatusBadge ok={payload.workboard.readOnly} label="Read-only functional slice" />
@@ -959,28 +1039,40 @@ export function DryRunActionPreviewCard({ preview }: { preview: PitsDryRunAction
       </div>
       <dl className="work-item-facts dry-run-facts">
         <div>
-          <dt>Current value</dt>
+          <dt>
+            <L text="Current value" />
+          </dt>
           <dd>{preview.currentValue}</dd>
         </div>
         <div>
-          <dt>Proposed value</dt>
+          <dt>
+            <L text="Proposed value" />
+          </dt>
           <dd>{preview.proposedValue}</dd>
         </div>
         <div>
-          <dt>Required role</dt>
+          <dt>
+            <L text="Required role" />
+          </dt>
           <dd>{preview.requiredRole}</dd>
         </div>
         <div>
-          <dt>Mode</dt>
+          <dt>
+            <L text="Mode" />
+          </dt>
           <dd>{preview.mode}</dd>
         </div>
       </dl>
       <section className="suggested-actions" aria-label={`${preview.label} expected impact`}>
-        <h5>What would happen?</h5>
+        <h5>
+          <L text="What would happen?" />
+        </h5>
         <p>{preview.expectedImpact}</p>
       </section>
       <section className="suggested-actions" aria-label={`${preview.label} blocked reason`}>
-        <h5>Why is it blocked now?</h5>
+        <h5>
+          <L text="Why is it blocked now?" />
+        </h5>
         <p>{preview.blockedReason}</p>
       </section>
       <div className="owner-review-marker-row" aria-label={`${preview.label} required gates`}>
@@ -1009,8 +1101,12 @@ export function DryRunActionPreviewPanel({
       <div className="panel-heading">
         <div>
           <span className="eyebrow">Stage 2B</span>
-          <h3>Dry-run Action Preview</h3>
-          <p className="muted">Preview only. No data will be changed. Future execution requires audit, confirmation and rollback gates.</p>
+          <h3>
+            <L text="Dry-run Action Preview" />
+          </h3>
+          <p className="muted">
+            <L text="Preview only. No data will be changed. Future execution requires audit, confirmation and rollback gates." />
+          </p>
         </div>
         <StatusBadge ok={payload?.noDataChanged ?? previews.every((preview) => preview.noDataChanged)} label="Preview only" />
       </div>
@@ -1043,12 +1139,18 @@ export function WorkItemDetailPanel({ payload }: { payload: PitsWorkItemDetailPa
       <section className="panel work-item-detail-panel owner-empty-state" data-work-item-detail="Work Item Detail">
         <div className="panel-heading">
           <div>
-            <h3>Work Item Detail</h3>
-            <p className="muted">Work item detail data is unavailable from Core API.</p>
+            <h3>
+              <L text="Work Item Detail" />
+            </h3>
+            <p className="muted">
+              <L text="Work item detail data is unavailable from Core API." />
+            </p>
           </div>
           <StatusBadge ok={false} label="Preview unavailable" />
         </div>
-        <p className="muted">Preview only. No data will be changed.</p>
+        <p className="muted">
+          <L text="Preview only" />. <L text="No data will be changed" />.
+        </p>
       </section>
     );
   }
@@ -1060,7 +1162,9 @@ export function WorkItemDetailPanel({ payload }: { payload: PitsWorkItemDetailPa
       <div className="panel-heading">
         <div>
           <span className="eyebrow">{payload.workItemDetail.projectCode}</span>
-          <h3>Work Item Detail</h3>
+          <h3>
+            <L text="Work Item Detail" />
+          </h3>
           <p className="muted">{item.description}</p>
         </div>
         <PriorityBadge priority={item.priority} />
@@ -1081,40 +1185,62 @@ export function WorkItemDetailPanel({ payload }: { payload: PitsWorkItemDetailPa
         <p>{item.summary}</p>
         <dl className="work-item-facts work-item-detail-facts">
           <div>
-            <dt>Status</dt>
-            <dd>{workboardStatusLabels[item.status] ?? item.status}</dd>
+            <dt>
+              <L text="Status" />
+            </dt>
+            <dd>
+              <L text={workboardStatusLabels[item.status] ?? item.status} />
+            </dd>
           </div>
           <div>
-            <dt>Priority</dt>
-            <dd>{priorityLabels[item.priority] ?? item.priority}</dd>
+            <dt>
+              <L text="Priority" />
+            </dt>
+            <dd>
+              <L text={priorityLabels[item.priority] ?? item.priority} />
+            </dd>
           </div>
           <div>
-            <dt>Owner</dt>
+            <dt>
+              <L text="Owner" />
+            </dt>
             <dd>{item.owner}</dd>
           </div>
           <div>
-            <dt>Due date</dt>
+            <dt>
+              <L text="Due date" />
+            </dt>
             <dd>{item.dueDate}</dd>
           </div>
           <div>
-            <dt>Source</dt>
+            <dt>
+              <L text="Source" />
+            </dt>
             <dd>{item.source}</dd>
           </div>
           <div>
-            <dt>Related project</dt>
+            <dt>
+              <L text="Related project" />
+            </dt>
             <dd>{payload.workItemDetail.projectName}</dd>
           </div>
         </dl>
         <section className="suggested-actions" aria-label="Work item next action">
-          <h5>Next action</h5>
+          <h5>
+            <L text="Next action" />
+          </h5>
           <p>{item.nextAction}</p>
         </section>
         <section className="suggested-actions" aria-label="Work item blockers">
-          <h5>Blockers</h5>
+          <h5>
+            <L text="Blockers" />
+          </h5>
           {item.blockers.length > 0 ? <SafetyGateList gates={item.blockers} /> : <p>No blockers are recorded for this item.</p>}
         </section>
         <section className="suggested-actions" aria-label="Available dry-run actions">
-          <h5>Available dry-run actions</h5>
+          <h5>
+            <L text="Available dry-run actions" />
+          </h5>
           <div className="owner-review-marker-row">
             {item.availableDryRunActions.map((action) => (
               <span key={action.actionType}>{action.label}</span>
@@ -1124,7 +1250,9 @@ export function WorkItemDetailPanel({ payload }: { payload: PitsWorkItemDetailPa
       </article>
       <section className="read-only-functional-slice" aria-label="Stage 2B read-only boundary">
         <div>
-          <span className="eyebrow">Read-only boundary</span>
+          <span className="eyebrow">
+            <L text="Read-only boundary" />
+          </span>
           <h4>{payload.readOnlyBoundary.notice}</h4>
           <p className="muted">No status, owner, note, priority or blocker mutation is enabled in Stage 2B.</p>
         </div>
@@ -1284,8 +1412,12 @@ export function RegistryHealthPanel({ snapshot }: { snapshot: PlatformRegistrySn
     <section className="panel registry-health-panel" data-registry-health="Registry Runtime Health">
       <div className="panel-heading">
         <div>
-          <h3>Registry Runtime Health</h3>
-          <p className="muted">Project runtime availability from Core API /platform/registry/health.</p>
+          <h3>
+            <L text="Registry Runtime Health" />
+          </h3>
+          <p className="muted">
+            <L text="Project runtime availability from Core API /platform/registry/health." />
+          </p>
         </div>
         <StatusBadge
           ok={Boolean(payload && summary?.status === "Healthy")}
@@ -1441,8 +1573,12 @@ export function RegistryGovernancePanel({ snapshot }: { snapshot: PlatformRegist
     <section className="panel registry-readiness-panel" data-registry-readiness="Registry Governance / Readiness">
       <div className="panel-heading">
         <div>
-          <h3>Registry Governance / Readiness</h3>
-          <p className="muted">Project readiness from Core API /platform/registry/readiness.</p>
+          <h3>
+            <L text="Registry Governance / Readiness" />
+          </h3>
+          <p className="muted">
+            <L text="Project readiness from Core API /platform/registry/readiness." />
+          </p>
         </div>
         {summary ? <ReadinessBadge status={summary.status} /> : <StatusBadge ok={false} label="Needs owner review" />}
       </div>
@@ -1511,9 +1647,13 @@ export function ProjectSelector({ snapshot }: { snapshot: PlatformRegistrySnapsh
     <section className="panel">
       <div className="panel-heading">
         <div>
-          <h3>Project Selector</h3>
+          <h3>
+            <L text="Project Selector" />
+          </h3>
           <p className="muted">Project count from Core API /platform/overview: {snapshot.counts.projects ?? "-"}.</p>
-          <p className="muted">PITS is no longer only a registry/readiness shell; Stage 2A adds a read-only workboard and Stage 2B adds work item detail with dry-run preview.</p>
+          <p className="muted">
+            <L text="PITS is no longer only a registry/readiness shell; Stage 2A adds a read-only workboard and Stage 2B adds work item detail with dry-run preview." />
+          </p>
         </div>
         <span className="pill">Installations: {snapshot.counts.installations ?? "-"}</span>
       </div>
@@ -1562,8 +1702,12 @@ export function RuntimeStatusCard({ snapshot }: { snapshot: PlatformSnapshot }) 
     <section className="panel">
       <div className="panel-heading">
         <div>
-          <h3>Runtime Status</h3>
-          <p className="muted">PITS reads platform data through Core API only.</p>
+          <h3>
+            <L text="Runtime Status" />
+          </h3>
+          <p className="muted">
+            <L text="PITS reads platform data through Core API only." />
+          </p>
         </div>
         <StatusBadge
           ok={snapshot.health.ok && snapshot.healthStatus === "ok"}
@@ -1572,15 +1716,21 @@ export function RuntimeStatusCard({ snapshot }: { snapshot: PlatformSnapshot }) 
       </div>
       <dl className="facts">
         <div>
-          <dt>Status</dt>
+          <dt>
+            <L text="Status" />
+          </dt>
           <dd>{snapshot.healthStatus}</dd>
         </div>
         <div>
-          <dt>Service</dt>
+          <dt>
+            <L text="Service" />
+          </dt>
           <dd>{snapshot.healthService}</dd>
         </div>
         <div>
-          <dt>Stage</dt>
+          <dt>
+            <L text="Stage" />
+          </dt>
           <dd>{snapshot.healthStage}</dd>
         </div>
         <div>
@@ -1612,8 +1762,12 @@ export function InstallationRegistryPanel({ snapshot }: { snapshot: PlatformRegi
     <section className="panel">
       <div className="panel-heading">
         <div>
-          <h3>Project Installation Registry</h3>
-          <p className="muted">PITS installation mapping read from Core API /platform/registry.</p>
+          <h3>
+            <L text="Project Installation Registry" />
+          </h3>
+          <p className="muted">
+            <L text="PITS installation mapping read from Core API /platform/registry." />
+          </p>
         </div>
         <span className="pill">Installations: {snapshot.installations.length}</span>
       </div>
@@ -1758,8 +1912,12 @@ export function PlatformCountsPanel({ snapshot }: { snapshot: PlatformSnapshot }
     <section className="panel">
       <div className="panel-heading">
         <div>
-          <h3>Platform Overview Counts</h3>
-          <p className="muted">Seeded staging counts from Core API /platform/overview.</p>
+          <h3>
+            <L text="Platform Overview Counts" />
+          </h3>
+          <p className="muted">
+            <L text="Seeded staging counts from Core API /platform/overview." />
+          </p>
         </div>
         <span className="pill">PLATFORM_KERNEL: {snapshot.platformKernelStatus}</span>
       </div>
@@ -1775,9 +1933,11 @@ export function PlatformCountsPanel({ snapshot }: { snapshot: PlatformSnapshot }
 export function DataBoundaryPanel() {
   return (
     <section className="panel">
-      <h3>Data Access Boundary</h3>
+      <h3>
+        <L text="Data Access Boundary" />
+      </h3>
       <p className="muted">
-        UI shell reads product status through Core API only. DB-backed demo data is accessed only through the Core API.
+        <L text="UI shell reads product status through Core API only. DB-backed demo data is accessed only through the Core API." />
       </p>
     </section>
   );
@@ -1786,7 +1946,9 @@ export function DataBoundaryPanel() {
 function Metric({ label, value, field }: { label: string; value: number | null; field?: KernelField }) {
   return (
     <section className="metric-tile" data-count-field={field}>
-      <span>{label}</span>
+      <span>
+        <L text={label} />
+      </span>
       <strong>{value ?? "-"}</strong>
     </section>
   );

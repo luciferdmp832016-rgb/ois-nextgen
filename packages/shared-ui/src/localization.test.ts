@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import {
   defaultLocale,
+  getLocalizationCatalog,
   isSupportedLocale,
+  localizeDisplayText,
   localizeNavLabel,
   localizeStatusCode,
   normalizeLocale,
-  translate
+  translate,
+  translations
 } from "./localization";
 
 describe("shared localization foundation", () => {
@@ -36,5 +39,22 @@ describe("shared localization foundation", () => {
     expect(localizeStatusCode("BLOCKED", "vi")).toBe("Bị chặn");
     expect(localizeStatusCode("DONE", "vi")).toBe("Hoàn tất");
     expect(localizeStatusCode("CUSTOM_INTERNAL_CODE", "vi")).toBe("CUSTOM_INTERNAL_CODE");
+  });
+
+  it("localizes exact visible UI labels without changing unknown stable values", () => {
+    expect(localizeDisplayText("Runtime Status", "vi")).toBe("Trạng thái runtime");
+    expect(localizeDisplayText("Core API source:", "vi")).toBe("Core API source:");
+    expect(localizeDisplayText("OIS_CONSOLE", "vi")).toBe("OIS_CONSOLE");
+  });
+
+  it("reports read-only catalog coverage for manual language-pack review", () => {
+    const catalog = getLocalizationCatalog("vi");
+
+    expect(catalog.availableLocales).toEqual(["en", "vi"]);
+    expect(catalog.totalKeys).toBe(Object.keys(translations).length);
+    expect(catalog.missingKeyCount).toBe(0);
+    expect(catalog.manualEditLocation).toBe("packages/shared-ui/src/localization.ts");
+    expect(catalog.namespaces.map((namespace) => namespace.namespace)).toContain("panel");
+    expect(catalog.namespaces.map((namespace) => namespace.namespace)).toContain("status");
   });
 });

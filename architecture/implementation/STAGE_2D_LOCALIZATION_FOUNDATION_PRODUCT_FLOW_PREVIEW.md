@@ -2,6 +2,8 @@
 
 Decision label: `LOCALIZATION_FOUNDATION_PRODUCT_FLOW_PREVIEW_READY`
 
+Stage 2D-R1 hotfix decision label: `LOCALIZATION_COVERAGE_FONT_RUNTIME_MARKER_HOTFIX_READY`
+
 Expected runtime verified label after GitHub CI, Abacus runtime sync/checks and Owner Browser/UAT: `LOCALIZATION_FOUNDATION_PRODUCT_FLOW_PREVIEW_RUNTIME_VERIFIED`
 
 ## Summary
@@ -9,6 +11,8 @@ Expected runtime verified label after GitHub CI, Abacus runtime sync/checks and 
 Stage 2D adds a shared English/Tiếng Việt localization foundation and upgrades the existing OIS/PITS `/product-flow` routes into visual product-flow previews for owner review.
 
 The implementation is UI-only and keeps workflow/API behavior unchanged.
+
+Stage 2D-R1 restores the stable `Core API source:` runtime marker, expands visible localization coverage, adds OIS/PITS `/localization` read-only catalog routes and standardizes Vietnamese-safe typography.
 
 ## Implemented
 

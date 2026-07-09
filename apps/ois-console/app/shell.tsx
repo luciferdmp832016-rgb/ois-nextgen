@@ -14,6 +14,7 @@ import {
   getProductUatSurfacesFor,
   getReadinessGaps,
   kernelFields,
+  LocalizedText,
   ModernProductShell,
   type AdminBoundaryAction,
   type AdminPermissionState,
@@ -37,6 +38,7 @@ const navItems = [
   { id: "dashboard", href: "/dashboard", label: "Dashboard", shortLabel: "Db" },
   { id: "products", href: "/products", label: "Products", shortLabel: "Pr" },
   { id: "workspaces", href: "/workspaces", label: "Workspaces", shortLabel: "Ws" },
+  { id: "localization", href: "/localization", label: "Localization", shortLabel: "L10n" },
   { id: "runtime", href: "/runtime", label: "Runtime", shortLabel: "Rt" }
 ];
 
@@ -50,6 +52,10 @@ const countLabels: Record<KernelField, string> = {
   modules: "Modules",
   auditRecords: "Audit Records"
 };
+
+function L({ text }: { text: string }) {
+  return <LocalizedText text={text} />;
+}
 
 export function OisConsoleShell({
   active,
@@ -87,15 +93,29 @@ export function PageHeading({ title, eyebrow, children }: { title: string; eyebr
       data-owner-design-system="Owner-first Design System"
       data-visual-hierarchy="Visual Hierarchy Standard"
     >
-      <span className="eyebrow">{eyebrow}</span>
-      <h2>{title}</h2>
-      {children ? <p>{children}</p> : null}
+      <span className="eyebrow">
+        <L text={eyebrow} />
+      </span>
+      <h2>
+        <L text={title} />
+      </h2>
+      {children ? <p>{typeof children === "string" ? <L text={children} /> : children}</p> : null}
       <div className="owner-page-cues" aria-label="Owner page cues">
-        <span>What this is</span>
-        <span>Health</span>
-        <span>Readiness</span>
-        <span>Missing</span>
-        <span>Next</span>
+        <span>
+          <L text="What this is" />
+        </span>
+        <span>
+          <L text="Health" />
+        </span>
+        <span>
+          <L text="Readiness" />
+        </span>
+        <span>
+          <L text="Missing" />
+        </span>
+        <span>
+          <L text="Next" />
+        </span>
       </div>
     </section>
   );
@@ -130,7 +150,7 @@ function ownerStatusTone(ok: boolean, label: string) {
 export function StatusBadge({ ok, label }: { ok: boolean; label: string }) {
   return (
     <span className={`status ${ownerStatusTone(ok, label)}`} data-owner-status="Owner-friendly Status Badges">
-      {label}
+      <L text={label} />
     </span>
   );
 }
@@ -145,7 +165,7 @@ function HealthBadge({ status }: { status: RegistryHealthStatus }) {
 
   return (
     <span className={className} data-owner-status="Owner-friendly Status Badges">
-      {status}
+      <L text={status} />
     </span>
   );
 }
@@ -265,64 +285,92 @@ export function OwnerRegistryCockpit({ snapshot }: { snapshot: PlatformRegistryS
     <section className="panel owner-cockpit" data-owner-cockpit="Owner Registry Cockpit / Registry Runtime Summary">
       <div className="panel-heading">
         <div>
-          <h3>Owner Registry Cockpit / Registry Runtime Summary</h3>
-          <p className="muted">Read-only browser cockpit showing what is ready, what needs owner review, what is missing and the next detail link to open.</p>
+          <h3>
+            <L text="Owner Registry Cockpit / Registry Runtime Summary" />
+          </h3>
+          <p className="muted">
+            <L text="Read-only browser cockpit showing what is ready, what needs owner review, what is missing and the next detail link to open." />
+          </p>
         </div>
         <StatusBadge ok={isReady} label={isReady ? "Ready to operate" : "Needs owner review"} />
       </div>
       <dl className="owner-fact-grid" aria-label="Owner registry counts">
         <div>
-          <dt>Total products</dt>
+          <dt>
+            <L text="Total products" />
+          </dt>
           <dd>{snapshot.products.length}</dd>
         </div>
         <div>
-          <dt>Total workspaces</dt>
+          <dt>
+            <L text="Total workspaces" />
+          </dt>
           <dd>{snapshot.workspaces.length}</dd>
         </div>
         <div>
-          <dt>Total projects</dt>
+          <dt>
+            <L text="Total projects" />
+          </dt>
           <dd>{snapshot.projects.length}</dd>
         </div>
         <div>
-          <dt>Total modules</dt>
+          <dt>
+            <L text="Total modules" />
+          </dt>
           <dd>{snapshot.modules.length}</dd>
         </div>
         <div>
-          <dt>Total installations</dt>
+          <dt>
+            <L text="Total installations" />
+          </dt>
           <dd>{snapshot.installations.length}</dd>
         </div>
         <div>
-          <dt>Health summary</dt>
+          <dt>
+            <L text="Health summary" />
+          </dt>
           <dd>{healthSummary ? `${healthSummary.healthy} healthy / ${healthSummary.degraded} needs review` : "Needs owner review"}</dd>
         </div>
         <div>
-          <dt>Readiness summary</dt>
+          <dt>
+            <L text="Readiness summary" />
+          </dt>
           <dd>{readinessSummary ? getOwnerReadinessLabel(readinessSummary.status) : "Incomplete"}</dd>
         </div>
         <div>
-          <dt>Ready / incomplete / blocked</dt>
+          <dt>
+            <L text="Ready / incomplete / blocked" />
+          </dt>
           <dd>{readinessSummary ? `${readinessSummary.ready} / ${readinessSummary.incomplete} / ${readinessSummary.blocked}` : "Incomplete"}</dd>
         </div>
       </dl>
       <div className="owner-guard-grid" aria-label="Owner readiness guards">
         <div>
-          <span>Missing link</span>
+          <span>
+            <L text="Missing link" />
+          </span>
           <strong>{missingLinkCount}</strong>
           <StatusBadge ok={missingLinkCount === 0} label={missingLinkCount === 0 ? "No issue detected" : "Needs owner review"} />
         </div>
         <div>
-          <span>Missing runtime URL</span>
+          <span>
+            <L text="Missing runtime URL" />
+          </span>
           <strong>{missingRuntimeUrlCount}</strong>
           <StatusBadge ok={missingRuntimeUrlCount === 0} label={missingRuntimeUrlCount === 0 ? "No issue detected" : "Needs owner review"} />
         </div>
         <div>
-          <span>Forbidden link guard</span>
+          <span>
+            <L text="Forbidden link guard" />
+          </span>
           <strong>{forbiddenIssueCount}</strong>
           <StatusBadge ok={forbiddenIssueCount === 0} label={forbiddenIssueCount === 0 ? "No issue detected" : "Blocked"} />
         </div>
       </div>
       <div className="owner-quick-links">
-        <h4>Quick detail links</h4>
+        <h4>
+          <L text="Quick detail links" />
+        </h4>
         <OwnerLinkList links={quickLinks} />
       </div>
     </section>
@@ -873,8 +921,12 @@ export function RegistryHealthPanel({ snapshot }: { snapshot: PlatformRegistrySn
     <section className="panel registry-health-panel" data-registry-health="Registry Runtime Health">
       <div className="panel-heading">
         <div>
-          <h3>Registry Runtime Health</h3>
-          <p className="muted">Owner-facing configured, linked and staging URL status from Core API /platform/registry/health.</p>
+          <h3>
+            <L text="Registry Runtime Health" />
+          </h3>
+          <p className="muted">
+            <L text="Owner-facing configured, linked and staging URL status from Core API /platform/registry/health." />
+          </p>
         </div>
         <StatusBadge
           ok={Boolean(payload && summary?.status === "Healthy")}
@@ -1030,8 +1082,12 @@ export function RegistryGovernancePanel({ snapshot }: { snapshot: PlatformRegist
     <section className="panel registry-readiness-panel" data-registry-readiness="Registry Governance / Readiness">
       <div className="panel-heading">
         <div>
-          <h3>Registry Governance / Readiness</h3>
-          <p className="muted">Owner-facing readiness from Core API /platform/registry/readiness.</p>
+          <h3>
+            <L text="Registry Governance / Readiness" />
+          </h3>
+          <p className="muted">
+            <L text="Owner-facing readiness from Core API /platform/registry/readiness." />
+          </p>
         </div>
         {summary ? <ReadinessBadge status={summary.status} /> : <StatusBadge ok={false} label="Needs owner review" />}
       </div>
@@ -1100,8 +1156,12 @@ export function PlatformOverviewCard({ snapshot }: { snapshot: PlatformSnapshot 
     <section className="panel">
       <div className="panel-heading">
         <div>
-          <h3>Platform Overview Counts</h3>
-          <p className="muted">Seeded counts read from Core API /platform/overview.</p>
+          <h3>
+            <L text="Platform Overview Counts" />
+          </h3>
+          <p className="muted">
+            <L text="Seeded counts read from Core API /platform/overview." />
+          </p>
         </div>
         <StatusBadge ok={snapshot.overview.ok} label={snapshot.overview.ok ? "Overview ready" : "Needs owner review"} />
       </div>
@@ -1115,8 +1175,12 @@ export function ProductModuleOverview({ snapshot }: { snapshot: PlatformSnapshot
     <section className="panel">
       <div className="panel-heading">
         <div>
-          <h3>Product & Module Overview</h3>
-          <p className="muted">Current product catalog baseline from the shared Core API.</p>
+          <h3>
+            <L text="Product & Module Overview" />
+          </h3>
+          <p className="muted">
+            <L text="Current product catalog baseline from the shared Core API." />
+          </p>
         </div>
         <span className="pill">PLATFORM_KERNEL: {snapshot.platformKernelStatus}</span>
       </div>
@@ -1130,8 +1194,12 @@ export function RuntimeStatusCard({ snapshot }: { snapshot: PlatformSnapshot }) 
     <section className="panel">
       <div className="panel-heading">
         <div>
-          <h3>Runtime Status</h3>
-          <p className="muted">Public staging shell status through Core API only.</p>
+          <h3>
+            <L text="Runtime Status" />
+          </h3>
+          <p className="muted">
+            <L text="Public staging shell status through Core API only." />
+          </p>
         </div>
         <StatusBadge
           ok={snapshot.health.ok && snapshot.healthStatus === "ok"}
@@ -1140,15 +1208,21 @@ export function RuntimeStatusCard({ snapshot }: { snapshot: PlatformSnapshot }) 
       </div>
       <dl className="facts">
         <div>
-          <dt>Status</dt>
+          <dt>
+            <L text="Status" />
+          </dt>
           <dd>{snapshot.healthStatus}</dd>
         </div>
         <div>
-          <dt>Service</dt>
+          <dt>
+            <L text="Service" />
+          </dt>
           <dd>{snapshot.healthService}</dd>
         </div>
         <div>
-          <dt>Stage</dt>
+          <dt>
+            <L text="Stage" />
+          </dt>
           <dd>{snapshot.healthStage}</dd>
         </div>
         <div>
@@ -1167,9 +1241,11 @@ export function RuntimeStatusCard({ snapshot }: { snapshot: PlatformSnapshot }) 
 export function DataBoundaryPanel() {
   return (
     <section className="panel">
-      <h3>Data Access Boundary</h3>
+      <h3>
+        <L text="Data Access Boundary" />
+      </h3>
       <p className="muted">
-        UI shell reads product status through Core API only. DB-backed demo data is accessed only through the Core API.
+        <L text="UI shell reads product status through Core API only. DB-backed demo data is accessed only through the Core API." />
       </p>
     </section>
   );
@@ -1180,22 +1256,30 @@ export function RegistryStatusPanel({ snapshot }: { snapshot: PlatformRegistrySn
     <section className="panel">
       <div className="panel-heading">
         <div>
-          <h3>Platform Registry Source</h3>
+          <h3>
+            <L text="Platform Registry Source" />
+          </h3>
           <p className="muted">Read-only registry data from Core API /platform/registry.</p>
         </div>
         <StatusBadge ok={snapshot.registry.ok} label={snapshot.registry.ok ? "Registry ready" : "Needs owner review"} />
       </div>
       <dl className="facts">
         <div>
-          <dt>Source</dt>
+          <dt>
+            <L text="Source" />
+          </dt>
           <dd>{snapshot.registryMetadata?.source ?? "Needs owner review"}</dd>
         </div>
         <div>
-          <dt>Mode</dt>
+          <dt>
+            <L text="Mode" />
+          </dt>
           <dd>{snapshot.registryMetadata?.mode ?? "read-only"}</dd>
         </div>
         <div>
-          <dt>Environment</dt>
+          <dt>
+            <L text="Environment" />
+          </dt>
           <dd>{snapshot.registryMetadata?.environment ?? "staging"}</dd>
         </div>
         <div>
@@ -1212,18 +1296,24 @@ export function DetailStatusPanel<T>({ detail, label }: { detail: RegistryDetail
     <section className="panel">
       <div className="panel-heading">
         <div>
-          <h3>{label} Source</h3>
+          <h3>
+            <L text={`${label} Source`} />
+          </h3>
           <p className="muted">Read-only detail data from Core API.</p>
         </div>
         <StatusBadge ok={detail.detail.ok} label={detail.detail.ok ? "Detail ready" : detail.notFound ? "Missing link" : "Needs owner review"} />
       </div>
       <dl className="facts">
         <div>
-          <dt>Source</dt>
+          <dt>
+            <L text="Source" />
+          </dt>
           <dd>{detail.metadata?.source ?? "Needs owner review"}</dd>
         </div>
         <div>
-          <dt>Mode</dt>
+          <dt>
+            <L text="Mode" />
+          </dt>
           <dd>{detail.metadata?.mode ?? "read-only"}</dd>
         </div>
         <div>
@@ -1322,7 +1412,9 @@ export function CountGrid({ snapshot, fields }: { snapshot: PlatformSnapshot; fi
     <div className="count-grid">
       {fields.map((field) => (
         <div className="count-tile" data-count-field={field} key={field}>
-          <span>{countLabels[field]}</span>
+          <span>
+            <L text={countLabels[field]} />
+          </span>
           <strong>{snapshot.counts[field] ?? "-"}</strong>
         </div>
       ))}

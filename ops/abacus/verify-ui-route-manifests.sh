@@ -118,12 +118,12 @@ if [ ! -f "$REPO_DIR/package.json" ]; then
   exit 1
 fi
 
-check_app "OIS_CONSOLE" "apps/ois-console" "/" "/product-flow" "/dashboard" "/products" "/products/[id]" "/workspaces" "/workspaces/[id]" "/modules/[id]" "/installations/[id]" "/runtime"
-check_app "PITS_SHELL" "apps/pits-shell" "/" "/product-flow" "/projects" "/projects/[id]" "/projects/[id]/workboard" "/projects/[id]/work-items/[itemId]" "/runtime"
+check_app "OIS_CONSOLE" "apps/ois-console" "/" "/product-flow" "/dashboard" "/products" "/products/[id]" "/workspaces" "/workspaces/[id]" "/modules/[id]" "/installations/[id]" "/localization" "/runtime"
+check_app "PITS_SHELL" "apps/pits-shell" "/" "/product-flow" "/projects" "/projects/[id]" "/projects/[id]/workboard" "/projects/[id]/work-items/[itemId]" "/localization" "/runtime"
 
 if [ "$failures" -gt 0 ]; then
   printf '\nUI_ROUTE_MANIFEST_CHECK_FAILED failures=%s\n' "$failures" >&2
   exit 1
 fi
 
-printf '\nUI_ROUTE_MANIFEST_CHECK_PASSED OIS Console and PITS Shell Stage 1A/1C plus Stage 2A workboard, Stage 2B work item detail and Stage 2D localized product-flow routes are present in production build artifacts.\n'
+printf '\nUI_ROUTE_MANIFEST_CHECK_PASSED OIS Console and PITS Shell Stage 1A/1C plus Stage 2A workboard, Stage 2B work item detail, Stage 2D localized product-flow routes and Stage 2D-R1 localization catalog routes are present in production build artifacts.\n'

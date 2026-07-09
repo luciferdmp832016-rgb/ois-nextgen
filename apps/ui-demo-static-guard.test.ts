@@ -27,6 +27,7 @@ const expectedRouteFiles = [
   "ois-console/app/workspaces/[id]/page.tsx",
   "ois-console/app/modules/[id]/page.tsx",
   "ois-console/app/installations/[id]/page.tsx",
+  "ois-console/app/localization/page.tsx",
   "ois-console/app/runtime/page.tsx",
   "pits-shell/app/page.tsx",
   "pits-shell/app/product-flow/page.tsx",
@@ -34,6 +35,7 @@ const expectedRouteFiles = [
   "pits-shell/app/projects/[id]/page.tsx",
   "pits-shell/app/projects/[id]/workboard/page.tsx",
   "pits-shell/app/projects/[id]/work-items/[itemId]/page.tsx",
+  "pits-shell/app/localization/page.tsx",
   "pits-shell/app/runtime/page.tsx"
 ];
 const expectedStage2CUxBlueprintDocs = [
@@ -45,7 +47,8 @@ const expectedStage2CUxBlueprintDocs = [
 const expectedStage2DLocalizationDocs = [
   "architecture/ux/LOCALIZATION_FOUNDATION.md",
   "architecture/ux/PRODUCT_FLOW_VISUAL_PREVIEW.md",
-  "architecture/implementation/STAGE_2D_LOCALIZATION_FOUNDATION_PRODUCT_FLOW_PREVIEW.md"
+  "architecture/implementation/STAGE_2D_LOCALIZATION_FOUNDATION_PRODUCT_FLOW_PREVIEW.md",
+  "architecture/implementation/STAGE_2D_R1_LOCALIZATION_COVERAGE_FONT_RUNTIME_MARKER_HOTFIX.md"
 ];
 
 function collectScannedFiles(root: string): string[] {
