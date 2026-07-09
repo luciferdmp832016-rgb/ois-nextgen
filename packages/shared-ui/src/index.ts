@@ -564,6 +564,28 @@ export type PitsDryRunActionPreview = {
   noDataChanged: true;
 };
 
+export type PitsActionRequestStatus = "DRAFT" | "PENDING_REVIEW" | "APPROVED_PREVIEW" | "REJECTED_PREVIEW" | "BLOCKED_BY_SAFETY_GATE";
+
+export type PitsWorkItemActionRequest = {
+  requestId: string;
+  projectId: string;
+  workItemId: string;
+  actionType: PitsDryRunActionType;
+  requestedBy: string;
+  requestedAt: string;
+  currentValue: string;
+  proposedValue: string;
+  status: PitsActionRequestStatus;
+  auditRequired: true;
+  confirmationRequired: true;
+  rollbackRequired: true;
+  permissionRequired: string;
+  safetyGates: string[];
+  expectedImpact: string;
+  rollbackPlan: string;
+  noDirectMutation: true;
+};
+
 export type PitsWorkItemDetail = PitsWorkItem & {
   description: string;
   readOnlyNotice: string;
@@ -682,6 +704,70 @@ export type PitsWorkItemActionPreviewPayload = {
   noDataChanged: true;
 };
 
+export type PitsWorkItemActionRequestsPayload = {
+  metadata: RegistryMetadata;
+  runtime: {
+    coreApiBaseUrl: string;
+    oisConsoleBaseUrl: string;
+    pitsShellBaseUrl: string;
+    actionRequestMode: string;
+    stage: string;
+    note: string;
+  };
+  actionRequestList: {
+    projectId: string;
+    projectCode: string;
+    projectName: string;
+    workItemId: string;
+    supportedActions: PitsDryRunActionType[];
+    actionRequestOnly: true;
+    noDirectMutation: true;
+    markers: string[];
+  };
+  requests: PitsWorkItemActionRequest[];
+  request: PitsWorkItemActionRequest | null;
+  readOnlyBoundary: {
+    mutationEndpointsAdded: boolean;
+    writePermission: string;
+    notice: string;
+    disabledActions: string[];
+    futureWriteBoundary: string;
+  };
+  noDirectMutation: true;
+};
+
+export type PitsWorkItemActionRequestPreviewPayload = {
+  metadata: RegistryMetadata;
+  runtime: {
+    coreApiBaseUrl: string;
+    oisConsoleBaseUrl: string;
+    pitsShellBaseUrl: string;
+    actionRequestPreviewMode: string;
+    stage: string;
+    note: string;
+  };
+  actionRequestPreview: {
+    projectId: string;
+    projectCode: string;
+    projectName: string;
+    workItemId: string;
+    requestedActionType: PitsDryRunActionType | null;
+    actionRequestOnly: true;
+    noDirectMutation: true;
+    markers: string[];
+  };
+  requests: PitsWorkItemActionRequest[];
+  request: PitsWorkItemActionRequest | null;
+  sourceItemUnchanged: {
+    itemId: string;
+    status: PitsWorkItemStatus;
+    priority: PitsWorkItemPriority;
+    owner: string;
+    blockers: string[];
+  };
+  noDirectMutation: true;
+};
+
 export type PitsWorkItemDetailSnapshot = {
   coreApiUrl: string;
   detail: ApiResult;
@@ -694,6 +780,22 @@ export type PitsWorkItemActionPreviewSnapshot = {
   coreApiUrl: string;
   actionPreview: ApiResult;
   payload: PitsWorkItemActionPreviewPayload | null;
+  notFound: boolean;
+  errorMessage: string | null;
+};
+
+export type PitsWorkItemActionRequestsSnapshot = {
+  coreApiUrl: string;
+  actionRequests: ApiResult;
+  payload: PitsWorkItemActionRequestsPayload | null;
+  notFound: boolean;
+  errorMessage: string | null;
+};
+
+export type PitsWorkItemActionRequestPreviewSnapshot = {
+  coreApiUrl: string;
+  actionRequestPreview: ApiResult;
+  payload: PitsWorkItemActionRequestPreviewPayload | null;
   notFound: boolean;
   errorMessage: string | null;
 };
@@ -1112,6 +1214,64 @@ export function getPitsWorkItemActionPreviewPayload(source: unknown): PitsWorkIt
   };
 }
 
+export function getPitsWorkItemActionRequestsPayload(source: unknown): PitsWorkItemActionRequestsPayload | null {
+  if (
+    !isRecord(source) ||
+    !isRecord(source.runtime) ||
+    !isRecord(source.actionRequestList) ||
+    !Array.isArray(source.requests) ||
+    !isRecord(source.readOnlyBoundary) ||
+    typeof source.noDirectMutation !== "boolean"
+  ) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+
+  if (!metadata) {
+    return null;
+  }
+
+  return {
+    metadata,
+    runtime: source.runtime as PitsWorkItemActionRequestsPayload["runtime"],
+    actionRequestList: source.actionRequestList as PitsWorkItemActionRequestsPayload["actionRequestList"],
+    requests: source.requests as PitsWorkItemActionRequest[],
+    request: isRecord(source.request) ? (source.request as PitsWorkItemActionRequest) : null,
+    readOnlyBoundary: source.readOnlyBoundary as PitsWorkItemActionRequestsPayload["readOnlyBoundary"],
+    noDirectMutation: source.noDirectMutation as true
+  };
+}
+
+export function getPitsWorkItemActionRequestPreviewPayload(source: unknown): PitsWorkItemActionRequestPreviewPayload | null {
+  if (
+    !isRecord(source) ||
+    !isRecord(source.runtime) ||
+    !isRecord(source.actionRequestPreview) ||
+    !Array.isArray(source.requests) ||
+    !isRecord(source.sourceItemUnchanged) ||
+    typeof source.noDirectMutation !== "boolean"
+  ) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+
+  if (!metadata) {
+    return null;
+  }
+
+  return {
+    metadata,
+    runtime: source.runtime as PitsWorkItemActionRequestPreviewPayload["runtime"],
+    actionRequestPreview: source.actionRequestPreview as PitsWorkItemActionRequestPreviewPayload["actionRequestPreview"],
+    requests: source.requests as PitsWorkItemActionRequest[],
+    request: isRecord(source.request) ? (source.request as PitsWorkItemActionRequest) : null,
+    sourceItemUnchanged: source.sourceItemUnchanged as PitsWorkItemActionRequestPreviewPayload["sourceItemUnchanged"],
+    noDirectMutation: source.noDirectMutation as true
+  };
+}
+
 function getRegistryErrorMessage(source: unknown) {
   if (!isRecord(source) || !isRecord(source.error)) {
     return null;
@@ -1322,6 +1482,44 @@ export async function getPitsWorkItemActionPreview(
     payload: getPitsWorkItemActionPreviewPayload(actionPreview.data),
     notFound: actionPreview.status === 404,
     errorMessage: getRegistryErrorMessage(actionPreview.data) ?? actionPreview.error
+  };
+}
+
+export async function getPitsWorkItemActionRequests(
+  projectId: string,
+  itemId: string,
+  coreApiUrl = getCoreApiUrl()
+): Promise<PitsWorkItemActionRequestsSnapshot> {
+  const actionRequests = await fetchCoreApi(
+    `/platform/pits/projects/${encodeURIComponent(projectId)}/work-items/${encodeURIComponent(itemId)}/action-requests`,
+    coreApiUrl
+  );
+
+  return {
+    coreApiUrl,
+    actionRequests,
+    payload: getPitsWorkItemActionRequestsPayload(actionRequests.data),
+    notFound: actionRequests.status === 404,
+    errorMessage: getRegistryErrorMessage(actionRequests.data) ?? actionRequests.error
+  };
+}
+
+export async function getPitsWorkItemActionRequestPreview(
+  projectId: string,
+  itemId: string,
+  coreApiUrl = getCoreApiUrl()
+): Promise<PitsWorkItemActionRequestPreviewSnapshot> {
+  const actionRequestPreview = await fetchCoreApi(
+    `/platform/pits/projects/${encodeURIComponent(projectId)}/work-items/${encodeURIComponent(itemId)}/action-request-preview`,
+    coreApiUrl
+  );
+
+  return {
+    coreApiUrl,
+    actionRequestPreview,
+    payload: getPitsWorkItemActionRequestPreviewPayload(actionRequestPreview.data),
+    notFound: actionRequestPreview.status === 404,
+    errorMessage: getRegistryErrorMessage(actionRequestPreview.data) ?? actionRequestPreview.error
   };
 }
 

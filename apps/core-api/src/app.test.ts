@@ -1182,6 +1182,166 @@ describe("platform registry read-only endpoints", () => {
     }
   });
 
+  it("returns deterministic audit-safe PITS work item action requests without mutating source data", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+    const workItemId = "pits-emerald_precinct_demo-open-site-access";
+    const requestId = `par-prj_emerald_precinct_demo-${workItemId}-change-status`;
+
+    try {
+      const listResponse = await app.inject({
+        method: "GET",
+        url: `/platform/pits/projects/prj_emerald_precinct_demo/work-items/${workItemId}/action-requests`
+      });
+      const listBody = listResponse.json();
+      const serializedList = JSON.stringify(listBody);
+
+      expect(listResponse.statusCode).toBe(200);
+      expect(listBody).toMatchObject({
+        metadata: {
+          source: "default-db",
+          mode: "read-only"
+        },
+        runtime: {
+          actionRequestMode: "read-only-action-request-boundary",
+          stage: "Stage 2E",
+          note: "PITS Action Request is staged only. No direct mutation is enabled."
+        },
+        actionRequestList: {
+          projectId: "prj_emerald_precinct_demo",
+          workItemId,
+          actionRequestOnly: true,
+          noDirectMutation: true,
+          supportedActions: ["CHANGE_STATUS", "ASSIGN_OWNER", "ADD_NOTE", "SET_PRIORITY", "RESOLVE_BLOCKER"],
+          markers: expect.arrayContaining([
+            "PITS Action Request",
+            "Action request only",
+            "No direct mutation",
+            "Pending review",
+            "Requires audit trail",
+            "Requires confirmation",
+            "Requires rollback plan"
+          ])
+        },
+        requests: expect.arrayContaining([
+          expect.objectContaining({
+            requestId,
+            projectId: "prj_emerald_precinct_demo",
+            workItemId,
+            actionType: "CHANGE_STATUS",
+            currentValue: "OPEN",
+            proposedValue: "DONE",
+            status: "PENDING_REVIEW",
+            auditRequired: true,
+            confirmationRequired: true,
+            rollbackRequired: true,
+            permissionRequired: "PROJECT_OPERATOR",
+            noDirectMutation: true
+          }),
+          expect.objectContaining({
+            actionType: "SET_PRIORITY",
+            status: "BLOCKED_BY_SAFETY_GATE",
+            noDirectMutation: true
+          })
+        ]),
+        readOnlyBoundary: {
+          mutationEndpointsAdded: false,
+          writePermission: "NOT_ALLOWED_IN_STAGE_2E",
+          notice: "Action request only. Work item is not changed yet."
+        },
+        noDirectMutation: true
+      });
+      expect(serializedList).toContain("Requires owner or admin confirmation");
+      expect(serializedList).toContain("No source work item is changed in Stage 2E");
+      expect(serializedList).not.toContain("localhost");
+      expect(serializedList).not.toContain("127.0.0.1");
+      expect(serializedList).not.toContain("ois.dmp247.com");
+      expect(serializedList).not.toContain("oisys.abacusai.app");
+
+      const detailResponse = await app.inject({
+        method: "GET",
+        url: `/platform/pits/projects/prj_emerald_precinct_demo/work-items/${workItemId}/action-requests/${requestId}`
+      });
+      const detailBody = detailResponse.json();
+
+      expect(detailResponse.statusCode).toBe(200);
+      expect(detailBody.request).toMatchObject({
+        requestId,
+        actionType: "CHANGE_STATUS",
+        currentValue: "OPEN",
+        proposedValue: "DONE",
+        status: "PENDING_REVIEW",
+        noDirectMutation: true
+      });
+      expect(detailBody.noDirectMutation).toBe(true);
+      expect(mock.writeCalls).toEqual([]);
+      expect(mock.userAccount.findUnique).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns deterministic non-mutating PITS action request preview data", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+    const workItemId = "pits-emerald_precinct_demo-open-site-access";
+
+    try {
+      const response = await app.inject({
+        method: "GET",
+        url: `/platform/pits/projects/prj_emerald_precinct_demo/work-items/${workItemId}/action-request-preview?actionType=CHANGE_STATUS&proposedValue=IN_PROGRESS`
+      });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body).toMatchObject({
+        metadata: {
+          source: "default-db",
+          mode: "read-only"
+        },
+        runtime: {
+          actionRequestPreviewMode: "read-only-action-request-preview",
+          stage: "Stage 2E"
+        },
+        actionRequestPreview: {
+          projectId: "prj_emerald_precinct_demo",
+          workItemId,
+          requestedActionType: "CHANGE_STATUS",
+          actionRequestOnly: true,
+          noDirectMutation: true,
+          markers: expect.arrayContaining([
+            "PITS Action Request",
+            "Action request only",
+            "No direct mutation",
+            "Pending review",
+            "Requires audit trail",
+            "Requires confirmation",
+            "Requires rollback plan"
+          ])
+        },
+        request: {
+          actionType: "CHANGE_STATUS",
+          currentValue: "OPEN",
+          proposedValue: "IN_PROGRESS",
+          status: "PENDING_REVIEW",
+          noDirectMutation: true
+        },
+        sourceItemUnchanged: {
+          itemId: workItemId,
+          status: "OPEN",
+          priority: "HIGH",
+          owner: "Project operator",
+          blockers: []
+        },
+        noDirectMutation: true
+      });
+      expect(mock.writeCalls).toEqual([]);
+      expect(mock.userAccount.findUnique).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
   it("does not add owner review, admin boundary or product UAT mutation endpoints", () => {
     const source = readFileSync(new URL("./app.ts", import.meta.url), "utf8");
 
@@ -1239,6 +1399,13 @@ describe("platform registry read-only endpoints", () => {
     ["/platform/pits/projects/missing/workboard", "project", "id"],
     ["/platform/pits/projects/prj_emerald_precinct_demo/work-items/missing", "workItem", "itemId"],
     ["/platform/pits/projects/prj_emerald_precinct_demo/work-items/missing/action-preview", "workItem", "itemId"],
+    ["/platform/pits/projects/prj_emerald_precinct_demo/work-items/missing/action-requests", "workItem", "itemId"],
+    ["/platform/pits/projects/prj_emerald_precinct_demo/work-items/missing/action-request-preview", "workItem", "itemId"],
+    [
+      "/platform/pits/projects/prj_emerald_precinct_demo/work-items/pits-emerald_precinct_demo-open-site-access/action-requests/missing",
+      "actionRequest",
+      "requestId"
+    ],
     ["/platform/modules/missing", "module", "id"],
     ["/platform/installations/missing", "installation", "id"]
   ] satisfies Array<[string, string, string]>)("returns controlled 404 for %s", async (url, entity, lookupKey) => {

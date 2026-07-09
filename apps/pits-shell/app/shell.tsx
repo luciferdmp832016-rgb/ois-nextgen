@@ -24,8 +24,11 @@ import {
   type OwnerReviewSeverity,
   type PlatformRegistrySnapshot,
   type PlatformSnapshot,
+  type PitsActionRequestStatus,
   type PitsDryRunActionPreview,
+  type PitsWorkItemActionRequest,
   type PitsWorkItemActionPreviewPayload,
+  type PitsWorkItemActionRequestsPayload,
   type PitsWorkboardPayload,
   type PitsWorkItemDetailPayload,
   type PitsWorkItem,
@@ -808,6 +811,14 @@ const priorityLabels: Record<PitsWorkItemPriority, string> = {
   CRITICAL: "Critical"
 };
 
+const actionRequestStatusLabels: Record<PitsActionRequestStatus, string> = {
+  DRAFT: "Draft",
+  PENDING_REVIEW: "Pending review",
+  APPROVED_PREVIEW: "Approved preview",
+  REJECTED_PREVIEW: "Rejected preview",
+  BLOCKED_BY_SAFETY_GATE: "Blocked by safety gate"
+};
+
 function firstDeterministicWorkItemHref(projectId: string) {
   const baseId = projectId.replace(/^prj_/, "");
   return `/projects/${projectId}/work-items/pits-${baseId}-open-site-access`;
@@ -1126,6 +1137,165 @@ export function DryRunActionPreviewPanel({
             <span className="eyebrow">Preview unavailable</span>
             <h4>No dry-run action preview was returned</h4>
             <p className="muted">No action is executable in Stage 2B.</p>
+          </article>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ActionRequestStatusBadge({ status }: { status: PitsActionRequestStatus }) {
+  return <StatusBadge ok={status !== "BLOCKED_BY_SAFETY_GATE"} label={actionRequestStatusLabels[status]} />;
+}
+
+export function PitsActionRequestCard({ request }: { request: PitsWorkItemActionRequest }) {
+  return (
+    <article className="dry-run-action-card action-request-card" data-action-request={request.requestId}>
+      <div className="panel-heading">
+        <div>
+          <span className="eyebrow">{request.actionType.replace("_", " ")}</span>
+          <h4>
+            <L text="Create action request" />
+          </h4>
+        </div>
+        <ActionRequestStatusBadge status={request.status} />
+      </div>
+      <dl className="work-item-facts dry-run-facts">
+        <div>
+          <dt>
+            <L text="Request status" />
+          </dt>
+          <dd>
+            <L text={actionRequestStatusLabels[request.status]} />
+          </dd>
+        </div>
+        <div>
+          <dt>
+            <L text="Current value" />
+          </dt>
+          <dd>{request.currentValue}</dd>
+        </div>
+        <div>
+          <dt>
+            <L text="Proposed value" />
+          </dt>
+          <dd>{request.proposedValue}</dd>
+        </div>
+        <div>
+          <dt>
+            <L text="Permission required" />
+          </dt>
+          <dd>{request.permissionRequired}</dd>
+        </div>
+        <div>
+          <dt>
+            <L text="Requested by" />
+          </dt>
+          <dd>{request.requestedBy}</dd>
+        </div>
+        <div>
+          <dt>
+            <L text="Requested at" />
+          </dt>
+          <dd>{request.requestedAt}</dd>
+        </div>
+      </dl>
+      <section className="suggested-actions" aria-label={`${request.actionType} action request expected impact`}>
+        <h5>
+          <L text="Expected impact" />
+        </h5>
+        <p>{request.expectedImpact}</p>
+      </section>
+      <section className="suggested-actions" aria-label={`${request.actionType} rollback plan`}>
+        <h5>
+          <L text="Rollback plan" />
+        </h5>
+        <p>{request.rollbackPlan}</p>
+      </section>
+      <div className="owner-review-marker-row" aria-label={`${request.actionType} action request gates`}>
+        <span>PITS Action Request</span>
+        <span>Action request only</span>
+        <span>No direct mutation</span>
+        <span>Work item is not changed yet</span>
+        {request.auditRequired ? <span>Requires audit trail</span> : null}
+        {request.confirmationRequired ? <span>Requires confirmation</span> : null}
+        {request.rollbackRequired ? <span>Requires rollback plan</span> : null}
+      </div>
+      <div className="owner-review-marker-row" aria-label={`${request.actionType} staged action controls`}>
+        <span className="disabled-action-preview" aria-disabled="true" data-action-request-preview="Read-only preview">
+          <L text="Preview request" />
+        </span>
+        <span className="disabled-action-preview" aria-disabled="true" data-action-request-stage="Read-only preview">
+          <L text="Stage for review" />
+        </span>
+      </div>
+      <SafetyGateList gates={request.safetyGates} />
+    </article>
+  );
+}
+
+export function PitsActionRequestPanel({
+  payload,
+  detailPayload
+}: {
+  payload: PitsWorkItemActionRequestsPayload | null;
+  detailPayload: PitsWorkItemDetailPayload | null;
+}) {
+  const requests = payload?.requests ?? [];
+
+  return (
+    <section className="panel action-request-panel" data-pits-action-request="PITS Action Request">
+      <div className="panel-heading">
+        <div>
+          <span className="eyebrow">Stage 2E</span>
+          <h3>
+            <L text="PITS Action Request" />
+          </h3>
+          <p className="muted">
+            <L text="Action request only. Work item is not changed yet. Requires owner or admin confirmation, audit trail and rollback plan." />
+          </p>
+        </div>
+        <StatusBadge ok={payload?.noDirectMutation ?? false} label={payload?.noDirectMutation ? "No direct mutation" : "Preview unavailable"} />
+      </div>
+      <div className="owner-review-marker-row" aria-label="PITS action request markers">
+        <span>PITS Action Request</span>
+        <span>Action request only</span>
+        <span>No direct mutation</span>
+        <span>Pending review</span>
+        <span>Requires audit trail</span>
+        <span>Requires confirmation</span>
+        <span>Requires rollback plan</span>
+      </div>
+      <section className="read-only-functional-slice" aria-label="Stage 2E action request boundary">
+        <div>
+          <span className="eyebrow">
+            <L text="Action request only" />
+          </span>
+          <h4>
+            <L text={payload?.readOnlyBoundary.notice ?? "Work item is not changed yet"} />
+          </h4>
+          <p className="muted">
+            <L text="No direct mutation. Requires audit trail, confirmation, permission check and rollback plan before any future execution." />
+          </p>
+        </div>
+        <div className="owner-review-marker-row">
+          {(payload?.readOnlyBoundary.disabledActions ?? ["Create action request - Read-only deterministic preview", "Stage for review - Read-only deterministic preview"]).map((action) => (
+            <span key={action}>{action}</span>
+          ))}
+        </div>
+      </section>
+      <div className="dry-run-grid">
+        {requests.length > 0 ? (
+          requests.map((request) => <PitsActionRequestCard request={request} key={request.requestId} />)
+        ) : (
+          <article className="dry-run-action-card owner-empty-state">
+            <span className="eyebrow">Action request unavailable</span>
+            <h4>
+              <L text="No action request was returned" />
+            </h4>
+            <p className="muted">
+              {detailPayload?.item.title ?? "Work item"}: <L text="Work item is not changed yet" />.
+            </p>
           </article>
         )}
       </div>

@@ -162,6 +162,18 @@ export const translations = {
     en: "No data will be changed",
     vi: "Không có dữ liệu nào bị thay đổi"
   },
+  "common.actionRequestOnly": {
+    en: "Action request only",
+    vi: "Chi tao yeu cau hanh dong"
+  },
+  "common.noDirectMutation": {
+    en: "No direct mutation",
+    vi: "Khong thay doi truc tiep"
+  },
+  "common.workItemNotChangedYet": {
+    en: "Work item is not changed yet",
+    vi: "Hang muc cong viec chua bi thay doi"
+  },
   "common.adminRuntime": {
     en: "Admin/runtime",
     vi: "Quản trị/môi trường chạy"
@@ -478,6 +490,18 @@ export const translations = {
     en: "Preview only. No data will be changed. Future execution requires audit, confirmation and rollback gates.",
     vi: "Chỉ xem trước. Không dữ liệu nào bị thay đổi. Lần thực thi tương lai cần audit, xác nhận và cổng rollback."
   },
+  "panel.actionRequest.title": {
+    en: "PITS Action Request",
+    vi: "Yeu cau hanh dong PITS"
+  },
+  "panel.actionRequest.description": {
+    en: "Action request only. Work item is not changed yet. Requires owner or admin confirmation, audit trail and rollback plan.",
+    vi: "Chi tao yeu cau hanh dong. Hang muc cong viec chua bi thay doi. Can chu so huu/quan tri xac nhan, nhat ky audit va ke hoach rollback."
+  },
+  "panel.actionRequest.boundaryDescription": {
+    en: "No direct mutation. Requires audit trail, confirmation, permission check and rollback plan before any future execution.",
+    vi: "Khong thay doi truc tiep. Can nhat ky audit, xac nhan, kiem tra quyen va ke hoach rollback truoc moi lan thuc thi trong tuong lai."
+  },
   "status.readyToOperate": {
     en: "Ready to operate",
     vi: "Sẵn sàng vận hành"
@@ -586,9 +610,33 @@ export const translations = {
     en: "Requires audit trail",
     vi: "Cần nhật ký audit"
   },
+  "status.requiresConfirmation": {
+    en: "Requires confirmation",
+    vi: "Can xac nhan"
+  },
   "status.requiresRollbackPlan": {
     en: "Requires rollback plan",
     vi: "Cần kế hoạch rollback"
+  },
+  "status.draft": {
+    en: "Draft",
+    vi: "Ban nhap"
+  },
+  "status.pendingReview": {
+    en: "Pending review",
+    vi: "Dang cho ra soat"
+  },
+  "status.approvedPreview": {
+    en: "Approved preview",
+    vi: "Ban xem truoc da duyet"
+  },
+  "status.rejectedPreview": {
+    en: "Rejected preview",
+    vi: "Ban xem truoc bi tu choi"
+  },
+  "status.blockedBySafetyGate": {
+    en: "Blocked by safety gate",
+    vi: "Bi chan boi cong an toan"
   },
   "status.blockedCurrentStage": {
     en: "Blocked in current stage",
@@ -694,6 +742,42 @@ export const translations = {
     en: "Required role",
     vi: "Vai trò yêu cầu"
   },
+  "label.requestStatus": {
+    en: "Request status",
+    vi: "Trang thai yeu cau"
+  },
+  "label.permissionRequired": {
+    en: "Permission required",
+    vi: "Quyen yeu cau"
+  },
+  "label.requestedBy": {
+    en: "Requested by",
+    vi: "Nguoi yeu cau"
+  },
+  "label.requestedAt": {
+    en: "Requested at",
+    vi: "Thoi diem yeu cau"
+  },
+  "label.expectedImpact": {
+    en: "Expected impact",
+    vi: "Tac dong du kien"
+  },
+  "label.rollbackPlan": {
+    en: "Rollback plan",
+    vi: "Ke hoach rollback"
+  },
+  "label.createActionRequest": {
+    en: "Create action request",
+    vi: "Tao yeu cau hanh dong"
+  },
+  "label.previewRequest": {
+    en: "Preview request",
+    vi: "Xem truoc yeu cau"
+  },
+  "label.stageForReview": {
+    en: "Stage for review",
+    vi: "Dua vao hang cho ra soat"
+  },
   "label.whatWouldHappen": {
     en: "What would happen?",
     vi: "Điều gì sẽ xảy ra?"
@@ -725,6 +809,10 @@ export const translations = {
   "message.noReadOnlyWorkItems": {
     en: "No read-only work items are mapped for this status.",
     vi: "Không có hạng mục công việc chỉ đọc nào được ánh xạ cho trạng thái này."
+  },
+  "message.noActionRequestReturned": {
+    en: "No action request was returned",
+    vi: "Khong co yeu cau hanh dong nao duoc tra ve"
   },
   "message.workboardGrouped": {
     en: "work items grouped by workflow status. This is the first real PITS user-level browser workflow.",

@@ -126,4 +126,4 @@ if [ "$failures" -gt 0 ]; then
   exit 1
 fi
 
-printf '\nUI_ROUTE_MANIFEST_CHECK_PASSED OIS Console and PITS Shell Stage 1A/1C plus Stage 2A workboard, Stage 2B work item detail, Stage 2D localized product-flow routes and Stage 2D-R1 localization catalog routes are present in production build artifacts.\n'
+printf '\nUI_ROUTE_MANIFEST_CHECK_PASSED OIS Console and PITS Shell Stage 1A/1C plus Stage 2A workboard, Stage 2B work item detail, Stage 2D localized product-flow routes, Stage 2D-R1 localization catalog routes and Stage 2E action-request panel route are present in production build artifacts.\n'
