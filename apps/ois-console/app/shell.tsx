@@ -41,6 +41,7 @@ const navItems = [
   { id: "workspaces", href: "/workspaces", label: "Workspaces", shortLabel: "Ws" },
   { id: "learning-center", href: "/learning-center", label: "Learning", shortLabel: "Ln" },
   { id: "knowledge-fabric", href: "/knowledge-fabric", label: "Knowledge", shortLabel: "KL" },
+  { id: "oima", href: "/oima", label: "OIMA", shortLabel: "Mt" },
   { id: "localization", href: "/localization", label: "Localization", shortLabel: "L10n" },
   { id: "runtime", href: "/runtime", label: "Runtime", shortLabel: "Rt" }
 ];

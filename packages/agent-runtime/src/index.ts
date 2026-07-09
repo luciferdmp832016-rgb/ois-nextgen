@@ -1,7 +1,13 @@
-export const ecosystemProductKeys = ["OIS_PLATFORM", "PITS", "KEIHB", "ICR", "CSAGENT", "FUTURE_PRODUCT", "CUSTOM"] as const;
+export const ecosystemProductKeys = ["OIS_PLATFORM", "PITS", "OIMA", "KEIHB", "ICR", "CSAGENT", "FUTURE_PRODUCT", "CUSTOM"] as const;
 export type EcosystemProductKey = (typeof ecosystemProductKeys)[number];
 
-export const ecosystemProductTypes = ["CORE_PLATFORM", "ECOSYSTEM_PRODUCT", "FUTURE_PRODUCT", "CUSTOM_PRODUCT"] as const;
+export const ecosystemProductTypes = [
+  "CORE_PLATFORM",
+  "ECOSYSTEM_PRODUCT",
+  "MEETING_INTELLIGENCE_PRODUCT",
+  "FUTURE_PRODUCT",
+  "CUSTOM_PRODUCT"
+] as const;
 export type EcosystemProductType = (typeof ecosystemProductTypes)[number];
 
 export const learningScopes = ["ORGANIZATION", "INDUSTRY", "PLATFORM"] as const;
@@ -125,6 +131,16 @@ export const ecosystemProductRegistry: EcosystemProductRegistryEntry[] = [
     enabled: true,
     supportedAgentCapabilities: ["ASK", "EXPLAIN_SCREEN", "SHOW_EVIDENCE", "TEACH_OIS", "SUBMIT_CORRECTION", "VIEW_LEARNING_STATUS"],
     supportedLearningSignalTypes: ["USER_CORRECTION", "ENTITY_CORRECTION", "RISK_PATTERN", "TICKET_PATTERN", "PRODUCT_FEEDBACK", "KNOWLEDGE_GAP", "OTHER"],
+    defaultLearningScope: "ORGANIZATION"
+  },
+  {
+    productKey: "OIMA",
+    displayName: "OIMA — Organizational Intelligence Meeting Agent",
+    description: "Meeting intelligence product powered by OIS; transcript-first and audio-optional boundary only in Stage 2H.",
+    productType: "MEETING_INTELLIGENCE_PRODUCT",
+    enabled: true,
+    supportedAgentCapabilities: ["ASK", "EXPLAIN_SCREEN", "SHOW_EVIDENCE", "SUGGEST_NEXT_ACTION", "TEACH_OIS", "SUBMIT_CORRECTION", "VIEW_LEARNING_STATUS"],
+    supportedLearningSignalTypes: ["USER_CORRECTION", "NEW_KNOWLEDGE", "PRODUCT_FEEDBACK", "KNOWLEDGE_GAP", "OTHER"],
     defaultLearningScope: "ORGANIZATION"
   },
   {

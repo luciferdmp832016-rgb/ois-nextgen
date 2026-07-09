@@ -12,6 +12,7 @@ describe("Powered by OIS product registry", () => {
     expect(ecosystemProductRegistry.map((product) => product.productKey)).toEqual([
       "OIS_PLATFORM",
       "PITS",
+      "OIMA",
       "KEIHB",
       "ICR",
       "CSAGENT",

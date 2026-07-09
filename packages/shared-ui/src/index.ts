@@ -2175,3 +2175,120 @@ export async function getKnowledgeFabricSnapshot(coreApiUrl = getCoreApiUrl()): 
     errorMessage
   };
 }
+
+export type OimaBoundaryPayload = {
+  metadata: RegistryMetadata;
+  boundary: Record<string, unknown>;
+  productKey: string;
+  displayName: string;
+  productType: string;
+  implementationStatus: string;
+  poweredBy: string;
+  tagline: string;
+  vietnamesePositioning: string;
+  capabilityCodes: string[];
+  sourceModes: string[];
+  sourceModeContracts?: Array<Record<string, unknown>> | undefined;
+  sourceModeRules: Record<string, unknown>;
+  meetingStatuses?: string[] | undefined;
+  analysisModes?: string[] | undefined;
+  safetyBoundaries: string[];
+  coreReuseMap?: Record<string, string> | undefined;
+  ownedUxSurfaces?: string[] | undefined;
+  knowledgeIntegration?: Record<string, unknown> | undefined;
+  roadmap?: Array<Record<string, unknown>> | undefined;
+  outOfScope?: string[] | undefined;
+  noCanonicalKnowledgeWrite?: boolean | undefined;
+  autoPromotionEnabled?: boolean | undefined;
+  oisAgentWidgetDirectCanonicalWriteAllowed?: boolean | undefined;
+};
+
+export type OimaSnapshot = {
+  coreApiUrl: string;
+  overview: ApiResult;
+  sourceModes: ApiResult;
+  roadmap: ApiResult;
+  boundary: ApiResult;
+  overviewPayload: OimaBoundaryPayload | null;
+  sourceModesPayload: OimaBoundaryPayload | null;
+  roadmapPayload: OimaBoundaryPayload | null;
+  boundaryPayload: OimaBoundaryPayload | null;
+  errorMessage: string | null;
+};
+
+export function getOimaBoundaryPayload(source: unknown): OimaBoundaryPayload | null {
+  if (
+    !isRecord(source) ||
+    !isRecord(source.boundary) ||
+    !Array.isArray(source.sourceModes) ||
+    !isRecord(source.sourceModeRules) ||
+    !Array.isArray(source.safetyBoundaries)
+  ) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+
+  if (!metadata) {
+    return null;
+  }
+
+  return {
+    metadata,
+    boundary: source.boundary,
+    productKey: getString(source, "productKey") ?? "OIMA",
+    displayName: getString(source, "displayName") ?? "OIMA",
+    productType: getString(source, "productType") ?? "MEETING_INTELLIGENCE_PRODUCT",
+    implementationStatus: getString(source, "implementationStatus") ?? "PRODUCT_BOUNDARY_READY",
+    poweredBy: getString(source, "poweredBy") ?? "OIS",
+    tagline: getString(source, "tagline") ?? "OIS understands the organization. OIMA understands the meeting.",
+    vietnamesePositioning: getString(source, "vietnamesePositioning") ?? "OIS hiểu tổ chức. OIMA hiểu cuộc họp.",
+    capabilityCodes: getArray<string>(source, "capabilityCodes"),
+    sourceModes: source.sourceModes as string[],
+    sourceModeContracts: Array.isArray(source.sourceModeContracts) ? (source.sourceModeContracts as Array<Record<string, unknown>>) : undefined,
+    sourceModeRules: source.sourceModeRules,
+    meetingStatuses: Array.isArray(source.meetingStatuses) ? (source.meetingStatuses as string[]) : undefined,
+    analysisModes: Array.isArray(source.analysisModes) ? (source.analysisModes as string[]) : undefined,
+    safetyBoundaries: source.safetyBoundaries as string[],
+    coreReuseMap: isRecord(source.coreReuseMap) ? (source.coreReuseMap as Record<string, string>) : undefined,
+    ownedUxSurfaces: getArray<string>(source, "ownedUxSurfaces"),
+    knowledgeIntegration: isRecord(source.knowledgeIntegration) ? source.knowledgeIntegration : undefined,
+    roadmap: Array.isArray(source.roadmap) ? (source.roadmap as Array<Record<string, unknown>>) : undefined,
+    outOfScope: getArray<string>(source, "outOfScope"),
+    noCanonicalKnowledgeWrite: typeof source.noCanonicalKnowledgeWrite === "boolean" ? source.noCanonicalKnowledgeWrite : undefined,
+    autoPromotionEnabled: typeof source.autoPromotionEnabled === "boolean" ? source.autoPromotionEnabled : undefined,
+    oisAgentWidgetDirectCanonicalWriteAllowed:
+      typeof source.oisAgentWidgetDirectCanonicalWriteAllowed === "boolean" ? source.oisAgentWidgetDirectCanonicalWriteAllowed : undefined
+  };
+}
+
+export async function getOimaSnapshot(coreApiUrl = getCoreApiUrl()): Promise<OimaSnapshot> {
+  const [overview, sourceModes, roadmap, boundary] = await Promise.all([
+    fetchCoreApi("/platform/oima/overview", coreApiUrl),
+    fetchCoreApi("/platform/oima/source-modes", coreApiUrl),
+    fetchCoreApi("/platform/oima/roadmap", coreApiUrl),
+    fetchCoreApi("/platform/oima/boundary", coreApiUrl)
+  ]);
+  const errorMessage =
+    getRegistryErrorMessage(overview.data) ??
+    getRegistryErrorMessage(sourceModes.data) ??
+    getRegistryErrorMessage(roadmap.data) ??
+    getRegistryErrorMessage(boundary.data) ??
+    overview.error ??
+    sourceModes.error ??
+    roadmap.error ??
+    boundary.error;
+
+  return {
+    coreApiUrl,
+    overview,
+    sourceModes,
+    roadmap,
+    boundary,
+    overviewPayload: getOimaBoundaryPayload(overview.data),
+    sourceModesPayload: getOimaBoundaryPayload(sourceModes.data),
+    roadmapPayload: getOimaBoundaryPayload(roadmap.data),
+    boundaryPayload: getOimaBoundaryPayload(boundary.data),
+    errorMessage
+  };
+}

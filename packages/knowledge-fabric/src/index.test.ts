@@ -12,7 +12,8 @@ import {
   knowledgeLayerMappingStatuses,
   knowledgeLayerDefinitions,
   knowledgeLayerKeys,
-  knowledgeLayerTaxonomy
+  knowledgeLayerTaxonomy,
+  productKnowledgeConsumptionMap
 } from "./index";
 
 describe("Stage 2G knowledge layer taxonomy", () => {
@@ -115,11 +116,27 @@ describe("deterministic agent knowledge context", () => {
 });
 
 describe("architecture mindmap manifest", () => {
-  it("contains Stage 2F and Stage 2G flows for future mindmap agents", () => {
+  it("contains Stage 2F, Stage 2G and Stage 2H flows for future mindmap agents", () => {
     expect(architectureMindmapManifest.flows.map((flow) => flow.key)).toEqual([
       "stage_2f_learning_flow",
-      "stage_2g_knowledge_fabric_flow"
+      "stage_2g_knowledge_fabric_flow",
+      "stage_2h_oima_boundary_flow"
     ]);
+    expect(architectureMindmapManifest.ecosystemProducts).toContain("OIMA");
+    expect(architectureMindmapManifest.apiContracts).toContain("/platform/oima/overview");
     expect(architectureMindmapManifest.governanceCheckpoints).toContain("No auto-promotion in Stage 2G");
+    expect(architectureMindmapManifest.governanceCheckpoints).toContain("OIMA is not a separate knowledge silo");
+  });
+
+  it("declares OIMA as an OIS Knowledge Fabric consumer, not a separate source of truth", () => {
+    expect(productKnowledgeConsumptionMap).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          productKey: "OIMA",
+          consumesLayers: expect.arrayContaining(["KL_0_LEGAL_REGULATORY_CORE", "KL_5_LIVE_OPERATIONAL_SIGNALS"]),
+          contributesToLayers: ["KL_5_LIVE_OPERATIONAL_SIGNALS"]
+        })
+      ])
+    );
   });
 });

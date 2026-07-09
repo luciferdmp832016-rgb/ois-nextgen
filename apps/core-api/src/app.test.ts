@@ -9,6 +9,7 @@ import {
   knowledgeLayerMappingStatusTaxonomy,
   knowledgeLayerKeys
 } from "@ois/knowledge-fabric";
+import { oimaCapabilityCodes, oimaSafetyBoundaries, oimaSourceModes } from "@ois/architecture-contracts";
 import { buildCoreApi, type BuildCoreApiOptions } from "./app";
 
 type MockPrisma = NonNullable<BuildCoreApiOptions["prisma"]>;
@@ -1628,6 +1629,13 @@ describe("Stage 2F OIS Agent Runtime and Self-Improvement endpoints", () => {
     mock.delegates.oisEcosystemProduct.findMany.mockResolvedValue([
       { ...stage2FRows.product, productKey: "OIS_PLATFORM" },
       { ...stage2FRows.product, id: "ecosystem_product_pits", productKey: "PITS", displayName: "PITS" },
+      {
+        ...stage2FRows.product,
+        id: "ecosystem_product_oima",
+        productKey: "OIMA",
+        displayName: "OIMA — Organizational Intelligence Meeting Agent",
+        productType: "MEETING_INTELLIGENCE_PRODUCT"
+      },
       { ...stage2FRows.product, id: "ecosystem_product_keihb", productKey: "KEIHB", displayName: "KEIHB" },
       { ...stage2FRows.product, id: "ecosystem_product_icr", productKey: "ICR", displayName: "ICR" },
       { ...stage2FRows.product, id: "ecosystem_product_csagent", productKey: "CSAGENT", displayName: "CSAgent" },
@@ -1644,6 +1652,7 @@ describe("Stage 2F OIS Agent Runtime and Self-Improvement endpoints", () => {
       expect(body.products.map((product: { productKey: string }) => product.productKey)).toEqual([
         "OIS_PLATFORM",
         "PITS",
+        "OIMA",
         "KEIHB",
         "ICR",
         "CSAGENT",
@@ -1790,6 +1799,168 @@ describe("Stage 2F OIS Agent Runtime and Self-Improvement endpoints", () => {
         currentStageMode: "READ_ONLY_PREVIEW_WITH_API_ROLE_CHECKS"
       });
       expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+describe("Stage 2H OIMA product boundary endpoints", () => {
+  it("returns the OIMA product code projection without requiring fake installations", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/products/code/OIMA" });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body.product).toMatchObject({
+        code: "OIMA",
+        productKey: "OIMA",
+        productType: "MEETING_INTELLIGENCE_PRODUCT",
+        implementationStatus: "PRODUCT_BOUNDARY_READY",
+        relationships: {
+          installations: [],
+          projects: [],
+          workspaces: []
+        }
+      });
+      expect(body.product.capabilityCodes).toEqual(oimaCapabilityCodes);
+      expect(body.product.sourceModes).toEqual(oimaSourceModes);
+      expect(body.product.safetyBoundaries).toEqual(oimaSafetyBoundaries);
+      expect(body.product.knowledgeIntegration).toMatchObject({
+        sourceOfTruth: "OIS Canonical Knowledge Fabric",
+        noSeparateKnowledgeSourceOfTruth: true
+      });
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("exposes transcript-first source modes, safety boundaries and roadmap metadata", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const overview = await app.inject({ method: "GET", url: "/platform/oima/overview" });
+      const sourceModes = await app.inject({ method: "GET", url: "/platform/oima/source-modes" });
+      const roadmap = await app.inject({ method: "GET", url: "/platform/oima/roadmap" });
+      const boundary = await app.inject({ method: "GET", url: "/platform/oima/boundary" });
+
+      expect(overview.statusCode).toBe(200);
+      expect(sourceModes.statusCode).toBe(200);
+      expect(roadmap.statusCode).toBe(200);
+      expect(boundary.statusCode).toBe(200);
+
+      const overviewBody = overview.json();
+      const sourceModeBody = sourceModes.json();
+      const roadmapBody = roadmap.json();
+      const boundaryBody = boundary.json();
+
+      expect(overviewBody).toMatchObject({
+        productKey: "OIMA",
+        productType: "MEETING_INTELLIGENCE_PRODUCT",
+        implementationStatus: "PRODUCT_BOUNDARY_READY",
+        vietnamesePositioning: "OIS hiểu tổ chức. OIMA hiểu cuộc họp."
+      });
+      expect(overviewBody.capabilityCodes).toEqual(oimaCapabilityCodes);
+      expect(overviewBody.knowledgeIntegration.knowledgeLayerTaxonomy.layerKeys).toContain("KL_0_LEGAL_REGULATORY_CORE");
+      expect(sourceModeBody.sourceModeRules).toMatchObject({
+        primarySourceMode: "TRANSCRIPT_ONLY",
+        transcriptOnlyWorksWithoutAudio: true,
+        audioDoesNotBlockAnalysis: true,
+        listenerModeFutureOnly: true
+      });
+      expect(sourceModeBody.sourceModeContracts).toEqual(
+        expect.arrayContaining([expect.objectContaining({ mode: "TRANSCRIPT_ONLY", primary: true, audioRequired: false })])
+      );
+      expect(roadmapBody.roadmap).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ stage: "OIMA-0", phase: "Stage 2H", status: "PRODUCT_BOUNDARY_READY" }),
+          expect.objectContaining({ stage: "OIMA-9", title: "Listener Mode", status: "PLANNED" })
+        ])
+      );
+      expect(boundaryBody).toMatchObject({
+        noCanonicalKnowledgeWrite: true,
+        autoPromotionEnabled: false,
+        oisAgentWidgetDirectCanonicalWriteAllowed: false
+      });
+      expect(boundaryBody.boundary).toMatchObject({
+        realLlmCallsEnabled: false,
+        uploadPipelineImplemented: false,
+        meetingStorageImplemented: false,
+        noLiveSpeakingAgent: true,
+        noVoiceClone: true,
+        noImpersonation: true
+      });
+      expect(boundaryBody.outOfScope).toEqual(expect.arrayContaining(["Production secrets or real OpenRouter calls"]));
+      expect(boundaryBody.safetyBoundaries).toEqual(oimaSafetyBoundaries);
+      expect(JSON.stringify(boundaryBody)).not.toMatch(/OPENROUTER_API_KEY|VOICE_CLONE_ENABLED|LIVE_SPEAKING_ENABLED/);
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("lets OIMA submit governed learning without canonical knowledge writes", async () => {
+    const mock = createMockPrisma();
+    const writeOps: string[] = [];
+    (mock.delegates.auditRecord.create as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("auditRecord.create");
+      return args.data;
+    });
+    (mock.delegates.oisLearningSignal.create as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("oisLearningSignal.create");
+      return {
+        ...stage2FRows.signal,
+        ...args.data,
+        workspaceId: args.data.workspaceId ?? null,
+        submittedBy: args.data.submittedBy ?? null,
+        userId: args.data.userId ?? null,
+        createdAt: stage2FRows.signal.createdAt,
+        updatedAt: stage2FRows.signal.updatedAt
+      };
+    });
+    (mock.delegates.oisAgentLearningSubmission.create as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("oisAgentLearningSubmission.create");
+      return {
+        ...args.data,
+        workspaceId: args.data.workspaceId ?? null,
+        sessionId: args.data.sessionId ?? null,
+        signalId: args.data.signalId ?? null,
+        submittedBy: args.data.submittedBy ?? null,
+        userId: args.data.userId ?? null,
+        createdAt: "2026-07-09T00:00:00.000Z",
+        updatedAt: "2026-07-09T00:00:00.000Z"
+      };
+    });
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: "/platform/agent/learning-submissions",
+        payload: {
+          organizationId: "org_pmc_demo",
+          workspaceId: "ws_pmc_org_demo",
+          productKey: "OIMA",
+          sourceType: "WIDGET",
+          sourceAuthority: "END_USER",
+          learningScope: "ORGANIZATION",
+          signalType: "PRODUCT_FEEDBACK",
+          rawText: "OIMA should clarify action owners after a transcript is uploaded.",
+          contextJson: { route: "/oima" },
+          relatedEntityRefs: []
+        }
+      });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body.noCanonicalKnowledgeWrite).toBe(true);
+      expect(body.signal).toMatchObject({ productKey: "OIMA", status: "RECEIVED" });
+      expect(writeOps).toEqual(["oisLearningSignal.create", "auditRecord.create", "oisAgentLearningSubmission.create", "auditRecord.create"]);
     } finally {
       await app.close();
     }
@@ -2083,10 +2254,12 @@ describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
 
       expect(response.statusCode).toBe(200);
       expect(body.mindmap).toMatchObject({
-        stage: "Stage 2G",
+        stage: "Stage 2H",
         title: architectureMindmapManifest.title
       });
       expect(body.mindmap.apiContracts).toContain("/platform/agent/knowledge-context");
+      expect(body.mindmap.ecosystemProducts).toContain("OIMA");
+      expect(body.mindmap.apiContracts).toContain("/platform/oima/overview");
       expect(body.source.file).toBe("architecture/mindmap/ois-ecosystem-map.v1.json");
       expect(mock.writeCalls).toEqual([]);
     } finally {
@@ -2097,9 +2270,12 @@ describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
   it("keeps widgets and Stage 2G APIs away from canonical item mutation and auto-promotion", () => {
     const stage2FSource = readFileSync(new URL("./stage-2f.ts", import.meta.url), "utf8");
     const stage2GSource = readFileSync(new URL("./stage-2g.ts", import.meta.url), "utf8");
+    const stage2HSource = readFileSync(new URL("./stage-2h.ts", import.meta.url), "utf8");
 
     expect(stage2FSource).not.toMatch(/oisCanonicalKnowledgeItem\.(create|update|upsert|delete)/);
     expect(stage2GSource).not.toMatch(/oisCanonicalKnowledgeItem\.(create|update|upsert|delete)/);
+    expect(stage2HSource).not.toMatch(/oisCanonicalKnowledgeItem\.(create|update|upsert|delete)/);
+    expect(stage2HSource).not.toMatch(/app\.(post|put|patch|delete)/);
     expect(stage2GSource).not.toMatch(/oisLearningCandidate\.(update|upsert)/);
     expect(stage2GSource).not.toMatch(/app\.(post|put|patch|delete)\(\s*["'`]\/platform\/knowledge\/items/);
     expect(stage2GSource).toContain("autoPromotionEnabled: false");

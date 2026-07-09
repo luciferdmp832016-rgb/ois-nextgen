@@ -6,6 +6,7 @@ Stage 2F introduces a canonical product registry for OIS-powered products.
 |---|---|---|---|
 | OIS_PLATFORM | OIS Platform | Core platform | Enabled. Mounted widget and Learning Center foundation. |
 | PITS | PITS | Ecosystem product | Enabled registry/context support. Runtime behavior remains staged by prior PITS phases. |
+| OIMA | OIMA — Organizational Intelligence Meeting Agent | Meeting intelligence product | Stage 2H product boundary ready. Transcript-first and audio-optional; no meeting upload or analysis runtime yet. |
 | KEIHB | KEIHB | Future product | Registry, adapter and extension point only. |
 | ICR | ICR | Future product | Registry, adapter and extension point only. |
 | CSAGENT | CSAgent | Future product | Registry, adapter and extension point only. |
@@ -31,3 +32,13 @@ Products cannot:
 - claim complete product functionality before implementation exists
 
 New OIS-powered products can be added as registry rows and adapter contracts without redesigning the schema.
+
+## OIMA Stage 2H Boundary
+
+OIMA is the meeting intelligence product powered by OIS.
+
+OIS understands the organization. OIMA understands the meeting.
+
+Vietnamese positioning: OIS hiểu tổ chức. OIMA hiểu cuộc họp.
+
+OIMA reuses OIS Workspace, future RBAC, Product Registry, Canonical Entity Registry, Knowledge Fabric, Universal Knowledge API, OIS Agent Runtime, Learning Governance and Audit. OIMA owns meeting-specific UX but does not own canonical organizational knowledge.

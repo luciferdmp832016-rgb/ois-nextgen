@@ -63,6 +63,9 @@ importers:
 
   apps/core-api:
     dependencies:
+      '@ois/architecture-contracts':
+        specifier: workspace:*
+        version: link:../../packages/architecture-contracts
       '@ois/agent-runtime':
         specifier: workspace:*
         version: link:../../packages/agent-runtime

@@ -262,6 +262,19 @@ export const productKnowledgeConsumptionMap = [
     role: "Project runtime consumer and operational signal contributor"
   },
   {
+    productKey: "OIMA",
+    consumesLayers: [
+      "KL_0_LEGAL_REGULATORY_CORE",
+      "KL_1_INDUSTRY_CORE",
+      "KL_2_ORGANIZATION_CORE",
+      "KL_3_PRODUCT_KNOWLEDGE_PACK",
+      "KL_4_WORKSPACE_PROJECT_OVERLAY",
+      "KL_5_LIVE_OPERATIONAL_SIGNALS"
+    ],
+    contributesToLayers: ["KL_5_LIVE_OPERATIONAL_SIGNALS"],
+    role: "Meeting intelligence product; reads OIS context and contributes reviewed meeting signals only"
+  },
+  {
     productKey: "CSAGENT",
     consumesLayers: ["KL_2_ORGANIZATION_CORE", "KL_3_PRODUCT_KNOWLEDGE_PACK", "KL_5_LIVE_OPERATIONAL_SIGNALS"],
     contributesToLayers: ["KL_5_LIVE_OPERATIONAL_SIGNALS"],
@@ -673,7 +686,7 @@ export function buildDeterministicKnowledgeContext(input: {
 
 export const architectureMindmapManifest = {
   manifestVersion: "1.0",
-  stage: "Stage 2G",
+  stage: "Stage 2H",
   title: "OIS Ecosystem Architecture Map",
   oisCoreLayers: [
     "Platform Kernel",
@@ -683,7 +696,7 @@ export const architectureMindmapManifest = {
     "Canonical Knowledge Fabric",
     "Universal Knowledge API"
   ],
-  ecosystemProducts: ["OIS_PLATFORM", "PITS", "KEIHB", "ICR", "CSAGENT", "FUTURE_PRODUCT", "CUSTOM"],
+  ecosystemProducts: ["OIS_PLATFORM", "PITS", "OIMA", "KEIHB", "ICR", "CSAGENT", "FUTURE_PRODUCT", "CUSTOM"],
   knowledgeLayers: knowledgeLayerDefinitions.map((layer) => ({
     key: layer.key,
     displayName: layer.displayName,
@@ -700,6 +713,11 @@ export const architectureMindmapManifest = {
       key: "stage_2g_knowledge_fabric_flow",
       label: "Stage 2G Knowledge Fabric",
       nodes: ["Knowledge Layer Mapping", "Canonical Knowledge Item", "Evidence Link", "Universal Knowledge API", "KEIHB Projection Bundle"]
+    },
+    {
+      key: "stage_2h_oima_boundary_flow",
+      label: "Stage 2H OIMA Product Boundary",
+      nodes: ["OIMA Meeting Shell", "Transcript-first Intake", "Universal Knowledge API", "OIS Agent Offline Analysis", "Learning Governance Review"]
     }
   ],
   apiContracts: [
@@ -709,11 +727,19 @@ export const architectureMindmapManifest = {
     "/platform/learning/layer-mappings",
     "/platform/knowledge/keihb/bundles",
     "/platform/agent/knowledge-context",
+    "/platform/products/code/OIMA",
+    "/platform/oima/overview",
+    "/platform/oima/source-modes",
+    "/platform/oima/roadmap",
+    "/platform/oima/boundary",
     "/platform/architecture/mindmap"
   ],
   governanceCheckpoints: [
     "No widget direct canonical write",
     "No auto-promotion in Stage 2G",
+    "OIMA transcript-first and audio-optional",
+    "OIMA is not a separate knowledge silo",
+    "No live speaking agent, voice clone or impersonation",
     "Evidence required for canonical claims",
     "KEIHB is projection/publishing product only",
     "Future promotion requires review and rollback gates"

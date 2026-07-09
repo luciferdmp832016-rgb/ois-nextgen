@@ -9,6 +9,7 @@ import KnowledgeFabricPage from "./knowledge-fabric/page";
 import LearningCenterPage from "./learning-center/page";
 import LocalizationPage from "./localization/page";
 import ModuleDetailPage from "./modules/[id]/page";
+import OimaPage from "./oima/page";
 import ProductFlowPage from "./product-flow/page";
 import ProductsPage from "./products/page";
 import ProductDetailPage from "./products/[id]/page";
@@ -1098,10 +1099,10 @@ const architectureMindmapPayload = {
   boundary: knowledgeBoundary,
   mindmap: {
     manifestVersion: "1.0",
-    stage: "Stage 2G",
+    stage: "Stage 2H",
     title: "OIS Ecosystem Architecture Map",
     oisCoreLayers: ["Platform Kernel", "Product Registry", "OIS Agent Runtime", "Canonical Knowledge Fabric"],
-    ecosystemProducts: ["OIS_PLATFORM", "PITS", "KEIHB", "ICR", "CSAGENT"],
+    ecosystemProducts: ["OIS_PLATFORM", "PITS", "OIMA", "KEIHB", "ICR", "CSAGENT"],
     knowledgeLayers: knowledgeLayersPayload.layers.map((layer) => ({
       key: layer.key,
       displayName: layer.displayName,
@@ -1118,6 +1119,11 @@ const architectureMindmapPayload = {
         key: "stage_2g_knowledge_fabric_flow",
         label: "Stage 2G Knowledge Fabric",
         nodes: ["Knowledge Layer Mapping", "Canonical Knowledge Item", "Evidence Link", "Universal Knowledge API", "KEIHB Projection Bundle"]
+      },
+      {
+        key: "stage_2h_oima_boundary_flow",
+        label: "Stage 2H OIMA Product Boundary",
+        nodes: ["OIMA Meeting Shell", "Transcript-first Intake", "Universal Knowledge API", "OIS Agent Offline Analysis", "Learning Governance Review"]
       }
     ],
     apiContracts: [
@@ -1127,11 +1133,13 @@ const architectureMindmapPayload = {
       "/platform/learning/layer-mappings",
       "/platform/knowledge/keihb/bundles",
       "/platform/agent/knowledge-context",
+      "/platform/oima/overview",
       "/platform/architecture/mindmap"
     ],
     governanceCheckpoints: [
       "No widget direct canonical write",
       "No auto-promotion in Stage 2G",
+      "OIMA is not a separate knowledge silo",
       "Evidence required for canonical claims",
       "KEIHB is projection/publishing product only"
     ]
@@ -1140,6 +1148,147 @@ const architectureMindmapPayload = {
     file: "architecture/mindmap/ois-ecosystem-map.v1.json",
     mode: "machine-readable-manifest"
   }
+};
+
+const oimaSourceModeContracts = [
+  {
+    mode: "TRANSCRIPT_ONLY",
+    primary: true,
+    transcriptRequired: true,
+    audioRequired: false,
+    listenerMode: false,
+    status: "PRIMARY_STAGE_2H_FOUNDATION",
+    description: "Primary OIMA foundation. Meeting analysis must work from a transcript without audio."
+  },
+  {
+    mode: "AUDIO_ONLY",
+    primary: false,
+    transcriptRequired: false,
+    audioRequired: true,
+    listenerMode: false,
+    status: "FUTURE_ENRICHMENT",
+    description: "Future audio intake may derive or enrich transcript evidence."
+  },
+  {
+    mode: "TRANSCRIPT_AND_AUDIO",
+    primary: false,
+    transcriptRequired: true,
+    audioRequired: false,
+    listenerMode: false,
+    status: "FUTURE_ENRICHMENT",
+    description: "Future combined mode may improve speaker confidence."
+  },
+  {
+    mode: "LISTENER_CAPTURED",
+    primary: false,
+    transcriptRequired: false,
+    audioRequired: true,
+    listenerMode: true,
+    status: "FUTURE_ONLY",
+    description: "Future Listener Mode is limited to listen, record and analyze."
+  }
+];
+
+const oimaPayload = {
+  metadata: registryPayload.metadata,
+  boundary: {
+    stage: "Stage 2H",
+    implementationStatus: "PRODUCT_BOUNDARY_READY",
+    mode: "deterministic-oima-product-boundary",
+    transcriptFirst: true,
+    audioOptional: true,
+    noLiveSpeakingAgent: true,
+    noVoiceClone: true,
+    noImpersonation: true,
+    noAutonomousDecision: true,
+    noSeparateKnowledgeSourceOfTruth: true
+  },
+  productKey: "OIMA",
+  displayName: "OIMA — Organizational Intelligence Meeting Agent",
+  productType: "MEETING_INTELLIGENCE_PRODUCT",
+  implementationStatus: "PRODUCT_BOUNDARY_READY",
+  poweredBy: "OIS",
+  tagline: "OIS understands the organization. OIMA understands the meeting.",
+  vietnamesePositioning: "OIS hiểu tổ chức. OIMA hiểu cuộc họp.",
+  capabilityCodes: [
+    "MEETING_LIBRARY",
+    "MEETING_INTAKE",
+    "TRANSCRIPT_FIRST_PIPELINE",
+    "AUDIO_OPTIONAL_ENRICHMENT",
+    "MEETING_TRANSCRIPT_PROCESSING",
+    "OFFLINE_MEETING_ANALYSIS",
+    "SUBJECT_CLARIFICATION",
+    "DECISION_ACTION_RISK_EXTRACTION",
+    "MEETING_DASHBOARD",
+    "MONTHLY_OPERATING_REPORT",
+    "MEETING_SELF_IMPROVEMENT_REVIEW",
+    "LISTENER_MODE_FUTURE"
+  ],
+  sourceModes: ["TRANSCRIPT_ONLY", "AUDIO_ONLY", "TRANSCRIPT_AND_AUDIO", "LISTENER_CAPTURED"],
+  sourceModeContracts: oimaSourceModeContracts,
+  sourceModeRules: {
+    primarySourceMode: "TRANSCRIPT_ONLY",
+    transcriptFirst: true,
+    audioOptional: true,
+    transcriptOnlyWorksWithoutAudio: true,
+    audioDoesNotBlockAnalysis: true,
+    listenerModeFutureOnly: true
+  },
+  meetingStatuses: ["DRAFT", "INTAKE_READY", "TRANSCRIPT_UPLOADED", "PROCESSING_READY", "ANALYSIS_READY"],
+  analysisModes: ["OFFLINE_ANALYSIS", "LISTENER_CAPTURED_ANALYSIS_FUTURE"],
+  safetyBoundaries: [
+    "NO_LIVE_SPEAKING_AGENT",
+    "NO_VOICE_CLONE",
+    "NO_IMPERSONATION",
+    "NO_AUTONOMOUS_DECISION",
+    "TRANSCRIPT_FIRST_AUDIO_OPTIONAL"
+  ],
+  coreReuseMap: {
+    workspace: "OIS Core Workspace",
+    rbac: "OIS Core RBAC / future permission model",
+    canonicalEntities: "OIS Core Canonical Entity Registry",
+    knowledgeFabric: "OIS Canonical Knowledge Fabric KL-0 to KL-5",
+    universalKnowledgeApi: "OIS Universal Knowledge API",
+    agentRuntime: "OIS Agent Runtime deterministic/offline analysis boundary",
+    learningGovernance: "OIS Learning Signal / Candidate / Policy / Audit",
+    audit: "OIS audit trail for sensitive future writes",
+    meetingProductUx: "OIMA-owned meeting product experience"
+  },
+  ownedUxSurfaces: [
+    "Meeting Library",
+    "Upload Meeting",
+    "Transcript processing",
+    "Optional audio/voice recorder processing",
+    "OIS Agent offline meeting analysis",
+    "Subject clarification",
+    "Decision/action/risk extraction",
+    "Meeting dashboard",
+    "Monthly operating report",
+    "Self-improvement review",
+    "Listener Mode future"
+  ],
+  knowledgeIntegration: {
+    sourceOfTruth: "OIS Canonical Knowledge Fabric",
+    knowledgeLayerTaxonomy: knowledgeLayersPayload,
+    universalKnowledgeApi: "/platform/knowledge/context",
+    noSeparateKnowledgeSourceOfTruth: true
+  },
+  roadmap: [
+    { stage: "OIMA-0", phase: "Stage 2H", status: "PRODUCT_BOUNDARY_READY", title: "Product Shell & Boundary", scope: "Registry entry and shell UI." },
+    { stage: "OIMA-1", phase: "Stage 2I", status: "PLANNED", title: "Meeting Intake", scope: "Versioned schema and transcript artifacts." },
+    { stage: "OIMA-2", phase: "Stage 2J", status: "PLANNED", title: "Transcript Processing", scope: "Transcript-first deterministic contracts." },
+    { stage: "OIMA-3", phase: "Future", status: "PLANNED", title: "OIS Agent Offline Analysis", scope: "Evidence-backed offline analysis." },
+    { stage: "OIMA-4", phase: "Future", status: "PLANNED", title: "Subject Clarification", scope: "Clarification workflow." },
+    { stage: "OIMA-5", phase: "Future", status: "PLANNED", title: "Dashboard & Monthly Report", scope: "Meeting dashboard and monthly operating report." },
+    { stage: "OIMA-6", phase: "Future", status: "PLANNED", title: "Self-Improvement Review", scope: "Reviewed learning candidates only." },
+    { stage: "OIMA-7", phase: "Future", status: "PLANNED", title: "Optional Audio Intelligence", scope: "Optional audio enrichment." },
+    { stage: "OIMA-8", phase: "Future", status: "PLANNED", title: "Voice Sample Speaker Identity", scope: "Future governed speaker identity." },
+    { stage: "OIMA-9", phase: "Future", status: "PLANNED", title: "Listener Mode", scope: "Future listen/record/analyze only." }
+  ],
+  outOfScope: ["Real meeting upload", "Transcript storage/parser", "Audio ingestion or speaker identity"],
+  noCanonicalKnowledgeWrite: true,
+  autoPromotionEnabled: false,
+  oisAgentWidgetDirectCanonicalWriteAllowed: false
 };
 
 const productDetailPayload = {
@@ -1216,6 +1365,10 @@ function mockCoreApiFetch(overrides?: {
   keihbBundles?: unknown;
   knowledgeContext?: unknown;
   architectureMindmap?: unknown;
+  oimaOverview?: unknown;
+  oimaSourceModes?: unknown;
+  oimaRoadmap?: unknown;
+  oimaBoundary?: unknown;
 }) {
   const fetchMock = vi.fn(async (input: Parameters<typeof fetch>[0]) => {
     const url = input instanceof Request ? input.url : String(input);
@@ -1282,6 +1435,22 @@ function mockCoreApiFetch(overrides?: {
 
     if (url === `${coreApiUrl}/platform/architecture/mindmap`) {
       return jsonResponse(overrides?.architectureMindmap ?? architectureMindmapPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/oima/overview`) {
+      return jsonResponse(overrides?.oimaOverview ?? oimaPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/oima/source-modes`) {
+      return jsonResponse(overrides?.oimaSourceModes ?? oimaPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/oima/roadmap`) {
+      return jsonResponse(overrides?.oimaRoadmap ?? oimaPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/oima/boundary`) {
+      return jsonResponse(overrides?.oimaBoundary ?? oimaPayload);
     }
 
     if (url === `${coreApiUrl}/platform/products/prod_pits`) {
@@ -1612,6 +1781,42 @@ describe("OIS Console product shell", () => {
         "OIS Ecosystem Architecture Map",
         "No auto-promotion in Stage 2G",
         "Read only"
+      ]
+    ],
+    [
+      "oima",
+      OimaPage,
+      [
+        "OIMA — Organizational Intelligence Meeting Agent",
+        "Powered by OIS Product",
+        "OIS understands the organization. OIMA understands the meeting.",
+        "OIS hiểu tổ chức. OIMA hiểu cuộc họp.",
+        "Product Boundary",
+        "MEETING_INTELLIGENCE_PRODUCT",
+        "PRODUCT_BOUNDARY_READY",
+        "MEETING_LIBRARY",
+        "TRANSCRIPT_FIRST_PIPELINE",
+        "Source Mode Contract",
+        "TRANSCRIPT_ONLY",
+        "AUDIO_ONLY",
+        "TRANSCRIPT_AND_AUDIO",
+        "LISTENER_CAPTURED",
+        "TRANSCRIPT_ONLY primary",
+        "Safety Boundary",
+        "NO_LIVE_SPEAKING_AGENT",
+        "NO_VOICE_CLONE",
+        "NO_IMPERSONATION",
+        "NO_AUTONOMOUS_DECISION",
+        "OIS Core Reuse Map",
+        "OIS Universal Knowledge API",
+        "OIMA Roadmap",
+        "OIMA-0 - Product Shell &amp; Boundary",
+        "OIMA-5 - Dashboard &amp; Monthly Report",
+        "OIMA-9 - Listener Mode",
+        "Placeholder Product Surfaces",
+        "Meeting Library",
+        "Upload Meeting",
+        "Preview only"
       ]
     ],
     [
