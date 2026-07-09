@@ -70,7 +70,11 @@ export const capabilityCodes = [
   "identity:read",
   "access:read",
   "audit:read",
-  "pits:runtime:access"
+  "pits:runtime:access",
+  "learning:signal:create",
+  "learning:candidate:review",
+  "learning:policy:manage",
+  "agent:runtime:access"
 ] as const;
 export type CapabilityCode = (typeof capabilityCodes)[number];
 
@@ -107,6 +111,42 @@ export const stageAModules: ModuleContract[] = [
     code: "PLATFORM_KERNEL_API",
     product: "OIS",
     layer: "L0_OPERATIONAL_DATA",
+    scope: "PLATFORM",
+    realm: "SYSTEM_SERVICE",
+    lifecycle: "ACTIVE",
+    type: "PLATFORM_KERNEL"
+  },
+  {
+    code: "OIS_SELF_IMPROVEMENT_ENGINE",
+    product: "OIS",
+    layer: "L4_OPERATIONAL_LEARNING",
+    scope: "PLATFORM",
+    realm: "SYSTEM_SERVICE",
+    lifecycle: "ACTIVE",
+    type: "DOMAIN_SERVICE"
+  },
+  {
+    code: "OIS_AGENT_RUNTIME",
+    product: "OIS",
+    layer: "L9_UNIVERSAL_INTELLIGENCE_QUERY",
+    scope: "PLATFORM",
+    realm: "SYSTEM_SERVICE",
+    lifecycle: "ACTIVE",
+    type: "PLATFORM_KERNEL"
+  },
+  {
+    code: "OIS_LEARNING_CENTER",
+    product: "OIS",
+    layer: "L7_AI_GOVERNANCE",
+    scope: "ORGANIZATION",
+    realm: "OIS_ORGANIZATION_USER",
+    lifecycle: "ACTIVE",
+    type: "CONTROL_PLANE_VIEW"
+  },
+  {
+    code: "UNIVERSAL_KNOWLEDGE_API",
+    product: "OIS",
+    layer: "L9_UNIVERSAL_INTELLIGENCE_QUERY",
     scope: "PLATFORM",
     realm: "SYSTEM_SERVICE",
     lifecycle: "ACTIVE",

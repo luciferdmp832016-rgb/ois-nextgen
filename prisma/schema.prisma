@@ -52,6 +52,140 @@ enum ModuleType {
   WORKER
 }
 
+enum OisEcosystemProductType {
+  CORE_PLATFORM
+  ECOSYSTEM_PRODUCT
+  FUTURE_PRODUCT
+  CUSTOM_PRODUCT
+}
+
+enum OisLearningScope {
+  ORGANIZATION
+  INDUSTRY
+  PLATFORM
+}
+
+enum OisSourceAuthority {
+  CEO
+  CHAIRMAN
+  BOD
+  C_LEVEL
+  DIRECTOR
+  MANAGER
+  SUPERADMIN
+  ADMIN
+  STAFF
+  END_USER
+  SYSTEM
+  UNKNOWN
+}
+
+enum OisLearningPolicyMode {
+  ALWAYS_ASK
+  AUTO_IF_CONFIDENCE
+  FULL_AUTO_PILOT
+  LOG_ONLY
+}
+
+enum OisLearningSourceType {
+  WIDGET
+  MEETING
+  DOCUMENT
+  TICKET
+  CHAT
+  EMAIL
+  CALL
+  SYSTEM
+  IMPORT
+  OTHER
+}
+
+enum OisLearningSignalType {
+  USER_CORRECTION
+  NEW_KNOWLEDGE
+  EXECUTIVE_STATEMENT
+  CEO_DIRECTIVE
+  STRATEGIC_INTENT
+  SOP_CORRECTION
+  FAQ_CORRECTION
+  ENTITY_CORRECTION
+  RISK_PATTERN
+  TICKET_PATTERN
+  CANDIDATE_MARKET_SIGNAL
+  CUSTOMER_COMPLAINT_PATTERN
+  PRODUCT_FEEDBACK
+  KNOWLEDGE_GAP
+  OTHER
+}
+
+enum OisLearningSignalStatus {
+  RECEIVED
+  TRIAGED
+  CANDIDATE_CREATED
+  IGNORED
+  ERROR
+}
+
+enum OisLearningCandidateType {
+  EXECUTIVE_DIRECTIVE
+  STRATEGIC_PRIORITY
+  MANAGEMENT_PRINCIPLE
+  EXECUTIVE_CONCERN
+  MISALIGNMENT_SIGNAL
+  ENTITY_UPDATE
+  SOP_UPDATE
+  FAQ_UPDATE
+  RISK_PATTERN
+  TICKET_PATTERN
+  PRODUCT_IMPROVEMENT
+  INDUSTRY_PATTERN
+  PLATFORM_PATTERN
+  OTHER
+}
+
+enum OisLearningConflictStatus {
+  NO_CONFLICT
+  POSSIBLE_CONFLICT
+  CONFLICT
+  INSUFFICIENT_EVIDENCE
+}
+
+enum OisLearningPolicyDecision {
+  ASK_REVIEW
+  AUTO_LEARN
+  LOG_ONLY
+  BLOCKED
+}
+
+enum OisLearningCandidateStatus {
+  PENDING_REVIEW
+  AUTO_LEARNED
+  APPROVED
+  REJECTED
+  PROMOTED
+  ROLLED_BACK
+}
+
+enum OisAgentSessionStatus {
+  OPEN
+  CLOSED
+}
+
+enum OisAgentMessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum OisAgentFeedbackType {
+  HELPFUL
+  NOT_HELPFUL
+  WRONG_ANSWER
+  CORRECTION
+  CONFIRMED_TRUE
+  ESCALATED
+}
+
 model Industry {
   id            String          @id
   code          String          @unique
@@ -171,6 +305,162 @@ model ProductDefinition {
   modules        ModuleDefinition[]
   roles          RoleDefinition[]
   permissions    PermissionDefinition[]
+}
+
+model OisEcosystemProduct {
+  id                           String                  @id
+  productKey                   String                  @unique
+  displayName                  String
+  description                  String
+  productType                  OisEcosystemProductType
+  enabled                      Boolean                 @default(true)
+  supportedAgentCapabilities   String[]
+  supportedLearningSignalTypes String[]
+  defaultLearningScope         OisLearningScope
+  createdAt                    DateTime                @default(now())
+  updatedAt                    DateTime                @updatedAt
+}
+
+model OisLearningPolicy {
+  id                  String                @id
+  organizationId      String
+  productKey          String
+  learningScope       OisLearningScope
+  signalType          OisLearningSignalType
+  sourceAuthority     OisSourceAuthority
+  policyMode          OisLearningPolicyMode
+  confidenceThreshold Float                 @default(0.95)
+  enabled             Boolean               @default(true)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  @@unique([organizationId, productKey, learningScope, signalType, sourceAuthority])
+  @@index([organizationId, productKey, learningScope])
+}
+
+model OisLearningSignal {
+  id                String                  @id
+  organizationId    String
+  workspaceId       String?
+  productKey        String
+  sourceType        OisLearningSourceType
+  sourceAuthority   OisSourceAuthority
+  learningScope     OisLearningScope
+  signalType        OisLearningSignalType
+  rawText           String
+  normalizedText    String
+  contextJson       Json                    @default("{}")
+  relatedEntityRefs Json                    @default("[]")
+  submittedBy       String?
+  userId            String?
+  confidenceInitial Float                   @default(0)
+  status            OisLearningSignalStatus @default(RECEIVED)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  @@index([organizationId, workspaceId, createdAt])
+  @@index([productKey, signalType, sourceAuthority])
+  @@index([status, createdAt])
+}
+
+model OisLearningCandidate {
+  id                      String                     @id
+  signalId                String
+  organizationId          String
+  workspaceId             String?
+  productKey              String
+  learningScope           OisLearningScope
+  candidateType           OisLearningCandidateType
+  title                   String
+  summary                 String
+  proposedKnowledgeJson   Json                       @default("{}")
+  affectedProducts        String[]
+  affectedEntities        Json                       @default("[]")
+  sourceAuthority         OisSourceAuthority
+  confidenceScore         Float                      @default(0)
+  confidenceBreakdownJson Json                       @default("{}")
+  conflictStatus          OisLearningConflictStatus  @default(NO_CONFLICT)
+  policyDecision          OisLearningPolicyDecision  @default(ASK_REVIEW)
+  status                  OisLearningCandidateStatus @default(PENDING_REVIEW)
+  evidenceJson            Json                       @default("{}")
+  reviewerId              String?
+  reviewedAt              DateTime?
+  createdAt               DateTime                   @default(now())
+  updatedAt               DateTime                   @updatedAt
+
+  @@index([signalId])
+  @@index([organizationId, workspaceId, createdAt])
+  @@index([productKey, candidateType, status])
+  @@index([sourceAuthority, policyDecision])
+}
+
+model OisAgentSession {
+  id                    String                @id
+  organizationId        String
+  workspaceId           String?
+  productKey            String
+  currentRoute          String?
+  screen                String?
+  currentEntityRefs     Json                  @default("[]")
+  userRole              String?
+  permissionContextJson Json                  @default("{}")
+  locale                String?
+  status                OisAgentSessionStatus @default(OPEN)
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  @@index([organizationId, workspaceId, productKey])
+  @@index([status, createdAt])
+}
+
+model OisAgentMessage {
+  id           String              @id
+  sessionId    String
+  role         OisAgentMessageRole
+  content      String
+  evidenceJson Json                @default("{}")
+  createdAt    DateTime            @default(now())
+
+  @@index([sessionId, createdAt])
+}
+
+model OisAgentFeedback {
+  id             String               @id
+  organizationId String
+  workspaceId    String?
+  productKey     String
+  sessionId      String
+  messageId      String?
+  feedbackType   OisAgentFeedbackType
+  comment        String?
+  submittedBy    String?
+  userId         String?
+  createdAt      DateTime             @default(now())
+
+  @@index([organizationId, workspaceId, productKey])
+  @@index([sessionId, messageId])
+}
+
+model OisAgentLearningSubmission {
+  id             String                  @id
+  organizationId String
+  workspaceId    String?
+  productKey     String
+  sessionId      String?
+  signalId       String?
+  sourceAuthority OisSourceAuthority
+  learningScope  OisLearningScope
+  signalType     OisLearningSignalType
+  rawText        String
+  status         OisLearningSignalStatus @default(RECEIVED)
+  submittedBy    String?
+  userId         String?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@index([organizationId, workspaceId, productKey])
+  @@index([signalId])
+  @@index([sessionId])
 }
 
 model ProductInstallation {

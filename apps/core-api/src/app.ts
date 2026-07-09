@@ -3,6 +3,7 @@ import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
+import { registerStage2FRoutes, type Stage2FPrisma } from "./stage-2f";
 
 const demoLoginSchema = z.object({
   email: z.string().email(),
@@ -38,6 +39,14 @@ export type CoreApiPrismaClient = Pick<
   | "auditRecord"
   | "industry"
   | "moduleDefinition"
+  | "oisAgentFeedback"
+  | "oisAgentLearningSubmission"
+  | "oisAgentMessage"
+  | "oisAgentSession"
+  | "oisEcosystemProduct"
+  | "oisLearningCandidate"
+  | "oisLearningPolicy"
+  | "oisLearningSignal"
   | "organization"
   | "productDefinition"
   | "productInstallation"
@@ -3859,6 +3868,8 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
     if (!installation) return reply.code(404).send({ error: "Product installation not found" });
     return installation;
   });
+
+  registerStage2FRoutes(app, prisma as unknown as Stage2FPrisma, registryMetadata);
 
   app.addHook("onClose", async () => {
     await prisma.$disconnect();

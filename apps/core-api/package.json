@@ -8,5 +8,8 @@
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
     "typecheck": "tsc -p ../../tsconfig.check.json --noEmit"
+  },
+  "dependencies": {
+    "@ois/agent-runtime": "workspace:*"
   }
 }

@@ -159,6 +159,80 @@ const registryRows = {
   }
 } as const;
 
+const stage2FRows = {
+  product: {
+    id: "ecosystem_product_ois_platform",
+    productKey: "OIS_PLATFORM",
+    displayName: "OIS Platform",
+    description: "The OIS Core control plane and shared platform brain.",
+    productType: "CORE_PLATFORM",
+    enabled: true,
+    supportedAgentCapabilities: ["ASK", "TEACH_OIS", "VIEW_LEARNING_STATUS"],
+    supportedLearningSignalTypes: ["USER_CORRECTION", "ENTITY_CORRECTION", "STRATEGIC_INTENT"],
+    defaultLearningScope: "PLATFORM",
+    createdAt: "2026-07-09T00:00:00.000Z",
+    updatedAt: "2026-07-09T00:00:00.000Z"
+  },
+  policy: {
+    id: "learning_policy_ois_platform_organization_entity_correction_superadmin",
+    organizationId: "org_pmc_demo",
+    productKey: "OIS_PLATFORM",
+    learningScope: "ORGANIZATION",
+    signalType: "ENTITY_CORRECTION",
+    sourceAuthority: "SUPERADMIN",
+    policyMode: "AUTO_IF_CONFIDENCE",
+    confidenceThreshold: 0.8,
+    enabled: true,
+    createdAt: "2026-07-09T00:00:00.000Z",
+    updatedAt: "2026-07-09T00:00:00.000Z"
+  },
+  signal: {
+    id: "learning_signal_test",
+    organizationId: "org_pmc_demo",
+    workspaceId: "ws_pmc_org_demo",
+    productKey: "OIS_PLATFORM",
+    sourceType: "WIDGET",
+    sourceAuthority: "SUPERADMIN",
+    learningScope: "ORGANIZATION",
+    signalType: "ENTITY_CORRECTION",
+    rawText: "Emerald Tower is also Emerald Precinct.",
+    normalizedText: "Emerald Tower is also Emerald Precinct.",
+    contextJson: { evidence: ["registry", "entity-ref"] },
+    relatedEntityRefs: [{ type: "Project", id: "prj_emerald_precinct_demo" }],
+    submittedBy: "Super Admin Demo",
+    userId: "user_super_admin_demo",
+    confidenceInitial: 0.8,
+    status: "RECEIVED",
+    createdAt: "2026-07-09T00:00:00.000Z",
+    updatedAt: "2026-07-09T00:00:00.000Z"
+  },
+  candidate: {
+    id: "learning_candidate_test",
+    signalId: "learning_signal_test",
+    organizationId: "org_pmc_demo",
+    workspaceId: "ws_pmc_org_demo",
+    productKey: "OIS_PLATFORM",
+    learningScope: "ORGANIZATION",
+    candidateType: "ENTITY_UPDATE",
+    title: "ENTITY UPDATE candidate",
+    summary: "Emerald Tower is also Emerald Precinct.",
+    proposedKnowledgeJson: { canonicalWriteAllowed: false },
+    affectedProducts: ["OIS_PLATFORM"],
+    affectedEntities: [{ type: "Project", id: "prj_emerald_precinct_demo" }],
+    sourceAuthority: "SUPERADMIN",
+    confidenceScore: 0.85,
+    confidenceBreakdownJson: {},
+    conflictStatus: "NO_CONFLICT",
+    policyDecision: "AUTO_LEARN",
+    status: "AUTO_LEARNED",
+    evidenceJson: { notes: ["no canonical knowledge write"] },
+    reviewerId: null,
+    reviewedAt: null,
+    createdAt: "2026-07-09T00:00:00.000Z",
+    updatedAt: "2026-07-09T00:00:00.000Z"
+  }
+} as const;
+
 function createWriteGuard(name: string, writeCalls: string[]) {
   return vi.fn(() => {
     writeCalls.push(name);
@@ -201,7 +275,21 @@ function createMockPrisma(counts = overviewCounts) {
       findUnique: vi.fn(async () => null)
     },
     moduleDefinition: createCountDelegate("moduleDefinition", counts.modules, readCalls, writeCalls, [registryRows.module]),
-    auditRecord: createCountDelegate("auditRecord", counts.auditRecords, readCalls, writeCalls)
+    auditRecord: createCountDelegate("auditRecord", counts.auditRecords, readCalls, writeCalls),
+    oisEcosystemProduct: createCountDelegate("oisEcosystemProduct", 0, readCalls, writeCalls, [stage2FRows.product]),
+    oisLearningPolicy: createCountDelegate("oisLearningPolicy", 0, readCalls, writeCalls, [stage2FRows.policy]),
+    oisLearningSignal: {
+      ...createCountDelegate("oisLearningSignal", 0, readCalls, writeCalls, [stage2FRows.signal]),
+      findUnique: vi.fn(async () => stage2FRows.signal)
+    },
+    oisLearningCandidate: {
+      ...createCountDelegate("oisLearningCandidate", 0, readCalls, writeCalls, [stage2FRows.candidate]),
+      findUnique: vi.fn(async () => stage2FRows.candidate)
+    },
+    oisAgentSession: createCountDelegate("oisAgentSession", 0, readCalls, writeCalls),
+    oisAgentMessage: createCountDelegate("oisAgentMessage", 0, readCalls, writeCalls),
+    oisAgentFeedback: createCountDelegate("oisAgentFeedback", 0, readCalls, writeCalls),
+    oisAgentLearningSubmission: createCountDelegate("oisAgentLearningSubmission", 0, readCalls, writeCalls)
   };
 
   const userAccount = {
@@ -1429,6 +1517,228 @@ describe("platform registry read-only endpoints", () => {
         }
       });
       expect(body.error.lookup[lookupKey]).toBeDefined();
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+describe("Stage 2F OIS Agent Runtime and Self-Improvement endpoints", () => {
+  function enableStage2FWrites(mock: ReturnType<typeof createMockPrisma>, writeOps: string[]) {
+    (mock.delegates.auditRecord.create as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("auditRecord.create");
+      return args.data;
+    });
+    (mock.delegates.oisLearningSignal.create as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("oisLearningSignal.create");
+      return {
+        ...stage2FRows.signal,
+        ...args.data,
+        workspaceId: args.data.workspaceId ?? null,
+        submittedBy: args.data.submittedBy ?? null,
+        userId: args.data.userId ?? null,
+        createdAt: stage2FRows.signal.createdAt,
+        updatedAt: stage2FRows.signal.updatedAt
+      };
+    });
+    (mock.delegates.oisLearningSignal.update as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("oisLearningSignal.update");
+      return { ...stage2FRows.signal, ...args.data };
+    });
+    (mock.delegates.oisLearningCandidate.create as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("oisLearningCandidate.create");
+      return {
+        ...stage2FRows.candidate,
+        ...args.data,
+        workspaceId: args.data.workspaceId ?? null,
+        reviewerId: null,
+        reviewedAt: null,
+        createdAt: stage2FRows.candidate.createdAt,
+        updatedAt: stage2FRows.candidate.updatedAt
+      };
+    });
+    (mock.delegates.oisAgentLearningSubmission.create as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("oisAgentLearningSubmission.create");
+      return {
+        ...args.data,
+        workspaceId: args.data.workspaceId ?? null,
+        sessionId: args.data.sessionId ?? null,
+        signalId: args.data.signalId ?? null,
+        submittedBy: args.data.submittedBy ?? null,
+        userId: args.data.userId ?? null,
+        createdAt: "2026-07-09T00:00:00.000Z",
+        updatedAt: "2026-07-09T00:00:00.000Z"
+      };
+    });
+  }
+
+  it("lists the Powered by OIS product registry foundation", async () => {
+    const mock = createMockPrisma();
+    mock.delegates.oisEcosystemProduct.findMany.mockResolvedValue([
+      { ...stage2FRows.product, productKey: "OIS_PLATFORM" },
+      { ...stage2FRows.product, id: "ecosystem_product_pits", productKey: "PITS", displayName: "PITS" },
+      { ...stage2FRows.product, id: "ecosystem_product_keihb", productKey: "KEIHB", displayName: "KEIHB" },
+      { ...stage2FRows.product, id: "ecosystem_product_icr", productKey: "ICR", displayName: "ICR" },
+      { ...stage2FRows.product, id: "ecosystem_product_csagent", productKey: "CSAGENT", displayName: "CSAgent" },
+      { ...stage2FRows.product, id: "ecosystem_product_future_product", productKey: "FUTURE_PRODUCT", displayName: "Future Product" },
+      { ...stage2FRows.product, id: "ecosystem_product_custom", productKey: "CUSTOM", displayName: "Custom" }
+    ]);
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/ecosystem-products" });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body.products.map((product: { productKey: string }) => product.productKey)).toEqual([
+        "OIS_PLATFORM",
+        "PITS",
+        "KEIHB",
+        "ICR",
+        "CSAGENT",
+        "FUTURE_PRODUCT",
+        "CUSTOM"
+      ]);
+      expect(body.supportedAgentCapabilities).toContain("TEACH_OIS");
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("lets the agent widget submit governed learning without canonical knowledge writes", async () => {
+    const mock = createMockPrisma();
+    const writeOps: string[] = [];
+    enableStage2FWrites(mock, writeOps);
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: "/platform/agent/learning-submissions",
+        payload: {
+          organizationId: "org_pmc_demo",
+          workspaceId: "ws_pmc_org_demo",
+          productKey: "OIS_PLATFORM",
+          sourceType: "WIDGET",
+          sourceAuthority: "END_USER",
+          learningScope: "ORGANIZATION",
+          signalType: "USER_CORRECTION",
+          rawText: "The project nickname should be Emerald Precinct.",
+          contextJson: { route: "/" },
+          relatedEntityRefs: []
+        }
+      });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body.noCanonicalKnowledgeWrite).toBe(true);
+      expect(body.signal).toMatchObject({
+        productKey: "OIS_PLATFORM",
+        sourceType: "WIDGET",
+        status: "RECEIVED"
+      });
+      expect(writeOps).toEqual(["oisLearningSignal.create", "auditRecord.create", "oisAgentLearningSubmission.create", "auditRecord.create"]);
+      expect(writeOps.join(" ")).not.toMatch(/MasterKnowledge|EntityRegistry|Decision|Commitment|Risk/i);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("creates deterministic learning candidates from signals and only auto-logs Stage 2F learning", async () => {
+    const mock = createMockPrisma();
+    const writeOps: string[] = [];
+    enableStage2FWrites(mock, writeOps);
+    mock.delegates.oisLearningSignal.findUnique.mockResolvedValue(stage2FRows.signal);
+    mock.delegates.oisLearningPolicy.findMany.mockResolvedValue([stage2FRows.policy]);
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: "/platform/learning/signals/learning_signal_test/candidates"
+      });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body.noCanonicalKnowledgeWrite).toBe(true);
+      expect(body.candidate).toMatchObject({
+        candidateType: "ENTITY_UPDATE",
+        policyDecision: "AUTO_LEARN",
+        status: "AUTO_LEARNED",
+        proposedKnowledgeJson: expect.objectContaining({ canonicalWriteAllowed: false })
+      });
+      expect(writeOps).toEqual(["oisLearningCandidate.create", "oisLearningSignal.update", "auditRecord.create"]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("forces executive and sensitive learning candidates into review even with auto policy", async () => {
+    const mock = createMockPrisma();
+    const writeOps: string[] = [];
+    enableStage2FWrites(mock, writeOps);
+    mock.delegates.oisLearningSignal.findUnique.mockResolvedValue({
+      ...stage2FRows.signal,
+      id: "learning_signal_ceo",
+      sourceAuthority: "CEO",
+      signalType: "STRATEGIC_INTENT",
+      rawText: "CEO directive: prioritize legal risk review for all product launches.",
+      normalizedText: "CEO directive: prioritize legal risk review for all product launches.",
+      relatedEntityRefs: []
+    } as any);
+    mock.delegates.oisLearningPolicy.findMany.mockResolvedValue([
+      {
+        ...stage2FRows.policy,
+        signalType: "STRATEGIC_INTENT",
+        sourceAuthority: "CEO",
+        policyMode: "FULL_AUTO_PILOT",
+        confidenceThreshold: 0.5
+      }
+    ]);
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: "/platform/learning/signals/learning_signal_ceo/candidates"
+      });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body.candidate).toMatchObject({
+        candidateType: "STRATEGIC_PRIORITY",
+        policyDecision: "ASK_REVIEW",
+        status: "PENDING_REVIEW",
+        sourceAuthority: "CEO"
+      });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("returns a SuperAdmin Learning Center v0 payload with guard limitation", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({ method: "GET", url: "/platform/learning/center" });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(200);
+      expect(body.overview).toMatchObject({
+        totalSignals: 1,
+        pendingCandidates: 0,
+        autoLearnedLogs: 1,
+        rejectedOrIgnored: 0
+      });
+      expect(body.executiveIntentQueue).toEqual([]);
+      expect(body.productContributionMap).toEqual(expect.arrayContaining([expect.objectContaining({ productKey: "OIS_PLATFORM" })]));
+      expect(body.accessGuard).toMatchObject({
+        requiredRole: "SUPERADMIN_OR_ADMIN",
+        currentStageMode: "READ_ONLY_PREVIEW_WITH_API_ROLE_CHECKS"
+      });
       expect(mock.writeCalls).toEqual([]);
     } finally {
       await app.close();

@@ -16,6 +16,7 @@ import {
   kernelFields,
   LocalizedText,
   ModernProductShell,
+  OisAgentWidgetShell,
   type AdminBoundaryAction,
   type AdminPermissionState,
   type KernelField,
@@ -38,6 +39,7 @@ const navItems = [
   { id: "dashboard", href: "/dashboard", label: "Dashboard", shortLabel: "Db" },
   { id: "products", href: "/products", label: "Products", shortLabel: "Pr" },
   { id: "workspaces", href: "/workspaces", label: "Workspaces", shortLabel: "Ws" },
+  { id: "learning-center", href: "/learning-center", label: "Learning", shortLabel: "Ln" },
   { id: "localization", href: "/localization", label: "Localization", shortLabel: "L10n" },
   { id: "runtime", href: "/runtime", label: "Runtime", shortLabel: "Rt" }
 ];
@@ -67,6 +69,9 @@ export function OisConsoleShell({
   children: ReactNode;
 }) {
   const healthOk = snapshot.health.ok && snapshot.healthStatus === "ok";
+  const registrySnapshot = snapshot as PlatformRegistrySnapshot;
+  const organizationId = registrySnapshot.organizations?.[0]?.id ?? "org_pmc_demo";
+  const workspaceId = registrySnapshot.workspaces?.[0]?.id;
 
   return (
     <ModernProductShell
@@ -82,6 +87,13 @@ export function OisConsoleShell({
       productName="OIS Console"
     >
       {children}
+      <OisAgentWidgetShell
+        coreApiUrl={snapshot.coreApiUrl}
+        currentRoute={active}
+        organizationId={organizationId}
+        productKey="OIS_PLATFORM"
+        workspaceId={workspaceId}
+      />
     </ModernProductShell>
   );
 }

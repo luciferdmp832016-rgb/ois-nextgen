@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
+import { defaultLearningPolicies, ecosystemProductRegistry } from "../packages/agent-runtime/src/index";
 
 const prisma = new PrismaClient();
 
@@ -137,6 +138,64 @@ async function main(): Promise<void> {
     await ensureRecord(prisma.productDefinition, { id: product.id }, product);
   }
 
+  for (const product of ecosystemProductRegistry) {
+    await ensureRecord(
+      prisma.oisEcosystemProduct,
+      { productKey: product.productKey },
+      {
+        id: `ecosystem_product_${product.productKey.toLowerCase()}`,
+        productKey: product.productKey,
+        displayName: product.displayName,
+        description: product.description,
+        productType: product.productType,
+        enabled: product.enabled,
+        supportedAgentCapabilities: product.supportedAgentCapabilities,
+        supportedLearningSignalTypes: product.supportedLearningSignalTypes,
+        defaultLearningScope: product.defaultLearningScope
+      },
+      {
+        displayName: product.displayName,
+        description: product.description,
+        productType: product.productType,
+        enabled: product.enabled,
+        supportedAgentCapabilities: product.supportedAgentCapabilities,
+        supportedLearningSignalTypes: product.supportedLearningSignalTypes,
+        defaultLearningScope: product.defaultLearningScope
+      }
+    );
+  }
+
+  for (const policy of defaultLearningPolicies) {
+    await ensureRecord(
+      prisma.oisLearningPolicy,
+      {
+        organizationId_productKey_learningScope_signalType_sourceAuthority: {
+          organizationId: ids.organization,
+          productKey: policy.productKey,
+          learningScope: policy.learningScope,
+          signalType: policy.signalType,
+          sourceAuthority: policy.sourceAuthority
+        }
+      },
+      {
+        id: `learning_policy_${policy.productKey.toLowerCase()}_${policy.learningScope.toLowerCase()}_${policy.signalType.toLowerCase()}_${policy.sourceAuthority.toLowerCase()}`,
+        organizationId: ids.organization,
+        productKey: policy.productKey,
+        learningScope: policy.learningScope,
+        signalType: policy.signalType,
+        sourceAuthority: policy.sourceAuthority,
+        policyMode: policy.policyMode,
+        confidenceThreshold: policy.confidenceThreshold,
+        enabled: policy.enabled
+      },
+      {
+        policyMode: policy.policyMode,
+        confidenceThreshold: policy.confidenceThreshold,
+        enabled: policy.enabled
+      }
+    );
+  }
+
   for (const realm of [
     { id: "realm_ois_org_user", code: "OIS_ORGANIZATION_USER", name: "OIS Organization User" },
     { id: "realm_pits_project_user", code: "PITS_PROJECT_USER", name: "PITS Project User" },
@@ -252,6 +311,46 @@ async function main(): Promise<void> {
       scope: "PROJECT",
       realmCode: "PITS_PROJECT_USER",
       moduleType: "PRODUCT_RUNTIME_VIEW"
+    },
+    {
+      id: "module_ois_self_improvement_engine",
+      code: "OIS_SELF_IMPROVEMENT_ENGINE",
+      productId: ids.products.OIS,
+      productCode: "OIS",
+      layerCode: "L4_OPERATIONAL_LEARNING",
+      scope: "PLATFORM",
+      realmCode: "SYSTEM_SERVICE",
+      moduleType: "DOMAIN_SERVICE"
+    },
+    {
+      id: "module_ois_agent_runtime",
+      code: "OIS_AGENT_RUNTIME",
+      productId: ids.products.OIS,
+      productCode: "OIS",
+      layerCode: "L9_UNIVERSAL_INTELLIGENCE_QUERY",
+      scope: "PLATFORM",
+      realmCode: "SYSTEM_SERVICE",
+      moduleType: "PLATFORM_KERNEL"
+    },
+    {
+      id: "module_ois_learning_center",
+      code: "OIS_LEARNING_CENTER",
+      productId: ids.products.OIS,
+      productCode: "OIS",
+      layerCode: "L7_AI_GOVERNANCE",
+      scope: "ORGANIZATION",
+      realmCode: "OIS_ORGANIZATION_USER",
+      moduleType: "CONTROL_PLANE_VIEW"
+    },
+    {
+      id: "module_universal_knowledge_api",
+      code: "UNIVERSAL_KNOWLEDGE_API",
+      productId: ids.products.OIS,
+      productCode: "OIS",
+      layerCode: "L9_UNIVERSAL_INTELLIGENCE_QUERY",
+      scope: "PLATFORM",
+      realmCode: "SYSTEM_SERVICE",
+      moduleType: "PLATFORM_KERNEL"
     }
   ] as const) {
     await ensureRecord(prisma.moduleDefinition, { id: module.id }, module, { lifecycle: "ACTIVE" });

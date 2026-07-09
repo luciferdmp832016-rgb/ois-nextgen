@@ -12,6 +12,10 @@
     "identity:read",
     "access:read",
     "audit:read",
-    "pits:runtime:access"
+    "pits:runtime:access",
+    "learning:signal:create",
+    "learning:candidate:review",
+    "learning:policy:manage",
+    "agent:runtime:access"
   ]
 }

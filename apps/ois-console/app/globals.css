@@ -1170,3 +1170,97 @@ input {
     grid-template-columns: 1fr;
   }
 }
+
+.ois-agent-widget {
+  bottom: 18px;
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+  pointer-events: none;
+  position: fixed;
+  right: 18px;
+  z-index: 40;
+}
+
+.ois-agent-launcher,
+.ois-agent-panel button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.ois-agent-launcher {
+  background: var(--blue);
+  color: #ffffff;
+  height: 48px;
+  pointer-events: auto;
+  width: 48px;
+}
+
+.ois-agent-panel {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.2);
+  display: grid;
+  gap: 12px;
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  padding: 14px;
+  pointer-events: auto;
+  width: min(92vw, 380px);
+}
+
+.ois-agent-panel header,
+.ois-agent-panel footer,
+.ois-agent-tabs {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.ois-agent-panel h3 {
+  margin: 0;
+}
+
+.ois-agent-tabs {
+  justify-content: flex-start;
+}
+
+.ois-agent-tabs button,
+.ois-agent-compose button {
+  background: #f8fafc;
+  color: var(--ink);
+  min-height: 36px;
+  padding: 7px 10px;
+}
+
+.ois-agent-tabs button.active,
+.ois-agent-compose button {
+  background: var(--blue);
+  color: #ffffff;
+}
+
+.ois-agent-compose {
+  display: grid;
+  gap: 8px;
+}
+
+.ois-agent-compose textarea {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-height: 92px;
+  padding: 10px;
+  resize: vertical;
+}
+
+.ois-agent-panel footer {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  padding-top: 10px;
+}
