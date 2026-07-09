@@ -85,6 +85,7 @@ function knowledgeIntegration() {
     knowledgeLayerTaxonomy,
     availableLayers: knowledgeLayerTaxonomy.availableLayers,
     universalKnowledgeApi: "/platform/knowledge/context",
+    universalKnowledgeApiLabel: "OIS Universal Knowledge API",
     agentKnowledgeContextApi: "/platform/agent/knowledge-context",
     oimaDoesNotOwnCanonicalKnowledge: true,
     noSeparateKnowledgeSourceOfTruth: true
@@ -124,6 +125,7 @@ export function buildOimaProductRegistryProjection() {
     id: "powered_by_ois_oima",
     code: "OIMA",
     name: oimaProductContract.displayName,
+    displayName: oimaProductContract.displayName,
     lifecycle: "ACTIVE",
     version: 1,
     productKey: oimaProductContract.productKey,

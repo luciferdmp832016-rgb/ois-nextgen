@@ -47,6 +47,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 2G-R1 fixes the Knowledge Fabric endpoint marker contract by returning global `knowledgeLayerTaxonomy` / `availableLayers` metadata on context, Learning layer mapping and KEIHB bundle responses while preserving scoped result truthfulness.
 - Stage 2G-R2 fixes the Learning layer mapping status marker contract by returning global `mappingStatusTaxonomy` / `availableStatuses` metadata on mapping responses while preserving actual row statuses.
 - Stage 2H adds OIMA as a distinct Powered by OIS meeting intelligence product boundary, backed by ADR 0006, a versioned enum migration, deterministic `/platform/oima/*` contract endpoints, `/platform/products/code/OIMA` and OIS `/oima`. It does not add meeting upload, transcript storage, audio processing, Listener Mode runtime or LLM calls.
+- Stage 2H-R1 fixes public staging smoke contract drift after OIMA deployment: overview/root shell count checks now validate minimum seeded counts instead of stale exact Stage 0Q counts, `/platform/products/code/OIMA` exposes `displayName`, and `/platform/oima/overview` exposes `OIS Universal Knowledge API` explicitly.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -2368,6 +2369,7 @@ Stage 2E adds source-ready PITS Action Request endpoints and PITS Work Item Deta
 Stage 2F adds source-ready Core API learning/agent endpoints plus OIS `/learning-center` and the OIS Agent Widget. Public verification is pending owner runtime sync, migration deploy and owner browser/UAT.
 Stage 2G adds source-ready Core API knowledge fabric, KEIHB projection, agent knowledge-context and architecture mindmap endpoints plus OIS `/knowledge-fabric`. Stage 2G-R1 adds the endpoint marker contract hotfix for global taxonomy metadata on context, mapping and KEIHB bundle responses. Stage 2G-R2 adds explicit mapping status taxonomy metadata on Learning layer mapping responses. Public verification is pending owner runtime sync, migration deploy and owner browser/UAT.
 Stage 2H adds source-ready Core API OIMA product boundary endpoints plus OIS `/oima`. Public verification is pending owner runtime sync, migration deploy and owner browser/UAT.
+Stage 2H-R1 adds no migration and no seed requirement. Redeploy Core API/OIS/PITS code and rerun public/local smoke scripts to verify the corrected count and OIMA marker contracts.
 
 ## Stop Conditions
 

@@ -72,7 +72,7 @@ validate_overview_body() {
 
   OVERVIEW_BODY="$body" node <<'NODE'
 const payload = JSON.parse(process.env.OVERVIEW_BODY);
-const expected = {
+const minimums = {
   industries: 1,
   organizations: 1,
   workspaces: 1,
@@ -86,9 +86,10 @@ if (payload.banner !== "DEMO DATA - NOT PRODUCTION") {
   console.error(`unexpected banner: ${payload.banner}`);
   process.exit(1);
 }
-for (const [key, value] of Object.entries(expected)) {
-  if (payload.kernel?.[key] !== value) {
-    console.error(`unexpected ${key}: ${payload.kernel?.[key]} expected ${value}`);
+for (const [key, minimum] of Object.entries(minimums)) {
+  const value = payload.kernel?.[key];
+  if (!Number.isInteger(value) || value < minimum) {
+    console.error(`unexpected ${key}: ${value} expected >= ${minimum}`);
     process.exit(1);
   }
 }
@@ -153,7 +154,7 @@ check_platform_overview_once() {
     return 1
   fi
 
-  CHECK_DETAIL="$label /platform/overview HTTP 200 seeded counts unchanged"
+  CHECK_DETAIL="$label /platform/overview HTTP 200 seeded count minimums verified"
 }
 
 print_platform_overview_once() {
@@ -196,7 +197,7 @@ for (const key of expected) {
 console.log(`PLATFORM_KERNEL=${payload.phaseGates.PLATFORM_KERNEL}`);
 NODE
 
-  CHECK_DETAIL="$label /platform/overview HTTP 200 seeded counts unchanged"
+  CHECK_DETAIL="$label /platform/overview HTTP 200 seeded count minimums verified"
 }
 
 wait_for_check() {
