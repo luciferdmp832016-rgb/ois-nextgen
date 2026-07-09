@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getOimaSnapshot, getPlatformRegistrySnapshot, type OimaBoundaryPayload } from "@ois/shared-ui";
 import { OisConsoleShell, PageHeading, StatusBadge } from "../shell";
 
@@ -23,8 +24,8 @@ function ProductOverview({ payload }: { payload: OimaBoundaryPayload }) {
   const plannedCapabilities =
     payload.plannedRuntimeCapabilities.length > 0
       ? payload.plannedRuntimeCapabilities
-      : ["MEETING_INTAKE", "TRANSCRIPT_PROCESSING", "AUDIO_PROCESSING", "LISTENER_MODE"];
-  const nextStage = String(payload.productShell?.nextRecommendedStage ?? "OIMA-1 Meeting Intake");
+      : ["TRANSCRIPT_PROCESSING", "AUDIO_PROCESSING", "LISTENER_MODE"];
+  const nextStage = String(payload.productShell?.nextRecommendedStage ?? "OIMA-2 Transcript Processing");
 
   return (
     <section className="panel" data-oima="OIMA Product Overview">
@@ -36,7 +37,7 @@ function ProductOverview({ payload }: { payload: OimaBoundaryPayload }) {
           <p className="muted">{payload.tagline}</p>
           <p className="muted">{payload.vietnamesePositioning}</p>
         </div>
-        <StatusBadge ok label="OIMA-0 shell ready" />
+        <StatusBadge ok label="OIMA-1 intake ready" />
       </div>
       <dl className="owner-fact-grid">
         <div>
@@ -57,7 +58,7 @@ function ProductOverview({ payload }: { payload: OimaBoundaryPayload }) {
         </div>
         <div>
           <dt>Audio input</dt>
-          <dd>Optional future enrichment</dd>
+          <dd>Optional metadata registration</dd>
         </div>
         <div>
           <dt>Next stage</dt>
@@ -74,6 +75,9 @@ function ProductOverview({ payload }: { payload: OimaBoundaryPayload }) {
           <span key={capability}>{capability}</span>
         ))}
       </div>
+      <Link className="button oima-inline-action" href="/oima/meetings">
+        Open Meeting Library
+      </Link>
     </section>
   );
 }
@@ -84,7 +88,7 @@ function SourceModes({ payload }: { payload: OimaBoundaryPayload }) {
       <div className="panel-heading">
         <div>
           <h3>Source Mode Contract</h3>
-          <p className="muted">Transcript-first intake with optional future audio enrichment.</p>
+          <p className="muted">Transcript-first intake with optional audio metadata registration.</p>
         </div>
         <StatusBadge ok label="TRANSCRIPT_ONLY primary" />
       </div>
@@ -157,7 +161,7 @@ function SafetyBoundary({ payload }: { payload: OimaBoundaryPayload }) {
       <div className="panel-heading">
         <div>
           <h3>Safety Boundary</h3>
-          <p className="muted">OIMA-0 is a product shell and boundary contract only; no live agent behavior is enabled.</p>
+          <p className="muted">OIMA-1 enables meeting intake metadata only; no live agent behavior is enabled.</p>
         </div>
         <StatusBadge ok={payload.noCanonicalKnowledgeWrite !== false} label="No canonical write" />
       </div>
@@ -226,7 +230,7 @@ function Roadmap({ payload }: { payload: OimaBoundaryPayload }) {
       <div className="panel-heading">
         <div>
           <h3>OIMA Roadmap</h3>
-          <p className="muted">Meeting intelligence delivery path after the hardened product shell is accepted.</p>
+          <p className="muted">Meeting intelligence delivery path after the intake foundation is accepted.</p>
         </div>
         <StatusBadge ok label="Boundary ready" />
       </div>
@@ -256,7 +260,9 @@ function EmptyStateCards({ payload }: { payload: OimaBoundaryPayload }) {
       <div className="panel-heading">
         <div>
           <h3>OIMA Product Surface Empty States</h3>
-          <p className="muted">Visible roadmap placeholders only; upload, transcript processing, audio processing and Listener Mode are not runtime in OIMA-0. Preview only.</p>
+          <p className="muted">
+            Meeting Library and Upload Meeting are available now. Transcript processing, audio processing, analysis and Listener Mode remain planned/not-runtime.
+          </p>
         </div>
         <StatusBadge ok label="Placeholder Product Surfaces" />
       </div>

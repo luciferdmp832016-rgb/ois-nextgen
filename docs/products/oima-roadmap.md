@@ -24,18 +24,24 @@ Delivered:
 
 ## OIMA-1: Meeting Intake
 
-Phase: Next recommended stage
+Phase: Stage 2J
 
-Planned:
+Status: `RUNTIME_FOUNDATION_READY`
 
-- Versioned Prisma schema for meeting records and transcript artifacts.
-- Tenant/workspace scoping and audit requirements.
-- Transcript remains the primary input path.
-- No production data or real AI calls.
+Delivered:
+
+- Versioned Prisma schema for meeting records and source file metadata.
+- Tenant/workspace scoping.
+- Audit-backed meeting intake writes.
+- Meeting Library, Upload/Register Meeting and Meeting Detail UI.
+- Transcript source file metadata registration.
+- Optional audio source file metadata registration.
+- Intake statuses: `DRAFT`, `UPLOADED`, `READY_FOR_PROCESSING`, `NEEDS_REVIEW`, `FAILED`.
+- No seeded fake meeting data, transcript parsing, audio processing or real AI calls.
 
 ## OIMA-2: Transcript Processing
 
-Phase: Stage 2J
+Phase: Next recommended stage
 
 Planned:
 

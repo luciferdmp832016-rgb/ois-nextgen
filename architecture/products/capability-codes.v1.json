@@ -42,10 +42,10 @@
   "oimaCurrentRuntimeCapabilities": [
     "OVERVIEW",
     "PRODUCT_BOUNDARY",
-    "KNOWLEDGE_API_LINKAGE"
+    "KNOWLEDGE_API_LINKAGE",
+    "MEETING_INTAKE"
   ],
   "oimaPlannedRuntimeCapabilities": [
-    "MEETING_INTAKE",
     "TRANSCRIPT_PROCESSING",
     "AUDIO_PROCESSING",
     "OFFLINE_AGENT_ANALYSIS",

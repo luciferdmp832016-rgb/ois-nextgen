@@ -10,6 +10,9 @@ import LearningCenterPage from "./learning-center/page";
 import LocalizationPage from "./localization/page";
 import ModuleDetailPage from "./modules/[id]/page";
 import OimaPage from "./oima/page";
+import OimaMeetingDetailPage from "./oima/meetings/[id]/page";
+import OimaMeetingsPage from "./oima/meetings/page";
+import NewOimaMeetingPage from "./oima/meetings/new/page";
 import ProductFlowPage from "./product-flow/page";
 import ProductsPage from "./products/page";
 import ProductDetailPage from "./products/[id]/page";
@@ -1194,15 +1197,18 @@ const oimaPayload = {
   boundary: {
     stage: "Stage 2H",
     hardeningStage: "Stage 2I / OIMA-0",
+    runtimeStage: "Stage 2J / OIMA-1",
     implementationStatus: "PRODUCT_BOUNDARY_READY",
-    productShellStatus: "PRODUCT_SHELL_HARDENED",
+    productShellStatus: "MEETING_INTAKE_FOUNDATION_READY",
     mode: "deterministic-oima-product-boundary",
     transcriptFirst: true,
     audioOptional: true,
     listenerModeStatus: "FUTURE_ONLY",
     realLlmCallsEnabled: false,
     uploadPipelineImplemented: false,
-    meetingStorageImplemented: false,
+    meetingStorageImplemented: true,
+    meetingIntakeImplemented: true,
+    sourceFileMetadataRegistrationImplemented: true,
     noLiveSpeakingAgent: true,
     noVoiceClone: true,
     noImpersonation: true,
@@ -1210,10 +1216,16 @@ const oimaPayload = {
     noSeparateKnowledgeSourceOfTruth: true
   },
   productShell: {
-    stage: "Stage 2I / OIMA-0",
-    status: "PRODUCT_SHELL_HARDENED",
-    nextRecommendedStage: "OIMA-1 Meeting Intake",
-    meetingRuntimeDataIncluded: false,
+    stage: "Stage 2J / OIMA-1",
+    status: "MEETING_INTAKE_FOUNDATION_READY",
+    nextRecommendedStage: "OIMA-2 Transcript Processing",
+    meetingRuntimeDataIncluded: true,
+    meetingLibraryRuntimeImplemented: true,
+    meetingIntakeImplemented: true,
+    sourceFileMetadataRegistrationImplemented: true,
+    transcriptSourceRegistrationImplemented: true,
+    optionalAudioMetadataRegistrationImplemented: true,
+    binaryUploadStorageImplemented: false,
     uploadRuntimeImplemented: false,
     transcriptProcessingImplemented: false,
     audioProcessingImplemented: false,
@@ -1223,15 +1235,14 @@ const oimaPayload = {
     realLlmCallsEnabled: false
   },
   productBoundaryMetadata: {
-    stage: "Stage 2I / OIMA-0",
-    sourceReadyStage: "Stage 2H",
+    stage: "Stage 2J / OIMA-1",
+    sourceReadyStage: "Stage 2J",
     productCode: "OIMA",
     productName: "Organizational Intelligence Meeting Agent",
     poweredBy: "OIS",
     sourceModes: ["TRANSCRIPT_ONLY", "AUDIO_ONLY", "TRANSCRIPT_AND_AUDIO", "LISTENER_CAPTURED"],
-    currentRuntimeCapabilities: ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE"],
+    currentRuntimeCapabilities: ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE", "MEETING_INTAKE"],
     plannedRuntimeCapabilities: [
-      "MEETING_INTAKE",
       "TRANSCRIPT_PROCESSING",
       "AUDIO_PROCESSING",
       "OFFLINE_AGENT_ANALYSIS",
@@ -1263,9 +1274,8 @@ const oimaPayload = {
     "MEETING_SELF_IMPROVEMENT_REVIEW",
     "LISTENER_MODE_FUTURE"
   ],
-  currentRuntimeCapabilities: ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE"],
+  currentRuntimeCapabilities: ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE", "MEETING_INTAKE"],
   plannedRuntimeCapabilities: [
-    "MEETING_INTAKE",
     "TRANSCRIPT_PROCESSING",
     "AUDIO_PROCESSING",
     "OFFLINE_AGENT_ANALYSIS",
@@ -1283,7 +1293,7 @@ const oimaPayload = {
     audioDoesNotBlockAnalysis: true,
     listenerModeFutureOnly: true
   },
-  meetingStatuses: ["DRAFT", "INTAKE_READY", "TRANSCRIPT_UPLOADED", "PROCESSING_READY", "ANALYSIS_READY"],
+  meetingStatuses: ["DRAFT", "UPLOADED", "READY_FOR_PROCESSING", "NEEDS_REVIEW", "FAILED"],
   analysisModes: ["OFFLINE_ANALYSIS", "LISTENER_CAPTURED_ANALYSIS_FUTURE"],
   safetyBoundaries: [
     "NO_LIVE_SPEAKING_AGENT",
@@ -1320,22 +1330,22 @@ const oimaPayload = {
     {
       surfaceCode: "MEETING_LIBRARY",
       title: "Meeting Library",
-      availability: "PLANNED",
-      availableNow: false,
-      runtimeEnabled: false,
+      availability: "AVAILABLE_NOW",
+      availableNow: true,
+      runtimeEnabled: true,
       stage: "OIMA-1",
-      statusLabel: "Planned for OIMA-1 Meeting Intake",
-      description: "Future meeting library shell. No meeting records are created or listed in OIMA-0."
+      statusLabel: "Available now in OIMA-1",
+      description: "Workspace-scoped meeting library for registered intake records. It does not create analysis artifacts."
     },
     {
       surfaceCode: "UPLOAD_MEETING",
       title: "Upload Meeting",
-      availability: "PLANNED",
-      availableNow: false,
-      runtimeEnabled: false,
+      availability: "AVAILABLE_NOW",
+      availableNow: true,
+      runtimeEnabled: true,
       stage: "OIMA-1",
-      statusLabel: "Planned for OIMA-1 Meeting Intake",
-      description: "Future transcript-first intake surface. Upload storage and parsing are not enabled in OIMA-0."
+      statusLabel: "Available now in OIMA-1",
+      description: "Transcript-first meeting registration with optional audio metadata. It does not parse transcripts or process audio."
     },
     {
       surfaceCode: "AGENT_ANALYSIS",
@@ -1345,7 +1355,7 @@ const oimaPayload = {
       runtimeEnabled: false,
       stage: "OIMA-3",
       statusLabel: "Planned for offline analysis",
-      description: "Future evidence-backed OIS Agent analysis. No LLM or OpenRouter calls are enabled in OIMA-0."
+      description: "Future evidence-backed OIS Agent analysis. No LLM or OpenRouter calls are enabled in OIMA-1."
     },
     {
       surfaceCode: "CLARIFICATION_REVIEW",
@@ -1396,8 +1406,8 @@ const oimaPayload = {
   },
   roadmap: [
     { stage: "OIMA-0", phase: "Stage 2I", status: "PRODUCT_SHELL_HARDENED", title: "Product Shell & Boundary Hardening", scope: "Stable OIMA product shell." },
-    { stage: "OIMA-1", phase: "Next", status: "PLANNED", title: "Meeting Intake", scope: "Versioned schema and transcript artifacts." },
-    { stage: "OIMA-2", phase: "Stage 2J", status: "PLANNED", title: "Transcript Processing", scope: "Transcript-first deterministic contracts." },
+    { stage: "OIMA-1", phase: "Stage 2J", status: "RUNTIME_FOUNDATION_READY", title: "Meeting Intake Foundation", scope: "Versioned schema and transcript artifacts." },
+    { stage: "OIMA-2", phase: "Next", status: "PLANNED", title: "Transcript Processing", scope: "Transcript-first deterministic contracts." },
     { stage: "OIMA-3", phase: "Future", status: "PLANNED", title: "OIS Agent Offline Analysis", scope: "Evidence-backed offline analysis." },
     { stage: "OIMA-4", phase: "Future", status: "PLANNED", title: "Subject Clarification", scope: "Clarification workflow." },
     { stage: "OIMA-5", phase: "Future", status: "PLANNED", title: "Dashboard & Monthly Report", scope: "Meeting dashboard and monthly operating report." },
@@ -1406,10 +1416,101 @@ const oimaPayload = {
     { stage: "OIMA-8", phase: "Future", status: "PLANNED", title: "Voice Sample Speaker Identity", scope: "Future governed speaker identity." },
     { stage: "OIMA-9", phase: "Future", status: "PLANNED", title: "Listener Mode", scope: "Future listen/record/analyze only." }
   ],
-  outOfScope: ["Real meeting upload", "Transcript storage/parser", "Audio ingestion or speaker identity"],
+  outOfScope: ["Binary meeting file storage", "Transcript parser or semantic extraction", "Audio processing or speaker identity"],
   noCanonicalKnowledgeWrite: true,
   autoPromotionEnabled: false,
   oisAgentWidgetDirectCanonicalWriteAllowed: false
+};
+
+const oimaMeeting = {
+  id: "oima_meeting_stage_2j_demo",
+  organizationId: "org_pmc_demo",
+  workspaceId: "ws_pmc_org_demo",
+  title: "Stage 2J Transcript Intake",
+  meetingDate: "2026-07-09",
+  startTime: "09:00",
+  endTime: "09:45",
+  sourceMode: "TRANSCRIPT_AND_AUDIO",
+  participantCount: 5,
+  status: "READY_FOR_PROCESSING",
+  confidenceScore: 0,
+  transcriptPresent: true,
+  audioPresent: true,
+  sourceFileCount: 2,
+  createdAt: "2026-07-09T01:00:00.000Z",
+  updatedAt: "2026-07-09T01:00:00.000Z",
+  sourceFiles: [
+    {
+      id: "oima_source_file_stage_2j_transcript",
+      meetingId: "oima_meeting_stage_2j_demo",
+      fileType: "TRANSCRIPT",
+      originalFilename: "stage-2j-transcript.txt",
+      storageKey: "oima/intake/stage-2j-transcript.txt",
+      storageUrl: null,
+      mimeType: "text/plain",
+      sizeBytes: 2048,
+      checksum: "sha256-demo-transcript",
+      uploadStatus: "REGISTERED",
+      createdAt: "2026-07-09T01:00:00.000Z"
+    },
+    {
+      id: "oima_source_file_stage_2j_audio",
+      meetingId: "oima_meeting_stage_2j_demo",
+      fileType: "AUDIO",
+      originalFilename: "stage-2j-audio.mp3",
+      storageKey: "oima/intake/stage-2j-audio.mp3",
+      storageUrl: null,
+      mimeType: "audio/mpeg",
+      sizeBytes: 4096,
+      checksum: "sha256-demo-audio",
+      uploadStatus: "REGISTERED",
+      createdAt: "2026-07-09T01:05:00.000Z"
+    }
+  ]
+};
+
+const oimaMeetingIntakeContract = {
+  productCode: "OIMA",
+  productName: "Organizational Intelligence Meeting Agent",
+  poweredBy: "OIS",
+  stage: "Stage 2J / OIMA-1",
+  sourceModes: ["TRANSCRIPT_ONLY", "AUDIO_ONLY", "TRANSCRIPT_AND_AUDIO", "LISTENER_CAPTURED"],
+  meetingStatuses: ["DRAFT", "UPLOADED", "READY_FOR_PROCESSING", "NEEDS_REVIEW", "FAILED"],
+  sourceFileTypes: ["TRANSCRIPT", "AUDIO", "PARTICIPANT_LIST", "OTHER"],
+  uploadStatuses: ["REGISTERED", "UPLOADED", "FAILED"],
+  currentRuntimeCapabilities: ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE", "MEETING_INTAKE"],
+  plannedRuntimeCapabilities: ["TRANSCRIPT_PROCESSING", "AUDIO_PROCESSING", "OFFLINE_AGENT_ANALYSIS", "SUBJECT_CLARIFICATION", "SELF_IMPROVEMENT", "LISTENER_MODE"],
+  transcriptFirst: true,
+  audioOptional: true,
+  runtimeBoundary: {
+    meetingIntakeImplemented: true,
+    transcriptProcessingImplemented: false,
+    audioProcessingImplemented: false,
+    listenerModeImplemented: false,
+    liveSpeakingAgentImplemented: false,
+    voiceCloneImplemented: false,
+    realLlmCallsEnabled: false,
+    fakeMeetingAnalysisCreated: false
+  },
+  nextStepPlaceholders: ["Transcript Processing", "OIS Agent Analysis", "Clarification Review", "Dashboard"]
+};
+
+const oimaMeetingLibraryPayload = {
+  metadata: registryPayload.metadata,
+  intakeContract: oimaMeetingIntakeContract,
+  meetings: [oimaMeeting],
+  count: 1,
+  noFakeMeetingAnalysis: true,
+  noLlmCalls: true
+};
+
+const oimaMeetingDetailPayload = {
+  metadata: registryPayload.metadata,
+  intakeContract: oimaMeetingIntakeContract,
+  meeting: oimaMeeting,
+  plannedNextSteps: ["Transcript Processing", "OIS Agent Analysis", "Clarification Review", "Dashboard"],
+  noFakeMeetingAnalysis: true,
+  noLlmCalls: true
 };
 
 const productDetailPayload = {
@@ -1490,6 +1591,8 @@ function mockCoreApiFetch(overrides?: {
   oimaSourceModes?: unknown;
   oimaRoadmap?: unknown;
   oimaBoundary?: unknown;
+  oimaMeetings?: unknown;
+  oimaMeetingDetail?: unknown;
 }) {
   const fetchMock = vi.fn(async (input: Parameters<typeof fetch>[0]) => {
     const url = input instanceof Request ? input.url : String(input);
@@ -1572,6 +1675,18 @@ function mockCoreApiFetch(overrides?: {
 
     if (url === `${coreApiUrl}/platform/oima/boundary`) {
       return jsonResponse(overrides?.oimaBoundary ?? oimaPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/oima/meetings`) {
+      return jsonResponse(overrides?.oimaMeetings ?? oimaMeetingLibraryPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/oima/meetings/oima_meeting_stage_2j_demo`) {
+      return jsonResponse(overrides?.oimaMeetingDetail ?? oimaMeetingDetailPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/oima/meetings/missing`) {
+      return jsonResponse({ metadata: registryPayload.metadata, error: { code: "NOT_FOUND", message: "oimaMeeting not found" } }, 404);
     }
 
     if (url === `${coreApiUrl}/platform/products/prod_pits`) {
@@ -1932,14 +2047,17 @@ describe("OIS Console product shell", () => {
         "OIS Universal Knowledge API",
         "OIMA Roadmap",
         "OIMA-0 - Product Shell &amp; Boundary",
+        "OIMA-1 - Meeting Intake Foundation",
+        "RUNTIME_FOUNDATION_READY",
+        "OIMA-2 - Transcript Processing",
         "OIMA-5 - Dashboard &amp; Monthly Report",
         "OIMA-9 - Listener Mode",
         "Placeholder Product Surfaces",
         "Meeting Library",
         "Upload Meeting",
-        "Preview only",
         "OIMA Product Overview",
-        "OIMA-0 shell ready",
+        "OIMA-1 intake ready",
+        "Open Meeting Library",
         "OIS is the organizational intelligence backbone. OIMA is the meeting intelligence product powered by OIS.",
         "Transcript is primary; audio is optional.",
         "Product code",
@@ -1954,6 +2072,8 @@ describe("OIS Console product shell", () => {
         "OFFLINE_AGENT_ANALYSIS",
         "SUBJECT_CLARIFICATION",
         "SELF_IMPROVEMENT",
+        "Available now",
+        "Available now in OIMA-1",
         "Future permissioned recording only",
         "Voice clone",
         "Live speaking",
@@ -1966,6 +2086,56 @@ describe("OIS Console product shell", () => {
         "Planned / not runtime",
         "Runtime enabled",
         "No fake meeting data"
+      ]
+    ],
+    [
+      "oima meetings",
+      OimaMeetingsPage,
+      [
+        "OIMA Meeting Intake",
+        "Meeting Library",
+        "Meeting Intake Foundation",
+        "OIMA-1 available",
+        "MEETING_INTAKE",
+        "TRANSCRIPT_ONLY",
+        "TRANSCRIPT_AND_AUDIO",
+        "AUDIO_ONLY metadata",
+        "LISTENER_CAPTURED planned/not-runtime",
+        "No LLM/OpenRouter calls",
+        "Registered meetings",
+        "Stage 2J Transcript Intake",
+        "READY_FOR_PROCESSING",
+        "Transcript present",
+        "Audio present",
+        "Open detail",
+        "Register meeting",
+        "No fake meeting analysis"
+      ]
+    ],
+    [
+      "new oima meeting",
+      NewOimaMeetingPage,
+      [
+        "OIMA Meeting Intake",
+        "Upload / Register Meeting",
+        "Source Mode Contract",
+        "Transcript-first registration",
+        "TRANSCRIPT_ONLY supported",
+        "TRANSCRIPT_AND_AUDIO optional audio",
+        "AUDIO_ONLY needs review",
+        "LISTENER_CAPTURED planned/not-runtime",
+        "Safety Boundary",
+        "No analysis runtime",
+        "No transcript processing",
+        "No audio processing",
+        "No OIS Agent analysis",
+        "No voice clone",
+        "No LLM/OpenRouter calls",
+        "Create Meeting Form",
+        "Transcript Source",
+        "Optional Audio Source",
+        "Register meeting",
+        "Ready for transcript-first meeting registration."
       ]
     ],
     [
@@ -2026,6 +2196,30 @@ describe("OIS Console product shell", () => {
     expect(html).not.toContain("Execute admin action");
     expect(html).not.toContain("Run admin action");
     expect(html).not.toContain("Apply registry fix");
+    expect(html).not.toContain(dbEnvKey);
+  });
+
+  it("renders OIMA meeting detail with source files and planned next-step placeholders", async () => {
+    mockCoreApiFetch();
+
+    const html = renderToStaticMarkup(await OimaMeetingDetailPage({ params: Promise.resolve({ id: "oima_meeting_stage_2j_demo" }) }));
+
+    expect(html).toContain("OIMA Meeting Detail");
+    expect(html).toContain("Stage 2J Transcript Intake");
+    expect(html).toContain("Meeting Metadata");
+    expect(html).toContain("TRANSCRIPT_AND_AUDIO");
+    expect(html).toContain("READY_FOR_PROCESSING");
+    expect(html).toContain("Transcript available");
+    expect(html).toContain("Audio available");
+    expect(html).toContain("Source Files");
+    expect(html).toContain("stage-2j-transcript.txt");
+    expect(html).toContain("stage-2j-audio.mp3");
+    expect(html).toContain("Transcript Processing");
+    expect(html).toContain("OIS Agent Analysis");
+    expect(html).toContain("Clarification Review");
+    expect(html).toContain("Dashboard");
+    expect(html).toContain("No fake meeting analysis");
+    expect(html).toContain("planned/not-runtime");
     expect(html).not.toContain(dbEnvKey);
   });
 

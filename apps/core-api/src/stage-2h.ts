@@ -29,8 +29,9 @@ type RegistryMetadataFactory = () => RegistryMetadata;
 const stage2HBoundary = {
   stage: "Stage 2H",
   hardeningStage: "Stage 2I / OIMA-0",
+  runtimeStage: "Stage 2J / OIMA-1",
   implementationStatus: "PRODUCT_BOUNDARY_READY",
-  productShellStatus: "PRODUCT_SHELL_HARDENED",
+  productShellStatus: "MEETING_INTAKE_FOUNDATION_READY",
   mode: "deterministic-oima-product-boundary",
   productKey: "OIMA",
   productCode: "OIMA",
@@ -40,7 +41,9 @@ const stage2HBoundary = {
   listenerModeStatus: "FUTURE_ONLY",
   realLlmCallsEnabled: false,
   uploadPipelineImplemented: false,
-  meetingStorageImplemented: false,
+  meetingStorageImplemented: true,
+  meetingIntakeImplemented: true,
+  sourceFileMetadataRegistrationImplemented: true,
   noLiveSpeakingAgent: true,
   noVoiceClone: true,
   noImpersonation: true,
@@ -48,15 +51,22 @@ const stage2HBoundary = {
   noSeparateKnowledgeSourceOfTruth: true
 } as const;
 
-const stage2IProductShell = {
-  stage: "Stage 2I / OIMA-0",
-  status: "PRODUCT_SHELL_HARDENED",
+const stage2JProductShell = {
+  stage: "Stage 2J / OIMA-1",
+  status: "MEETING_INTAKE_FOUNDATION_READY",
   availableNow: oimaCurrentRuntimeCapabilities,
   plannedLater: oimaPlannedRuntimeCapabilities,
   transcriptPrimaryInput: true,
-  audioOptionalFutureInput: true,
+  audioOptionalFutureInput: false,
+  audioOptionalMetadataRegistration: true,
   listenerModePermissionedRecordingFutureOnly: true,
-  meetingRuntimeDataIncluded: false,
+  meetingRuntimeDataIncluded: true,
+  meetingLibraryRuntimeImplemented: true,
+  meetingIntakeImplemented: true,
+  sourceFileMetadataRegistrationImplemented: true,
+  transcriptSourceRegistrationImplemented: true,
+  optionalAudioMetadataRegistrationImplemented: true,
+  binaryUploadStorageImplemented: false,
   uploadRuntimeImplemented: false,
   transcriptProcessingImplemented: false,
   audioProcessingImplemented: false,
@@ -64,13 +74,13 @@ const stage2IProductShell = {
   liveSpeakingAgentImplemented: false,
   voiceCloneImplemented: false,
   realLlmCallsEnabled: false,
-  nextRecommendedStage: "OIMA-1 Meeting Intake"
+  nextRecommendedStage: "OIMA-2 Transcript Processing"
 } as const;
 
 const oimaOutOfScope = [
-  "Real meeting upload",
-  "Transcript storage/parser",
-  "Audio ingestion or speaker identity",
+  "Binary meeting file storage",
+  "Transcript parser or semantic extraction",
+  "Audio processing or speaker identity",
   "Offline LLM/router execution",
   "Listener Mode runtime",
   "Live meeting speaking agent",
@@ -125,7 +135,7 @@ function responseBase(metadata: RegistryMetadata) {
   return {
     metadata,
     boundary: stage2HBoundary,
-    productShell: stage2IProductShell,
+    productShell: stage2JProductShell,
     productBoundaryMetadata: oimaProductBoundaryMetadata,
     productCode: oimaProductContract.productCode,
     productKey: oimaProductContract.productKey,
@@ -179,7 +189,7 @@ export function buildOimaProductRegistryProjection() {
     sourceModeRules: sourceModeRules(),
     safetyBoundaries: oimaSafetyBoundaries,
     coreReuseMap: oimaCoreReuseMap,
-    productShell: stage2IProductShell,
+    productShell: stage2JProductShell,
     emptyStateSurfaces: oimaEmptyStateSurfaces,
     knowledgeIntegration: knowledgeIntegration(),
     boundary: stage2HBoundary,

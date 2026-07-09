@@ -2232,6 +2232,191 @@ export type OimaSnapshot = {
   errorMessage: string | null;
 };
 
+export type OimaMeetingSourceFilePayload = {
+  id: string;
+  meetingId: string;
+  fileType: string;
+  originalFilename: string;
+  storageKey: string | null;
+  storageUrl: string | null;
+  mimeType: string | null;
+  sizeBytes: number;
+  checksum: string | null;
+  uploadStatus: string;
+  createdAt: string;
+};
+
+export type OimaMeetingPayload = {
+  id: string;
+  organizationId: string;
+  workspaceId: string;
+  title: string;
+  meetingDate: string;
+  startTime: string | null;
+  endTime: string | null;
+  sourceMode: string;
+  participantCount: number;
+  status: string;
+  confidenceScore: number;
+  transcriptPresent: boolean;
+  audioPresent: boolean;
+  sourceFileCount: number;
+  sourceFiles: OimaMeetingSourceFilePayload[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type OimaMeetingIntakePayload = {
+  metadata: RegistryMetadata | null;
+  intakeContract: Record<string, unknown> | null;
+  meetings: OimaMeetingPayload[];
+  meeting: OimaMeetingPayload | null;
+  plannedNextSteps: string[];
+  noFakeMeetingAnalysis: boolean;
+  noLlmCalls: boolean;
+};
+
+export type OimaMeetingLibrarySnapshot = {
+  coreApiUrl: string;
+  library: ApiResult;
+  payload: OimaMeetingIntakePayload | null;
+  meetings: OimaMeetingPayload[];
+  errorMessage: string | null;
+};
+
+export type OimaMeetingDetailSnapshot = {
+  coreApiUrl: string;
+  detail: ApiResult;
+  payload: OimaMeetingIntakePayload | null;
+  meeting: OimaMeetingPayload | null;
+  errorMessage: string | null;
+  notFound: boolean;
+};
+
+function getOimaMeetingSourceFilePayload(source: unknown): OimaMeetingSourceFilePayload | null {
+  if (!isRecord(source)) {
+    return null;
+  }
+
+  const id = getString(source, "id");
+  const meetingId = getString(source, "meetingId");
+  const fileType = getString(source, "fileType");
+  const originalFilename = getString(source, "originalFilename");
+  const uploadStatus = getString(source, "uploadStatus");
+  const createdAt = getString(source, "createdAt");
+
+  if (!id || !meetingId || !fileType || !originalFilename || !uploadStatus || !createdAt) {
+    return null;
+  }
+
+  return {
+    id,
+    meetingId,
+    fileType,
+    originalFilename,
+    storageKey: getString(source, "storageKey"),
+    storageUrl: getString(source, "storageUrl"),
+    mimeType: getString(source, "mimeType"),
+    sizeBytes: typeof source.sizeBytes === "number" ? source.sizeBytes : 0,
+    checksum: getString(source, "checksum"),
+    uploadStatus,
+    createdAt
+  };
+}
+
+function getOimaMeetingPayload(source: unknown): OimaMeetingPayload | null {
+  if (!isRecord(source)) {
+    return null;
+  }
+
+  const id = getString(source, "id");
+  const organizationId = getString(source, "organizationId");
+  const workspaceId = getString(source, "workspaceId");
+  const title = getString(source, "title");
+  const meetingDate = getString(source, "meetingDate");
+  const sourceMode = getString(source, "sourceMode");
+  const status = getString(source, "status");
+  const createdAt = getString(source, "createdAt");
+  const updatedAt = getString(source, "updatedAt");
+
+  if (!id || !organizationId || !workspaceId || !title || !meetingDate || !sourceMode || !status || !createdAt || !updatedAt) {
+    return null;
+  }
+
+  const sourceFiles = Array.isArray(source.sourceFiles)
+    ? source.sourceFiles.map(getOimaMeetingSourceFilePayload).filter((item): item is OimaMeetingSourceFilePayload => Boolean(item))
+    : [];
+
+  return {
+    id,
+    organizationId,
+    workspaceId,
+    title,
+    meetingDate,
+    startTime: getString(source, "startTime"),
+    endTime: getString(source, "endTime"),
+    sourceMode,
+    participantCount: typeof source.participantCount === "number" ? source.participantCount : 0,
+    status,
+    confidenceScore: typeof source.confidenceScore === "number" ? source.confidenceScore : 0,
+    transcriptPresent: typeof source.transcriptPresent === "boolean" ? source.transcriptPresent : sourceFiles.some((file) => file.fileType === "TRANSCRIPT"),
+    audioPresent: typeof source.audioPresent === "boolean" ? source.audioPresent : sourceFiles.some((file) => file.fileType === "AUDIO"),
+    sourceFileCount: typeof source.sourceFileCount === "number" ? source.sourceFileCount : sourceFiles.length,
+    sourceFiles,
+    createdAt,
+    updatedAt
+  };
+}
+
+export function getOimaMeetingIntakePayload(source: unknown): OimaMeetingIntakePayload | null {
+  if (!isRecord(source)) {
+    return null;
+  }
+
+  const metadata = getRegistryMetadata(source);
+  const meetings = Array.isArray(source.meetings)
+    ? source.meetings.map(getOimaMeetingPayload).filter((item): item is OimaMeetingPayload => Boolean(item))
+    : [];
+  const meeting = getOimaMeetingPayload(source.meeting);
+
+  return {
+    metadata,
+    intakeContract: isRecord(source.intakeContract) ? source.intakeContract : null,
+    meetings,
+    meeting,
+    plannedNextSteps: getArray<string>(source, "plannedNextSteps"),
+    noFakeMeetingAnalysis: typeof source.noFakeMeetingAnalysis === "boolean" ? source.noFakeMeetingAnalysis : false,
+    noLlmCalls: typeof source.noLlmCalls === "boolean" ? source.noLlmCalls : false
+  };
+}
+
+export async function getOimaMeetingLibrarySnapshot(coreApiUrl = getCoreApiUrl()): Promise<OimaMeetingLibrarySnapshot> {
+  const library = await fetchCoreApi("/platform/oima/meetings", coreApiUrl);
+  const payload = getOimaMeetingIntakePayload(library.data);
+
+  return {
+    coreApiUrl,
+    library,
+    payload,
+    meetings: payload?.meetings ?? [],
+    errorMessage: getRegistryErrorMessage(library.data) ?? library.error
+  };
+}
+
+export async function getOimaMeetingDetailSnapshot(id: string, coreApiUrl = getCoreApiUrl()): Promise<OimaMeetingDetailSnapshot> {
+  const detail = await fetchCoreApi(`/platform/oima/meetings/${encodeURIComponent(id)}`, coreApiUrl);
+  const payload = getOimaMeetingIntakePayload(detail.data);
+
+  return {
+    coreApiUrl,
+    detail,
+    payload,
+    meeting: payload?.meeting ?? null,
+    errorMessage: getRegistryErrorMessage(detail.data) ?? detail.error,
+    notFound: detail.status === 404
+  };
+}
+
 export function getOimaBoundaryPayload(source: unknown): OimaBoundaryPayload | null {
   if (
     !isRecord(source) ||
