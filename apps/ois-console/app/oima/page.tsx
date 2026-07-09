@@ -3,6 +3,81 @@ import { OisConsoleShell, PageHeading, StatusBadge } from "../shell";
 
 export const dynamic = "force-dynamic";
 
+type OimaSurface = NonNullable<OimaBoundaryPayload["emptyStateSurfaces"]>[number];
+
+function fallbackSurface(surface: string): OimaSurface {
+  return {
+    surfaceCode: surface.toUpperCase().replaceAll(" ", "_"),
+    title: surface,
+    availability: "PLANNED",
+    availableNow: false,
+    runtimeEnabled: false,
+    stage: "Future",
+    statusLabel: "Planned for later OIMA stages",
+    description: "Boundary placeholder. No meeting data is created from this shell."
+  };
+}
+
+function ProductOverview({ payload }: { payload: OimaBoundaryPayload }) {
+  const currentCapabilities = payload.currentRuntimeCapabilities.length > 0 ? payload.currentRuntimeCapabilities : ["OVERVIEW", "PRODUCT_BOUNDARY"];
+  const plannedCapabilities =
+    payload.plannedRuntimeCapabilities.length > 0
+      ? payload.plannedRuntimeCapabilities
+      : ["MEETING_INTAKE", "TRANSCRIPT_PROCESSING", "AUDIO_PROCESSING", "LISTENER_MODE"];
+  const nextStage = String(payload.productShell?.nextRecommendedStage ?? "OIMA-1 Meeting Intake");
+
+  return (
+    <section className="panel" data-oima="OIMA Product Overview">
+      <div className="panel-heading">
+        <div>
+          <h3>OIMA Product Overview</h3>
+          <p className="muted">OIS is the organizational intelligence backbone. OIMA is the meeting intelligence product powered by OIS.</p>
+          <p className="muted">{payload.displayName}</p>
+          <p className="muted">{payload.tagline}</p>
+          <p className="muted">{payload.vietnamesePositioning}</p>
+        </div>
+        <StatusBadge ok label="OIMA-0 shell ready" />
+      </div>
+      <dl className="owner-fact-grid">
+        <div>
+          <dt>Product code</dt>
+          <dd>{payload.productCode}</dd>
+        </div>
+        <div>
+          <dt>Product name</dt>
+          <dd>{payload.productName}</dd>
+        </div>
+        <div>
+          <dt>Powered by</dt>
+          <dd>{payload.poweredBy}</dd>
+        </div>
+        <div>
+          <dt>Primary input</dt>
+          <dd>Transcript first</dd>
+        </div>
+        <div>
+          <dt>Audio input</dt>
+          <dd>Optional future enrichment</dd>
+        </div>
+        <div>
+          <dt>Next stage</dt>
+          <dd>{nextStage}</dd>
+        </div>
+      </dl>
+      <div className="owner-review-marker-row" aria-label="OIMA current runtime capabilities">
+        {currentCapabilities.map((capability) => (
+          <span key={capability}>{capability}</span>
+        ))}
+      </div>
+      <div className="owner-review-marker-row" aria-label="OIMA planned runtime capabilities">
+        {plannedCapabilities.map((capability) => (
+          <span key={capability}>{capability}</span>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function SourceModes({ payload }: { payload: OimaBoundaryPayload }) {
   return (
     <section className="panel" data-oima="Source Mode Contract">
@@ -47,6 +122,14 @@ function Boundary({ payload }: { payload: OimaBoundaryPayload }) {
           <dd>{payload.productKey}</dd>
         </div>
         <div>
+          <dt>Product code</dt>
+          <dd>{payload.productCode}</dd>
+        </div>
+        <div>
+          <dt>Product name</dt>
+          <dd>{payload.productName}</dd>
+        </div>
+        <div>
           <dt>Product type</dt>
           <dd>{payload.productType}</dd>
         </div>
@@ -74,7 +157,7 @@ function SafetyBoundary({ payload }: { payload: OimaBoundaryPayload }) {
       <div className="panel-heading">
         <div>
           <h3>Safety Boundary</h3>
-          <p className="muted">Stage 2H is architecture and contract only; no live agent behavior is enabled.</p>
+          <p className="muted">OIMA-0 is a product shell and boundary contract only; no live agent behavior is enabled.</p>
         </div>
         <StatusBadge ok={payload.noCanonicalKnowledgeWrite !== false} label="No canonical write" />
       </div>
@@ -94,11 +177,19 @@ function SafetyBoundary({ payload }: { payload: OimaBoundaryPayload }) {
         </div>
         <div>
           <dt>Listener Mode</dt>
-          <dd>Future only</dd>
+          <dd>Future permissioned recording only</dd>
         </div>
         <div>
           <dt>LLM calls</dt>
           <dd>Disabled</dd>
+        </div>
+        <div>
+          <dt>Voice clone</dt>
+          <dd>Out of scope</dd>
+        </div>
+        <div>
+          <dt>Live speaking</dt>
+          <dd>Out of scope</dd>
         </div>
       </dl>
     </section>
@@ -135,7 +226,7 @@ function Roadmap({ payload }: { payload: OimaBoundaryPayload }) {
       <div className="panel-heading">
         <div>
           <h3>OIMA Roadmap</h3>
-          <p className="muted">Meeting intelligence delivery path after the product boundary is accepted.</p>
+          <p className="muted">Meeting intelligence delivery path after the hardened product shell is accepted.</p>
         </div>
         <StatusBadge ok label="Boundary ready" />
       </div>
@@ -143,7 +234,9 @@ function Roadmap({ payload }: { payload: OimaBoundaryPayload }) {
         {(payload.roadmap ?? []).map((item) => (
           <article className="owner-review-card" key={String(item.stage)}>
             <span className="eyebrow">{String(item.status)}</span>
-            <h4>{String(item.stage)} - {String(item.title)}</h4>
+            <h4>
+              {String(item.stage)} - {String(item.title)}
+            </h4>
             <p>{String(item.scope)}</p>
           </article>
         ))}
@@ -152,22 +245,46 @@ function Roadmap({ payload }: { payload: OimaBoundaryPayload }) {
   );
 }
 
-function PlaceholderCards({ payload }: { payload: OimaBoundaryPayload }) {
+function EmptyStateCards({ payload }: { payload: OimaBoundaryPayload }) {
+  const surfaces =
+    payload.emptyStateSurfaces && payload.emptyStateSurfaces.length > 0
+      ? payload.emptyStateSurfaces
+      : (payload.ownedUxSurfaces ?? []).map(fallbackSurface);
+
   return (
     <section className="panel" data-oima="Placeholder Product Surfaces">
       <div className="panel-heading">
         <div>
-          <h3>Placeholder Product Surfaces</h3>
-          <p className="muted">Visible roadmap placeholders only; upload and analysis workflows are not implemented in Stage 2H.</p>
+          <h3>OIMA Product Surface Empty States</h3>
+          <p className="muted">Visible roadmap placeholders only; upload, transcript processing, audio processing and Listener Mode are not runtime in OIMA-0. Preview only.</p>
         </div>
-        <StatusBadge ok label="Preview only" />
+        <StatusBadge ok label="Placeholder Product Surfaces" />
       </div>
       <div className="owner-review-grid">
-        {(payload.ownedUxSurfaces ?? []).map((surface) => (
-          <article className="owner-review-card" key={surface}>
-            <span className="eyebrow">OIMA UX</span>
-            <h4>{surface}</h4>
-            <p className="muted">Boundary placeholder. No meeting data is created from this shell.</p>
+        {surfaces.map((surface) => (
+          <article className="owner-review-card" key={surface.surfaceCode}>
+            <div className="panel-heading">
+              <div>
+                <span className="eyebrow">{surface.stage}</span>
+                <h4>{surface.title}</h4>
+              </div>
+              <StatusBadge ok={surface.availableNow} label={surface.availableNow ? "Available now" : "Planned / not runtime"} />
+            </div>
+            <p className="muted">{surface.description}</p>
+            <dl className="facts action-boundary-facts">
+              <div>
+                <dt>Availability</dt>
+                <dd>{surface.statusLabel}</dd>
+              </div>
+              <div>
+                <dt>Runtime enabled</dt>
+                <dd>{String(surface.runtimeEnabled)}</dd>
+              </div>
+              <div>
+                <dt>Meeting data</dt>
+                <dd>No fake meeting data</dd>
+              </div>
+            </dl>
           </article>
         ))}
       </div>
@@ -192,17 +309,18 @@ export default async function OimaPage() {
 
   return (
     <OisConsoleShell active="oima" snapshot={registrySnapshot}>
-      <PageHeading eyebrow="Powered by OIS Product" title="OIMA — Organizational Intelligence Meeting Agent">
-        OIS understands the organization. OIMA understands the meeting. OIS hiểu tổ chức. OIMA hiểu cuộc họp.
+      <PageHeading eyebrow="Powered by OIS Product" title="OIMA - Organizational Intelligence Meeting Agent">
+        OIS is the organizational intelligence backbone. OIMA is the meeting intelligence product powered by OIS. Transcript is primary; audio is optional.
       </PageHeading>
       {overview && boundary ? (
         <>
+          <ProductOverview payload={overview} />
           <Boundary payload={overview} />
           <SourceModes payload={overview} />
           <SafetyBoundary payload={boundary} />
           <CoreReuse payload={overview} />
           <Roadmap payload={overview} />
-          <PlaceholderCards payload={overview} />
+          <EmptyStateCards payload={overview} />
         </>
       ) : (
         <OimaFallback message={oimaSnapshot.errorMessage} />

@@ -2179,7 +2179,11 @@ export async function getKnowledgeFabricSnapshot(coreApiUrl = getCoreApiUrl()): 
 export type OimaBoundaryPayload = {
   metadata: RegistryMetadata;
   boundary: Record<string, unknown>;
+  productShell?: Record<string, unknown> | undefined;
+  productBoundaryMetadata?: Record<string, unknown> | undefined;
+  productCode: string;
   productKey: string;
+  productName: string;
   displayName: string;
   productType: string;
   implementationStatus: string;
@@ -2187,6 +2191,8 @@ export type OimaBoundaryPayload = {
   tagline: string;
   vietnamesePositioning: string;
   capabilityCodes: string[];
+  currentRuntimeCapabilities: string[];
+  plannedRuntimeCapabilities: string[];
   sourceModes: string[];
   sourceModeContracts?: Array<Record<string, unknown>> | undefined;
   sourceModeRules: Record<string, unknown>;
@@ -2195,6 +2201,16 @@ export type OimaBoundaryPayload = {
   safetyBoundaries: string[];
   coreReuseMap?: Record<string, string> | undefined;
   ownedUxSurfaces?: string[] | undefined;
+  emptyStateSurfaces?: Array<{
+    surfaceCode: string;
+    title: string;
+    availability: string;
+    availableNow: boolean;
+    runtimeEnabled: boolean;
+    stage: string;
+    statusLabel: string;
+    description: string;
+  }> | undefined;
   knowledgeIntegration?: Record<string, unknown> | undefined;
   roadmap?: Array<Record<string, unknown>> | undefined;
   outOfScope?: string[] | undefined;
@@ -2236,7 +2252,11 @@ export function getOimaBoundaryPayload(source: unknown): OimaBoundaryPayload | n
   return {
     metadata,
     boundary: source.boundary,
+    productShell: isRecord(source.productShell) ? source.productShell : undefined,
+    productBoundaryMetadata: isRecord(source.productBoundaryMetadata) ? source.productBoundaryMetadata : undefined,
+    productCode: getString(source, "productCode") ?? "OIMA",
     productKey: getString(source, "productKey") ?? "OIMA",
+    productName: getString(source, "productName") ?? "Organizational Intelligence Meeting Agent",
     displayName: getString(source, "displayName") ?? "OIMA",
     productType: getString(source, "productType") ?? "MEETING_INTELLIGENCE_PRODUCT",
     implementationStatus: getString(source, "implementationStatus") ?? "PRODUCT_BOUNDARY_READY",
@@ -2244,6 +2264,8 @@ export function getOimaBoundaryPayload(source: unknown): OimaBoundaryPayload | n
     tagline: getString(source, "tagline") ?? "OIS understands the organization. OIMA understands the meeting.",
     vietnamesePositioning: getString(source, "vietnamesePositioning") ?? "OIS hiểu tổ chức. OIMA hiểu cuộc họp.",
     capabilityCodes: getArray<string>(source, "capabilityCodes"),
+    currentRuntimeCapabilities: getArray<string>(source, "currentRuntimeCapabilities"),
+    plannedRuntimeCapabilities: getArray<string>(source, "plannedRuntimeCapabilities"),
     sourceModes: source.sourceModes as string[],
     sourceModeContracts: Array.isArray(source.sourceModeContracts) ? (source.sourceModeContracts as Array<Record<string, unknown>>) : undefined,
     sourceModeRules: source.sourceModeRules,
@@ -2252,6 +2274,9 @@ export function getOimaBoundaryPayload(source: unknown): OimaBoundaryPayload | n
     safetyBoundaries: source.safetyBoundaries as string[],
     coreReuseMap: isRecord(source.coreReuseMap) ? (source.coreReuseMap as Record<string, string>) : undefined,
     ownedUxSurfaces: getArray<string>(source, "ownedUxSurfaces"),
+    emptyStateSurfaces: Array.isArray(source.emptyStateSurfaces)
+      ? (source.emptyStateSurfaces as OimaBoundaryPayload["emptyStateSurfaces"])
+      : undefined,
     knowledgeIntegration: isRecord(source.knowledgeIntegration) ? source.knowledgeIntegration : undefined,
     roadmap: Array.isArray(source.roadmap) ? (source.roadmap as Array<Record<string, unknown>>) : undefined,
     outOfScope: getArray<string>(source, "outOfScope"),

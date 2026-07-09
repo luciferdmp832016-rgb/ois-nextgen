@@ -11,6 +11,10 @@ import {
 } from "@ois/knowledge-fabric";
 import {
   oimaCapabilityCodes,
+  oimaCurrentRuntimeCapabilities,
+  oimaEmptyStateSurfaces,
+  oimaPlannedRuntimeCapabilities,
+  oimaProductBoundaryMetadata,
   oimaSafetyBoundaries,
   oimaSourceModes,
   universalKnowledgeApiContract
@@ -1637,7 +1641,9 @@ describe("Stage 2F OIS Agent Runtime and Self-Improvement endpoints", () => {
       {
         ...stage2FRows.product,
         id: "ecosystem_product_oima",
+        productCode: "OIMA",
         productKey: "OIMA",
+        productName: "Organizational Intelligence Meeting Agent",
         displayName: "OIMA — Organizational Intelligence Meeting Agent",
         productType: "MEETING_INTELLIGENCE_PRODUCT"
       },
@@ -1823,7 +1829,9 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
       expect(body.product).toMatchObject({
         code: "OIMA",
         displayName: "OIMA — Organizational Intelligence Meeting Agent",
+        productCode: "OIMA",
         productKey: "OIMA",
+        productName: "Organizational Intelligence Meeting Agent",
         productType: "MEETING_INTELLIGENCE_PRODUCT",
         implementationStatus: "PRODUCT_BOUNDARY_READY",
         relationships: {
@@ -1833,6 +1841,15 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
         }
       });
       expect(body.product.capabilityCodes).toEqual(oimaCapabilityCodes);
+      expect(body.product.currentRuntimeCapabilities).toEqual(oimaCurrentRuntimeCapabilities);
+      expect(body.product.plannedRuntimeCapabilities).toEqual(oimaPlannedRuntimeCapabilities);
+      expect(body.product.productBoundaryMetadata).toEqual(oimaProductBoundaryMetadata);
+      expect(body.product.productShell).toMatchObject({
+        status: "PRODUCT_SHELL_HARDENED",
+        meetingRuntimeDataIncluded: false,
+        nextRecommendedStage: "OIMA-1 Meeting Intake"
+      });
+      expect(body.product.emptyStateSurfaces).toEqual(oimaEmptyStateSurfaces);
       expect(body.product.sourceModes).toEqual(oimaSourceModes);
       expect(body.product.safetyBoundaries).toEqual(oimaSafetyBoundaries);
       expect(body.product.knowledgeIntegration).toMatchObject({
@@ -1868,12 +1885,30 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
       const boundaryBody = boundary.json();
 
       expect(overviewBody).toMatchObject({
+        productCode: "OIMA",
         productKey: "OIMA",
+        productName: "Organizational Intelligence Meeting Agent",
         productType: "MEETING_INTELLIGENCE_PRODUCT",
         implementationStatus: "PRODUCT_BOUNDARY_READY",
         vietnamesePositioning: "OIS hiểu tổ chức. OIMA hiểu cuộc họp."
       });
       expect(overviewBody.capabilityCodes).toEqual(oimaCapabilityCodes);
+      expect(overviewBody.currentRuntimeCapabilities).toEqual(oimaCurrentRuntimeCapabilities);
+      expect(overviewBody.plannedRuntimeCapabilities).toEqual(oimaPlannedRuntimeCapabilities);
+      expect(overviewBody.productBoundaryMetadata).toEqual(oimaProductBoundaryMetadata);
+      expect(overviewBody.emptyStateSurfaces).toEqual(oimaEmptyStateSurfaces);
+      expect(overviewBody.emptyStateSurfaces.map((surface: { title: string }) => surface.title)).toEqual([
+        "Meeting Library",
+        "Upload Meeting",
+        "Agent Analysis",
+        "Clarification Review",
+        "Dashboard",
+        "Self-Improvement Center",
+        "Listener Mode"
+      ]);
+      expect(overviewBody.emptyStateSurfaces.every((surface: { availableNow: boolean; runtimeEnabled: boolean }) => !surface.availableNow && !surface.runtimeEnabled)).toBe(
+        true
+      );
       expect(overviewBody.knowledgeIntegration.knowledgeLayerTaxonomy.layerKeys).toContain("KL_0_LEGAL_REGULATORY_CORE");
       expect(overviewBody.knowledgeIntegration.universalKnowledgeApiDisplayName).toBe("Universal Knowledge API");
       expect(overviewBody.knowledgeIntegration.universalKnowledgeApiLabel).toBe("OIS Universal Knowledge API");
@@ -1889,7 +1924,7 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
       );
       expect(roadmapBody.roadmap).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ stage: "OIMA-0", phase: "Stage 2H", status: "PRODUCT_BOUNDARY_READY" }),
+          expect.objectContaining({ stage: "OIMA-0", phase: "Stage 2I", status: "PRODUCT_SHELL_HARDENED" }),
           expect.objectContaining({ stage: "OIMA-9", title: "Listener Mode", status: "PLANNED" })
         ])
       );
@@ -1902,9 +1937,19 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
         realLlmCallsEnabled: false,
         uploadPipelineImplemented: false,
         meetingStorageImplemented: false,
+        listenerModeStatus: "FUTURE_ONLY",
+        productShellStatus: "PRODUCT_SHELL_HARDENED",
         noLiveSpeakingAgent: true,
         noVoiceClone: true,
         noImpersonation: true
+      });
+      expect(boundaryBody.productShell).toMatchObject({
+        uploadRuntimeImplemented: false,
+        transcriptProcessingImplemented: false,
+        audioProcessingImplemented: false,
+        listenerModeImplemented: false,
+        voiceCloneImplemented: false,
+        realLlmCallsEnabled: false
       });
       expect(boundaryBody.outOfScope).toEqual(expect.arrayContaining(["Production secrets or real OpenRouter calls"]));
       expect(boundaryBody.safetyBoundaries).toEqual(oimaSafetyBoundaries);

@@ -1,4 +1,4 @@
-export const productCodes = ["OIS", "PITS", "CS_AGENT", "KEIHB", "ICR"] as const;
+export const productCodes = ["OIS", "PITS", "CS_AGENT", "KEIHB", "ICR", "OIMA"] as const;
 export type ProductCode = (typeof productCodes)[number];
 
 export const layerCodes = [
@@ -234,6 +234,103 @@ export const oimaCapabilityCodes = [
 ] as const;
 export type OimaCapabilityCode = (typeof oimaCapabilityCodes)[number];
 
+export const oimaCurrentRuntimeCapabilities = ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE"] as const;
+export type OimaCurrentRuntimeCapability = (typeof oimaCurrentRuntimeCapabilities)[number];
+
+export const oimaPlannedRuntimeCapabilities = [
+  "MEETING_INTAKE",
+  "TRANSCRIPT_PROCESSING",
+  "AUDIO_PROCESSING",
+  "OFFLINE_AGENT_ANALYSIS",
+  "SUBJECT_CLARIFICATION",
+  "SELF_IMPROVEMENT",
+  "LISTENER_MODE"
+] as const;
+export type OimaPlannedRuntimeCapability = (typeof oimaPlannedRuntimeCapabilities)[number];
+
+export const oimaEmptyStateSurfaces = [
+  {
+    surfaceCode: "MEETING_LIBRARY",
+    title: "Meeting Library",
+    availability: "PLANNED",
+    availableNow: false,
+    runtimeEnabled: false,
+    stage: "OIMA-1",
+    statusLabel: "Planned for OIMA-1 Meeting Intake",
+    description: "Future meeting library shell. No meeting records are created or listed in OIMA-0."
+  },
+  {
+    surfaceCode: "UPLOAD_MEETING",
+    title: "Upload Meeting",
+    availability: "PLANNED",
+    availableNow: false,
+    runtimeEnabled: false,
+    stage: "OIMA-1",
+    statusLabel: "Planned for OIMA-1 Meeting Intake",
+    description: "Future transcript-first intake surface. Upload storage and parsing are not enabled in OIMA-0."
+  },
+  {
+    surfaceCode: "AGENT_ANALYSIS",
+    title: "Agent Analysis",
+    availability: "PLANNED",
+    availableNow: false,
+    runtimeEnabled: false,
+    stage: "OIMA-3",
+    statusLabel: "Planned for offline analysis",
+    description: "Future evidence-backed OIS Agent analysis. No LLM or OpenRouter calls are enabled in OIMA-0."
+  },
+  {
+    surfaceCode: "CLARIFICATION_REVIEW",
+    title: "Clarification Review",
+    availability: "PLANNED",
+    availableNow: false,
+    runtimeEnabled: false,
+    stage: "OIMA-4",
+    statusLabel: "Planned for subject clarification",
+    description: "Future review queue for ambiguous subjects, owners and meeting context."
+  },
+  {
+    surfaceCode: "DASHBOARD",
+    title: "Dashboard",
+    availability: "PLANNED",
+    availableNow: false,
+    runtimeEnabled: false,
+    stage: "OIMA-5",
+    statusLabel: "Planned for meeting dashboards",
+    description: "Future meeting dashboard and monthly operating report surface."
+  },
+  {
+    surfaceCode: "SELF_IMPROVEMENT_CENTER",
+    title: "Self-Improvement Center",
+    availability: "PLANNED",
+    availableNow: false,
+    runtimeEnabled: false,
+    stage: "OIMA-6",
+    statusLabel: "Planned for reviewed learning",
+    description: "Future reviewed learning loop. It will not auto-promote meeting signals to canonical knowledge."
+  },
+  {
+    surfaceCode: "LISTENER_MODE",
+    title: "Listener Mode",
+    availability: "PLANNED",
+    availableNow: false,
+    runtimeEnabled: false,
+    stage: "OIMA-9",
+    statusLabel: "Future permissioned recording only",
+    description: "Future listener may record meetings with permission. Live speaking and voice clone remain out of scope."
+  }
+] as const satisfies ReadonlyArray<{
+  surfaceCode: string;
+  title: string;
+  availability: "PLANNED";
+  availableNow: false;
+  runtimeEnabled: false;
+  stage: string;
+  statusLabel: string;
+  description: string;
+}>;
+export type OimaEmptyStateSurface = (typeof oimaEmptyStateSurfaces)[number];
+
 export const oimaCoreReuseMap = {
   workspace: "OIS Core Workspace",
   rbac: "OIS Core RBAC / future permission model",
@@ -306,14 +403,14 @@ export const oimaSourceModeContracts = [
 export const oimaRoadmap = [
   {
     stage: "OIMA-0",
-    phase: "Stage 2H",
-    status: "PRODUCT_BOUNDARY_READY",
-    title: "Product Shell & Boundary",
-    scope: "Registry entry, contracts, deterministic overview APIs, shell UI and docs."
+    phase: "Stage 2I",
+    status: "PRODUCT_SHELL_HARDENED",
+    title: "Product Shell & Boundary Hardening",
+    scope: "Stable OIMA product shell, overview, source-mode clarity, empty states and OIS knowledge linkage."
   },
   {
     stage: "OIMA-1",
-    phase: "Stage 2I",
+    phase: "Next",
     status: "PLANNED",
     title: "Meeting Intake",
     scope: "Versioned schema for meeting records, transcript artifacts, evidence provenance and tenant scoping."
@@ -377,7 +474,9 @@ export const oimaRoadmap = [
 ] as const;
 
 export const oimaProductContract = {
+  productCode: "OIMA",
   productKey: "OIMA",
+  productName: "Organizational Intelligence Meeting Agent",
   displayName: "OIMA — Organizational Intelligence Meeting Agent",
   productType: "MEETING_INTELLIGENCE_PRODUCT",
   poweredBy: "OIS",
@@ -391,5 +490,25 @@ export const oimaProductContract = {
   analysisModes: oimaAnalysisModes,
   safetyBoundaries: oimaSafetyBoundaries,
   coreReuseMap: oimaCoreReuseMap,
+  currentRuntimeCapabilities: oimaCurrentRuntimeCapabilities,
+  plannedRuntimeCapabilities: oimaPlannedRuntimeCapabilities,
+  emptyStateSurfaces: oimaEmptyStateSurfaces,
   roadmap: oimaRoadmap
+} as const;
+
+export const oimaProductBoundaryMetadata = {
+  stage: "Stage 2I / OIMA-0",
+  sourceReadyStage: "Stage 2H",
+  productCode: oimaProductContract.productCode,
+  productName: oimaProductContract.productName,
+  displayName: oimaProductContract.displayName,
+  poweredBy: oimaProductContract.poweredBy,
+  sourceModes: oimaSourceModes,
+  currentRuntimeCapabilities: oimaCurrentRuntimeCapabilities,
+  plannedRuntimeCapabilities: oimaPlannedRuntimeCapabilities,
+  primaryInput: "TRANSCRIPT",
+  audioInput: "OPTIONAL_FUTURE_ENRICHMENT",
+  listenerMode: "FUTURE_PERMISSIONED_RECORDING_ONLY",
+  liveSpeakingAgent: "OUT_OF_SCOPE",
+  voiceClone: "OUT_OF_SCOPE"
 } as const;

@@ -3,7 +3,11 @@ import {
   oimaAnalysisModes,
   oimaCapabilityCodes,
   oimaCoreReuseMap,
+  oimaCurrentRuntimeCapabilities,
+  oimaEmptyStateSurfaces,
   oimaMeetingStatuses,
+  oimaPlannedRuntimeCapabilities,
+  oimaProductBoundaryMetadata,
   oimaProductContract,
   oimaRoadmap,
   oimaSafetyBoundaries,
@@ -24,9 +28,12 @@ type RegistryMetadataFactory = () => RegistryMetadata;
 
 const stage2HBoundary = {
   stage: "Stage 2H",
+  hardeningStage: "Stage 2I / OIMA-0",
   implementationStatus: "PRODUCT_BOUNDARY_READY",
+  productShellStatus: "PRODUCT_SHELL_HARDENED",
   mode: "deterministic-oima-product-boundary",
   productKey: "OIMA",
+  productCode: "OIMA",
   poweredBy: "OIS",
   transcriptFirst: true,
   audioOptional: true,
@@ -39,6 +46,25 @@ const stage2HBoundary = {
   noImpersonation: true,
   noAutonomousDecision: true,
   noSeparateKnowledgeSourceOfTruth: true
+} as const;
+
+const stage2IProductShell = {
+  stage: "Stage 2I / OIMA-0",
+  status: "PRODUCT_SHELL_HARDENED",
+  availableNow: oimaCurrentRuntimeCapabilities,
+  plannedLater: oimaPlannedRuntimeCapabilities,
+  transcriptPrimaryInput: true,
+  audioOptionalFutureInput: true,
+  listenerModePermissionedRecordingFutureOnly: true,
+  meetingRuntimeDataIncluded: false,
+  uploadRuntimeImplemented: false,
+  transcriptProcessingImplemented: false,
+  audioProcessingImplemented: false,
+  listenerModeImplemented: false,
+  liveSpeakingAgentImplemented: false,
+  voiceCloneImplemented: false,
+  realLlmCallsEnabled: false,
+  nextRecommendedStage: "OIMA-1 Meeting Intake"
 } as const;
 
 const oimaOutOfScope = [
@@ -99,10 +125,16 @@ function responseBase(metadata: RegistryMetadata) {
   return {
     metadata,
     boundary: stage2HBoundary,
+    productShell: stage2IProductShell,
+    productBoundaryMetadata: oimaProductBoundaryMetadata,
+    productCode: oimaProductContract.productCode,
     productKey: oimaProductContract.productKey,
+    productName: oimaProductContract.productName,
     displayName: oimaProductContract.displayName,
     productType: oimaProductContract.productType,
     implementationStatus: oimaProductContract.implementationStatus,
+    currentRuntimeCapabilities: oimaCurrentRuntimeCapabilities,
+    plannedRuntimeCapabilities: oimaPlannedRuntimeCapabilities,
     poweredBy: oimaProductContract.poweredBy,
     tagline: oimaProductContract.tagline,
     vietnamesePositioning: oimaProductContract.vietnamesePositioning
@@ -131,9 +163,14 @@ export function buildOimaProductRegistryProjection() {
     displayName: oimaProductContract.displayName,
     lifecycle: "ACTIVE",
     version: 1,
+    productCode: oimaProductContract.productCode,
     productKey: oimaProductContract.productKey,
+    productName: oimaProductContract.productName,
     productType: oimaProductContract.productType,
     implementationStatus: oimaProductContract.implementationStatus,
+    productBoundaryMetadata: oimaProductBoundaryMetadata,
+    currentRuntimeCapabilities: oimaCurrentRuntimeCapabilities,
+    plannedRuntimeCapabilities: oimaPlannedRuntimeCapabilities,
     poweredBy: oimaProductContract.poweredBy,
     adminPath: "/oima",
     runtimePath: null,
@@ -142,6 +179,8 @@ export function buildOimaProductRegistryProjection() {
     sourceModeRules: sourceModeRules(),
     safetyBoundaries: oimaSafetyBoundaries,
     coreReuseMap: oimaCoreReuseMap,
+    productShell: stage2IProductShell,
+    emptyStateSurfaces: oimaEmptyStateSurfaces,
     knowledgeIntegration: knowledgeIntegration(),
     boundary: stage2HBoundary,
     modules,
@@ -166,6 +205,7 @@ function buildOverview(metadata: RegistryMetadata) {
     analysisModes: oimaAnalysisModes,
     safetyBoundaries: oimaSafetyBoundaries,
     coreReuseMap: oimaCoreReuseMap,
+    emptyStateSurfaces: oimaEmptyStateSurfaces,
     ownedUxSurfaces: oimaOwnedUxSurfaces,
     knowledgeIntegration: knowledgeIntegration(),
     roadmap: oimaRoadmap,
@@ -198,6 +238,7 @@ function buildRoadmap(metadata: RegistryMetadata) {
     coreReuseMap: oimaCoreReuseMap,
     roadmap: oimaRoadmap,
     ownedUxSurfaces: oimaOwnedUxSurfaces,
+    emptyStateSurfaces: oimaEmptyStateSurfaces,
     outOfScope: oimaOutOfScope,
     nextStageCandidates: ["Meeting intake schema ADR", "Transcript artifact model", "Offline deterministic extraction contract"]
   };
@@ -214,6 +255,7 @@ function buildBoundary(metadata: RegistryMetadata) {
     sourceModeRules: sourceModeRules(),
     roadmap: oimaRoadmap,
     ownedUxSurfaces: oimaOwnedUxSurfaces,
+    emptyStateSurfaces: oimaEmptyStateSurfaces,
     outOfScope: oimaOutOfScope,
     knowledgeIntegration: knowledgeIntegration(),
     registryProjection: buildOimaProductRegistryProjection(),

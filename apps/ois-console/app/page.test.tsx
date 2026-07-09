@@ -1193,17 +1193,56 @@ const oimaPayload = {
   metadata: registryPayload.metadata,
   boundary: {
     stage: "Stage 2H",
+    hardeningStage: "Stage 2I / OIMA-0",
     implementationStatus: "PRODUCT_BOUNDARY_READY",
+    productShellStatus: "PRODUCT_SHELL_HARDENED",
     mode: "deterministic-oima-product-boundary",
     transcriptFirst: true,
     audioOptional: true,
+    listenerModeStatus: "FUTURE_ONLY",
+    realLlmCallsEnabled: false,
+    uploadPipelineImplemented: false,
+    meetingStorageImplemented: false,
     noLiveSpeakingAgent: true,
     noVoiceClone: true,
     noImpersonation: true,
     noAutonomousDecision: true,
     noSeparateKnowledgeSourceOfTruth: true
   },
+  productShell: {
+    stage: "Stage 2I / OIMA-0",
+    status: "PRODUCT_SHELL_HARDENED",
+    nextRecommendedStage: "OIMA-1 Meeting Intake",
+    meetingRuntimeDataIncluded: false,
+    uploadRuntimeImplemented: false,
+    transcriptProcessingImplemented: false,
+    audioProcessingImplemented: false,
+    listenerModeImplemented: false,
+    liveSpeakingAgentImplemented: false,
+    voiceCloneImplemented: false,
+    realLlmCallsEnabled: false
+  },
+  productBoundaryMetadata: {
+    stage: "Stage 2I / OIMA-0",
+    sourceReadyStage: "Stage 2H",
+    productCode: "OIMA",
+    productName: "Organizational Intelligence Meeting Agent",
+    poweredBy: "OIS",
+    sourceModes: ["TRANSCRIPT_ONLY", "AUDIO_ONLY", "TRANSCRIPT_AND_AUDIO", "LISTENER_CAPTURED"],
+    currentRuntimeCapabilities: ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE"],
+    plannedRuntimeCapabilities: [
+      "MEETING_INTAKE",
+      "TRANSCRIPT_PROCESSING",
+      "AUDIO_PROCESSING",
+      "OFFLINE_AGENT_ANALYSIS",
+      "SUBJECT_CLARIFICATION",
+      "SELF_IMPROVEMENT",
+      "LISTENER_MODE"
+    ]
+  },
+  productCode: "OIMA",
   productKey: "OIMA",
+  productName: "Organizational Intelligence Meeting Agent",
   displayName: "OIMA — Organizational Intelligence Meeting Agent",
   productType: "MEETING_INTELLIGENCE_PRODUCT",
   implementationStatus: "PRODUCT_BOUNDARY_READY",
@@ -1223,6 +1262,16 @@ const oimaPayload = {
     "MONTHLY_OPERATING_REPORT",
     "MEETING_SELF_IMPROVEMENT_REVIEW",
     "LISTENER_MODE_FUTURE"
+  ],
+  currentRuntimeCapabilities: ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE"],
+  plannedRuntimeCapabilities: [
+    "MEETING_INTAKE",
+    "TRANSCRIPT_PROCESSING",
+    "AUDIO_PROCESSING",
+    "OFFLINE_AGENT_ANALYSIS",
+    "SUBJECT_CLARIFICATION",
+    "SELF_IMPROVEMENT",
+    "LISTENER_MODE"
   ],
   sourceModes: ["TRANSCRIPT_ONLY", "AUDIO_ONLY", "TRANSCRIPT_AND_AUDIO", "LISTENER_CAPTURED"],
   sourceModeContracts: oimaSourceModeContracts,
@@ -1267,6 +1316,78 @@ const oimaPayload = {
     "Self-improvement review",
     "Listener Mode future"
   ],
+  emptyStateSurfaces: [
+    {
+      surfaceCode: "MEETING_LIBRARY",
+      title: "Meeting Library",
+      availability: "PLANNED",
+      availableNow: false,
+      runtimeEnabled: false,
+      stage: "OIMA-1",
+      statusLabel: "Planned for OIMA-1 Meeting Intake",
+      description: "Future meeting library shell. No meeting records are created or listed in OIMA-0."
+    },
+    {
+      surfaceCode: "UPLOAD_MEETING",
+      title: "Upload Meeting",
+      availability: "PLANNED",
+      availableNow: false,
+      runtimeEnabled: false,
+      stage: "OIMA-1",
+      statusLabel: "Planned for OIMA-1 Meeting Intake",
+      description: "Future transcript-first intake surface. Upload storage and parsing are not enabled in OIMA-0."
+    },
+    {
+      surfaceCode: "AGENT_ANALYSIS",
+      title: "Agent Analysis",
+      availability: "PLANNED",
+      availableNow: false,
+      runtimeEnabled: false,
+      stage: "OIMA-3",
+      statusLabel: "Planned for offline analysis",
+      description: "Future evidence-backed OIS Agent analysis. No LLM or OpenRouter calls are enabled in OIMA-0."
+    },
+    {
+      surfaceCode: "CLARIFICATION_REVIEW",
+      title: "Clarification Review",
+      availability: "PLANNED",
+      availableNow: false,
+      runtimeEnabled: false,
+      stage: "OIMA-4",
+      statusLabel: "Planned for subject clarification",
+      description: "Future review queue for ambiguous subjects, owners and meeting context."
+    },
+    {
+      surfaceCode: "DASHBOARD",
+      title: "Dashboard",
+      availability: "PLANNED",
+      availableNow: false,
+      runtimeEnabled: false,
+      stage: "OIMA-5",
+      statusLabel: "Planned for meeting dashboards",
+      description: "Future meeting dashboard and monthly operating report surface."
+    },
+    {
+      surfaceCode: "SELF_IMPROVEMENT_CENTER",
+      title: "Self-Improvement Center",
+      availability: "PLANNED",
+      availableNow: false,
+      runtimeEnabled: false,
+      stage: "OIMA-6",
+      statusLabel: "Planned for reviewed learning",
+      description: "Future reviewed learning loop. It will not auto-promote meeting signals to canonical knowledge."
+    },
+    {
+      surfaceCode: "LISTENER_MODE",
+      title: "Listener Mode",
+      availability: "PLANNED",
+      availableNow: false,
+      runtimeEnabled: false,
+      stage: "OIMA-9",
+      statusLabel: "Future permissioned recording only",
+      description: "Future listener may record meetings with permission. Live speaking and voice clone remain out of scope."
+    }
+  ],
   knowledgeIntegration: {
     sourceOfTruth: "OIS Canonical Knowledge Fabric",
     knowledgeLayerTaxonomy: knowledgeLayersPayload,
@@ -1274,8 +1395,8 @@ const oimaPayload = {
     noSeparateKnowledgeSourceOfTruth: true
   },
   roadmap: [
-    { stage: "OIMA-0", phase: "Stage 2H", status: "PRODUCT_BOUNDARY_READY", title: "Product Shell & Boundary", scope: "Registry entry and shell UI." },
-    { stage: "OIMA-1", phase: "Stage 2I", status: "PLANNED", title: "Meeting Intake", scope: "Versioned schema and transcript artifacts." },
+    { stage: "OIMA-0", phase: "Stage 2I", status: "PRODUCT_SHELL_HARDENED", title: "Product Shell & Boundary Hardening", scope: "Stable OIMA product shell." },
+    { stage: "OIMA-1", phase: "Next", status: "PLANNED", title: "Meeting Intake", scope: "Versioned schema and transcript artifacts." },
     { stage: "OIMA-2", phase: "Stage 2J", status: "PLANNED", title: "Transcript Processing", scope: "Transcript-first deterministic contracts." },
     { stage: "OIMA-3", phase: "Future", status: "PLANNED", title: "OIS Agent Offline Analysis", scope: "Evidence-backed offline analysis." },
     { stage: "OIMA-4", phase: "Future", status: "PLANNED", title: "Subject Clarification", scope: "Clarification workflow." },
@@ -1816,7 +1937,35 @@ describe("OIS Console product shell", () => {
         "Placeholder Product Surfaces",
         "Meeting Library",
         "Upload Meeting",
-        "Preview only"
+        "Preview only",
+        "OIMA Product Overview",
+        "OIMA-0 shell ready",
+        "OIS is the organizational intelligence backbone. OIMA is the meeting intelligence product powered by OIS.",
+        "Transcript is primary; audio is optional.",
+        "Product code",
+        "Product name",
+        "Organizational Intelligence Meeting Agent",
+        "OVERVIEW",
+        "PRODUCT_BOUNDARY",
+        "KNOWLEDGE_API_LINKAGE",
+        "MEETING_INTAKE",
+        "TRANSCRIPT_PROCESSING",
+        "AUDIO_PROCESSING",
+        "OFFLINE_AGENT_ANALYSIS",
+        "SUBJECT_CLARIFICATION",
+        "SELF_IMPROVEMENT",
+        "Future permissioned recording only",
+        "Voice clone",
+        "Live speaking",
+        "Out of scope",
+        "OIMA Product Surface Empty States",
+        "Agent Analysis",
+        "Clarification Review",
+        "Dashboard",
+        "Self-Improvement Center",
+        "Planned / not runtime",
+        "Runtime enabled",
+        "No fake meeting data"
       ]
     ],
     [
