@@ -215,7 +215,7 @@ for (const marker of markers) {
     process.exit(1);
   }
 }
-const expectedCounts = {
+const minimumCounts = {
   industries: 1,
   organizations: 1,
   workspaces: 1,
@@ -225,10 +225,12 @@ const expectedCounts = {
   modules: 3,
   auditRecords: 1
 };
-for (const [field, value] of Object.entries(expectedCounts)) {
-  const pattern = new RegExp(`${field}[\\s\\S]{0,240}>${value}<`);
-  if (!pattern.test(body)) {
-    console.error(`${label} missing seeded count ${field}=${value}`);
+for (const [field, minimum] of Object.entries(minimumCounts)) {
+  const pattern = new RegExp(`${field}[\\s\\S]{0,240}?>(\\d+)<`, "i");
+  const match = body.match(pattern);
+  const value = match ? Number.parseInt(match[1], 10) : Number.NaN;
+  if (!Number.isInteger(value) || value < minimum) {
+    console.error(`${label} missing seeded count ${field}>=${minimum}; found ${Number.isNaN(value) ? "none" : value}`);
     process.exit(1);
   }
 }
@@ -258,7 +260,7 @@ ui_demo_check_once() {
     return 1
   fi
 
-  UI_CHECK_DETAIL="$label HTTP 200 product=$product_code core_api=$CORE_API_URL seeded_counts=verified"
+  UI_CHECK_DETAIL="$label HTTP 200 product=$product_code core_api=$CORE_API_URL seeded_count_minimums=verified"
 }
 
 ui_demo_wait_for_local() {

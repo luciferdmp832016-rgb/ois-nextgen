@@ -1817,6 +1817,7 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
       expect(response.statusCode).toBe(200);
       expect(body.product).toMatchObject({
         code: "OIMA",
+        displayName: "OIMA — Organizational Intelligence Meeting Agent",
         productKey: "OIMA",
         productType: "MEETING_INTELLIGENCE_PRODUCT",
         implementationStatus: "PRODUCT_BOUNDARY_READY",
@@ -1867,6 +1868,7 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
       });
       expect(overviewBody.capabilityCodes).toEqual(oimaCapabilityCodes);
       expect(overviewBody.knowledgeIntegration.knowledgeLayerTaxonomy.layerKeys).toContain("KL_0_LEGAL_REGULATORY_CORE");
+      expect(overviewBody.knowledgeIntegration.universalKnowledgeApiLabel).toBe("OIS Universal Knowledge API");
       expect(sourceModeBody.sourceModeRules).toMatchObject({
         primarySourceMode: "TRANSCRIPT_ONLY",
         transcriptOnlyWorksWithoutAudio: true,
