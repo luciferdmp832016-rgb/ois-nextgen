@@ -4,6 +4,7 @@ REPO_DIR="${REPO_DIR:-/home/ubuntu/ois-nextgen}"
 CORE_API_SERVICE="${CORE_API_SERVICE:-ois-nextgen-core-api}"
 OIS_CONSOLE_SERVICE="${OIS_CONSOLE_SERVICE:-ois-nextgen-ois-console}"
 PITS_SHELL_SERVICE="${PITS_SHELL_SERVICE:-ois-nextgen-pits-shell}"
+OIMA_SHELL_SERVICE="${OIMA_SHELL_SERVICE:-ois-nextgen-oima-staging}"
 CLOUDFLARED_SERVICE="${CLOUDFLARED_SERVICE:-cloudflared}"
 
 CORE_API_URL="${CORE_API_URL:-https://ois-nextgen.abacusai.cloud}"
@@ -16,8 +17,10 @@ UI_DEMO_READY_INTERVAL="${UI_DEMO_READY_INTERVAL:-2}"
 CORE_API_LOCAL_BASE="${CORE_API_LOCAL_BASE:-http://127.0.0.1:4000}"
 OIS_CONSOLE_LOCAL_URL="${OIS_CONSOLE_LOCAL_URL:-http://127.0.0.1:3000}"
 PITS_SHELL_LOCAL_URL="${PITS_SHELL_LOCAL_URL:-http://127.0.0.1:3001}"
+OIMA_SHELL_LOCAL_URL="${OIMA_SHELL_LOCAL_URL:-http://127.0.0.1:3002}"
 OIS_CONSOLE_PUBLIC_URL="${OIS_CONSOLE_PUBLIC_URL:-https://ois-ng.dmp247.com}"
 PITS_SHELL_PUBLIC_URL="${PITS_SHELL_PUBLIC_URL:-https://pits-ng.dmp247.com}"
+OIMA_SHELL_PUBLIC_URL="${OIMA_SHELL_PUBLIC_URL:-https://oima.dmp247.com}"
 
 PUBLIC_STAGING_DETAIL=""
 REGISTRY_PRODUCT_ID=""
@@ -35,7 +38,7 @@ public_staging_print_safety() {
 }
 
 public_staging_require_repo() {
-  if [ ! -f "$REPO_DIR/package.json" ] || [ ! -d "$REPO_DIR/apps/ois-console" ] || [ ! -d "$REPO_DIR/apps/pits-shell" ]; then
+  if [ ! -f "$REPO_DIR/package.json" ] || [ ! -d "$REPO_DIR/apps/ois-console" ] || [ ! -d "$REPO_DIR/apps/pits-shell" ] || [ ! -d "$REPO_DIR/apps/oima-shell" ]; then
     printf 'STOP: REPO_DIR does not look like OIS NextGen repo: %s\n' "$REPO_DIR" >&2
     return 1
   fi

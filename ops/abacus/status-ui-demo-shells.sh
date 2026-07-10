@@ -73,18 +73,21 @@ ui_demo_require_repo
 printf '\n== Processes ==\n'
 report_process "ois-console" "OIS_CONSOLE"
 report_process "pits-shell" "PITS_SHELL"
+report_process "oima-shell" "OIMA_SHELL"
 
 printf '\n== Local UI Demo Pages ==\n'
 check_local "OIS_CONSOLE_LOCAL" "http://127.0.0.1:3000/" "OIS_CONSOLE" "OIS Console"
 check_local "PITS_SHELL_LOCAL" "http://127.0.0.1:3001/" "PITS_SHELL" "PITS Shell"
+check_local "OIMA_SHELL_LOCAL" "http://127.0.0.1:3002/" "OIMA_APP_SHELL" "OIMA"
 
 printf '\n== Preview Proxy UI Demo Pages ==\n'
 check_preview_if_available "OIS_CONSOLE_PREVIEW" "3000" "OIS_CONSOLE" "OIS Console"
 check_preview_if_available "PITS_SHELL_PREVIEW" "3001" "PITS_SHELL" "PITS Shell"
+check_preview_if_available "OIMA_SHELL_PREVIEW" "3002" "OIMA_APP_SHELL" "OIMA"
 
 if [ "$failures" -gt 0 ]; then
   printf '\nUI_DEMO_STATUS_FAILED failures=%s\n' "$failures" >&2
   exit 1
 fi
 
-printf '\nUI_DEMO_STATUS_PASSED OIS Console and PITS Shell demo pages are running and reading seeded Core API data.\n'
+printf '\nUI_DEMO_STATUS_PASSED OIS Console, PITS Shell and OIMA Shell demo pages are running and reading seeded Core API data.\n'

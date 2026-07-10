@@ -18,7 +18,19 @@ Vietnamese positioning: OIS hiểu tổ chức. OIMA hiểu cuộc họp.
 
 OIMA is a distinct Powered by OIS product. It is not a feature buried inside the generic OIS Platform, and it is not a separate knowledge source of truth.
 
-Stage 2K / OIMA-2 adds the transcript processing foundation on top of the Stage 2J meeting intake foundation. Current runtime capabilities are `OVERVIEW`, `PRODUCT_BOUNDARY`, `KNOWLEDGE_API_LINKAGE`, `MEETING_INTAKE` and `TRANSCRIPT_PROCESSING`.
+Stage 2K / OIMA-2 adds the transcript processing foundation on top of the Stage 2J meeting intake foundation. Stage 2L / OIMA-A0 moves the OIMA browser runtime into a standalone app shell at `apps/oima-shell` with public hostname foundation `https://oima.dmp247.com`.
+
+Current runtime capabilities are `OVERVIEW`, `PRODUCT_BOUNDARY`, `KNOWLEDGE_API_LINKAGE`, `MEETING_INTAKE` and `TRANSCRIPT_PROCESSING`.
+
+Standalone runtime metadata:
+
+- App path: `apps/oima-shell`
+- Package: `@ois/oima-shell`
+- Service: `ois-nextgen-oima-staging`
+- Port: `3002`
+- Public hostname foundation: `https://oima.dmp247.com`
+- Core API source: `https://ois-nextgen.abacusai.cloud`
+- OIS Console `/oima` remains a launcher/compatibility route.
 
 Planned runtime capabilities are `AUDIO_PROCESSING`, `OFFLINE_AGENT_ANALYSIS`, `SUBJECT_CLARIFICATION`, `SELF_IMPROVEMENT` and `LISTENER_MODE`.
 
@@ -67,4 +79,4 @@ Microsoft Teams-style speaker names, timestamps, raw text and source order are p
 
 ## Safety
 
-Stage 2K / OIMA-2 explicitly blocks binary file storage, audio processing, OIS Agent meeting analysis, issues, decisions, actions, risks, Listener Mode runtime, live speaking agents, voice clone, impersonation, autonomous decisions, real LLM/OpenRouter calls, production secrets and `prisma db push`.
+Stage 2K / OIMA-2 and Stage 2L / OIMA-A0 explicitly block binary file storage, audio processing, OIS Agent meeting analysis, issues, decisions, actions, risks, Listener Mode runtime, live speaking agents, voice clone, impersonation, autonomous decisions, real LLM/OpenRouter calls, production secrets and `prisma db push`. Stage 2L adds no DB schema, migration, seed data or duplicate Core API.

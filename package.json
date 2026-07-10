@@ -5,10 +5,11 @@
   "packageManager": "pnpm@9.15.4",
   "type": "module",
   "scripts": {
-    "dev": "pnpm -r --parallel --filter @ois/core-api --filter @ois/ois-console --filter @ois/pits-shell dev",
+    "dev": "pnpm -r --parallel --filter @ois/core-api --filter @ois/ois-console --filter @ois/pits-shell --filter @ois/oima-shell dev",
     "dev:api": "pnpm --filter @ois/core-api dev",
     "dev:console": "pnpm --filter @ois/ois-console dev",
     "dev:pits": "pnpm --filter @ois/pits-shell dev",
+    "dev:oima": "pnpm --filter @ois/oima-shell dev",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "prisma db seed",

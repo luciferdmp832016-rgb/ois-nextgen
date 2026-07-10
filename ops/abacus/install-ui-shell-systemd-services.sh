@@ -74,14 +74,14 @@ cd "$REPO_DIR"
 
 if [ "$BUILD_UI_SHELLS" = "true" ]; then
   if [ "$CLEAN_UI_BUILDS" = "true" ]; then
-    printf '%s\n' "UI_SYSTEMD_BUILD_CLEAN_START removing generated OIS/PITS .next folders"
-    rm -rf "$REPO_DIR/apps/ois-console/.next" "$REPO_DIR/apps/pits-shell/.next"
+    printf '%s\n' "UI_SYSTEMD_BUILD_CLEAN_START removing generated OIS/PITS/OIMA .next folders"
+    rm -rf "$REPO_DIR/apps/ois-console/.next" "$REPO_DIR/apps/pits-shell/.next" "$REPO_DIR/apps/oima-shell/.next"
     printf '%s\n' "UI_SYSTEMD_BUILD_CLEAN_PASSED"
   else
     printf '%s\n' "UI_SYSTEMD_BUILD_CLEAN_SKIPPED CLEAN_UI_BUILDS=false"
   fi
 
-  printf '%s\n' "UI_SYSTEMD_BUILD_START OIS Console and PITS Shell"
+  printf '%s\n' "UI_SYSTEMD_BUILD_START OIS Console, PITS Shell and OIMA Shell"
   env -u DATABASE_URL -u ABACUS_DATABASE_URL \
     CORE_API_URL="$CORE_API_URL" \
     NEXT_PUBLIC_CORE_API_URL="$NEXT_PUBLIC_CORE_API_URL" \
@@ -92,6 +92,13 @@ if [ "$BUILD_UI_SHELLS" = "true" ]; then
     NEXT_PUBLIC_CORE_API_URL="$NEXT_PUBLIC_CORE_API_URL" \
     NEXT_TELEMETRY_DISABLED="$NEXT_TELEMETRY_DISABLED" \
     pnpm --filter @ois/pits-shell build
+  env -u DATABASE_URL -u ABACUS_DATABASE_URL \
+    CORE_API_URL="$CORE_API_URL" \
+    NEXT_PUBLIC_CORE_API_URL="$NEXT_PUBLIC_CORE_API_URL" \
+    NEXT_TELEMETRY_DISABLED="$NEXT_TELEMETRY_DISABLED" \
+    OIMA_PUBLIC_BASE_URL="$OIMA_SHELL_PUBLIC_URL" \
+    NEXT_PUBLIC_OIMA_PUBLIC_BASE_URL="$OIMA_SHELL_PUBLIC_URL" \
+    pnpm --filter @ois/oima-shell build
   bash "$SCRIPT_DIR/verify-ui-route-manifests.sh"
   printf '%s\n' "UI_SYSTEMD_BUILD_PASSED"
 else
@@ -100,10 +107,12 @@ fi
 
 write_unit "$OIS_CONSOLE_SERVICE" "OIS NextGen OIS Console public staging shell" "$REPO_DIR/apps/ois-console" "3000"
 write_unit "$PITS_SHELL_SERVICE" "OIS NextGen PITS Shell public staging shell" "$REPO_DIR/apps/pits-shell" "3001"
+write_unit "$OIMA_SHELL_SERVICE" "OIS NextGen OIMA public staging shell" "$REPO_DIR/apps/oima-shell" "3002"
 
 sudo systemctl daemon-reload
 sudo systemctl enable --now "$OIS_CONSOLE_SERVICE"
 sudo systemctl enable --now "$PITS_SHELL_SERVICE"
+sudo systemctl enable --now "$OIMA_SHELL_SERVICE"
 
 if ! public_staging_systemctl_active "$OIS_CONSOLE_SERVICE"; then
   record_failure "$OIS_CONSOLE_SERVICE did not become active"
@@ -113,10 +122,14 @@ if ! public_staging_systemctl_active "$PITS_SHELL_SERVICE"; then
   record_failure "$PITS_SHELL_SERVICE did not become active"
 fi
 
+if ! public_staging_systemctl_active "$OIMA_SHELL_SERVICE"; then
+  record_failure "$OIMA_SHELL_SERVICE did not become active"
+fi
+
 if [ "$failures" -gt 0 ]; then
   printf '\nUI_SYSTEMD_INSTALL_FAILED failures=%s\n' "$failures" >&2
   exit 1
 fi
 
-printf '\nUI_SYSTEMD_INSTALL_PASSED durable OIS Console and PITS Shell services are enabled and active.\n'
+printf '\nUI_SYSTEMD_INSTALL_PASSED durable OIS Console, PITS Shell and OIMA Shell services are enabled and active.\n'
 printf '%s\n' "Run: bash ops/abacus/status-public-staging-runtime.sh"

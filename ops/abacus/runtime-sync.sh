@@ -11,7 +11,7 @@ printf '%s\n' "Runtime sync starting."
 printf '%s\n' "Safety: no migrations, no seed, no prisma db push, no .env printing."
 printf '%s\n' "Safety: stops if Prisma schema, migration or seed files changed in pulled commits."
 printf '%s\n' "Safety: cloudflared is not restarted unless RESTART_CLOUDFLARED=true and PUBLIC_STAGING_RESTART_SCOPE=all."
-printf '%s\n' "Safety: UI build cleanup removes only generated .next folders for OIS Console and PITS Shell."
+printf '%s\n' "Safety: UI build cleanup removes only generated .next folders for OIS Console, PITS Shell and OIMA Shell."
 
 cd "$REPO_DIR"
 
@@ -50,8 +50,8 @@ pnpm typecheck
 pnpm test
 
 if [ "$CLEAN_UI_BUILDS" = "true" ]; then
-  printf '%s\n' "UI_BUILD_CLEAN_START removing generated OIS/PITS .next folders before production build"
-  rm -rf "$REPO_DIR/apps/ois-console/.next" "$REPO_DIR/apps/pits-shell/.next"
+  printf '%s\n' "UI_BUILD_CLEAN_START removing generated OIS/PITS/OIMA .next folders before production build"
+  rm -rf "$REPO_DIR/apps/ois-console/.next" "$REPO_DIR/apps/pits-shell/.next" "$REPO_DIR/apps/oima-shell/.next"
   printf '%s\n' "UI_BUILD_CLEAN_PASSED"
 else
   printf '%s\n' "UI_BUILD_CLEAN_SKIPPED CLEAN_UI_BUILDS=false"

@@ -120,10 +120,11 @@ fi
 
 check_app "OIS_CONSOLE" "apps/ois-console" "/" "/product-flow" "/dashboard" "/products" "/products/[id]" "/workspaces" "/workspaces/[id]" "/modules/[id]" "/installations/[id]" "/learning-center" "/knowledge-fabric" "/oima" "/oima/meetings" "/oima/meetings/new" "/oima/meetings/[id]" "/localization" "/runtime"
 check_app "PITS_SHELL" "apps/pits-shell" "/" "/product-flow" "/projects" "/projects/[id]" "/projects/[id]/workboard" "/projects/[id]/work-items/[itemId]" "/localization" "/runtime"
+check_app "OIMA_SHELL" "apps/oima-shell" "/" "/meetings" "/meetings/new" "/meetings/[id]" "/analysis" "/clarification" "/dashboard" "/self-improvement" "/listener"
 
 if [ "$failures" -gt 0 ]; then
   printf '\nUI_ROUTE_MANIFEST_CHECK_FAILED failures=%s\n' "$failures" >&2
   exit 1
 fi
 
-printf '\nUI_ROUTE_MANIFEST_CHECK_PASSED OIS Console and PITS Shell Stage 1A/1C plus Stage 2A workboard, Stage 2B work item detail, Stage 2D localized product-flow routes, Stage 2D-R1 localization catalog routes, Stage 2E action-request panel route, Stage 2F Learning Center route, Stage 2G Knowledge Fabric route, Stage 2I OIMA route, Stage 2J OIMA Meeting Intake routes and Stage 2K OIMA Transcript Processing surfaces are present in production build artifacts.\n'
+printf '\nUI_ROUTE_MANIFEST_CHECK_PASSED OIS Console, PITS Shell and standalone OIMA Shell routes are present in production build artifacts, including Stage 2L OIMA app shell routes and planned placeholders.\n'

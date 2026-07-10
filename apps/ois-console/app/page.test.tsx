@@ -22,6 +22,7 @@ import WorkspaceDetailPage from "./workspaces/[id]/page";
 
 const coreApiUrl = "https://ois-nextgen.abacusai.cloud";
 const pitsPublicBaseUrl = "https://pits-ng.dmp247.com";
+const oimaPublicBaseUrl = "https://oima.dmp247.com";
 const dbEnvKey = ["DATABASE", "URL"].join("_");
 
 const healthPayload = {
@@ -1929,11 +1930,13 @@ describe("OIS Console product shell", () => {
   const previousCoreApiUrl = process.env.CORE_API_URL;
   const previousNextPublicCoreApiUrl = process.env.NEXT_PUBLIC_CORE_API_URL;
   const previousPitsPublicBaseUrl = process.env.PITS_PUBLIC_BASE_URL;
+  const previousOimaPublicBaseUrl = process.env.OIMA_PUBLIC_BASE_URL;
   const previousDbEnv = process.env[dbEnvKey];
 
   beforeEach(() => {
     process.env.CORE_API_URL = coreApiUrl;
     process.env.PITS_PUBLIC_BASE_URL = pitsPublicBaseUrl;
+    process.env.OIMA_PUBLIC_BASE_URL = oimaPublicBaseUrl;
     delete process.env.NEXT_PUBLIC_CORE_API_URL;
     delete process.env[dbEnvKey];
   });
@@ -1943,6 +1946,7 @@ describe("OIS Console product shell", () => {
     restoreEnv("CORE_API_URL", previousCoreApiUrl);
     restoreEnv("NEXT_PUBLIC_CORE_API_URL", previousNextPublicCoreApiUrl);
     restoreEnv("PITS_PUBLIC_BASE_URL", previousPitsPublicBaseUrl);
+    restoreEnv("OIMA_PUBLIC_BASE_URL", previousOimaPublicBaseUrl);
     restoreEnv(dbEnvKey, previousDbEnv);
   });
 
@@ -2219,121 +2223,77 @@ describe("OIS Console product shell", () => {
       "oima",
       OimaPage,
       [
-        "OIMA — Organizational Intelligence Meeting Agent",
+        "Open OIMA standalone app",
+        "OIMA product launcher",
+        "OIS Console remains Product Administration",
+        "OIMA is now a standalone Product Runtime app powered by OIS.",
+        "OIMA Console Launcher",
+        "OIMA - Organizational Intelligence Meeting Agent",
         "Powered by OIS Product",
-        "OIS understands the organization. OIMA understands the meeting.",
-        "OIS hiểu tổ chức. OIMA hiểu cuộc họp.",
-        "Product Boundary",
-        "MEETING_INTELLIGENCE_PRODUCT",
-        "PRODUCT_BOUNDARY_READY",
-        "MEETING_LIBRARY",
-        "TRANSCRIPT_FIRST_PIPELINE",
-        "Source Mode Contract",
-        "TRANSCRIPT_ONLY",
-        "AUDIO_ONLY",
-        "TRANSCRIPT_AND_AUDIO",
-        "LISTENER_CAPTURED",
-        "TRANSCRIPT_ONLY primary",
-        "Safety Boundary",
-        "NO_LIVE_SPEAKING_AGENT",
-        "NO_VOICE_CLONE",
-        "NO_IMPERSONATION",
-        "NO_AUTONOMOUS_DECISION",
-        "OIS Core Reuse Map",
-        "OIS Universal Knowledge API",
-        "OIMA Roadmap",
-        "OIMA-0 - Product Shell &amp; Boundary",
-        "OIMA-1 - Meeting Intake Foundation",
-        "RUNTIME_FOUNDATION_READY",
-        "OIMA-2 - Transcript Processing Foundation",
-        "TRANSCRIPT_PROCESSING_READY",
-        "OIMA-5 - Dashboard &amp; Monthly Report",
-        "OIMA-9 - Listener Mode",
-        "Placeholder Product Surfaces",
+        "OIS is the organizational intelligence backbone. OIMA is the meeting intelligence product powered by OIS.",
+        "Standalone app ready",
+        "Launcher / compatibility route",
+        "OIMA_APP_SHELL",
+        "OIMA_STANDALONE_APP_SHELL",
+        "STAGE_2L_STANDALONE_OIMA_APP_SHELL",
+        "Product Runtime separate from Product Administration",
+        "No fake meeting data",
+        "No LLM/OpenRouter calls",
+        "Open standalone OIMA app",
+        `${oimaPublicBaseUrl}/`,
+        "Service",
+        "ois-nextgen-oima-staging",
+        "Port",
+        "3002",
+        "OIMA-0",
+        "OIMA-1",
+        "OIMA-2",
+        "OIMA-9",
         "Meeting Library",
         "Upload Meeting",
-        "OIMA Product Overview",
-        "OIMA-2 transcript ready",
-        "Open Meeting Library",
-        "OIS is the organizational intelligence backbone. OIMA is the meeting intelligence product powered by OIS.",
-        "Transcript is primary; audio is optional.",
-        "Product code",
-        "Product name",
-        "Organizational Intelligence Meeting Agent",
-        "OVERVIEW",
-        "PRODUCT_BOUNDARY",
-        "KNOWLEDGE_API_LINKAGE",
-        "MEETING_INTAKE",
-        "TRANSCRIPT_PROCESSING",
-        "AUDIO_PROCESSING",
-        "OFFLINE_AGENT_ANALYSIS",
-        "SUBJECT_CLARIFICATION",
-        "SELF_IMPROVEMENT",
-        "Available now",
-        "Available now in OIMA-1",
-        "Available now in OIMA-2",
-        "Future permissioned recording only",
-        "Voice clone",
-        "Live speaking",
-        "Out of scope",
-        "OIMA Product Surface Empty States",
         "Agent Analysis",
         "Clarification Review",
         "Dashboard",
         "Self-Improvement Center",
+        "Listener Mode",
         "Planned / not runtime",
-        "Runtime enabled",
-        "No fake meeting data"
+        "Available now"
       ]
     ],
     [
       "oima meetings",
       OimaMeetingsPage,
       [
-        "OIMA Meeting Intake",
-        "Meeting Library",
-        "Meeting Intake Foundation",
-        "OIMA-2 available",
-        "MEETING_INTAKE",
-        "TRANSCRIPT_ONLY",
-        "TRANSCRIPT_AND_AUDIO",
-        "AUDIO_ONLY metadata",
-        "LISTENER_CAPTURED planned/not-runtime",
+        "Meeting Library moved to OIMA app",
+        "OIMA compatibility route",
+        "Use the standalone OIMA app for meeting runtime workflows.",
+        "OIMA Console Launcher",
+        "Open OIMA Meeting Library",
+        "OIMA_APP_SHELL",
+        "OIMA_STANDALONE_APP_SHELL",
+        "STAGE_2L_STANDALONE_OIMA_APP_SHELL",
+        "Product Runtime separate from Product Administration",
+        "No fake meeting data",
         "No LLM/OpenRouter calls",
-        "Registered meetings",
-        "Stage 2J Transcript Intake",
-        "READY_FOR_PROCESSING",
-        "Transcript present",
-        "Audio present",
-        "Open detail",
-        "Register meeting",
-        "No fake meeting analysis"
+        `${oimaPublicBaseUrl}/meetings`
       ]
     ],
     [
       "new oima meeting",
       NewOimaMeetingPage,
       [
-        "OIMA Meeting Intake",
-        "Upload / Register Meeting",
-        "Source Mode Contract",
-        "Transcript-first registration",
-        "TRANSCRIPT_ONLY supported",
-        "TRANSCRIPT_AND_AUDIO optional audio",
-        "AUDIO_ONLY needs review",
-        "LISTENER_CAPTURED planned/not-runtime",
-        "Safety Boundary",
-        "No analytics runtime",
-        "Transcript processing available after registration",
-        "No audio processing",
-        "No OIS Agent analysis",
-        "No voice clone",
+        "Upload Meeting moved to OIMA app",
+        "OIMA compatibility route",
+        "Transcript-first meeting registration now runs in the standalone OIMA app.",
+        "Open OIMA Upload / Register Meeting",
+        "OIMA Console Launcher",
+        "OIMA_APP_SHELL",
+        "OIMA_STANDALONE_APP_SHELL",
+        "STAGE_2L_STANDALONE_OIMA_APP_SHELL",
+        "Product Runtime separate from Product Administration",
+        "No fake meeting data",
         "No LLM/OpenRouter calls",
-        "Create Meeting Form",
-        "Transcript Source",
-        "Optional Audio Source",
-        "Register meeting",
-        "Ready for transcript-first meeting registration."
+        `${oimaPublicBaseUrl}/meetings/new`
       ]
     ],
     [
@@ -2397,33 +2357,24 @@ describe("OIS Console product shell", () => {
     expect(html).not.toContain(dbEnvKey);
   });
 
-  it("renders OIMA meeting detail with source files and planned next-step placeholders", async () => {
+  it("renders OIMA meeting detail compatibility route as a standalone app launcher", async () => {
     mockCoreApiFetch();
 
     const html = renderToStaticMarkup(await OimaMeetingDetailPage({ params: Promise.resolve({ id: "oima_meeting_stage_2j_demo" }) }));
 
-    expect(html).toContain("OIMA Meeting Detail");
-    expect(html).toContain("Stage 2J Transcript Intake");
-    expect(html).toContain("Meeting Metadata");
-    expect(html).toContain("TRANSCRIPT_AND_AUDIO");
-    expect(html).toContain("READY_FOR_PROCESSING");
-    expect(html).toContain("Transcript available");
-    expect(html).toContain("Audio available");
-    expect(html).toContain("Source Files");
-    expect(html).toContain("stage-2j-transcript.txt");
-    expect(html).toContain("stage-2j-audio.mp3");
-    expect(html).toContain("TRANSCRIPT_PROCESSING");
-    expect(html).toContain("Process Transcript");
-    expect(html).toContain("Transcript Timeline");
-    expect(html).toContain("Raw kickoff   text");
-    expect(html).toContain("Raw kickoff text");
-    expect(html).toContain("RAW transcript immutable");
-    expect(html).toContain("OIS Agent Analysis");
-    expect(html).toContain("Subject Clarification");
-    expect(html).toContain("Dashboard");
-    expect(html).toContain("Listener Mode");
-    expect(html).toContain("No fake meeting analysis");
-    expect(html).toContain("planned/not-runtime");
+    expect(html).toContain("Meeting Detail moved to OIMA app");
+    expect(html).toContain("Meeting detail and transcript processing now run in the standalone OIMA app.");
+    expect(html).toContain("Open OIMA Meeting Detail");
+    expect(html).toContain("OIMA Console Launcher");
+    expect(html).toContain("OIMA_APP_SHELL");
+    expect(html).toContain("OIMA_STANDALONE_APP_SHELL");
+    expect(html).toContain("STAGE_2L_STANDALONE_OIMA_APP_SHELL");
+    expect(html).toContain("Product Runtime separate from Product Administration");
+    expect(html).toContain("No fake meeting data");
+    expect(html).toContain("No LLM/OpenRouter calls");
+    expect(html).toContain(`${oimaPublicBaseUrl}/meetings/oima_meeting_stage_2j_demo`);
+    expect(html).not.toContain("Process Transcript");
+    expect(html).not.toContain("stage-2j-transcript.txt");
     expect(html).not.toContain(dbEnvKey);
   });
 

@@ -18,8 +18,8 @@
     { "productKey": "CUSTOM", "displayName": "Custom", "productType": "CUSTOM_PRODUCT", "defaultLearningScope": "ORGANIZATION", "lifecycle": "PLANNED" }
   ],
   "oimaProductBoundaryMetadata": {
-    "stage": "Stage 2K / OIMA-2",
-    "sourceReadyStage": "Stage 2K",
+    "stage": "Stage 2L / OIMA-A0",
+    "sourceReadyStage": "Stage 2L",
     "productCode": "OIMA",
     "productName": "Organizational Intelligence Meeting Agent",
     "poweredBy": "OIS",
@@ -36,6 +36,11 @@
     "audioInput": "OPTIONAL_METADATA_REGISTRATION",
     "meetingIntake": "RUNTIME_FOUNDATION_READY",
     "transcriptProcessing": "TRANSCRIPT_PROCESSING_READY",
+    "standaloneAppShell": "READY",
+    "standaloneAppPath": "apps/oima-shell",
+    "standaloneServiceName": "ois-nextgen-oima-staging",
+    "standalonePort": 3002,
+    "customDomainFoundation": "https://oima.dmp247.com",
     "rawTranscriptImmutability": "MANDATORY",
     "normalizedTranscriptVersioning": "SEPARATE_FROM_RAW",
     "audioProcessing": "PLANNED_NOT_RUNTIME",

@@ -52,6 +52,7 @@ Stage 0T-A corrected the UI deployment model:
 - Stage 2I / OIMA-0 hardens the OIMA product shell and boundary contract by exposing `productCode`, `productName`, current/planned runtime capabilities and empty-state product surfaces while keeping meeting upload, transcript processing, audio processing, Listener Mode runtime, voice clone and LLM calls out of scope. It adds no migration or seed requirement.
 - Stage 2J / OIMA-1 adds the first real OIMA Meeting Intake foundation, backed by ADR 0007, a versioned Prisma migration, `/platform/oima/meetings` contracts and OIS `/oima/meetings` routes. It supports transcript-first meeting/source-file metadata registration with optional audio metadata; it does not add binary file storage, transcript processing, audio processing, Listener Mode runtime, voice clone, fake analytics or LLM calls.
 - Stage 2K / OIMA-2 adds the OIMA Transcript Processing foundation, backed by ADR 0008, a versioned Prisma migration, immutable raw transcript versions, separate normalized transcript versions, deterministic parse runs, ordered segments, warnings, `/platform/oima/transcripts/contract` and `/platform/oima/meetings/:id/transcript/*` routes. It does not add audio processing, Listener Mode runtime, voice clone, fake analytics, issue/decision/action/risk extraction or LLM calls.
+- Stage 2L / OIMA-A0 adds the standalone OIMA app shell at `apps/oima-shell` (`@ois/oima-shell`), service `ois-nextgen-oima-staging`, port `3002` and Cloudflare Tunnel hostname foundation `https://oima.dmp247.com`. OIS Console `/oima*` remains a launcher/compatibility surface. It adds no schema, migration, seed, data silo, duplicate Core API, audio runtime, Listener Mode, voice clone or LLM/OpenRouter call.
 
 Use separate App Shells for UI staging unless a later owner-approved Abacus feature explicitly supersedes this contract.
 
@@ -60,14 +61,16 @@ Use separate App Shells for UI staging unless a later owner-approved Abacus feat
 | Core API | `pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @ois/core-api build` | `pnpm --filter @ois/core-api start` | `/health` |
 | OIS Console | `pnpm install --frozen-lockfile && pnpm --filter @ois/ois-console build` | `pnpm --filter @ois/ois-console start` | `/` |
 | PITS Shell | `pnpm install --frozen-lockfile && pnpm --filter @ois/pits-shell build` | `pnpm --filter @ois/pits-shell start` | `/` |
+| OIMA Shell | `pnpm install --frozen-lockfile && pnpm --filter @ois/oima-shell build` | `pnpm --filter @ois/oima-shell start` | `/` |
 
 Recommended service names:
 
 - `ois-nextgen-core-api-staging`
 - `ois-nextgen-console-staging`
 - `ois-nextgen-pits-staging`
+- `ois-nextgen-oima-staging`
 
-Use the same release ref for all three services.
+Use the same release ref for all four services.
 
 ## Prerequisites
 
@@ -2384,6 +2387,8 @@ Stage 2J / OIMA-1 requires applying versioned migration `202607090004_stage_2j_o
 
 Stage 2K / OIMA-2 requires applying versioned migration `202607090005_stage_2k_oima_transcript_processing_foundation` to the non-production staging database. It adds no seed requirement. Redeploy Core API/OIS Console plus updated ops scripts, then rerun public/local smoke scripts to verify the OIMA transcript processing contract and OIMA UI transcript markers without requiring seeded meeting transcript records.
 
+Stage 2L / OIMA-A0 requires no new Prisma migration and no seed requirement. Redeploy Core API, OIS Console, PITS Shell and the new OIMA Shell service, then add Cloudflare public hostname `oima.dmp247.com` to the existing `ois-nextgen-abacus` tunnel with service URL `http://127.0.0.1:3002`. Rerun `bash ops/abacus/status-public-staging-runtime.sh` and `bash ops/abacus/check-public-staging-endpoints.sh`.
+
 ## Stop Conditions
 
 - Missing migration evidence.
@@ -2391,8 +2396,10 @@ Stage 2K / OIMA-2 requires applying versioned migration `202607090005_stage_2k_o
 - Stage 2H runtime sync is attempted without applying versioned migration `202607090003_stage_2h_oima_product_boundary` and rerunning the idempotent seed on the non-production staging database.
 - Stage 2J runtime sync is attempted without applying versioned migration `202607090004_stage_2j_oima_meeting_intake_foundation` to the non-production staging database.
 - Stage 2K runtime sync is attempted without applying versioned migration `202607090005_stage_2k_oima_transcript_processing_foundation` to the non-production staging database.
+- Stage 2L runtime sync attempts a new schema change, seed data change or separate OIMA database/backend without a documented later stage.
 - A knowledge route enables auto-promotion, a canonical knowledge mutation endpoint or widget direct canonical writes.
 - An OIMA route enables binary file storage, audio processing, Listener Mode runtime, live speaking, voice clone, impersonation, autonomous decisions, fake analytics, issue/decision/action/risk extraction, real LLM/OpenRouter calls or direct canonical knowledge writes outside the explicit Stage 2K meeting/source-file/transcript evidence boundary.
+- The standalone OIMA app imports Prisma, reads `DATABASE_URL`, duplicates Core API logic or writes directly to OIMA tables.
 - Abacus access is limited to project/chat/task editing and does not expose staging env/secrets/deploy configuration.
 - Staging-only mock database mode, mock storage mode, staging subdomain/path or AI provider config is missing.
 - Stage 0F-R3 owner checklist is incomplete or contains real secret values.

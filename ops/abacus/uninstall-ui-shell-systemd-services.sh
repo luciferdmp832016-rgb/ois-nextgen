@@ -14,9 +14,10 @@ usage() {
   cat <<'USAGE'
 Usage: bash ops/abacus/uninstall-ui-shell-systemd-services.sh --confirm
 
-Removes only the Stage 0W-A OIS/PITS UI shell systemd units:
+Removes only the OIS/PITS/OIMA UI shell systemd units:
 - ois-nextgen-ois-console
 - ois-nextgen-pits-shell
+- ois-nextgen-oima-staging
 
 Does not stop Core API, cloudflared, nginx, DBs, DNS or legacy resources.
 USAGE
@@ -49,10 +50,10 @@ public_staging_print_safety
 printf '%s\n' "Safety: sudo is used only for systemd stop/disable/remove/daemon-reload."
 printf '%s\n' "Safety: Core API and cloudflared are not stopped or modified."
 
-sudo systemctl stop "$OIS_CONSOLE_SERVICE" "$PITS_SHELL_SERVICE" || true
-sudo systemctl disable "$OIS_CONSOLE_SERVICE" "$PITS_SHELL_SERVICE" || true
-sudo rm -f "$SYSTEMD_DIR/$OIS_CONSOLE_SERVICE.service" "$SYSTEMD_DIR/$PITS_SHELL_SERVICE.service"
+sudo systemctl stop "$OIS_CONSOLE_SERVICE" "$PITS_SHELL_SERVICE" "$OIMA_SHELL_SERVICE" || true
+sudo systemctl disable "$OIS_CONSOLE_SERVICE" "$PITS_SHELL_SERVICE" "$OIMA_SHELL_SERVICE" || true
+sudo rm -f "$SYSTEMD_DIR/$OIS_CONSOLE_SERVICE.service" "$SYSTEMD_DIR/$PITS_SHELL_SERVICE.service" "$SYSTEMD_DIR/$OIMA_SHELL_SERVICE.service"
 sudo systemctl daemon-reload
-sudo systemctl reset-failed "$OIS_CONSOLE_SERVICE" "$PITS_SHELL_SERVICE" || true
+sudo systemctl reset-failed "$OIS_CONSOLE_SERVICE" "$PITS_SHELL_SERVICE" "$OIMA_SHELL_SERVICE" || true
 
-printf '\nUI_SYSTEMD_UNINSTALL_PASSED OIS Console and PITS Shell systemd units removed.\n'
+printf '\nUI_SYSTEMD_UNINSTALL_PASSED OIS Console, PITS Shell and OIMA Shell systemd units removed.\n'

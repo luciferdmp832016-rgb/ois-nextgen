@@ -57,6 +57,22 @@ Delivered:
 - Meeting Detail transcript processing UI.
 - No fake analysis, no issue/decision/action/risk extraction, no audio processing, no Listener Mode, no voice clone and no LLM/OpenRouter calls.
 
+## OIMA-A0: Standalone App Shell & Custom Domain Foundation
+
+Phase: Stage 2L
+
+Status: `STANDALONE_APP_SHELL_READY`
+
+Delivered:
+
+- Standalone OIMA frontend app at `apps/oima-shell`.
+- Package/runtime identity `@ois/oima-shell`, `OIMA_APP_SHELL`, port `3002`.
+- Public custom domain foundation `https://oima.dmp247.com` through the existing Cloudflare Tunnel pattern.
+- Standalone routes `/`, `/meetings`, `/meetings/new`, `/meetings/[id]`, `/analysis`, `/clarification`, `/dashboard`, `/self-improvement` and `/listener`.
+- OIS Console `/oima` compatibility launcher routes that send users to the standalone OIMA app.
+- Abacus restart/status/smoke/route-manifest coverage for the standalone OIMA service.
+- No new DB silo, no duplicate Core API, no fake meeting data, no LLM/OpenRouter call, no audio runtime, no Listener Mode and no voice clone.
+
 ## OIMA-3: OIS Agent Offline Analysis
 
 Phase: Next recommended stage

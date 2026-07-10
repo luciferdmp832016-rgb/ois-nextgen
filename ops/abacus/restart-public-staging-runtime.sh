@@ -20,6 +20,7 @@ Restarts the durable public staging app services:
 - ois-nextgen-core-api
 - ois-nextgen-ois-console
 - ois-nextgen-pits-shell
+- ois-nextgen-oima-staging
 
 cloudflared is checked but not restarted unless --include-cloudflared is passed.
 USAGE
@@ -53,6 +54,7 @@ report_ui_ports() {
 
   public_staging_report_port_listener "3000" "OIS_CONSOLE_${stage_label}"
   public_staging_report_port_listener "3001" "PITS_SHELL_${stage_label}"
+  public_staging_report_port_listener "3002" "OIMA_SHELL_${stage_label}"
 }
 
 report_orphan_suspect_if_needed() {
@@ -85,8 +87,15 @@ cleanup_ui_port_orphans() {
     fi
   fi
 
+  if public_staging_port_has_listener "3002"; then
+    needs_cleanup=true
+    if ! report_orphan_suspect_if_needed "$OIMA_SHELL_SERVICE" "3002" "after_systemd_stop"; then
+      printf 'UI_PORT_LISTENER_REMAINS service=%s port=3002 label=after_systemd_stop\n' "$OIMA_SHELL_SERVICE" >&2
+    fi
+  fi
+
   if [ "$needs_cleanup" != true ]; then
-    printf '%s\n' "UI_ORPHAN_PORT_CLEANUP_SKIPPED no listeners remained on ports 3000/3001 after systemd stop"
+    printf '%s\n' "UI_ORPHAN_PORT_CLEANUP_SKIPPED no listeners remained on ports 3000/3001/3002 after systemd stop"
     return 0
   fi
 
@@ -95,9 +104,9 @@ cleanup_ui_port_orphans() {
     return 1
   fi
 
-  printf '%s\n' "UI_ORPHAN_PORT_CLEANUP_START killing only listeners bound to 3000/tcp and 3001/tcp"
-  if sudo fuser -k 3000/tcp 3001/tcp; then
-    printf '%s\n' "UI_ORPHAN_PORT_CLEANUP_PASSED fuser killed only 3000/tcp and 3001/tcp listeners"
+  printf '%s\n' "UI_ORPHAN_PORT_CLEANUP_START killing only listeners bound to 3000/tcp, 3001/tcp and 3002/tcp"
+  if sudo fuser -k 3000/tcp 3001/tcp 3002/tcp; then
+    printf '%s\n' "UI_ORPHAN_PORT_CLEANUP_PASSED fuser killed only 3000/tcp, 3001/tcp and 3002/tcp listeners"
   else
     printf '%s\n' "UI_ORPHAN_PORT_CLEANUP_WARN fuser returned non-zero; ports will be rechecked before start" >&2
   fi
@@ -117,11 +126,16 @@ verify_local_product_routes() {
   public_staging_wait_for_route "LOCAL_ROUTE_READY" "PITS_SHELL_LOCAL_PROJECTS" "$PITS_SHELL_LOCAL_URL/projects" "Project Selector" "EMERALD_PRECINCT_DEMO" "DEMO DATA - NOT PRODUCTION" || record_failure "PITS Shell local projects route timeout"
   public_staging_wait_for_route "LOCAL_ROUTE_READY" "PITS_SHELL_LOCAL_LOCALIZATION" "$PITS_SHELL_LOCAL_URL/localization" "Localization Catalog" "Read-only Localization Catalog" "Browser editing is not enabled yet" "PITS_SHELL" || record_failure "PITS Shell local localization route timeout"
   public_staging_wait_for_route "LOCAL_ROUTE_READY" "PITS_SHELL_LOCAL_RUNTIME" "$PITS_SHELL_LOCAL_URL/runtime" "Runtime Status" "Core API source:" "PITS_SHELL" || record_failure "PITS Shell local runtime route timeout"
+
+  public_staging_wait_for_root_shell "LOCAL_UI_READY" "OIMA_SHELL_LOCAL" "$OIMA_SHELL_LOCAL_URL" "OIMA_APP_SHELL" "OIMA" || record_failure "OIMA Shell local readiness timeout"
+  public_staging_wait_for_route "LOCAL_ROUTE_READY" "OIMA_SHELL_LOCAL_MEETINGS" "$OIMA_SHELL_LOCAL_URL/meetings" "OIMA Meeting Intake" "Meeting Library" "MEETING_INTAKE" "OIMA_APP_SHELL" || record_failure "OIMA Shell local meetings route timeout"
+  public_staging_wait_for_route "LOCAL_ROUTE_READY" "OIMA_SHELL_LOCAL_MEETINGS_NEW" "$OIMA_SHELL_LOCAL_URL/meetings/new" "Upload / Register Meeting" "Create Meeting Form" "TRANSCRIPT_ONLY supported" "OIMA_APP_SHELL" || record_failure "OIMA Shell local new meeting route timeout"
+  public_staging_wait_for_route "LOCAL_ROUTE_READY" "OIMA_SHELL_LOCAL_ANALYSIS" "$OIMA_SHELL_LOCAL_URL/analysis" "Agent Analysis" "Planned / not runtime" "No LLM/OpenRouter calls" "OIMA_APP_SHELL" || record_failure "OIMA Shell local analysis route timeout"
 }
 
 printf '%s\n' "Restarting OIS NextGen public staging runtime."
 public_staging_print_safety
-printf '%s\n' "Safety: sudo is used only for systemd operations and fuser cleanup on ports 3000/3001."
+printf '%s\n' "Safety: sudo is used only for systemd operations and fuser cleanup on ports 3000/3001/3002."
 printf '%s\n' "Safety: cloudflared is not restarted unless --include-cloudflared is passed."
 printf '%s\n' "Safety: Core API port 4000 and cloudflared are never killed by UI orphan cleanup."
 
@@ -148,8 +162,8 @@ if ! wait_for_core_api_restart_ready "$CORE_API_LOCAL_BASE" "$CORE_API_URL"; the
   record_failure "Core API restart readiness timeout"
 fi
 
-printf 'SYSTEMD_STOP %s %s\n' "$OIS_CONSOLE_SERVICE" "$PITS_SHELL_SERVICE"
-if ! sudo systemctl stop "$OIS_CONSOLE_SERVICE" "$PITS_SHELL_SERVICE"; then
+printf 'SYSTEMD_STOP %s %s %s\n' "$OIS_CONSOLE_SERVICE" "$PITS_SHELL_SERVICE" "$OIMA_SHELL_SERVICE"
+if ! sudo systemctl stop "$OIS_CONSOLE_SERVICE" "$PITS_SHELL_SERVICE" "$OIMA_SHELL_SERVICE"; then
   record_failure "UI systemd services did not stop cleanly"
 fi
 
@@ -166,12 +180,12 @@ report_ui_ports "BEFORE_ORPHAN_CLEANUP"
 cleanup_ui_port_orphans
 report_ui_ports "AFTER_ORPHAN_CLEANUP"
 
-if public_staging_port_has_listener "3000" || public_staging_port_has_listener "3001"; then
-  record_failure "UI port listener remained on 3000/3001 after orphan cleanup"
+if public_staging_port_has_listener "3000" || public_staging_port_has_listener "3001" || public_staging_port_has_listener "3002"; then
+  record_failure "UI port listener remained on 3000/3001/3002 after orphan cleanup"
 fi
 
-printf 'SYSTEMD_RESET_FAILED %s %s\n' "$OIS_CONSOLE_SERVICE" "$PITS_SHELL_SERVICE"
-sudo systemctl reset-failed "$OIS_CONSOLE_SERVICE" "$PITS_SHELL_SERVICE" || true
+printf 'SYSTEMD_RESET_FAILED %s %s %s\n' "$OIS_CONSOLE_SERVICE" "$PITS_SHELL_SERVICE" "$OIMA_SHELL_SERVICE"
+sudo systemctl reset-failed "$OIS_CONSOLE_SERVICE" "$PITS_SHELL_SERVICE" "$OIMA_SHELL_SERVICE" || true
 
 printf 'SYSTEMD_START %s\n' "$OIS_CONSOLE_SERVICE"
 if ! sudo systemctl start "$OIS_CONSOLE_SERVICE"; then
@@ -184,6 +198,12 @@ if ! sudo systemctl start "$PITS_SHELL_SERVICE"; then
   record_failure "$PITS_SHELL_SERVICE failed to start"
 fi
 sudo systemctl is-active --quiet "$PITS_SHELL_SERVICE" || record_failure "$PITS_SHELL_SERVICE is not active after start"
+
+printf 'SYSTEMD_START %s\n' "$OIMA_SHELL_SERVICE"
+if ! sudo systemctl start "$OIMA_SHELL_SERVICE"; then
+  record_failure "$OIMA_SHELL_SERVICE failed to start"
+fi
+sudo systemctl is-active --quiet "$OIMA_SHELL_SERVICE" || record_failure "$OIMA_SHELL_SERVICE is not active after start"
 
 report_ui_ports "AFTER_SYSTEMD_START"
 
@@ -202,4 +222,4 @@ if [ "$failures" -gt 0 ]; then
   exit 1
 fi
 
-printf '\nPUBLIC_STAGING_RESTART_PASSED Core API, OIS Console, PITS Shell and public endpoints verified.\n'
+printf '\nPUBLIC_STAGING_RESTART_PASSED Core API, OIS Console, PITS Shell, OIMA Shell and public endpoints verified.\n'

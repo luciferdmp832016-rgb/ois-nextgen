@@ -686,7 +686,7 @@ export function buildDeterministicKnowledgeContext(input: {
 
 export const architectureMindmapManifest = {
   manifestVersion: "1.0",
-  stage: "Stage 2H",
+  stage: "Stage 2L",
   title: "OIS Ecosystem Architecture Map",
   oisCoreLayers: [
     "Platform Kernel",
@@ -718,6 +718,11 @@ export const architectureMindmapManifest = {
       key: "stage_2h_oima_boundary_flow",
       label: "Stage 2H OIMA Product Boundary",
       nodes: ["OIMA Meeting Shell", "Transcript-first Intake", "Universal Knowledge API", "OIS Agent Offline Analysis", "Learning Governance Review"]
+    },
+    {
+      key: "stage_2l_oima_app_shell_flow",
+      label: "Stage 2L Standalone OIMA App Shell",
+      nodes: ["OIMA_APP_SHELL", "apps/oima-shell", "oima.dmp247.com", "Core API reuse", "OIS Console launcher"]
     }
   ],
   apiContracts: [
@@ -732,6 +737,9 @@ export const architectureMindmapManifest = {
     "/platform/oima/source-modes",
     "/platform/oima/roadmap",
     "/platform/oima/boundary",
+    "https://oima.dmp247.com",
+    "https://oima.dmp247.com/meetings",
+    "https://oima.dmp247.com/meetings/new",
     "/platform/architecture/mindmap"
   ],
   governanceCheckpoints: [
@@ -739,6 +747,7 @@ export const architectureMindmapManifest = {
     "No auto-promotion in Stage 2G",
     "OIMA transcript-first and audio-optional",
     "OIMA is not a separate knowledge silo",
+    "OIMA has standalone app shell and reuses Core API",
     "No live speaking agent, voice clone or impersonation",
     "Evidence required for canonical claims",
     "KEIHB is projection/publishing product only",

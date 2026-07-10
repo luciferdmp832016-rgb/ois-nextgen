@@ -25,7 +25,8 @@ const serviceIdentity = {
 const publicRuntimeConfig = {
   coreApiBaseUrl: "https://ois-nextgen.abacusai.cloud",
   oisConsoleBaseUrl: "https://ois-ng.dmp247.com",
-  pitsShellBaseUrl: "https://pits-ng.dmp247.com"
+  pitsShellBaseUrl: "https://pits-ng.dmp247.com",
+  oimaShellBaseUrl: "https://oima.dmp247.com"
 } as const;
 
 function registryMetadata() {
@@ -570,7 +571,8 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
   const approvedRuntimeBaseUrls = [
     publicRuntimeConfig.coreApiBaseUrl,
     publicRuntimeConfig.oisConsoleBaseUrl,
-    publicRuntimeConfig.pitsShellBaseUrl
+    publicRuntimeConfig.pitsShellBaseUrl,
+    publicRuntimeConfig.oimaShellBaseUrl
   ];
 
   function publicRuntimeUrl(baseUrl: string, path: string) {
@@ -589,6 +591,10 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
 
   function pitsShellUrl(path: string) {
     return publicRuntimeUrl(publicRuntimeConfig.pitsShellBaseUrl, path);
+  }
+
+  function oimaShellUrl(path: string) {
+    return publicRuntimeUrl(publicRuntimeConfig.oimaShellBaseUrl, path);
   }
 
   function healthCheck(
@@ -774,7 +780,9 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
           ? publicRuntimeConfig.oisConsoleBaseUrl
           : product.code === "PITS"
             ? publicRuntimeConfig.pitsShellBaseUrl
-            : null;
+            : product.code === "OIMA"
+              ? publicRuntimeConfig.oimaShellBaseUrl
+              : null;
       const projectRuntimeUrl = firstProjectId ? pitsShellUrl(`/projects/${encodeURIComponent(firstProjectId)}`) : null;
 
       return buildHealthEntity({
@@ -787,7 +795,8 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
           coreApiDetail: coreApiUrl(productPath),
           oisConsoleDetail: oisConsoleUrl(oisProductPath),
           productRuntime: productRuntimeUrl,
-          pitsProject: projectRuntimeUrl
+          pitsProject: projectRuntimeUrl,
+          oimaApp: product.code === "OIMA" ? oimaShellUrl("/") : null
         },
         checks: [
           healthCheck("Registry row", "Configured", Boolean(product.id && product.code), true, "Product registry row is present."),
@@ -834,7 +843,7 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
                 "Reachable",
                 true,
                 false,
-                "Product runtime base URL is configured for this Stage 1D product.",
+            "Product runtime base URL is configured for this staging product.",
                 productRuntimeUrl
               )
             : healthCheck(
@@ -842,7 +851,7 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
                 "Not applicable",
                 true,
                 false,
-                "No dedicated public runtime URL is active for this product in Stage 1D."
+                "No dedicated public runtime URL is active for this product in this stage."
               ),
           projectRuntimeUrl
             ? healthCheck(
@@ -1183,7 +1192,7 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
           ok: stagingSafe,
           required: true,
           reason: stagingSafe ? "All configured URLs use approved staging hosts." : "A configured URL does not use an approved staging host.",
-          ownerAction: stagingSafe ? null : "Replace non-staging links with approved OIS, PITS or Core API staging URLs."
+          ownerAction: stagingSafe ? null : "Replace non-staging links with approved OIS, PITS, OIMA or Core API staging URLs."
         })
       ];
     };
@@ -1202,7 +1211,7 @@ export function buildCoreApi(options: BuildCoreApiOptions = {}) {
       const links = findHealthLinks("products", product.id);
       const productRuntimeUrl = links.productRuntime ?? null;
       const pitsProjectUrl = links.pitsProject ?? null;
-      const runtimeRequired = product.code === "OIS" || product.code === "PITS";
+      const runtimeRequired = product.code === "OIS" || product.code === "PITS" || product.code === "OIMA";
       const runtimeReady = runtimeRequired ? Boolean(productRuntimeUrl || pitsProjectUrl) : true;
 
       return buildReadinessEntity({

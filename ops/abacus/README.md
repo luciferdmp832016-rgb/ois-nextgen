@@ -16,18 +16,18 @@ bash ops/abacus/status.sh
 | `status.sh` | Shows repo branch/commit/status, Core API systemd status, local/public health, local/public platform overview and seeded counts. | No. Read-only. |
 | `check-live-endpoints.sh` | Checks active OIS NextGen public staging endpoints only. Legacy probes require `--include-legacy-readonly`. | No. Read-only. |
 | `safe-restart-core-api.sh` | Restarts `ois-nextgen-core-api`, waits for local `/health`, then verifies public `/health` and local/public `/platform/overview`. | Yes, service restart only. |
-| `runtime-sync.sh` | Fetches/pulls the integration branch, runs install/lint/typecheck/test, cleans generated OIS/PITS `.next` folders before build, verifies UI route manifests, then restarts Core API or all public staging services. | Yes, source sync and service restart only. |
-| `start-ui-demo-shells.sh` | Builds and starts OIS Console on port 3000 and PITS Shell on port 3001 as temporary `nohup` demo processes. | Yes, temporary UI demo processes only. |
-| `status-ui-demo-shells.sh` | Checks temporary OIS Console/PITS demo PIDs, local HTTP 200 pages, expected shell markers and seeded Core API data; checks preview URLs when `PREVIEW_URL` or `APP_ORIGIN` is available. | No. Read-only. |
-| `stop-ui-demo-shells.sh` | Stops only the temporary OIS Console and PITS Shell demo processes recorded by PID files. | Yes, stops UI demo processes only. |
-| `restart-ui-demo-shells.sh` | Stops, starts and verifies both temporary UI demo shell processes. | Yes, temporary UI demo processes only. |
-| `install-ui-shell-systemd-services.sh` | Installs and starts durable systemd services for OIS Console and PITS Shell public staging shells. | Yes, UI systemd units only. |
-| `uninstall-ui-shell-systemd-services.sh` | Stops, disables and removes only the OIS Console/PITS Shell public staging systemd units. Requires `--confirm`. | Yes, UI systemd units only. |
-| `restart-public-staging-runtime.sh` | Restarts Core API, stops OIS/PITS UI services, stops legacy temporary UI demo processes, removes only orphan listeners on `3000/tcp` and `3001/tcp`, starts UI services, then verifies local/public staging endpoints. Does not restart `cloudflared` unless `--include-cloudflared` is passed. | Yes, service restart and UI port cleanup only. |
-| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS UI services, token-safe `cloudflared` status, local loopback URLs, public staging URLs, Stage 1B registry endpoints, Stage 1C registry detail routes, Stage 1D health markers, Stage 1E readiness markers, Stage 1F cockpit/UAT markers, Stage 1G shell markers, Stage 1H owner-first design markers, Stage 1I owner-review safe action-boundary markers, Stage 1J audit/admin permission model markers, Stage 1K product UAT/gap-map markers, Stage 2A/2B PITS workboard/detail markers, Stage 2D localization/product-flow markers and Stage 2E action-request markers. | No. Read-only. |
-| `check-public-staging-endpoints.sh` | Checks public Core API, registry, registry health, registry readiness, owner review, admin boundary, product UAT, PITS workboard/detail, OIS/PITS product-flow and OIS/PITS staging endpoints for HTTP 200, product markers, Core API URL, seeded counts, Stage 1F cockpit/UAT markers, Stage 1G shell markers, Stage 1H owner-first design markers, Stage 1I safe action-boundary markers, Stage 1J admin/audit permission markers, Stage 1K product journey/gap-map markers, Stage 2A/2B workboard/detail markers, Stage 2D localization/product-flow markers and forbidden localhost/legacy links on read-only surfaces. | No. Read-only. |
-| `verify-ui-route-manifests.sh` | Checks production `.next` route manifests and server entries for every Stage 1A route plus Stage 1C dynamic detail routes, Stage 2A/2B PITS routes and Stage 2D product-flow routes. | No. Read-only build artifact check. |
-| `enable-product-subdomain-demo-routes.sh` | Adds a dedicated nginx host-routing config for `ois-ng.dmp247.com` -> port 3000 and `pits-ng.dmp247.com` -> port 3001. | Yes, nginx config only. |
+| `runtime-sync.sh` | Fetches/pulls the integration branch, runs install/lint/typecheck/test, cleans generated OIS/PITS/OIMA `.next` folders before build, verifies UI route manifests, then restarts Core API or all public staging services. | Yes, source sync and service restart only. |
+| `start-ui-demo-shells.sh` | Builds and starts OIS Console on port 3000, PITS Shell on port 3001 and OIMA Shell on port 3002 as temporary `nohup` demo processes. | Yes, temporary UI demo processes only. |
+| `status-ui-demo-shells.sh` | Checks temporary OIS/PITS/OIMA demo PIDs, local HTTP 200 pages, expected shell markers and seeded Core API data; checks preview URLs when `PREVIEW_URL` or `APP_ORIGIN` is available. | No. Read-only. |
+| `stop-ui-demo-shells.sh` | Stops only the temporary OIS Console, PITS Shell and OIMA Shell demo processes recorded by PID files. | Yes, stops UI demo processes only. |
+| `restart-ui-demo-shells.sh` | Stops, starts and verifies all temporary UI demo shell processes. | Yes, temporary UI demo processes only. |
+| `install-ui-shell-systemd-services.sh` | Installs and starts durable systemd services for OIS Console, PITS Shell and OIMA Shell public staging shells. | Yes, UI systemd units only. |
+| `uninstall-ui-shell-systemd-services.sh` | Stops, disables and removes only the OIS Console/PITS/OIMA public staging systemd units. Requires `--confirm`. | Yes, UI systemd units only. |
+| `restart-public-staging-runtime.sh` | Restarts Core API, stops OIS/PITS/OIMA UI services, stops legacy temporary UI demo processes, removes only orphan listeners on `3000/tcp`, `3001/tcp` and `3002/tcp`, starts UI services, then verifies local/public staging endpoints. Does not restart `cloudflared` unless `--include-cloudflared` is passed. | Yes, service restart and UI port cleanup only. |
+| `status-public-staging-runtime.sh` | Checks Core API, OIS/PITS/OIMA UI services, token-safe `cloudflared` status, local loopback URLs, public staging URLs, Stage 1B+ registry/governance markers, Stage 2A/2B PITS markers, Stage 2D+ OIS/PITS markers, Stage 2J/2K OIMA API markers and Stage 2L standalone OIMA shell markers. | No. Read-only. |
+| `check-public-staging-endpoints.sh` | Checks public Core API, registry, registry health, registry readiness, owner review, admin boundary, product UAT, PITS routes, OIS/PITS staging endpoints, OIMA API contracts and standalone OIMA `oima.dmp247.com` root/meeting/planned routes for HTTP 200 and truthful markers. | No. Read-only. |
+| `verify-ui-route-manifests.sh` | Checks production `.next` route manifests and server entries for OIS, PITS and standalone OIMA routes, including OIMA meeting and planned placeholder routes. | No. Read-only build artifact check. |
+| `enable-product-subdomain-demo-routes.sh` | Adds a dedicated nginx host-routing config for `ois-ng.dmp247.com` -> port 3000, `pits-ng.dmp247.com` -> port 3001 and `oima.dmp247.com` -> port 3002. | Yes, nginx config only. |
 | `status-product-subdomain-demo-routes.sh` | Checks local Host-header product subdomain routing and optional public DNS/TLS routes. | No. Read-only. |
 | `disable-product-subdomain-demo-routes.sh` | Removes only the Stage 0U-A managed nginx product-subdomain config. | Yes, nginx config only. |
 | `package-pits-shell-upload-bundle.sh` | Creates `artifacts/abacus/pits-shell-abacus-upload-bundle.zip` for direct PITS Shell App Shell source upload. | No. Local packaging only. |
@@ -45,6 +45,7 @@ Stage 0S-B adds temporary preview operations for two separate UI shells:
 |---|---|---:|---|
 | OIS Console | `@ois/ois-console` | 3000 | `https://ois-nextgen.abacusai.cloud` |
 | PITS Shell | `@ois/pits-shell` | 3001 | `https://ois-nextgen.abacusai.cloud` |
+| OIMA Shell | `@ois/oima-shell` | 3002 | `https://ois-nextgen.abacusai.cloud` |
 
 The UI demo scripts intentionally use `nohup` plus PID files under `.abacus-ui-demo/` instead of systemd. This is temporary preview/demo operation only and does not modify nginx, the Core API systemd service, DB schema, seed data or legacy resources.
 
@@ -55,6 +56,7 @@ Safe environment passed to both UI shells:
 - `NEXT_TELEMETRY_DISABLED=1`
 - `PORT=3000` for OIS Console
 - `PORT=3001` for PITS Shell
+- `PORT=3002` for OIMA Shell
 
 The scripts explicitly unset `DATABASE_URL` and `ABACUS_DATABASE_URL` for UI shell build/start commands.
 
@@ -86,11 +88,13 @@ Expected local URLs:
 
 - `http://127.0.0.1:3000/` for OIS Console.
 - `http://127.0.0.1:3001/` for PITS Shell.
+- `http://127.0.0.1:3002/` for OIMA Shell.
 
 Expected Abacus preview URLs, when `PREVIEW_URL` or `APP_ORIGIN` is available:
 
 - `<preview-base>-3000.../` for OIS Console.
 - `<preview-base>-3001.../` for PITS Shell.
+- `<preview-base>-3002.../` for OIMA Shell.
 
 The status script verifies HTTP 200, product markers and seeded Platform Kernel counts in each UI page. It does not probe legacy endpoints.
 
@@ -102,12 +106,14 @@ Stage 0U-A adds a SuperComputer nginx host-routing demo for owner-approved stagi
 |---|---|---|
 | `ois-ng.dmp247.com` | `http://127.0.0.1:3000` | OIS Console |
 | `pits-ng.dmp247.com` | `http://127.0.0.1:3001` | PITS Shell |
+| `oima.dmp247.com` | `http://127.0.0.1:3002` | OIMA Shell |
 
 DNS principle:
 
 - DNS CNAME maps hostnames only, not URL paths.
 - `ois-ng.dmp247.com` may CNAME to `ois-nextgen.abacusai.cloud`.
 - `pits-ng.dmp247.com` may CNAME to `ois-nextgen.abacusai.cloud`.
+- `oima.dmp247.com` may CNAME to the Cloudflare Tunnel target for the existing `ois-nextgen-abacus` tunnel.
 - DNS cannot map `ois-ng.dmp247.com` to `ois-nextgen.abacusai.cloud/ois`.
 - Path and product routing are nginx/app concerns.
 
@@ -151,7 +157,7 @@ These scripts do not modify DNS, `ois.dmp247.com`, `oisys.abacusai.app`, Core AP
 
 Stage 0V-A documents the Cloudflare Tunnel path for public custom staging subdomains after Abacus confirmed SuperComputer custom hostnames are not supported directly.
 
-Stage 0V-B/C verifies tunnel `ois-nextgen-abacus` is healthy with 1 active replica, 2 routes and `cloudflared` version `2026.6.1`.
+Stage 0V-B/C verifies tunnel `ois-nextgen-abacus` is healthy with 1 active replica, 2 routes and `cloudflared` version `2026.6.1`. Stage 2L adds the OIMA hostname to the same tunnel; do not create a second tunnel unless the owner later changes the Cloudflare architecture.
 
 Verified routes:
 
@@ -159,6 +165,7 @@ Verified routes:
 |---|---|
 | `https://ois-ng.dmp247.com` | `http://127.0.0.1:3000` |
 | `https://pits-ng.dmp247.com` | `http://127.0.0.1:3001` |
+| `https://oima.dmp247.com` | `http://127.0.0.1:3002` |
 | `https://api-ng.dmp247.com` | Optional later `http://127.0.0.1:4000` route. |
 
 `https://ois-ng.dmp247.com/dashboard` opens OIS Platform Overview, and `https://pits-ng.dmp247.com/projects` opens PITS Project Selector.
@@ -167,14 +174,15 @@ Do not paste tunnel tokens, print tunnel tokens, commit connector credentials or
 
 ## Public Staging Runtime Hardening
 
-Stage 0W-A promotes the OIS Console and PITS Shell public staging shells from temporary `nohup` demo processes into durable systemd services. This keeps the already verified Cloudflare Tunnel topology intact while making the app processes restartable and observable.
+Stage 0W-A promotes the OIS Console and PITS Shell public staging shells from temporary `nohup` demo processes into durable systemd services. Stage 2L adds OIMA Shell to the same durable service pattern.
 
 | Service | Working directory | Port | Public route |
 |---|---|---:|---|
 | `ois-nextgen-core-api` | Existing Core API service | 4000 | `https://ois-nextgen.abacusai.cloud` |
 | `ois-nextgen-ois-console` | `/home/ubuntu/ois-nextgen/apps/ois-console` | 3000 | `https://ois-ng.dmp247.com` |
 | `ois-nextgen-pits-shell` | `/home/ubuntu/ois-nextgen/apps/pits-shell` | 3001 | `https://pits-ng.dmp247.com` |
-| `cloudflared` | Existing Cloudflare connector | n/a | Tunnel for OIS/PITS public hostnames |
+| `ois-nextgen-oima-staging` | `/home/ubuntu/ois-nextgen/apps/oima-shell` | 3002 | `https://oima.dmp247.com` |
+| `cloudflared` | Existing Cloudflare connector | n/a | Tunnel for OIS/PITS/OIMA public hostnames |
 
 Safe UI service environment:
 
@@ -183,6 +191,7 @@ Safe UI service environment:
 - `NEXT_TELEMETRY_DISABLED=1`
 - `PORT=3000` for OIS Console.
 - `PORT=3001` for PITS Shell.
+- `PORT=3002` for OIMA Shell.
 
 The UI systemd units intentionally do not set `DATABASE_URL` or `ABACUS_DATABASE_URL`. They do not modify the Core API service, nginx, DNS or Cloudflare tunnel credentials.
 
@@ -201,7 +210,7 @@ Restart the public staging runtime after a safe source sync:
 bash ops/abacus/restart-public-staging-runtime.sh
 ```
 
-This restarts Core API, OIS Console and PITS Shell. It does not restart `cloudflared`.
+This restarts Core API, OIS Console, PITS Shell and OIMA Shell. It does not restart `cloudflared`.
 
 Restart `cloudflared` only when the owner explicitly asks for it:
 
@@ -209,13 +218,13 @@ Restart `cloudflared` only when the owner explicitly asks for it:
 bash ops/abacus/restart-public-staging-runtime.sh --include-cloudflared
 ```
 
-Remove only the OIS/PITS UI systemd services:
+Remove only the OIS/PITS/OIMA UI systemd services:
 
 ```sh
 bash ops/abacus/uninstall-ui-shell-systemd-services.sh --confirm
 ```
 
-`runtime-sync.sh` remains Core API only by default. To restart all three app services after a pull/build, set:
+`runtime-sync.sh` remains Core API only by default. To restart all public staging app services after a pull/build, set:
 
 ```sh
 PUBLIC_STAGING_RESTART_SCOPE=all bash ops/abacus/runtime-sync.sh
@@ -231,8 +240,8 @@ Stage 0W-B hotfix note:
 
 - Public staging runtime is verified operational after owner execution of Stage 0W-A.
 - `status-public-staging-runtime.sh` must not print full `systemctl status cloudflared`; it uses `systemctl is-active` and selected `systemctl show` properties only.
-- `restart-public-staging-runtime.sh` stops legacy temporary UI demo processes before restarting OIS/PITS systemd services.
-- Port diagnostics for `3000` and `3001` intentionally avoid process command lines and environment values.
+- `restart-public-staging-runtime.sh` stops legacy temporary UI demo processes before restarting OIS/PITS/OIMA systemd services.
+- Port diagnostics for `3000`, `3001` and `3002` intentionally avoid process command lines and environment values.
 
 Stage 1A product shell route checks:
 
@@ -651,7 +660,7 @@ Stop temporary UI demo shells:
 bash ops/abacus/stop-ui-demo-shells.sh
 ```
 
-Install durable OIS/PITS public staging services:
+Install durable OIS/PITS/OIMA public staging services:
 
 ```sh
 bash ops/abacus/install-ui-shell-systemd-services.sh
@@ -669,13 +678,13 @@ Read-only public staging endpoint check:
 bash ops/abacus/check-public-staging-endpoints.sh
 ```
 
-Restart Core API plus OIS/PITS public staging services:
+Restart Core API plus OIS/PITS/OIMA public staging services:
 
 ```sh
 bash ops/abacus/restart-public-staging-runtime.sh
 ```
 
-Uninstall only the OIS/PITS public staging services:
+Uninstall only the OIS/PITS/OIMA public staging services:
 
 ```sh
 bash ops/abacus/uninstall-ui-shell-systemd-services.sh --confirm

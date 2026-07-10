@@ -60,6 +60,7 @@ Stage 0V-A does not:
 |---|---|---|---|
 | `https://ois-ng.dmp247.com` | `http://127.0.0.1:3000` | OIS Console | SuperComputer local UI shell. |
 | `https://pits-ng.dmp247.com` | `http://127.0.0.1:3001` | PITS Shell | SuperComputer local UI shell. |
+| `https://oima.dmp247.com` | `http://127.0.0.1:3002` | OIMA Shell | Stage 2L standalone product runtime shell. |
 | `https://api-ng.dmp247.com` | `http://127.0.0.1:4000` | Optional later Core API route | Not part of Stage 0V-A execution. |
 
 Core API remains:
@@ -68,7 +69,7 @@ Core API remains:
 https://ois-nextgen.abacusai.cloud
 ```
 
-OIS Console and PITS Shell continue to fetch DB-backed data through Core API only.
+OIS Console, PITS Shell and OIMA Shell continue to fetch DB-backed data through Core API only.
 
 ## Stage 0V-B/C Runtime Verification
 
@@ -105,7 +106,44 @@ Both shells show Core API URL `https://ois-nextgen.abacusai.cloud`, Core API hea
 
 UI shells do not use `DATABASE_URL`. DB-backed demo data is accessed only through Core API.
 
-Direct CNAME to the Abacus SuperComputer remains unsupported. Cloudflare Tunnel is now the accepted custom subdomain path for SuperComputer-hosted OIS/PITS UI shells.
+Direct CNAME to the Abacus SuperComputer remains unsupported. Cloudflare Tunnel is now the accepted custom subdomain path for SuperComputer-hosted OIS/PITS/OIMA UI shells.
+
+## Stage 2L OIMA Public Hostname
+
+Add OIMA to the existing dashboard-managed tunnel `ois-nextgen-abacus`. Do not create, paste, print or commit tunnel tokens.
+
+Cloudflare Public Hostname fields:
+
+| Field | Value |
+|---|---|
+| Subdomain | `oima` |
+| Domain | `dmp247.com` |
+| Service type | `HTTP` |
+| Service URL | `http://127.0.0.1:3002` |
+
+DNS guidance: let Cloudflare manage the tunnel DNS route for `oima.dmp247.com`, or follow the dashboard-generated CNAME target exactly. Do not point `oima.dmp247.com` directly at `ois-nextgen.abacusai.cloud`, and do not touch `ois.dmp247.com` or `oisys.abacusai.app`.
+
+If the tunnel is ever converted to a local config-file managed tunnel, preserve the final catch-all rule and add:
+
+```yaml
+ingress:
+  - hostname: ois-ng.dmp247.com
+    service: http://127.0.0.1:3000
+  - hostname: pits-ng.dmp247.com
+    service: http://127.0.0.1:3001
+  - hostname: oima.dmp247.com
+    service: http://127.0.0.1:3002
+  - service: http_status:404
+```
+
+Stage 2L verification commands:
+
+```sh
+cd /home/ubuntu/ois-nextgen
+bash ops/abacus/status-public-staging-runtime.sh
+bash ops/abacus/check-public-staging-endpoints.sh
+bash ops/abacus/status-product-subdomain-demo-routes.sh --include-public
+```
 
 ## Stage 0W-A Durable Runtime Hardening
 
@@ -117,15 +155,18 @@ Durable service target:
 |---|---|---|
 | `https://ois-ng.dmp247.com` | `http://127.0.0.1:3000` | `ois-nextgen-ois-console` |
 | `https://pits-ng.dmp247.com` | `http://127.0.0.1:3001` | `ois-nextgen-pits-shell` |
+| `https://oima.dmp247.com` | `http://127.0.0.1:3002` | `ois-nextgen-oima-staging` |
 
-Stage 0W-A scripts:
+Stage 2L extends the same durable runtime pattern to OIMA. OIMA uses the existing tunnel and does not require a second connector.
+
+Stage 0W-A / Stage 2L scripts:
 
 | Script | Purpose |
 |---|---|
-| `ops/abacus/install-ui-shell-systemd-services.sh` | Installs/enables/starts durable OIS/PITS UI shell services. |
-| `ops/abacus/uninstall-ui-shell-systemd-services.sh` | Removes only the durable OIS/PITS UI shell services after `--confirm`. |
-| `ops/abacus/restart-public-staging-runtime.sh` | Restarts Core API plus OIS/PITS services and verifies endpoints; does not restart cloudflared unless `--include-cloudflared` is passed. |
-| `ops/abacus/status-public-staging-runtime.sh` | Read-only status for Core API, OIS/PITS services, cloudflared and public endpoints. |
+| `ops/abacus/install-ui-shell-systemd-services.sh` | Installs/enables/starts durable OIS/PITS/OIMA UI shell services. |
+| `ops/abacus/uninstall-ui-shell-systemd-services.sh` | Removes only the durable OIS/PITS/OIMA UI shell services after `--confirm`. |
+| `ops/abacus/restart-public-staging-runtime.sh` | Restarts Core API plus OIS/PITS/OIMA services and verifies endpoints; does not restart cloudflared unless `--include-cloudflared` is passed. |
+| `ops/abacus/status-public-staging-runtime.sh` | Read-only status for Core API, OIS/PITS/OIMA services, cloudflared and public endpoints. |
 | `ops/abacus/check-public-staging-endpoints.sh` | Read-only public endpoint marker/count verification. |
 
 Owner install sequence:
@@ -198,9 +239,18 @@ These steps are retained as the reference path. Stage 0V-B/C owner execution com
    | Service type | `HTTP` |
    | Service URL | `http://127.0.0.1:3001` |
 
-8. Do not add `api-ng.dmp247.com` until a later owner-approved API custom-domain stage.
-9. Let Cloudflare create or manage the tunnel DNS records, or follow the dashboard's exact DNS instruction for tunnel hostnames.
-10. Save changes and wait for connector/route health in Cloudflare before public validation.
+8. Add public hostname for Stage 2L OIMA:
+
+   | Field | Value |
+   |---|---|
+   | Subdomain | `oima` |
+   | Domain | `dmp247.com` |
+   | Service type | `HTTP` |
+   | Service URL | `http://127.0.0.1:3002` |
+
+9. Do not add `api-ng.dmp247.com` until a later owner-approved API custom-domain stage.
+10. Let Cloudflare create or manage the tunnel DNS records, or follow the dashboard's exact DNS instruction for tunnel hostnames.
+11. Save changes and wait for connector/route health in Cloudflare before public validation.
 
 ## Abacus Web Terminal Reference Outline
 

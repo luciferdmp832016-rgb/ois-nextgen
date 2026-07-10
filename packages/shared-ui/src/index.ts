@@ -32,6 +32,7 @@ export {
 export const defaultCoreApiUrl = "https://ois-nextgen.abacusai.cloud";
 export const defaultOisPublicBaseUrl = "https://ois-ng.dmp247.com";
 export const defaultPitsPublicBaseUrl = "https://pits-ng.dmp247.com";
+export const defaultOimaPublicBaseUrl = "https://oima.dmp247.com";
 
 export const kernelFields = [
   "industries",
@@ -231,6 +232,7 @@ export type RegistryHealthPayload = {
     coreApiBaseUrl: string;
     oisConsoleBaseUrl: string;
     pitsShellBaseUrl: string;
+    oimaShellBaseUrl?: string;
     reachabilityMode: string;
     note: string;
   };
@@ -285,6 +287,7 @@ export type RegistryReadinessPayload = {
     coreApiBaseUrl: string;
     oisConsoleBaseUrl: string;
     pitsShellBaseUrl: string;
+    oimaShellBaseUrl?: string;
     readinessMode: string;
     note: string;
   };
@@ -341,6 +344,7 @@ export type OwnerReviewPayload = {
     coreApiBaseUrl: string;
     oisConsoleBaseUrl: string;
     pitsShellBaseUrl: string;
+    oimaShellBaseUrl?: string;
     reviewMode: string;
     stage: string;
     note: string;
@@ -411,6 +415,7 @@ export type AdminBoundaryPayload = {
     coreApiBaseUrl: string;
     oisConsoleBaseUrl: string;
     pitsShellBaseUrl: string;
+    oimaShellBaseUrl?: string;
     boundaryMode: string;
     stage: string;
     note: string;
@@ -497,6 +502,7 @@ export type ProductUatPayload = {
     coreApiBaseUrl: string;
     oisConsoleBaseUrl: string;
     pitsShellBaseUrl: string;
+    oimaShellBaseUrl?: string;
     uatMode: string;
     stage: string;
     note: string;
@@ -606,6 +612,7 @@ export type PitsWorkboardPayload = {
     coreApiBaseUrl: string;
     oisConsoleBaseUrl: string;
     pitsShellBaseUrl: string;
+    oimaShellBaseUrl?: string;
     workboardMode: string;
     stage: string;
     note: string;
@@ -656,6 +663,7 @@ export type PitsWorkItemDetailPayload = {
     coreApiBaseUrl: string;
     oisConsoleBaseUrl: string;
     pitsShellBaseUrl: string;
+    oimaShellBaseUrl?: string;
     workItemDetailMode: string;
     stage: string;
     note: string;
@@ -686,6 +694,7 @@ export type PitsWorkItemActionPreviewPayload = {
     coreApiBaseUrl: string;
     oisConsoleBaseUrl: string;
     pitsShellBaseUrl: string;
+    oimaShellBaseUrl?: string;
     dryRunMode: "DRY_RUN_ONLY";
     stage: string;
     note: string;
@@ -711,6 +720,7 @@ export type PitsWorkItemActionRequestsPayload = {
     coreApiBaseUrl: string;
     oisConsoleBaseUrl: string;
     pitsShellBaseUrl: string;
+    oimaShellBaseUrl?: string;
     actionRequestMode: string;
     stage: string;
     note: string;
@@ -743,6 +753,7 @@ export type PitsWorkItemActionRequestPreviewPayload = {
     coreApiBaseUrl: string;
     oisConsoleBaseUrl: string;
     pitsShellBaseUrl: string;
+    oimaShellBaseUrl?: string;
     actionRequestPreviewMode: string;
     stage: string;
     note: string;
@@ -836,6 +847,7 @@ export type RegistryDetailSnapshot<T> = {
 export type PublicBaseUrls = {
   ois: string;
   pits: string;
+  oima: string;
 };
 
 export type CrossProductLinkTargets = {
@@ -860,6 +872,9 @@ export function getPublicBaseUrls(): PublicBaseUrls {
     ois: normalizeBaseUrl(process.env.OIS_PUBLIC_BASE_URL ?? process.env.NEXT_PUBLIC_OIS_PUBLIC_BASE_URL ?? defaultOisPublicBaseUrl),
     pits: normalizeBaseUrl(
       process.env.PITS_PUBLIC_BASE_URL ?? process.env.NEXT_PUBLIC_PITS_PUBLIC_BASE_URL ?? defaultPitsPublicBaseUrl
+    ),
+    oima: normalizeBaseUrl(
+      process.env.OIMA_PUBLIC_BASE_URL ?? process.env.NEXT_PUBLIC_OIMA_PUBLIC_BASE_URL ?? defaultOimaPublicBaseUrl
     )
   };
 }
@@ -876,6 +891,10 @@ export function buildOisDetailUrl(kind: "products" | "workspaces" | "modules" | 
 
 export function buildPitsProjectUrl(id: string, baseUrl = getPublicBaseUrls().pits) {
   return buildPublicUrl(baseUrl, `/projects/${encodeURIComponent(id)}`);
+}
+
+export function buildOimaAppUrl(path = "/", baseUrl = getPublicBaseUrls().oima) {
+  return buildPublicUrl(baseUrl, path);
 }
 
 export function buildCrossProductLinkTargets(

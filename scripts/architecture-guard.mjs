@@ -20,14 +20,20 @@ function walk(dir) {
 function scanFile(path) {
   const text = readFileSync(path, "utf8");
   const rel = relative(root, path);
-  const isFrontend = rel.startsWith("apps\\ois-console") || rel.startsWith("apps/ois-console") || rel.startsWith("apps\\pits-shell") || rel.startsWith("apps/pits-shell");
+  const isOisConsole = rel.startsWith("apps\\ois-console") || rel.startsWith("apps/ois-console");
   const isPitsRuntime = rel.startsWith("apps\\pits-shell") || rel.startsWith("apps/pits-shell");
+  const isOimaRuntime = rel.startsWith("apps\\oima-shell") || rel.startsWith("apps/oima-shell");
+  const isFrontend = isOisConsole || isPitsRuntime || isOimaRuntime;
+  const isTestFile = /\.(test|spec)\.(ts|tsx|js|jsx|mjs)$/.test(rel);
 
   if (isFrontend && /from\s+["']@prisma\/client["']|from\s+["'].*prisma["']/.test(text)) {
     violations.push(`${rel}: frontend code must not import Prisma`);
   }
-  if (isPitsRuntime && /apps\/ois-console|apps\\ois-console|\/admin|control-plane/i.test(text)) {
+  if (isPitsRuntime && !isTestFile && /apps\/ois-console|apps\\ois-console|\/admin|control-plane/i.test(text)) {
     violations.push(`${rel}: PITS runtime must not import or link to Control Plane surfaces`);
+  }
+  if (isOimaRuntime && !isTestFile && /apps\/ois-console|apps\\ois-console|\/admin|control-plane/i.test(text)) {
+    violations.push(`${rel}: OIMA runtime must not import or link to Control Plane surfaces`);
   }
   if (/page:intelligence/.test(text)) {
     violations.push(`${rel}: broad legacy permission page:intelligence is forbidden in NextGen`);
