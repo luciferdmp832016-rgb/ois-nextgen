@@ -1098,6 +1098,37 @@ textarea {
   color: var(--red);
 }
 
+.oima-transcript-timeline {
+  display: grid;
+  gap: 12px;
+}
+
+.oima-timeline-item {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.oima-transcript-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.oima-transcript-grid > div {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.oima-transcript-grid p {
+  margin: 6px 0 0;
+  white-space: pre-wrap;
+}
+
 .oima-inline-action,
 .oima-primary-button {
   display: inline-flex;

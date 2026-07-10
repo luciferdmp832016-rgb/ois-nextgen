@@ -2417,6 +2417,297 @@ export async function getOimaMeetingDetailSnapshot(id: string, coreApiUrl = getC
   };
 }
 
+export type OimaTranscriptVersionPayload = {
+  id: string;
+  meetingId: string;
+  sourceFileId: string;
+  versionType: string;
+  versionNumber: number;
+  rawContentHash: string;
+  contentStorageKey: string | null;
+  contentTextAvailable: boolean;
+  contentTextLength: number;
+  isImmutable: boolean;
+  createdBy: string | null;
+  createdAt: string | null;
+};
+
+export type OimaTranscriptParseRunPayload = {
+  id: string;
+  meetingId: string;
+  sourceFileId: string;
+  rawVersionId: string;
+  normalizedVersionId: string;
+  parserType: string;
+  status: string;
+  segmentCount: number;
+  warningCount: number;
+  confidenceScore: number;
+  startedAt: string | null;
+  completedAt: string | null;
+  errorMessage: string | null;
+};
+
+export type OimaTranscriptSegmentPayload = {
+  id: string;
+  meetingId: string;
+  transcriptVersionId: string;
+  parseRunId: string;
+  segmentIndex: number;
+  sourceLineStart: number;
+  sourceLineEnd: number;
+  timestampStart: string | null;
+  timestampEnd: string | null;
+  speakerRaw: string | null;
+  speakerNormalized: string | null;
+  rawText: string;
+  normalizedText: string;
+  confidenceScore: number;
+  needsReview: boolean;
+  createdAt: string | null;
+};
+
+export type OimaTranscriptWarningPayload = {
+  id: string;
+  parseRunId: string;
+  segmentId: string | null;
+  warningType: string;
+  message: string;
+  severity: string;
+  createdAt: string | null;
+};
+
+export type OimaTranscriptProcessingPayload = {
+  metadata: RegistryMetadata | null;
+  transcriptProcessingContract: Record<string, unknown> | null;
+  meetingId: string | null;
+  latestParseRun: OimaTranscriptParseRunPayload | null;
+  parseRun: OimaTranscriptParseRunPayload | null;
+  rawVersion: OimaTranscriptVersionPayload | null;
+  normalizedVersion: OimaTranscriptVersionPayload | null;
+  versions: OimaTranscriptVersionPayload[];
+  segments: OimaTranscriptSegmentPayload[];
+  warnings: OimaTranscriptWarningPayload[];
+  count: number;
+  noLlmCalls: boolean;
+  noFakeMeetingAnalysis: boolean;
+};
+
+export type OimaTranscriptSnapshot = {
+  coreApiUrl: string;
+  status: ApiResult;
+  versionsResult: ApiResult;
+  segmentsResult: ApiResult;
+  warningsResult: ApiResult;
+  statusPayload: OimaTranscriptProcessingPayload | null;
+  versionsPayload: OimaTranscriptProcessingPayload | null;
+  segmentsPayload: OimaTranscriptProcessingPayload | null;
+  warningsPayload: OimaTranscriptProcessingPayload | null;
+  latestParseRun: OimaTranscriptParseRunPayload | null;
+  versions: OimaTranscriptVersionPayload[];
+  segments: OimaTranscriptSegmentPayload[];
+  warnings: OimaTranscriptWarningPayload[];
+  errorMessage: string | null;
+};
+
+function getOimaTranscriptVersionPayload(source: unknown): OimaTranscriptVersionPayload | null {
+  if (!isRecord(source)) {
+    return null;
+  }
+
+  const id = getString(source, "id");
+  const meetingId = getString(source, "meetingId");
+  const sourceFileId = getString(source, "sourceFileId");
+  const versionType = getString(source, "versionType");
+  const rawContentHash = getString(source, "rawContentHash");
+
+  if (!id || !meetingId || !sourceFileId || !versionType || !rawContentHash) {
+    return null;
+  }
+
+  return {
+    id,
+    meetingId,
+    sourceFileId,
+    versionType,
+    versionNumber: typeof source.versionNumber === "number" ? source.versionNumber : 0,
+    rawContentHash,
+    contentStorageKey: getString(source, "contentStorageKey"),
+    contentTextAvailable: typeof source.contentTextAvailable === "boolean" ? source.contentTextAvailable : false,
+    contentTextLength: typeof source.contentTextLength === "number" ? source.contentTextLength : 0,
+    isImmutable: typeof source.isImmutable === "boolean" ? source.isImmutable : false,
+    createdBy: getString(source, "createdBy"),
+    createdAt: getString(source, "createdAt")
+  };
+}
+
+function getOimaTranscriptParseRunPayload(source: unknown): OimaTranscriptParseRunPayload | null {
+  if (!isRecord(source)) {
+    return null;
+  }
+
+  const id = getString(source, "id");
+  const meetingId = getString(source, "meetingId");
+  const sourceFileId = getString(source, "sourceFileId");
+  const rawVersionId = getString(source, "rawVersionId");
+  const normalizedVersionId = getString(source, "normalizedVersionId");
+  const parserType = getString(source, "parserType");
+  const status = getString(source, "status");
+
+  if (!id || !meetingId || !sourceFileId || !rawVersionId || !normalizedVersionId || !parserType || !status) {
+    return null;
+  }
+
+  return {
+    id,
+    meetingId,
+    sourceFileId,
+    rawVersionId,
+    normalizedVersionId,
+    parserType,
+    status,
+    segmentCount: typeof source.segmentCount === "number" ? source.segmentCount : 0,
+    warningCount: typeof source.warningCount === "number" ? source.warningCount : 0,
+    confidenceScore: typeof source.confidenceScore === "number" ? source.confidenceScore : 0,
+    startedAt: getString(source, "startedAt"),
+    completedAt: getString(source, "completedAt"),
+    errorMessage: getString(source, "errorMessage")
+  };
+}
+
+function getOimaTranscriptSegmentPayload(source: unknown): OimaTranscriptSegmentPayload | null {
+  if (!isRecord(source)) {
+    return null;
+  }
+
+  const id = getString(source, "id");
+  const meetingId = getString(source, "meetingId");
+  const transcriptVersionId = getString(source, "transcriptVersionId");
+  const parseRunId = getString(source, "parseRunId");
+  const rawText = getString(source, "rawText");
+  const normalizedText = getString(source, "normalizedText");
+
+  if (!id || !meetingId || !transcriptVersionId || !parseRunId || rawText === null || normalizedText === null) {
+    return null;
+  }
+
+  return {
+    id,
+    meetingId,
+    transcriptVersionId,
+    parseRunId,
+    segmentIndex: typeof source.segmentIndex === "number" ? source.segmentIndex : 0,
+    sourceLineStart: typeof source.sourceLineStart === "number" ? source.sourceLineStart : 0,
+    sourceLineEnd: typeof source.sourceLineEnd === "number" ? source.sourceLineEnd : 0,
+    timestampStart: getString(source, "timestampStart"),
+    timestampEnd: getString(source, "timestampEnd"),
+    speakerRaw: getString(source, "speakerRaw"),
+    speakerNormalized: getString(source, "speakerNormalized"),
+    rawText,
+    normalizedText,
+    confidenceScore: typeof source.confidenceScore === "number" ? source.confidenceScore : 0,
+    needsReview: typeof source.needsReview === "boolean" ? source.needsReview : false,
+    createdAt: getString(source, "createdAt")
+  };
+}
+
+function getOimaTranscriptWarningPayload(source: unknown): OimaTranscriptWarningPayload | null {
+  if (!isRecord(source)) {
+    return null;
+  }
+
+  const id = getString(source, "id");
+  const parseRunId = getString(source, "parseRunId");
+  const warningType = getString(source, "warningType");
+  const message = getString(source, "message");
+  const severity = getString(source, "severity");
+
+  if (!id || !parseRunId || !warningType || !message || !severity) {
+    return null;
+  }
+
+  return {
+    id,
+    parseRunId,
+    segmentId: getString(source, "segmentId"),
+    warningType,
+    message,
+    severity,
+    createdAt: getString(source, "createdAt")
+  };
+}
+
+export function getOimaTranscriptProcessingPayload(source: unknown): OimaTranscriptProcessingPayload | null {
+  if (!isRecord(source)) {
+    return null;
+  }
+
+  const versions = Array.isArray(source.versions)
+    ? source.versions.map(getOimaTranscriptVersionPayload).filter((item): item is OimaTranscriptVersionPayload => Boolean(item))
+    : [];
+  const segments = Array.isArray(source.segments)
+    ? source.segments.map(getOimaTranscriptSegmentPayload).filter((item): item is OimaTranscriptSegmentPayload => Boolean(item))
+    : [];
+  const warnings = Array.isArray(source.warnings)
+    ? source.warnings.map(getOimaTranscriptWarningPayload).filter((item): item is OimaTranscriptWarningPayload => Boolean(item))
+    : [];
+
+  return {
+    metadata: getRegistryMetadata(source),
+    transcriptProcessingContract: isRecord(source.transcriptProcessingContract) ? source.transcriptProcessingContract : null,
+    meetingId: getString(source, "meetingId"),
+    latestParseRun: getOimaTranscriptParseRunPayload(source.latestParseRun),
+    parseRun: getOimaTranscriptParseRunPayload(source.parseRun),
+    rawVersion: getOimaTranscriptVersionPayload(source.rawVersion),
+    normalizedVersion: getOimaTranscriptVersionPayload(source.normalizedVersion),
+    versions,
+    segments,
+    warnings,
+    count: typeof source.count === "number" ? source.count : 0,
+    noLlmCalls: typeof source.noLlmCalls === "boolean" ? source.noLlmCalls : false,
+    noFakeMeetingAnalysis: typeof source.noFakeMeetingAnalysis === "boolean" ? source.noFakeMeetingAnalysis : false
+  };
+}
+
+export async function getOimaTranscriptSnapshot(id: string, coreApiUrl = getCoreApiUrl()): Promise<OimaTranscriptSnapshot> {
+  const encodedId = encodeURIComponent(id);
+  const [status, versionsResult, segmentsResult, warningsResult] = await Promise.all([
+    fetchCoreApi(`/platform/oima/meetings/${encodedId}/transcript/status`, coreApiUrl),
+    fetchCoreApi(`/platform/oima/meetings/${encodedId}/transcript/versions`, coreApiUrl),
+    fetchCoreApi(`/platform/oima/meetings/${encodedId}/transcript/segments`, coreApiUrl),
+    fetchCoreApi(`/platform/oima/meetings/${encodedId}/transcript/warnings`, coreApiUrl)
+  ]);
+  const statusPayload = getOimaTranscriptProcessingPayload(status.data);
+  const versionsPayload = getOimaTranscriptProcessingPayload(versionsResult.data);
+  const segmentsPayload = getOimaTranscriptProcessingPayload(segmentsResult.data);
+  const warningsPayload = getOimaTranscriptProcessingPayload(warningsResult.data);
+
+  return {
+    coreApiUrl,
+    status,
+    versionsResult,
+    segmentsResult,
+    warningsResult,
+    statusPayload,
+    versionsPayload,
+    segmentsPayload,
+    warningsPayload,
+    latestParseRun: statusPayload?.latestParseRun ?? null,
+    versions: versionsPayload?.versions ?? [],
+    segments: segmentsPayload?.segments ?? [],
+    warnings: warningsPayload?.warnings ?? [],
+    errorMessage:
+      getRegistryErrorMessage(status.data) ??
+      status.error ??
+      getRegistryErrorMessage(versionsResult.data) ??
+      versionsResult.error ??
+      getRegistryErrorMessage(segmentsResult.data) ??
+      segmentsResult.error ??
+      getRegistryErrorMessage(warningsResult.data) ??
+      warningsResult.error
+  };
+}
+
 export function getOimaBoundaryPayload(source: unknown): OimaBoundaryPayload | null {
   if (
     !isRecord(source) ||

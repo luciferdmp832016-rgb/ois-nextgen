@@ -20,9 +20,14 @@ import {
   oimaProductBoundaryMetadata,
   oimaSafetyBoundaries,
   oimaSourceModes,
+  oimaTranscriptParseRunStatuses,
+  oimaTranscriptParseWarningSeverities,
+  oimaTranscriptParserTypes,
+  oimaTranscriptVersionTypes,
   universalKnowledgeApiContract
 } from "@ois/architecture-contracts";
 import { buildCoreApi, type BuildCoreApiOptions } from "./app";
+import { parseOimaTranscript } from "./stage-2k";
 
 type MockPrisma = NonNullable<BuildCoreApiOptions["prisma"]>;
 
@@ -326,6 +331,78 @@ const stage2JRows = {
   }
 } as const;
 
+const stage2KRows = {
+  rawTranscriptText: "00:00 Alice Nguyen: Raw kickoff text\r\n00:05 Bob Tran: Follow-up with   spacing",
+  rawVersion: {
+    id: "oima_transcript_version_stage_2k_raw",
+    meetingId: "oima_meeting_stage_2j_demo",
+    sourceFileId: "oima_source_file_stage_2j_transcript",
+    versionType: "RAW",
+    versionNumber: 1,
+    rawContentHash: "sha256:stage-2k-raw-hash",
+    contentStorageKey: null,
+    contentText: "00:00 Alice Nguyen: Raw kickoff text\r\n00:05 Bob Tran: Follow-up with   spacing",
+    isImmutable: true,
+    createdBy: "tester",
+    createdAt: "2026-07-09T03:00:00.000Z"
+  },
+  normalizedVersion: {
+    id: "oima_transcript_version_stage_2k_normalized",
+    meetingId: "oima_meeting_stage_2j_demo",
+    sourceFileId: "oima_source_file_stage_2j_transcript",
+    versionType: "NORMALIZED",
+    versionNumber: 1,
+    rawContentHash: "sha256:stage-2k-raw-hash",
+    contentStorageKey: null,
+    contentText: "[00:00] Alice Nguyen: Raw kickoff text\n[00:05] Bob Tran: Follow-up with spacing",
+    isImmutable: false,
+    createdBy: "tester",
+    createdAt: "2026-07-09T03:00:00.000Z"
+  },
+  parseRun: {
+    id: "oima_transcript_parse_run_stage_2k",
+    meetingId: "oima_meeting_stage_2j_demo",
+    sourceFileId: "oima_source_file_stage_2j_transcript",
+    rawVersionId: "oima_transcript_version_stage_2k_raw",
+    normalizedVersionId: "oima_transcript_version_stage_2k_normalized",
+    parserType: "MICROSOFT_TEAMS",
+    status: "COMPLETED",
+    segmentCount: 2,
+    warningCount: 0,
+    confidenceScore: 0.98,
+    startedAt: "2026-07-09T03:00:00.000Z",
+    completedAt: "2026-07-09T03:00:01.000Z",
+    errorMessage: null
+  },
+  segment: {
+    id: "oima_transcript_segment_stage_2k_0",
+    meetingId: "oima_meeting_stage_2j_demo",
+    transcriptVersionId: "oima_transcript_version_stage_2k_normalized",
+    parseRunId: "oima_transcript_parse_run_stage_2k",
+    segmentIndex: 0,
+    sourceLineStart: 1,
+    sourceLineEnd: 1,
+    timestampStart: "00:00",
+    timestampEnd: null,
+    speakerRaw: "Alice Nguyen",
+    speakerNormalized: "Alice Nguyen",
+    rawText: "Raw kickoff text",
+    normalizedText: "Raw kickoff text",
+    confidenceScore: 0.98,
+    needsReview: false,
+    createdAt: "2026-07-09T03:00:01.000Z"
+  },
+  warning: {
+    id: "oima_transcript_warning_stage_2k",
+    parseRunId: "oima_transcript_parse_run_stage_2k",
+    segmentId: "oima_transcript_segment_stage_2k_review",
+    warningType: "MISSING_TIMESTAMP",
+    message: "Timestamp could not be parsed confidently for this segment.",
+    severity: "WARNING",
+    createdAt: "2026-07-09T03:00:01.000Z"
+  }
+} as const;
+
 function createWriteGuard(name: string, writeCalls: string[]) {
   return vi.fn(() => {
     writeCalls.push(name);
@@ -403,7 +480,11 @@ function createMockPrisma(counts = overviewCounts) {
       ...createCountDelegate("oimaMeetingRecord", 0, readCalls, writeCalls, [stage2JRows.meeting]),
       findUnique: vi.fn(async (args: { where: { id: string } }) => (args.where.id === stage2JRows.meeting.id ? stage2JRows.meeting : null))
     },
-    oimaMeetingSourceFile: createCountDelegate("oimaMeetingSourceFile", 0, readCalls, writeCalls, [stage2JRows.audioFile])
+    oimaMeetingSourceFile: createCountDelegate("oimaMeetingSourceFile", 0, readCalls, writeCalls, [stage2JRows.audioFile]),
+    oimaTranscriptVersion: createCountDelegate("oimaTranscriptVersion", 0, readCalls, writeCalls, [stage2KRows.rawVersion, stage2KRows.normalizedVersion]),
+    oimaTranscriptParseRun: createCountDelegate("oimaTranscriptParseRun", 0, readCalls, writeCalls, [stage2KRows.parseRun]),
+    oimaTranscriptSegment: createCountDelegate("oimaTranscriptSegment", 0, readCalls, writeCalls, [stage2KRows.segment]),
+    oimaTranscriptParseWarning: createCountDelegate("oimaTranscriptParseWarning", 0, readCalls, writeCalls, [stage2KRows.warning])
   };
 
   const userAccount = {
@@ -1902,12 +1983,15 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
       expect(body.product.plannedRuntimeCapabilities).toEqual(oimaPlannedRuntimeCapabilities);
       expect(body.product.productBoundaryMetadata).toEqual(oimaProductBoundaryMetadata);
       expect(body.product.productShell).toMatchObject({
-        status: "MEETING_INTAKE_FOUNDATION_READY",
+        status: "TRANSCRIPT_PROCESSING_FOUNDATION_READY",
         meetingRuntimeDataIncluded: true,
         meetingIntakeImplemented: true,
         sourceFileMetadataRegistrationImplemented: true,
-        transcriptProcessingImplemented: false,
-        nextRecommendedStage: "OIMA-2 Transcript Processing"
+        rawTranscriptImmutable: true,
+        normalizedTranscriptSeparate: true,
+        transcriptProcessingImplemented: true,
+        meetingAnalyticsImplemented: false,
+        nextRecommendedStage: "OIMA-3 OIS Agent Offline Analysis"
       });
       expect(body.product.emptyStateSurfaces).toEqual(oimaEmptyStateSurfaces);
       expect(body.product.sourceModes).toEqual(oimaSourceModes);
@@ -1960,16 +2044,17 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
       expect(overviewBody.emptyStateSurfaces.map((surface: { title: string }) => surface.title)).toEqual([
         "Meeting Library",
         "Upload Meeting",
+        "Transcript Processing",
         "Agent Analysis",
         "Clarification Review",
         "Dashboard",
         "Self-Improvement Center",
         "Listener Mode"
       ]);
-      expect(overviewBody.emptyStateSurfaces.slice(0, 2).every((surface: { availableNow: boolean; runtimeEnabled: boolean }) => surface.availableNow && surface.runtimeEnabled)).toBe(
+      expect(overviewBody.emptyStateSurfaces.slice(0, 3).every((surface: { availableNow: boolean; runtimeEnabled: boolean }) => surface.availableNow && surface.runtimeEnabled)).toBe(
         true
       );
-      expect(overviewBody.emptyStateSurfaces.slice(2).every((surface: { availableNow: boolean; runtimeEnabled: boolean }) => !surface.availableNow && !surface.runtimeEnabled)).toBe(
+      expect(overviewBody.emptyStateSurfaces.slice(3).every((surface: { availableNow: boolean; runtimeEnabled: boolean }) => !surface.availableNow && !surface.runtimeEnabled)).toBe(
         true
       );
       expect(overviewBody.knowledgeIntegration.knowledgeLayerTaxonomy.layerKeys).toContain("KL_0_LEGAL_REGULATORY_CORE");
@@ -1989,6 +2074,7 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
         expect.arrayContaining([
           expect.objectContaining({ stage: "OIMA-0", phase: "Stage 2I", status: "PRODUCT_SHELL_HARDENED" }),
           expect.objectContaining({ stage: "OIMA-1", phase: "Stage 2J", status: "RUNTIME_FOUNDATION_READY" }),
+          expect.objectContaining({ stage: "OIMA-2", phase: "Stage 2K", status: "TRANSCRIPT_PROCESSING_READY" }),
           expect.objectContaining({ stage: "OIMA-9", title: "Listener Mode", status: "PLANNED" })
         ])
       );
@@ -2003,8 +2089,11 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
         meetingStorageImplemented: true,
         meetingIntakeImplemented: true,
         sourceFileMetadataRegistrationImplemented: true,
+        transcriptProcessingImplemented: true,
+        rawTranscriptImmutable: true,
+        normalizedTranscriptSeparate: true,
         listenerModeStatus: "FUTURE_ONLY",
-        productShellStatus: "MEETING_INTAKE_FOUNDATION_READY",
+        productShellStatus: "TRANSCRIPT_PROCESSING_FOUNDATION_READY",
         noLiveSpeakingAgent: true,
         noVoiceClone: true,
         noImpersonation: true
@@ -2014,7 +2103,11 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
         meetingIntakeImplemented: true,
         sourceFileMetadataRegistrationImplemented: true,
         uploadRuntimeImplemented: false,
-        transcriptProcessingImplemented: false,
+        transcriptProcessingImplemented: true,
+        rawTranscriptImmutable: true,
+        normalizedTranscriptSeparate: true,
+        meetingAnalyticsImplemented: false,
+        issueDecisionActionRiskExtractionImplemented: false,
         audioProcessingImplemented: false,
         listenerModeImplemented: false,
         voiceCloneImplemented: false,
@@ -2317,6 +2410,254 @@ describe("Stage 2J OIMA Meeting Intake endpoints", () => {
       expect(body.error.code).toBe("OIMA_SOURCE_MODE_NOT_SUPPORTED");
       expect(JSON.stringify(body)).toContain("LISTENER_CAPTURED remains planned/not-runtime");
       expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+});
+
+describe("Stage 2K OIMA Transcript Processing endpoints", () => {
+  function enableStage2KWrites(mock: ReturnType<typeof createMockPrisma>, writeOps: string[]) {
+    (mock.delegates.auditRecord.create as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("auditRecord.create");
+      return args.data;
+    });
+    (mock.delegates.oimaTranscriptVersion.create as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("oimaTranscriptVersion.create");
+      const base = args.data.versionType === "RAW" ? stage2KRows.rawVersion : stage2KRows.normalizedVersion;
+      return {
+        ...base,
+        ...args.data,
+        contentStorageKey: args.data.contentStorageKey ?? null,
+        createdBy: args.data.createdBy ?? null,
+        createdAt: "2026-07-09T03:10:00.000Z"
+      };
+    });
+    (mock.delegates.oimaTranscriptParseRun.create as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("oimaTranscriptParseRun.create");
+      return {
+        ...stage2KRows.parseRun,
+        ...args.data,
+        completedAt: args.data.completedAt ?? null,
+        errorMessage: args.data.errorMessage ?? null
+      };
+    });
+    (mock.delegates.oimaTranscriptSegment.createMany as any).mockImplementation(async (args: { data: Record<string, unknown>[] }) => {
+      writeOps.push("oimaTranscriptSegment.createMany");
+      return { count: args.data.length };
+    });
+    (mock.delegates.oimaTranscriptParseWarning.createMany as any).mockImplementation(async (args: { data: Record<string, unknown>[] }) => {
+      writeOps.push("oimaTranscriptParseWarning.createMany");
+      return { count: args.data.length };
+    });
+    (mock.delegates.oimaMeetingRecord.update as any).mockImplementation(async (args: { data: Record<string, unknown> }) => {
+      writeOps.push("oimaMeetingRecord.update");
+      return {
+        ...stage2JRows.meeting,
+        ...args.data,
+        sourceFiles: stage2JRows.meeting.sourceFiles
+      };
+    });
+  }
+
+  it("parses Microsoft Teams-like transcript text into ordered evidence segments", () => {
+    const parsed = parseOimaTranscript("00:00:01 Alice Nguyen: Hello   team\n00:00:05 Bob Tran: Next item", "MICROSOFT_TEAMS");
+
+    expect(parsed.status).toBe("COMPLETED");
+    expect(parsed.segmentCount).toBe(2);
+    expect(parsed.warningCount).toBe(0);
+    expect(parsed.confidenceScore).toBeGreaterThan(0.9);
+    expect(parsed.segments[0]).toMatchObject({
+      segmentIndex: 0,
+      sourceLineStart: 1,
+      timestampStart: "00:00:01",
+      speakerRaw: "Alice Nguyen",
+      speakerNormalized: "Alice Nguyen",
+      rawText: "Hello   team",
+      normalizedText: "Hello team",
+      needsReview: false
+    });
+    expect(parsed.segments[1]).toMatchObject({
+      segmentIndex: 1,
+      sourceLineStart: 2,
+      speakerRaw: "Bob Tran",
+      rawText: "Next item"
+    });
+  });
+
+  it("preserves plain text fallback segments and marks them for review", () => {
+    const parsed = parseOimaTranscript("Unlabeled first line\nstill raw transcript text", "GENERIC_TEXT");
+
+    expect(parsed.status).toBe("NEEDS_REVIEW");
+    expect(parsed.segmentCount).toBe(1);
+    expect(parsed.segments[0]).toMatchObject({
+      speakerRaw: null,
+      timestampStart: null,
+      rawText: "Unlabeled first line\nstill raw transcript text",
+      normalizedText: "Unlabeled first line still raw transcript text",
+      needsReview: true
+    });
+    expect(parsed.warnings.map((warning) => warning.warningType)).toEqual(
+      expect.arrayContaining(["MISSING_TIMESTAMP", "MISSING_SPEAKER", "LOW_CONFIDENCE_SEGMENT"])
+    );
+  });
+
+  it("exposes transcript processing contract and read projections without writes", async () => {
+    const mock = createMockPrisma();
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const contract = await app.inject({ method: "GET", url: "/platform/oima/transcripts/contract" });
+      const status = await app.inject({ method: "GET", url: `/platform/oima/meetings/${stage2JRows.meeting.id}/transcript/status` });
+      const versions = await app.inject({ method: "GET", url: `/platform/oima/meetings/${stage2JRows.meeting.id}/transcript/versions` });
+      const segments = await app.inject({ method: "GET", url: `/platform/oima/meetings/${stage2JRows.meeting.id}/transcript/segments` });
+      const warnings = await app.inject({ method: "GET", url: `/platform/oima/meetings/${stage2JRows.meeting.id}/transcript/warnings` });
+
+      expect(contract.statusCode).toBe(200);
+      expect(status.statusCode).toBe(200);
+      expect(versions.statusCode).toBe(200);
+      expect(segments.statusCode).toBe(200);
+      expect(warnings.statusCode).toBe(200);
+
+      const contractBody = contract.json();
+      expect(contractBody.transcriptProcessingContract).toMatchObject({
+        productCode: "OIMA",
+        stage: "Stage 2K / OIMA-2",
+        rawTranscriptImmutable: true,
+        normalizedTranscriptSeparate: true,
+        parserDeterministic: true
+      });
+      expect(contractBody.transcriptProcessingContract.transcriptVersionTypes).toEqual(oimaTranscriptVersionTypes);
+      expect(contractBody.transcriptProcessingContract.transcriptParserTypes).toEqual(oimaTranscriptParserTypes);
+      expect(contractBody.transcriptProcessingContract.transcriptParseRunStatuses).toEqual(oimaTranscriptParseRunStatuses);
+      expect(contractBody.transcriptProcessingContract.transcriptParseWarningSeverities).toEqual(oimaTranscriptParseWarningSeverities);
+      expect(contractBody.transcriptProcessingContract.runtimeBoundary).toMatchObject({
+        transcriptProcessingImplemented: true,
+        rawTranscriptOverwriteAllowed: false,
+        audioProcessingImplemented: false,
+        issueDecisionActionRiskExtractionImplemented: false,
+        meetingAnalyticsImplemented: false,
+        realLlmCallsEnabled: false
+      });
+
+      expect(status.json().latestParseRun).toMatchObject({ id: stage2KRows.parseRun.id, status: "COMPLETED" });
+      expect(versions.json().versions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ versionType: "RAW", isImmutable: true, rawContentHash: stage2KRows.rawVersion.rawContentHash }),
+          expect.objectContaining({ versionType: "NORMALIZED", isImmutable: false })
+        ])
+      );
+      expect(segments.json().segments[0]).toMatchObject({ rawText: "Raw kickoff text", normalizedText: "Raw kickoff text" });
+      expect(warnings.json().warnings[0]).toMatchObject({ warningType: "MISSING_TIMESTAMP", severity: "WARNING" });
+      expect(mock.writeCalls).toEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("processes a transcript into immutable raw and separate normalized versions without analytics or LLM calls", async () => {
+    const mock = createMockPrisma();
+    const writeOps: string[] = [];
+    enableStage2KWrites(mock, writeOps);
+    (mock.delegates.oimaTranscriptVersion.findMany as any).mockResolvedValue([]);
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: `/platform/oima/meetings/${stage2JRows.meeting.id}/transcript/process`,
+        payload: {
+          sourceFileId: stage2JRows.meeting.sourceFiles[0].id,
+          parserType: "MICROSOFT_TEAMS",
+          rawTranscriptText: "00:00 Alice Nguyen: Raw text   preserved\n00:05 Bob Tran: Second point",
+          createdBy: "tester"
+        }
+      });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(201);
+      expect(body.rawVersion).toMatchObject({
+        versionType: "RAW",
+        versionNumber: 1,
+        isImmutable: true,
+        contentTextAvailable: true
+      });
+      expect(body.normalizedVersion).toMatchObject({
+        versionType: "NORMALIZED",
+        versionNumber: 1,
+        isImmutable: false,
+        contentTextAvailable: true
+      });
+      expect(body.rawVersion.rawContentHash).toMatch(/^sha256:/);
+      expect(body.normalizedVersion.rawContentHash).toBe(body.rawVersion.rawContentHash);
+      expect(body.parseRun).toMatchObject({
+        parserType: "MICROSOFT_TEAMS",
+        status: "COMPLETED",
+        segmentCount: 2,
+        warningCount: 0
+      });
+      expect(body.segments[0]).toMatchObject({
+        speakerRaw: "Alice Nguyen",
+        rawText: "Raw text   preserved",
+        normalizedText: "Raw text preserved",
+        needsReview: false
+      });
+      expect(body.noLlmCalls).toBe(true);
+      expect(body.noFakeMeetingAnalysis).toBe(true);
+      expect(body.noAudioProcessing).toBe(true);
+      expect(body.noIssueDecisionActionRiskExtraction).toBe(true);
+      expect(writeOps).toEqual([
+        "oimaTranscriptVersion.create",
+        "oimaTranscriptVersion.create",
+        "oimaTranscriptParseRun.create",
+        "oimaTranscriptSegment.createMany",
+        "oimaMeetingRecord.update",
+        "auditRecord.create"
+      ]);
+      expect(mock.delegates.oisCanonicalKnowledgeItem.create).not.toHaveBeenCalled();
+      expect(mock.delegates.oisLearningCandidate.create).not.toHaveBeenCalled();
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("marks low-confidence transcript parsing as NEEDS_REVIEW without failing silently", async () => {
+    const mock = createMockPrisma();
+    const writeOps: string[] = [];
+    enableStage2KWrites(mock, writeOps);
+    (mock.delegates.oimaTranscriptVersion.findMany as any).mockResolvedValue([]);
+    const app = buildCoreApi({ prisma: mock.prisma });
+
+    try {
+      const response = await app.inject({
+        method: "POST",
+        url: `/platform/oima/meetings/${stage2JRows.meeting.id}/transcript/process`,
+        payload: {
+          sourceFileId: stage2JRows.meeting.sourceFiles[0].id,
+          parserType: "GENERIC_TEXT",
+          rawTranscriptText: "No speaker or timestamp here\nbut the raw transcript is preserved"
+        }
+      });
+      const body = response.json();
+
+      expect(response.statusCode).toBe(201);
+      expect(body.parseRun.status).toBe("NEEDS_REVIEW");
+      expect(body.parseRun.warningCount).toBeGreaterThan(0);
+      expect(body.segments[0]).toMatchObject({
+        speakerRaw: null,
+        timestampStart: null,
+        needsReview: true
+      });
+      expect(body.warnings.map((warning: { warningType: string }) => warning.warningType)).toEqual(
+        expect.arrayContaining(["MISSING_TIMESTAMP", "MISSING_SPEAKER", "LOW_CONFIDENCE_SEGMENT"])
+      );
+      expect(mock.delegates.oimaMeetingRecord.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: stage2JRows.meeting.id },
+          data: expect.objectContaining({ status: "NEEDS_REVIEW" })
+        })
+      );
+      expect(writeOps).toContain("oimaTranscriptParseWarning.createMany");
     } finally {
       await app.close();
     }

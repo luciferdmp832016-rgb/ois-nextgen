@@ -25,7 +25,7 @@ function ProductOverview({ payload }: { payload: OimaBoundaryPayload }) {
     payload.plannedRuntimeCapabilities.length > 0
       ? payload.plannedRuntimeCapabilities
       : ["TRANSCRIPT_PROCESSING", "AUDIO_PROCESSING", "LISTENER_MODE"];
-  const nextStage = String(payload.productShell?.nextRecommendedStage ?? "OIMA-2 Transcript Processing");
+  const nextStage = String(payload.productShell?.nextRecommendedStage ?? "OIMA-3 OIS Agent Offline Analysis");
 
   return (
     <section className="panel" data-oima="OIMA Product Overview">
@@ -37,7 +37,7 @@ function ProductOverview({ payload }: { payload: OimaBoundaryPayload }) {
           <p className="muted">{payload.tagline}</p>
           <p className="muted">{payload.vietnamesePositioning}</p>
         </div>
-        <StatusBadge ok label="OIMA-1 intake ready" />
+        <StatusBadge ok label="OIMA-2 transcript ready" />
       </div>
       <dl className="owner-fact-grid">
         <div>
@@ -161,7 +161,7 @@ function SafetyBoundary({ payload }: { payload: OimaBoundaryPayload }) {
       <div className="panel-heading">
         <div>
           <h3>Safety Boundary</h3>
-          <p className="muted">OIMA-1 enables meeting intake metadata only; no live agent behavior is enabled.</p>
+          <p className="muted">OIMA-2 enables meeting intake and deterministic transcript processing; no live agent behavior is enabled.</p>
         </div>
         <StatusBadge ok={payload.noCanonicalKnowledgeWrite !== false} label="No canonical write" />
       </div>
@@ -261,7 +261,7 @@ function EmptyStateCards({ payload }: { payload: OimaBoundaryPayload }) {
         <div>
           <h3>OIMA Product Surface Empty States</h3>
           <p className="muted">
-            Meeting Library and Upload Meeting are available now. Transcript processing, audio processing, analysis and Listener Mode remain planned/not-runtime.
+            Meeting Library, Upload Meeting and Transcript Processing are available now. Audio processing, analysis and Listener Mode remain planned/not-runtime.
           </p>
         </div>
         <StatusBadge ok label="Placeholder Product Surfaces" />

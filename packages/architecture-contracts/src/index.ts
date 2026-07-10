@@ -206,6 +206,18 @@ export type OimaMeetingSourceFileType = (typeof oimaMeetingSourceFileTypes)[numb
 export const oimaMeetingSourceUploadStatuses = ["REGISTERED", "UPLOADED", "FAILED"] as const;
 export type OimaMeetingSourceUploadStatus = (typeof oimaMeetingSourceUploadStatuses)[number];
 
+export const oimaTranscriptVersionTypes = ["RAW", "NORMALIZED", "CORRECTED"] as const;
+export type OimaTranscriptVersionType = (typeof oimaTranscriptVersionTypes)[number];
+
+export const oimaTranscriptParserTypes = ["MICROSOFT_TEAMS", "GENERIC_TEXT", "MANUAL"] as const;
+export type OimaTranscriptParserType = (typeof oimaTranscriptParserTypes)[number];
+
+export const oimaTranscriptParseRunStatuses = ["PENDING", "PROCESSING", "COMPLETED", "NEEDS_REVIEW", "FAILED"] as const;
+export type OimaTranscriptParseRunStatus = (typeof oimaTranscriptParseRunStatuses)[number];
+
+export const oimaTranscriptParseWarningSeverities = ["INFO", "WARNING", "ERROR"] as const;
+export type OimaTranscriptParseWarningSeverity = (typeof oimaTranscriptParseWarningSeverities)[number];
+
 export const oimaAnalysisModes = ["OFFLINE_ANALYSIS", "LISTENER_CAPTURED_ANALYSIS_FUTURE"] as const;
 export type OimaAnalysisMode = (typeof oimaAnalysisModes)[number];
 
@@ -234,11 +246,10 @@ export const oimaCapabilityCodes = [
 ] as const;
 export type OimaCapabilityCode = (typeof oimaCapabilityCodes)[number];
 
-export const oimaCurrentRuntimeCapabilities = ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE", "MEETING_INTAKE"] as const;
+export const oimaCurrentRuntimeCapabilities = ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE", "MEETING_INTAKE", "TRANSCRIPT_PROCESSING"] as const;
 export type OimaCurrentRuntimeCapability = (typeof oimaCurrentRuntimeCapabilities)[number];
 
 export const oimaPlannedRuntimeCapabilities = [
-  "TRANSCRIPT_PROCESSING",
   "AUDIO_PROCESSING",
   "OFFLINE_AGENT_ANALYSIS",
   "SUBJECT_CLARIFICATION",
@@ -266,7 +277,17 @@ export const oimaEmptyStateSurfaces = [
     runtimeEnabled: true,
     stage: "OIMA-1",
     statusLabel: "Available now in OIMA-1",
-    description: "Transcript-first meeting registration with optional audio metadata. It does not parse transcripts or process audio."
+    description: "Transcript-first meeting registration with optional audio metadata."
+  },
+  {
+    surfaceCode: "TRANSCRIPT_PROCESSING",
+    title: "Transcript Processing",
+    availability: "AVAILABLE_NOW",
+    availableNow: true,
+    runtimeEnabled: true,
+    stage: "OIMA-2",
+    statusLabel: "Available now in OIMA-2",
+    description: "Deterministic parser preserves immutable raw transcripts and creates separate normalized transcript evidence."
   },
   {
     surfaceCode: "AGENT_ANALYSIS",
@@ -276,7 +297,7 @@ export const oimaEmptyStateSurfaces = [
     runtimeEnabled: false,
     stage: "OIMA-3",
     statusLabel: "Planned for offline analysis",
-    description: "Future evidence-backed OIS Agent analysis. No LLM or OpenRouter calls are enabled in OIMA-1."
+    description: "Future evidence-backed OIS Agent analysis. No LLM or OpenRouter calls are enabled in OIMA-2."
   },
   {
     surfaceCode: "CLARIFICATION_REVIEW",
@@ -359,8 +380,8 @@ export const oimaSourceModeContracts = [
     transcriptRequired: true,
     audioRequired: false,
     listenerMode: false,
-    status: "SUPPORTED_STAGE_2J_PRIMARY",
-    description: "Primary OIMA-1 intake flow. A transcript source file can be registered without audio."
+    status: "SUPPORTED_STAGE_2K_PRIMARY",
+    description: "Primary OIMA-2 flow. A transcript source file can be registered and deterministically parsed without audio."
   },
   {
     mode: "AUDIO_ONLY",
@@ -369,7 +390,7 @@ export const oimaSourceModeContracts = [
     audioRequired: true,
     listenerMode: false,
     status: "METADATA_ACCEPTED_NO_ANALYSIS",
-    description: "Audio metadata may be registered, but audio-only meetings require review and do not produce analysis in OIMA-1."
+    description: "Audio metadata may be registered, but audio-only meetings require review and do not produce transcript processing or analysis in OIMA-2."
   },
   {
     mode: "TRANSCRIPT_AND_AUDIO",
@@ -377,8 +398,8 @@ export const oimaSourceModeContracts = [
     transcriptRequired: true,
     audioRequired: false,
     listenerMode: false,
-    status: "SUPPORTED_STAGE_2J_OPTIONAL_AUDIO",
-    description: "Transcript remains required while optional audio metadata may be attached for later stages."
+    status: "SUPPORTED_STAGE_2K_OPTIONAL_AUDIO",
+    description: "Transcript remains primary while optional audio metadata may be attached for later stages."
   },
   {
     mode: "LISTENER_CAPTURED",
@@ -416,17 +437,17 @@ export const oimaRoadmap = [
   },
   {
     stage: "OIMA-2",
-    phase: "Next",
-    status: "PLANNED",
-    title: "Transcript Processing",
-    scope: "Deterministic transcript parsing, subject clarification queue and review-ready extraction contracts."
+    phase: "Stage 2K",
+    status: "TRANSCRIPT_PROCESSING_READY",
+    title: "Transcript Processing Foundation",
+    scope: "Immutable raw transcript versions, separate normalized transcript versions, deterministic Microsoft Teams/plain-text parsing, parse runs, ordered segments, warnings and review markers."
   },
   {
     stage: "OIMA-3",
-    phase: "Future",
+    phase: "Next",
     status: "PLANNED",
     title: "OIS Agent Offline Analysis",
-    scope: "Evidence-backed offline analysis contracts; no real LLM/OpenRouter call in OIMA-1."
+    scope: "Evidence-backed offline analysis contracts; no real LLM/OpenRouter call in OIMA-2."
   },
   {
     stage: "OIMA-4",
@@ -486,6 +507,10 @@ export const oimaProductContract = {
   sourceModes: oimaSourceModes,
   sourceModeContracts: oimaSourceModeContracts,
   meetingStatuses: oimaMeetingStatuses,
+  transcriptVersionTypes: oimaTranscriptVersionTypes,
+  transcriptParserTypes: oimaTranscriptParserTypes,
+  transcriptParseRunStatuses: oimaTranscriptParseRunStatuses,
+  transcriptParseWarningSeverities: oimaTranscriptParseWarningSeverities,
   analysisModes: oimaAnalysisModes,
   safetyBoundaries: oimaSafetyBoundaries,
   coreReuseMap: oimaCoreReuseMap,
@@ -496,8 +521,8 @@ export const oimaProductContract = {
 } as const;
 
 export const oimaProductBoundaryMetadata = {
-  stage: "Stage 2J / OIMA-1",
-  sourceReadyStage: "Stage 2J",
+  stage: "Stage 2K / OIMA-2",
+  sourceReadyStage: "Stage 2K",
   productCode: oimaProductContract.productCode,
   productName: oimaProductContract.productName,
   displayName: oimaProductContract.displayName,
@@ -508,7 +533,9 @@ export const oimaProductBoundaryMetadata = {
   primaryInput: "TRANSCRIPT",
   audioInput: "OPTIONAL_METADATA_REGISTRATION",
   meetingIntake: "RUNTIME_FOUNDATION_READY",
-  transcriptProcessing: "PLANNED_NOT_RUNTIME",
+  transcriptProcessing: "TRANSCRIPT_PROCESSING_READY",
+  rawTranscriptImmutability: "MANDATORY",
+  normalizedTranscriptVersioning: "SEPARATE_FROM_RAW",
   audioProcessing: "PLANNED_NOT_RUNTIME",
   listenerMode: "FUTURE_PERMISSIONED_RECORDING_ONLY",
   liveSpeakingAgent: "OUT_OF_SCOPE",

@@ -34,7 +34,7 @@ function MeetingRows({ meetings }: { meetings: OimaMeetingPayload[] }) {
     return (
       <tr>
         <td colSpan={8}>
-          No OIMA meetings registered yet. Register a transcript-first meeting to start OIMA-1 intake.
+          No OIMA meetings registered yet. Register a transcript-first meeting to start OIMA intake and transcript processing.
         </td>
       </tr>
     );
@@ -67,7 +67,7 @@ export default async function OimaMeetingLibraryPage() {
   return (
     <OisConsoleShell active="oima" snapshot={snapshot}>
       <PageHeading eyebrow="OIMA Meeting Intake" title="Meeting Library">
-        OIMA-1 lists real meeting intake records from Core API. Transcript processing, analysis and Listener Mode remain planned/not-runtime.
+        OIMA-2 lists real meeting intake records from Core API. Transcript processing is available; analysis and Listener Mode remain planned/not-runtime.
       </PageHeading>
 
       <DetailSourceMarker label="OIMA Meeting Library Source" />
@@ -80,7 +80,7 @@ export default async function OimaMeetingLibraryPage() {
               <h3>Meeting Intake Foundation</h3>
               <p className="muted">Transcript-first. Audio-optional metadata. No fake meeting analysis.</p>
             </div>
-            <StatusBadge ok label="OIMA-1 available" />
+            <StatusBadge ok label="OIMA-2 available" />
           </div>
           <div className="owner-review-marker-row" aria-label="OIMA meeting intake markers">
             <span>MEETING_INTAKE</span>
@@ -102,7 +102,7 @@ export default async function OimaMeetingLibraryPage() {
           <div>
             <span className="eyebrow">Meeting Library</span>
             <h3>Registered meetings</h3>
-            <p className="muted">The table shows intake metadata only; issues, decisions, actions and risks are not created in OIMA-1.</p>
+            <p className="muted">The table shows intake metadata only; issues, decisions, actions and risks are not created in OIMA-2.</p>
           </div>
           <StatusBadge ok={library.library.ok} label={library.library.ok ? "Library ready" : "Needs owner review"} />
         </div>

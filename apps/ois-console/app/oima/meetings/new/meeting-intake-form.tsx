@@ -53,7 +53,7 @@ export function MeetingIntakeForm({ coreApiUrl, organizationId, workspaceId }: M
     const sourceFiles = [transcript, audio].filter(Boolean);
 
     if (sourceMode === "LISTENER_CAPTURED") {
-      setSubmitState({ status: "error", message: "Listener Mode remains planned/not-runtime in OIMA-1." });
+      setSubmitState({ status: "error", message: "Listener Mode remains planned/not-runtime in OIMA-2." });
       return;
     }
 
@@ -109,7 +109,7 @@ export function MeetingIntakeForm({ coreApiUrl, organizationId, workspaceId }: M
 
       setSubmitState({
         status: "success",
-        message: "Meeting registered. Transcript processing remains planned for OIMA-2.",
+        message: "Meeting registered. Open the detail page to process the transcript in OIMA-2.",
         meetingId: body.meeting.id
       });
     } catch (error) {
@@ -159,7 +159,7 @@ export function MeetingIntakeForm({ coreApiUrl, organizationId, workspaceId }: M
           <div>
             <span className="eyebrow">Transcript Source</span>
             <h3>Transcript upload/register input</h3>
-            <p className="muted">Register metadata only. Transcript parsing starts in OIMA-2.</p>
+            <p className="muted">Register metadata only. Process the immutable raw transcript from the meeting detail page.</p>
           </div>
         </div>
         <div className="oima-form-grid">
@@ -191,7 +191,7 @@ export function MeetingIntakeForm({ coreApiUrl, organizationId, workspaceId }: M
           <div>
             <span className="eyebrow">Optional Audio Source</span>
             <h3>Optional audio upload/register input</h3>
-            <p className="muted">Audio metadata can be registered; audio processing is not runtime in OIMA-1.</p>
+            <p className="muted">Audio metadata can be registered; audio processing is not runtime in OIMA-2.</p>
           </div>
         </div>
         <div className="oima-form-grid">

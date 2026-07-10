@@ -1197,9 +1197,9 @@ const oimaPayload = {
   boundary: {
     stage: "Stage 2H",
     hardeningStage: "Stage 2I / OIMA-0",
-    runtimeStage: "Stage 2J / OIMA-1",
+    runtimeStage: "Stage 2K / OIMA-2",
     implementationStatus: "PRODUCT_BOUNDARY_READY",
-    productShellStatus: "MEETING_INTAKE_FOUNDATION_READY",
+    productShellStatus: "TRANSCRIPT_PROCESSING_FOUNDATION_READY",
     mode: "deterministic-oima-product-boundary",
     transcriptFirst: true,
     audioOptional: true,
@@ -1209,6 +1209,10 @@ const oimaPayload = {
     meetingStorageImplemented: true,
     meetingIntakeImplemented: true,
     sourceFileMetadataRegistrationImplemented: true,
+    transcriptProcessingImplemented: true,
+    rawTranscriptImmutable: true,
+    normalizedTranscriptSeparate: true,
+    correctedTranscriptWorkflowImplemented: false,
     noLiveSpeakingAgent: true,
     noVoiceClone: true,
     noImpersonation: true,
@@ -1216,18 +1220,24 @@ const oimaPayload = {
     noSeparateKnowledgeSourceOfTruth: true
   },
   productShell: {
-    stage: "Stage 2J / OIMA-1",
-    status: "MEETING_INTAKE_FOUNDATION_READY",
-    nextRecommendedStage: "OIMA-2 Transcript Processing",
+    stage: "Stage 2K / OIMA-2",
+    status: "TRANSCRIPT_PROCESSING_FOUNDATION_READY",
+    nextRecommendedStage: "OIMA-3 OIS Agent Offline Analysis",
     meetingRuntimeDataIncluded: true,
     meetingLibraryRuntimeImplemented: true,
     meetingIntakeImplemented: true,
     sourceFileMetadataRegistrationImplemented: true,
     transcriptSourceRegistrationImplemented: true,
     optionalAudioMetadataRegistrationImplemented: true,
+    rawTranscriptImmutable: true,
+    normalizedTranscriptSeparate: true,
+    deterministicTranscriptParserImplemented: true,
     binaryUploadStorageImplemented: false,
     uploadRuntimeImplemented: false,
-    transcriptProcessingImplemented: false,
+    transcriptProcessingImplemented: true,
+    meetingAnalyticsImplemented: false,
+    issueDecisionActionRiskExtractionImplemented: false,
+    correctedTranscriptWorkflowImplemented: false,
     audioProcessingImplemented: false,
     listenerModeImplemented: false,
     liveSpeakingAgentImplemented: false,
@@ -1235,15 +1245,14 @@ const oimaPayload = {
     realLlmCallsEnabled: false
   },
   productBoundaryMetadata: {
-    stage: "Stage 2J / OIMA-1",
-    sourceReadyStage: "Stage 2J",
+    stage: "Stage 2K / OIMA-2",
+    sourceReadyStage: "Stage 2K",
     productCode: "OIMA",
     productName: "Organizational Intelligence Meeting Agent",
     poweredBy: "OIS",
     sourceModes: ["TRANSCRIPT_ONLY", "AUDIO_ONLY", "TRANSCRIPT_AND_AUDIO", "LISTENER_CAPTURED"],
-    currentRuntimeCapabilities: ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE", "MEETING_INTAKE"],
+    currentRuntimeCapabilities: ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE", "MEETING_INTAKE", "TRANSCRIPT_PROCESSING"],
     plannedRuntimeCapabilities: [
-      "TRANSCRIPT_PROCESSING",
       "AUDIO_PROCESSING",
       "OFFLINE_AGENT_ANALYSIS",
       "SUBJECT_CLARIFICATION",
@@ -1274,9 +1283,8 @@ const oimaPayload = {
     "MEETING_SELF_IMPROVEMENT_REVIEW",
     "LISTENER_MODE_FUTURE"
   ],
-  currentRuntimeCapabilities: ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE", "MEETING_INTAKE"],
+  currentRuntimeCapabilities: ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE", "MEETING_INTAKE", "TRANSCRIPT_PROCESSING"],
   plannedRuntimeCapabilities: [
-    "TRANSCRIPT_PROCESSING",
     "AUDIO_PROCESSING",
     "OFFLINE_AGENT_ANALYSIS",
     "SUBJECT_CLARIFICATION",
@@ -1345,7 +1353,17 @@ const oimaPayload = {
       runtimeEnabled: true,
       stage: "OIMA-1",
       statusLabel: "Available now in OIMA-1",
-      description: "Transcript-first meeting registration with optional audio metadata. It does not parse transcripts or process audio."
+      description: "Transcript-first meeting registration with optional audio metadata."
+    },
+    {
+      surfaceCode: "TRANSCRIPT_PROCESSING",
+      title: "Transcript Processing",
+      availability: "AVAILABLE_NOW",
+      availableNow: true,
+      runtimeEnabled: true,
+      stage: "OIMA-2",
+      statusLabel: "Available now in OIMA-2",
+      description: "Deterministic parser preserves immutable raw transcripts and creates separate normalized transcript evidence."
     },
     {
       surfaceCode: "AGENT_ANALYSIS",
@@ -1355,7 +1373,7 @@ const oimaPayload = {
       runtimeEnabled: false,
       stage: "OIMA-3",
       statusLabel: "Planned for offline analysis",
-      description: "Future evidence-backed OIS Agent analysis. No LLM or OpenRouter calls are enabled in OIMA-1."
+      description: "Future evidence-backed OIS Agent analysis. No LLM or OpenRouter calls are enabled in OIMA-2."
     },
     {
       surfaceCode: "CLARIFICATION_REVIEW",
@@ -1407,8 +1425,8 @@ const oimaPayload = {
   roadmap: [
     { stage: "OIMA-0", phase: "Stage 2I", status: "PRODUCT_SHELL_HARDENED", title: "Product Shell & Boundary Hardening", scope: "Stable OIMA product shell." },
     { stage: "OIMA-1", phase: "Stage 2J", status: "RUNTIME_FOUNDATION_READY", title: "Meeting Intake Foundation", scope: "Versioned schema and transcript artifacts." },
-    { stage: "OIMA-2", phase: "Next", status: "PLANNED", title: "Transcript Processing", scope: "Transcript-first deterministic contracts." },
-    { stage: "OIMA-3", phase: "Future", status: "PLANNED", title: "OIS Agent Offline Analysis", scope: "Evidence-backed offline analysis." },
+    { stage: "OIMA-2", phase: "Stage 2K", status: "TRANSCRIPT_PROCESSING_READY", title: "Transcript Processing Foundation", scope: "Immutable raw and normalized transcript evidence." },
+    { stage: "OIMA-3", phase: "Next", status: "PLANNED", title: "OIS Agent Offline Analysis", scope: "Evidence-backed offline analysis." },
     { stage: "OIMA-4", phase: "Future", status: "PLANNED", title: "Subject Clarification", scope: "Clarification workflow." },
     { stage: "OIMA-5", phase: "Future", status: "PLANNED", title: "Dashboard & Monthly Report", scope: "Meeting dashboard and monthly operating report." },
     { stage: "OIMA-6", phase: "Future", status: "PLANNED", title: "Self-Improvement Review", scope: "Reviewed learning candidates only." },
@@ -1416,7 +1434,7 @@ const oimaPayload = {
     { stage: "OIMA-8", phase: "Future", status: "PLANNED", title: "Voice Sample Speaker Identity", scope: "Future governed speaker identity." },
     { stage: "OIMA-9", phase: "Future", status: "PLANNED", title: "Listener Mode", scope: "Future listen/record/analyze only." }
   ],
-  outOfScope: ["Binary meeting file storage", "Transcript parser or semantic extraction", "Audio processing or speaker identity"],
+  outOfScope: ["Binary meeting file storage", "Transcript semantic extraction", "Audio processing or speaker identity"],
   noCanonicalKnowledgeWrite: true,
   autoPromotionEnabled: false,
   oisAgentWidgetDirectCanonicalWriteAllowed: false
@@ -1478,8 +1496,8 @@ const oimaMeetingIntakeContract = {
   meetingStatuses: ["DRAFT", "UPLOADED", "READY_FOR_PROCESSING", "NEEDS_REVIEW", "FAILED"],
   sourceFileTypes: ["TRANSCRIPT", "AUDIO", "PARTICIPANT_LIST", "OTHER"],
   uploadStatuses: ["REGISTERED", "UPLOADED", "FAILED"],
-  currentRuntimeCapabilities: ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE", "MEETING_INTAKE"],
-  plannedRuntimeCapabilities: ["TRANSCRIPT_PROCESSING", "AUDIO_PROCESSING", "OFFLINE_AGENT_ANALYSIS", "SUBJECT_CLARIFICATION", "SELF_IMPROVEMENT", "LISTENER_MODE"],
+  currentRuntimeCapabilities: ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE", "MEETING_INTAKE", "TRANSCRIPT_PROCESSING"],
+  plannedRuntimeCapabilities: ["AUDIO_PROCESSING", "OFFLINE_AGENT_ANALYSIS", "SUBJECT_CLARIFICATION", "SELF_IMPROVEMENT", "LISTENER_MODE"],
   transcriptFirst: true,
   audioOptional: true,
   runtimeBoundary: {
@@ -1511,6 +1529,164 @@ const oimaMeetingDetailPayload = {
   plannedNextSteps: ["Transcript Processing", "OIS Agent Analysis", "Clarification Review", "Dashboard"],
   noFakeMeetingAnalysis: true,
   noLlmCalls: true
+};
+
+const oimaTranscriptProcessingContract = {
+  productCode: "OIMA",
+  productName: "Organizational Intelligence Meeting Agent",
+  poweredBy: "OIS",
+  stage: "Stage 2K / OIMA-2",
+  currentRuntimeCapabilities: ["OVERVIEW", "PRODUCT_BOUNDARY", "KNOWLEDGE_API_LINKAGE", "MEETING_INTAKE", "TRANSCRIPT_PROCESSING"],
+  plannedRuntimeCapabilities: ["AUDIO_PROCESSING", "OFFLINE_AGENT_ANALYSIS", "SUBJECT_CLARIFICATION", "SELF_IMPROVEMENT", "LISTENER_MODE"],
+  transcriptVersionTypes: ["RAW", "NORMALIZED", "CORRECTED"],
+  transcriptParserTypes: ["MICROSOFT_TEAMS", "GENERIC_TEXT", "MANUAL"],
+  transcriptParseRunStatuses: ["PENDING", "PROCESSING", "COMPLETED", "NEEDS_REVIEW", "FAILED"],
+  rawTranscriptImmutable: true,
+  normalizedTranscriptSeparate: true,
+  correctedTranscriptPlanned: true,
+  parserDeterministic: true,
+  runtimeBoundary: {
+    meetingIntakeImplemented: true,
+    transcriptProcessingImplemented: true,
+    rawTranscriptOverwriteAllowed: false,
+    audioProcessingImplemented: false,
+    issueDecisionActionRiskExtractionImplemented: false,
+    meetingAnalyticsImplemented: false,
+    listenerModeImplemented: false,
+    realLlmCallsEnabled: false,
+    fakeMeetingAnalysisCreated: false
+  }
+};
+
+const oimaTranscriptParseRun = {
+  id: "oima_transcript_parse_run_stage_2k",
+  meetingId: oimaMeeting.id,
+  sourceFileId: "oima_source_file_stage_2j_transcript",
+  rawVersionId: "oima_transcript_version_stage_2k_raw",
+  normalizedVersionId: "oima_transcript_version_stage_2k_normalized",
+  parserType: "MICROSOFT_TEAMS",
+  status: "COMPLETED",
+  segmentCount: 2,
+  warningCount: 1,
+  confidenceScore: 0.87,
+  startedAt: "2026-07-09T03:00:00.000Z",
+  completedAt: "2026-07-09T03:00:01.000Z",
+  errorMessage: null
+};
+
+const oimaTranscriptVersionsPayload = {
+  metadata: registryPayload.metadata,
+  transcriptProcessingContract: oimaTranscriptProcessingContract,
+  meetingId: oimaMeeting.id,
+  versions: [
+    {
+      id: "oima_transcript_version_stage_2k_raw",
+      meetingId: oimaMeeting.id,
+      sourceFileId: "oima_source_file_stage_2j_transcript",
+      versionType: "RAW",
+      versionNumber: 1,
+      rawContentHash: "sha256:stage2krawhash",
+      contentStorageKey: null,
+      contentTextAvailable: true,
+      contentTextLength: 128,
+      isImmutable: true,
+      createdBy: "tester",
+      createdAt: "2026-07-09T03:00:00.000Z"
+    },
+    {
+      id: "oima_transcript_version_stage_2k_normalized",
+      meetingId: oimaMeeting.id,
+      sourceFileId: "oima_source_file_stage_2j_transcript",
+      versionType: "NORMALIZED",
+      versionNumber: 1,
+      rawContentHash: "sha256:stage2krawhash",
+      contentStorageKey: null,
+      contentTextAvailable: true,
+      contentTextLength: 112,
+      isImmutable: false,
+      createdBy: "tester",
+      createdAt: "2026-07-09T03:00:01.000Z"
+    }
+  ],
+  count: 2,
+  rawTranscriptImmutable: true,
+  normalizedTranscriptSeparate: true
+};
+
+const oimaTranscriptStatusPayload = {
+  metadata: registryPayload.metadata,
+  transcriptProcessingContract: oimaTranscriptProcessingContract,
+  meetingId: oimaMeeting.id,
+  latestParseRun: oimaTranscriptParseRun,
+  noLlmCalls: true,
+  noFakeMeetingAnalysis: true
+};
+
+const oimaTranscriptSegmentsPayload = {
+  metadata: registryPayload.metadata,
+  transcriptProcessingContract: oimaTranscriptProcessingContract,
+  meetingId: oimaMeeting.id,
+  segments: [
+    {
+      id: "oima_transcript_segment_stage_2k_0",
+      meetingId: oimaMeeting.id,
+      transcriptVersionId: "oima_transcript_version_stage_2k_normalized",
+      parseRunId: oimaTranscriptParseRun.id,
+      segmentIndex: 0,
+      sourceLineStart: 1,
+      sourceLineEnd: 1,
+      timestampStart: "00:00",
+      timestampEnd: null,
+      speakerRaw: "Alice Nguyen",
+      speakerNormalized: "Alice Nguyen",
+      rawText: "Raw kickoff   text",
+      normalizedText: "Raw kickoff text",
+      confidenceScore: 0.98,
+      needsReview: false,
+      createdAt: "2026-07-09T03:00:01.000Z"
+    },
+    {
+      id: "oima_transcript_segment_stage_2k_1",
+      meetingId: oimaMeeting.id,
+      transcriptVersionId: "oima_transcript_version_stage_2k_normalized",
+      parseRunId: oimaTranscriptParseRun.id,
+      segmentIndex: 1,
+      sourceLineStart: 2,
+      sourceLineEnd: 2,
+      timestampStart: null,
+      timestampEnd: null,
+      speakerRaw: "Bob Tran",
+      speakerNormalized: "Bob Tran",
+      rawText: "Needs review text",
+      normalizedText: "Needs review text",
+      confidenceScore: 0.7,
+      needsReview: true,
+      createdAt: "2026-07-09T03:00:01.000Z"
+    }
+  ],
+  count: 2,
+  noLlmCalls: true,
+  noFakeMeetingAnalysis: true
+};
+
+const oimaTranscriptWarningsPayload = {
+  metadata: registryPayload.metadata,
+  transcriptProcessingContract: oimaTranscriptProcessingContract,
+  meetingId: oimaMeeting.id,
+  warnings: [
+    {
+      id: "oima_transcript_warning_stage_2k",
+      parseRunId: oimaTranscriptParseRun.id,
+      segmentId: "oima_transcript_segment_stage_2k_1",
+      warningType: "MISSING_TIMESTAMP",
+      message: "Timestamp could not be parsed confidently for this segment.",
+      severity: "WARNING",
+      createdAt: "2026-07-09T03:00:01.000Z"
+    }
+  ],
+  count: 1,
+  noLlmCalls: true,
+  noFakeMeetingAnalysis: true
 };
 
 const productDetailPayload = {
@@ -1593,6 +1769,10 @@ function mockCoreApiFetch(overrides?: {
   oimaBoundary?: unknown;
   oimaMeetings?: unknown;
   oimaMeetingDetail?: unknown;
+  oimaTranscriptStatus?: unknown;
+  oimaTranscriptVersions?: unknown;
+  oimaTranscriptSegments?: unknown;
+  oimaTranscriptWarnings?: unknown;
 }) {
   const fetchMock = vi.fn(async (input: Parameters<typeof fetch>[0]) => {
     const url = input instanceof Request ? input.url : String(input);
@@ -1683,6 +1863,22 @@ function mockCoreApiFetch(overrides?: {
 
     if (url === `${coreApiUrl}/platform/oima/meetings/oima_meeting_stage_2j_demo`) {
       return jsonResponse(overrides?.oimaMeetingDetail ?? oimaMeetingDetailPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/oima/meetings/oima_meeting_stage_2j_demo/transcript/status`) {
+      return jsonResponse(overrides?.oimaTranscriptStatus ?? oimaTranscriptStatusPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/oima/meetings/oima_meeting_stage_2j_demo/transcript/versions`) {
+      return jsonResponse(overrides?.oimaTranscriptVersions ?? oimaTranscriptVersionsPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/oima/meetings/oima_meeting_stage_2j_demo/transcript/segments`) {
+      return jsonResponse(overrides?.oimaTranscriptSegments ?? oimaTranscriptSegmentsPayload);
+    }
+
+    if (url === `${coreApiUrl}/platform/oima/meetings/oima_meeting_stage_2j_demo/transcript/warnings`) {
+      return jsonResponse(overrides?.oimaTranscriptWarnings ?? oimaTranscriptWarningsPayload);
     }
 
     if (url === `${coreApiUrl}/platform/oima/meetings/missing`) {
@@ -2049,14 +2245,15 @@ describe("OIS Console product shell", () => {
         "OIMA-0 - Product Shell &amp; Boundary",
         "OIMA-1 - Meeting Intake Foundation",
         "RUNTIME_FOUNDATION_READY",
-        "OIMA-2 - Transcript Processing",
+        "OIMA-2 - Transcript Processing Foundation",
+        "TRANSCRIPT_PROCESSING_READY",
         "OIMA-5 - Dashboard &amp; Monthly Report",
         "OIMA-9 - Listener Mode",
         "Placeholder Product Surfaces",
         "Meeting Library",
         "Upload Meeting",
         "OIMA Product Overview",
-        "OIMA-1 intake ready",
+        "OIMA-2 transcript ready",
         "Open Meeting Library",
         "OIS is the organizational intelligence backbone. OIMA is the meeting intelligence product powered by OIS.",
         "Transcript is primary; audio is optional.",
@@ -2074,6 +2271,7 @@ describe("OIS Console product shell", () => {
         "SELF_IMPROVEMENT",
         "Available now",
         "Available now in OIMA-1",
+        "Available now in OIMA-2",
         "Future permissioned recording only",
         "Voice clone",
         "Live speaking",
@@ -2095,7 +2293,7 @@ describe("OIS Console product shell", () => {
         "OIMA Meeting Intake",
         "Meeting Library",
         "Meeting Intake Foundation",
-        "OIMA-1 available",
+        "OIMA-2 available",
         "MEETING_INTAKE",
         "TRANSCRIPT_ONLY",
         "TRANSCRIPT_AND_AUDIO",
@@ -2125,8 +2323,8 @@ describe("OIS Console product shell", () => {
         "AUDIO_ONLY needs review",
         "LISTENER_CAPTURED planned/not-runtime",
         "Safety Boundary",
-        "No analysis runtime",
-        "No transcript processing",
+        "No analytics runtime",
+        "Transcript processing available after registration",
         "No audio processing",
         "No OIS Agent analysis",
         "No voice clone",
@@ -2214,10 +2412,16 @@ describe("OIS Console product shell", () => {
     expect(html).toContain("Source Files");
     expect(html).toContain("stage-2j-transcript.txt");
     expect(html).toContain("stage-2j-audio.mp3");
-    expect(html).toContain("Transcript Processing");
+    expect(html).toContain("TRANSCRIPT_PROCESSING");
+    expect(html).toContain("Process Transcript");
+    expect(html).toContain("Transcript Timeline");
+    expect(html).toContain("Raw kickoff   text");
+    expect(html).toContain("Raw kickoff text");
+    expect(html).toContain("RAW transcript immutable");
     expect(html).toContain("OIS Agent Analysis");
-    expect(html).toContain("Clarification Review");
+    expect(html).toContain("Subject Clarification");
     expect(html).toContain("Dashboard");
+    expect(html).toContain("Listener Mode");
     expect(html).toContain("No fake meeting analysis");
     expect(html).toContain("planned/not-runtime");
     expect(html).not.toContain(dbEnvKey);
