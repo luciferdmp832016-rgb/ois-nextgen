@@ -278,6 +278,32 @@ enum OimaMeetingSourceUploadStatus {
   FAILED
 }
 
+enum OimaTranscriptVersionType {
+  RAW
+  NORMALIZED
+  CORRECTED
+}
+
+enum OimaTranscriptParserType {
+  MICROSOFT_TEAMS
+  GENERIC_TEXT
+  MANUAL
+}
+
+enum OimaTranscriptParseRunStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  NEEDS_REVIEW
+  FAILED
+}
+
+enum OimaTranscriptParseWarningSeverity {
+  INFO
+  WARNING
+  ERROR
+}
+
 model Industry {
   id            String          @id
   code          String          @unique
@@ -666,6 +692,9 @@ model OimaMeetingRecord {
   organization     Organization           @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   workspace        Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Restrict)
   sourceFiles      OimaMeetingSourceFile[]
+  transcriptVersions OimaTranscriptVersion[]
+  transcriptParseRuns OimaTranscriptParseRun[]
+  transcriptSegments OimaTranscriptSegment[]
 
   @@index([organizationId, workspaceId, meetingDate])
   @@index([workspaceId, status, createdAt])
@@ -685,9 +714,104 @@ model OimaMeetingSourceFile {
   uploadStatus     OimaMeetingSourceUploadStatus @default(REGISTERED)
   createdAt        DateTime                      @default(now())
   meeting          OimaMeetingRecord             @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  transcriptVersions OimaTranscriptVersion[]
+  transcriptParseRuns OimaTranscriptParseRun[]
 
   @@index([meetingId, fileType])
   @@index([uploadStatus, createdAt])
+}
+
+model OimaTranscriptVersion {
+  id             String                    @id
+  meetingId      String
+  sourceFileId   String
+  versionType    OimaTranscriptVersionType
+  versionNumber  Int
+  rawContentHash String
+  contentStorageKey String?
+  contentText    String?
+  isImmutable    Boolean                   @default(false)
+  createdBy      String?
+  createdAt      DateTime                  @default(now())
+  meeting        OimaMeetingRecord         @relation(fields: [meetingId], references: [id], onDelete: Restrict)
+  sourceFile     OimaMeetingSourceFile     @relation(fields: [sourceFileId], references: [id], onDelete: Restrict)
+  parseRunsAsRaw OimaTranscriptParseRun[]  @relation("OimaRawTranscriptVersion")
+  parseRunsAsNormalized OimaTranscriptParseRun[] @relation("OimaNormalizedTranscriptVersion")
+  segments       OimaTranscriptSegment[]
+
+  @@unique([meetingId, versionType, versionNumber])
+  @@index([meetingId, sourceFileId, versionType])
+  @@index([rawContentHash])
+}
+
+model OimaTranscriptParseRun {
+  id                  String                         @id
+  meetingId           String
+  sourceFileId        String
+  rawVersionId        String
+  normalizedVersionId String
+  parserType          OimaTranscriptParserType
+  status              OimaTranscriptParseRunStatus   @default(PENDING)
+  segmentCount        Int                            @default(0)
+  warningCount        Int                            @default(0)
+  confidenceScore     Float                          @default(0)
+  startedAt           DateTime                       @default(now())
+  completedAt         DateTime?
+  errorMessage        String?
+  meeting             OimaMeetingRecord              @relation(fields: [meetingId], references: [id], onDelete: Restrict)
+  sourceFile          OimaMeetingSourceFile          @relation(fields: [sourceFileId], references: [id], onDelete: Restrict)
+  rawVersion          OimaTranscriptVersion          @relation("OimaRawTranscriptVersion", fields: [rawVersionId], references: [id], onDelete: Restrict)
+  normalizedVersion   OimaTranscriptVersion          @relation("OimaNormalizedTranscriptVersion", fields: [normalizedVersionId], references: [id], onDelete: Restrict)
+  segments            OimaTranscriptSegment[]
+  warnings            OimaTranscriptParseWarning[]
+
+  @@index([meetingId, status, startedAt])
+  @@index([sourceFileId, parserType])
+  @@index([rawVersionId])
+  @@index([normalizedVersionId])
+}
+
+model OimaTranscriptSegment {
+  id                  String                   @id
+  meetingId           String
+  transcriptVersionId String
+  parseRunId          String
+  segmentIndex        Int
+  sourceLineStart     Int
+  sourceLineEnd       Int
+  timestampStart      String?
+  timestampEnd        String?
+  speakerRaw          String?
+  speakerNormalized   String?
+  rawText             String
+  normalizedText      String
+  confidenceScore     Float                    @default(0)
+  needsReview         Boolean                  @default(false)
+  createdAt           DateTime                 @default(now())
+  meeting             OimaMeetingRecord        @relation(fields: [meetingId], references: [id], onDelete: Restrict)
+  transcriptVersion   OimaTranscriptVersion    @relation(fields: [transcriptVersionId], references: [id], onDelete: Restrict)
+  parseRun            OimaTranscriptParseRun   @relation(fields: [parseRunId], references: [id], onDelete: Cascade)
+  warnings            OimaTranscriptParseWarning[]
+
+  @@unique([parseRunId, segmentIndex])
+  @@index([meetingId, segmentIndex])
+  @@index([transcriptVersionId, segmentIndex])
+  @@index([needsReview])
+}
+
+model OimaTranscriptParseWarning {
+  id          String                            @id
+  parseRunId  String
+  segmentId   String?
+  warningType String
+  message     String
+  severity    OimaTranscriptParseWarningSeverity @default(WARNING)
+  createdAt   DateTime                         @default(now())
+  parseRun    OimaTranscriptParseRun           @relation(fields: [parseRunId], references: [id], onDelete: Cascade)
+  segment     OimaTranscriptSegment?           @relation(fields: [segmentId], references: [id], onDelete: SetNull)
+
+  @@index([parseRunId, severity])
+  @@index([segmentId])
 }
 
 model ProductInstallation {

@@ -22,7 +22,7 @@ export default async function NewOimaMeetingPage() {
             <div>
               <span className="eyebrow">Source Mode Contract</span>
               <h3>Transcript-first registration</h3>
-              <p className="muted">TRANSCRIPT_ONLY is the primary OIMA-1 flow. TRANSCRIPT_AND_AUDIO can attach optional audio metadata.</p>
+              <p className="muted">TRANSCRIPT_ONLY is the primary OIMA flow. TRANSCRIPT_AND_AUDIO can attach optional audio metadata.</p>
             </div>
             <StatusBadge ok label="Intake metadata only" />
           </div>
@@ -38,13 +38,13 @@ export default async function NewOimaMeetingPage() {
           <div className="panel-heading">
             <div>
               <span className="eyebrow">Safety Boundary</span>
-              <h3>No analysis runtime</h3>
-              <p className="muted">This form registers meeting and source file metadata only.</p>
+              <h3>No analytics runtime</h3>
+              <p className="muted">This form registers meeting and source file metadata. Transcript processing runs from the meeting detail page.</p>
             </div>
             <StatusBadge ok={false} label="Analysis not runtime" />
           </div>
           <div className="owner-review-marker-row" aria-label="OIMA non-runtime markers">
-            <span>No transcript processing</span>
+            <span>Transcript processing available after registration</span>
             <span>No audio processing</span>
             <span>No OIS Agent analysis</span>
             <span>No voice clone</span>

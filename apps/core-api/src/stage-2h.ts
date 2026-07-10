@@ -29,9 +29,9 @@ type RegistryMetadataFactory = () => RegistryMetadata;
 const stage2HBoundary = {
   stage: "Stage 2H",
   hardeningStage: "Stage 2I / OIMA-0",
-  runtimeStage: "Stage 2J / OIMA-1",
+  runtimeStage: "Stage 2K / OIMA-2",
   implementationStatus: "PRODUCT_BOUNDARY_READY",
-  productShellStatus: "MEETING_INTAKE_FOUNDATION_READY",
+  productShellStatus: "TRANSCRIPT_PROCESSING_FOUNDATION_READY",
   mode: "deterministic-oima-product-boundary",
   productKey: "OIMA",
   productCode: "OIMA",
@@ -44,6 +44,10 @@ const stage2HBoundary = {
   meetingStorageImplemented: true,
   meetingIntakeImplemented: true,
   sourceFileMetadataRegistrationImplemented: true,
+  transcriptProcessingImplemented: true,
+  rawTranscriptImmutable: true,
+  normalizedTranscriptSeparate: true,
+  correctedTranscriptWorkflowImplemented: false,
   noLiveSpeakingAgent: true,
   noVoiceClone: true,
   noImpersonation: true,
@@ -52,8 +56,8 @@ const stage2HBoundary = {
 } as const;
 
 const stage2JProductShell = {
-  stage: "Stage 2J / OIMA-1",
-  status: "MEETING_INTAKE_FOUNDATION_READY",
+  stage: "Stage 2K / OIMA-2",
+  status: "TRANSCRIPT_PROCESSING_FOUNDATION_READY",
   availableNow: oimaCurrentRuntimeCapabilities,
   plannedLater: oimaPlannedRuntimeCapabilities,
   transcriptPrimaryInput: true,
@@ -66,21 +70,29 @@ const stage2JProductShell = {
   sourceFileMetadataRegistrationImplemented: true,
   transcriptSourceRegistrationImplemented: true,
   optionalAudioMetadataRegistrationImplemented: true,
+  rawTranscriptImmutable: true,
+  normalizedTranscriptSeparate: true,
+  deterministicTranscriptParserImplemented: true,
   binaryUploadStorageImplemented: false,
   uploadRuntimeImplemented: false,
-  transcriptProcessingImplemented: false,
+  transcriptProcessingImplemented: true,
   audioProcessingImplemented: false,
+  meetingAnalyticsImplemented: false,
+  issueDecisionActionRiskExtractionImplemented: false,
+  correctedTranscriptWorkflowImplemented: false,
   listenerModeImplemented: false,
   liveSpeakingAgentImplemented: false,
   voiceCloneImplemented: false,
   realLlmCallsEnabled: false,
-  nextRecommendedStage: "OIMA-2 Transcript Processing"
+  nextRecommendedStage: "OIMA-3 OIS Agent Offline Analysis"
 } as const;
 
 const oimaOutOfScope = [
   "Binary meeting file storage",
-  "Transcript parser or semantic extraction",
+  "Transcript semantic extraction",
   "Audio processing or speaker identity",
+  "Meeting analytics",
+  "Issue, decision, action or risk extraction",
   "Offline LLM/router execution",
   "Listener Mode runtime",
   "Live meeting speaking agent",
@@ -250,7 +262,7 @@ function buildRoadmap(metadata: RegistryMetadata) {
     ownedUxSurfaces: oimaOwnedUxSurfaces,
     emptyStateSurfaces: oimaEmptyStateSurfaces,
     outOfScope: oimaOutOfScope,
-    nextStageCandidates: ["Meeting intake schema ADR", "Transcript artifact model", "Offline deterministic extraction contract"]
+    nextStageCandidates: ["OIS Agent offline analysis contract", "Subject clarification review model", "Evidence-backed meeting insight review payloads"]
   };
 }
 

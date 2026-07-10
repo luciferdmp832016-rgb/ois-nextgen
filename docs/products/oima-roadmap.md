@@ -41,21 +41,30 @@ Delivered:
 
 ## OIMA-2: Transcript Processing
 
+Phase: Stage 2K
+
+Status: `TRANSCRIPT_PROCESSING_READY`
+
+Delivered:
+
+- Deterministic transcript parsing contracts.
+- Immutable raw transcript versions.
+- Separate normalized transcript versions.
+- Microsoft Teams-style and generic text segment parsing.
+- Ordered transcript segments with raw speaker, timestamp, raw text, normalized text, source order and confidence.
+- Parse runs with status, segment count, warning count and confidence.
+- Parse warnings that mark low-confidence or incomplete transcript structure for human review.
+- Meeting Detail transcript processing UI.
+- No fake analysis, no issue/decision/action/risk extraction, no audio processing, no Listener Mode, no voice clone and no LLM/OpenRouter calls.
+
+## OIMA-3: OIS Agent Offline Analysis
+
 Phase: Next recommended stage
 
 Planned:
 
-- Deterministic transcript parsing contracts.
-- Subject clarification queue.
-- Decision/action/risk extraction review payloads.
-- Learning Candidate flow only; no canonical knowledge promotion.
-
-## OIMA-3: OIS Agent Offline Analysis
-
-Planned:
-
 - Evidence-backed offline analysis contracts.
-- No real LLM/OpenRouter call in Stage 2H.
+- No real LLM/OpenRouter call in OIMA-2.
 - Review payloads that keep provenance visible.
 
 ## OIMA-4: Subject Clarification

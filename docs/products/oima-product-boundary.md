@@ -18,9 +18,9 @@ Vietnamese positioning: OIS hiểu tổ chức. OIMA hiểu cuộc họp.
 
 OIMA is a distinct Powered by OIS product. It is not a feature buried inside the generic OIS Platform, and it is not a separate knowledge source of truth.
 
-Stage 2J / OIMA-1 adds the meeting intake foundation. Current runtime capabilities are `OVERVIEW`, `PRODUCT_BOUNDARY`, `KNOWLEDGE_API_LINKAGE` and `MEETING_INTAKE`.
+Stage 2K / OIMA-2 adds the transcript processing foundation on top of the Stage 2J meeting intake foundation. Current runtime capabilities are `OVERVIEW`, `PRODUCT_BOUNDARY`, `KNOWLEDGE_API_LINKAGE`, `MEETING_INTAKE` and `TRANSCRIPT_PROCESSING`.
 
-Planned runtime capabilities are `TRANSCRIPT_PROCESSING`, `AUDIO_PROCESSING`, `OFFLINE_AGENT_ANALYSIS`, `SUBJECT_CLARIFICATION`, `SELF_IMPROVEMENT` and `LISTENER_MODE`.
+Planned runtime capabilities are `AUDIO_PROCESSING`, `OFFLINE_AGENT_ANALYSIS`, `SUBJECT_CLARIFICATION`, `SELF_IMPROVEMENT` and `LISTENER_MODE`.
 
 OIMA owns meeting-specific product UX:
 
@@ -51,14 +51,20 @@ OIMA reuses OIS Core:
 
 ## Source Modes
 
-`TRANSCRIPT_ONLY` is the primary OIMA foundation and works without audio. Transcript source file metadata can be registered in OIMA-1.
+`TRANSCRIPT_ONLY` is the primary OIMA foundation and works without audio. Transcript source file metadata can be registered and raw transcript text can be deterministically parsed in OIMA-2.
 
-`TRANSCRIPT_AND_AUDIO` can register optional audio source metadata while preserving transcript as the primary input.
+`TRANSCRIPT_AND_AUDIO` can register optional audio source metadata while preserving transcript as the primary input. OIMA-2 parses the transcript only; audio processing remains planned.
 
-`AUDIO_ONLY` may be accepted as source metadata and remains review-oriented because audio processing is not runtime in OIMA-1.
+`AUDIO_ONLY` may be accepted as source metadata and remains review-oriented because audio processing is not runtime in OIMA-2.
 
 `LISTENER_CAPTURED` is future-only. Initial Listener Mode, when implemented, may record meetings only with permission and is limited to listen, record and analyze.
 
+## Transcript Evidence
+
+Raw transcript content is immutable. OIMA stores raw transcript versions separately from normalized transcript versions, and reprocessing creates a new parse run rather than overwriting evidence.
+
+Microsoft Teams-style speaker names, timestamps, raw text and source order are preserved as captured. Normalized text is stored separately for later review and future processing. Low-confidence segments or missing speaker/timestamp structure are marked `NEEDS_REVIEW`.
+
 ## Safety
 
-Stage 2J / OIMA-1 explicitly blocks binary file storage, transcript processing, audio processing, OIS Agent meeting analysis, issues, decisions, actions, risks, Listener Mode runtime, live speaking agents, voice clone, impersonation, autonomous decisions, real LLM/OpenRouter calls, production secrets and `prisma db push`.
+Stage 2K / OIMA-2 explicitly blocks binary file storage, audio processing, OIS Agent meeting analysis, issues, decisions, actions, risks, Listener Mode runtime, live speaking agents, voice clone, impersonation, autonomous decisions, real LLM/OpenRouter calls, production secrets and `prisma db push`.
