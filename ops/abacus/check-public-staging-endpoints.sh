@@ -123,6 +123,9 @@ oima_endpoint_markers=(
   '"KNOWLEDGE_API_LINKAGE"'
   '"MEETING_INTAKE"'
   '"TRANSCRIPT_PROCESSING"'
+  '"standaloneAppShellImplemented":true'
+  '"standaloneAppServiceName":"ois-nextgen-oima-staging"'
+  '"customDomainFoundation":"https://oima.dmp247.com"'
   '"TRANSCRIPT_ONLY"'
   '"AUDIO_ONLY"'
   '"TRANSCRIPT_AND_AUDIO"'
@@ -141,12 +144,13 @@ oima_ui_markers=(
   "OIMA-2 transcript ready"
   "Open Meeting Library"
   "OIS is the organizational intelligence backbone. OIMA is the meeting intelligence product powered by OIS."
-  "Product Boundary"
-  "Source Mode Contract"
-  "Safety Boundary"
-  "OIS Core Reuse Map"
-  "OIMA Roadmap"
-  "Placeholder Product Surfaces"
+  "Standalone OIMA App Shell"
+  "OIMA_APP_SHELL"
+  "OIMA_STANDALONE_APP_SHELL"
+  "STAGE_2L_STANDALONE_OIMA_APP_SHELL"
+  "OIMA_DOMAIN_READY"
+  "oima.dmp247.com"
+  "Standalone OIMA Runtime Boundary"
   "OIMA Product Surface Empty States"
   "Meeting Library"
   "Upload Meeting"
@@ -163,6 +167,28 @@ oima_ui_markers=(
   "TRANSCRIPT_PROCESSING"
   "MEETING_INTELLIGENCE_PRODUCT"
   "PRODUCT_BOUNDARY_READY"
+)
+oima_console_launcher_markers=(
+  "Open OIMA standalone app"
+  "OIMA Console Launcher"
+  "Standalone app ready"
+  "Launcher / compatibility route"
+  "Open standalone OIMA app"
+  "Product Runtime separate from Product Administration"
+  "OIMA_APP_SHELL"
+  "OIMA_STANDALONE_APP_SHELL"
+  "STAGE_2L_STANDALONE_OIMA_APP_SHELL"
+  "oima.dmp247.com"
+  "No fake meeting data"
+  "No LLM/OpenRouter calls"
+)
+oima_planned_ui_markers=(
+  "Planned / not runtime"
+  "No fake meeting data"
+  "No LLM/OpenRouter calls"
+  "No voice clone"
+  "Listener Mode planned/not-runtime"
+  "OIMA_APP_SHELL"
 )
 oima_transcript_endpoint_markers=(
   '"productCode":"OIMA"'
@@ -511,9 +537,9 @@ check_route "OIS_CONSOLE_PUBLIC_PRODUCTS" "$OIS_CONSOLE_PUBLIC_URL/products" "Pr
 check_route "OIS_CONSOLE_PUBLIC_WORKSPACES" "$OIS_CONSOLE_PUBLIC_URL/workspaces" "Organizations, Workspaces &amp; Projects" "Workspace Overview" "Owner Registry Cockpit / Registry Runtime Summary" "Registry Governance / Readiness" "Registry Runtime Health" "Runtime health:" "Readiness:" "PMC Org Demo" "OIS_CONSOLE"
 check_route "OIS_CONSOLE_PUBLIC_LEARNING_CENTER" "$OIS_CONSOLE_PUBLIC_URL/learning-center" "${learning_center_ui_markers[@]}" "OIS_CONSOLE"
 check_route "OIS_CONSOLE_PUBLIC_KNOWLEDGE_FABRIC" "$OIS_CONSOLE_PUBLIC_URL/knowledge-fabric" "${knowledge_ui_markers[@]}" "OIS_CONSOLE"
-check_route "OIS_CONSOLE_PUBLIC_OIMA" "$OIS_CONSOLE_PUBLIC_URL/oima" "${oima_ui_markers[@]}" "OIS_CONSOLE" "OIMA-0" "OIMA-1" "OIMA-2" "OIMA-9"
-check_route "OIS_CONSOLE_PUBLIC_OIMA_MEETINGS" "$OIS_CONSOLE_PUBLIC_URL/oima/meetings" "${oima_meeting_library_ui_markers[@]}" "OIS_CONSOLE"
-check_route "OIS_CONSOLE_PUBLIC_OIMA_MEETINGS_NEW" "$OIS_CONSOLE_PUBLIC_URL/oima/meetings/new" "${oima_meeting_new_ui_markers[@]}" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_PUBLIC_OIMA" "$OIS_CONSOLE_PUBLIC_URL/oima" "${oima_console_launcher_markers[@]}" "OIS_CONSOLE" "OIMA-0" "OIMA-1" "OIMA-2" "OIMA-9"
+check_route "OIS_CONSOLE_PUBLIC_OIMA_MEETINGS" "$OIS_CONSOLE_PUBLIC_URL/oima/meetings" "${oima_console_launcher_markers[@]}" "Meeting Library moved to OIMA app" "Open OIMA Meeting Library" "OIS_CONSOLE"
+check_route "OIS_CONSOLE_PUBLIC_OIMA_MEETINGS_NEW" "$OIS_CONSOLE_PUBLIC_URL/oima/meetings/new" "${oima_console_launcher_markers[@]}" "Upload Meeting moved to OIMA app" "Open OIMA Upload / Register Meeting" "OIS_CONSOLE"
 check_route "OIS_CONSOLE_PUBLIC_RUNTIME" "$OIS_CONSOLE_PUBLIC_URL/runtime" "Runtime Status" "Owner Registry Cockpit / Registry Runtime Summary" "Safe Action Boundary" "Read-only preview" "Future admin action requires audit" "Audit / Permission / Admin Boundary" "Audit Required" "Permission Model" "Preview only" "Blocked in current stage" "Registry Governance / Readiness" "Registry Runtime Health" "Core API source:" "OIS_CONSOLE"
 check_route "OIS_CONSOLE_PUBLIC_PRODUCT_UAT_RUNTIME" "$OIS_CONSOLE_PUBLIC_URL/runtime" "Product Capability / UAT Status" "${product_uat_ui_markers[@]}"
 check_root_shell "PITS_SHELL_PUBLIC_ROOT" "$PITS_SHELL_PUBLIC_URL" "PITS_SHELL" "PITS Shell"
@@ -527,6 +553,15 @@ check_route "PITS_SHELL_PUBLIC_PROJECTS" "$PITS_SHELL_PUBLIC_URL/projects" "Proj
 check_route "PITS_SHELL_PUBLIC_PRODUCT_UAT_PROJECTS" "$PITS_SHELL_PUBLIC_URL/projects" "Product User Journey / UAT Baseline" "${product_uat_ui_markers[@]}" "project registry shell" "true workflow app"
 check_route "PITS_SHELL_PUBLIC_RUNTIME" "$PITS_SHELL_PUBLIC_URL/runtime" "Runtime Status" "PITS Registry Cockpit / Project Runtime Summary" "Safe Action Boundary" "Read-only preview" "Future admin action requires audit" "Audit / Permission / Admin Boundary" "Audit Required" "Permission Model" "Preview only" "Blocked in current stage" "Project readiness" "Registry Governance / Readiness" "Registry Runtime Health" "Core API source:" "PITS_SHELL" "PITS Project Workboard" "Read-only functional slice" "Work Item Detail" "Dry-run Action Preview" "No data will be changed" "Requires Stage 2B/2C write boundary"
 check_route "PITS_SHELL_PUBLIC_PRODUCT_UAT_RUNTIME" "$PITS_SHELL_PUBLIC_URL/runtime" "Product Capability / UAT Status" "${product_uat_ui_markers[@]}"
+check_root_shell "OIMA_SHELL_PUBLIC_ROOT" "$OIMA_SHELL_PUBLIC_URL" "OIMA_APP_SHELL" "OIMA"
+check_route "OIMA_SHELL_PUBLIC_ROOT_CONTRACT" "$OIMA_SHELL_PUBLIC_URL" "${oima_ui_markers[@]}" "Core API source:" "Platform Overview Counts" "DEMO DATA - NOT PRODUCTION"
+check_route "OIMA_SHELL_PUBLIC_MEETINGS" "$OIMA_SHELL_PUBLIC_URL/meetings" "${oima_meeting_library_ui_markers[@]}" "OIMA_APP_SHELL"
+check_route "OIMA_SHELL_PUBLIC_MEETINGS_NEW" "$OIMA_SHELL_PUBLIC_URL/meetings/new" "${oima_meeting_new_ui_markers[@]}" "OIMA_APP_SHELL"
+check_route "OIMA_SHELL_PUBLIC_ANALYSIS" "$OIMA_SHELL_PUBLIC_URL/analysis" "${oima_planned_ui_markers[@]}" "Agent Analysis"
+check_route "OIMA_SHELL_PUBLIC_CLARIFICATION" "$OIMA_SHELL_PUBLIC_URL/clarification" "${oima_planned_ui_markers[@]}" "Clarification Review"
+check_route "OIMA_SHELL_PUBLIC_DASHBOARD" "$OIMA_SHELL_PUBLIC_URL/dashboard" "${oima_planned_ui_markers[@]}" "Dashboard"
+check_route "OIMA_SHELL_PUBLIC_SELF_IMPROVEMENT" "$OIMA_SHELL_PUBLIC_URL/self-improvement" "${oima_planned_ui_markers[@]}" "Self-Improvement Center"
+check_route "OIMA_SHELL_PUBLIC_LISTENER" "$OIMA_SHELL_PUBLIC_URL/listener" "${oima_planned_ui_markers[@]}" "Listener Mode"
 check_absent_markers "OIS_CONSOLE_PUBLIC_DASHBOARD_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/dashboard" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "OIS_CONSOLE_PUBLIC_PRODUCT_FLOW_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/product-flow" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "OIS_CONSOLE_PUBLIC_LOCALIZATION_LINK_BOUNDARY" "$OIS_CONSOLE_PUBLIC_URL/localization" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
@@ -538,6 +573,8 @@ check_absent_markers "OIS_CONSOLE_PUBLIC_OIMA_MEETINGS_NEW_LINK_BOUNDARY" "$OIS_
 check_absent_markers "PITS_SHELL_PUBLIC_PROJECTS_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/projects" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "PITS_SHELL_PUBLIC_PRODUCT_FLOW_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/product-flow" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 check_absent_markers "PITS_SHELL_PUBLIC_LOCALIZATION_LINK_BOUNDARY" "$PITS_SHELL_PUBLIC_URL/localization" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
+check_absent_markers "OIMA_SHELL_PUBLIC_ROOT_LINK_BOUNDARY" "$OIMA_SHELL_PUBLIC_URL" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
+check_absent_markers "OIMA_SHELL_PUBLIC_MEETINGS_LINK_BOUNDARY" "$OIMA_SHELL_PUBLIC_URL/meetings" "localhost" "127.0.0.1" "ois.dmp247.com" "oisys.abacusai.app"
 
 if [ -n "$REGISTRY_PRODUCT_ID" ] && [ -n "$REGISTRY_WORKSPACE_ID" ] && [ -n "$REGISTRY_PROJECT_ID" ] && [ -n "$REGISTRY_MODULE_ID" ] && [ -n "$REGISTRY_INSTALLATION_ID" ]; then
   registry_project_base_id="${REGISTRY_PROJECT_ID#prj_}"

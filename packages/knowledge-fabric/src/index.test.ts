@@ -116,11 +116,12 @@ describe("deterministic agent knowledge context", () => {
 });
 
 describe("architecture mindmap manifest", () => {
-  it("contains Stage 2F, Stage 2G and Stage 2H flows for future mindmap agents", () => {
+  it("contains Stage 2F, Stage 2G, Stage 2H and Stage 2L flows for future mindmap agents", () => {
     expect(architectureMindmapManifest.flows.map((flow) => flow.key)).toEqual([
       "stage_2f_learning_flow",
       "stage_2g_knowledge_fabric_flow",
-      "stage_2h_oima_boundary_flow"
+      "stage_2h_oima_boundary_flow",
+      "stage_2l_oima_app_shell_flow"
     ]);
     expect(architectureMindmapManifest.ecosystemProducts).toContain("OIMA");
     expect(architectureMindmapManifest.apiContracts).toContain("/platform/oima/overview");

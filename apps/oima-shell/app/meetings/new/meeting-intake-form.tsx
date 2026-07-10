@@ -118,7 +118,7 @@ export function MeetingIntakeForm({ coreApiUrl, organizationId, workspaceId }: M
   }
 
   return (
-    <form className="oima-intake-form" data-oima="Create Meeting Form" onSubmit={handleSubmit}>
+    <form className="oima-intake-form panel" data-oima="Create Meeting Form" onSubmit={handleSubmit}>
       <input name="organizationId" type="hidden" value={organizationId} />
       <input name="workspaceId" type="hidden" value={workspaceId} />
 
@@ -154,7 +154,7 @@ export function MeetingIntakeForm({ coreApiUrl, organizationId, workspaceId }: M
         </label>
       </div>
 
-      <section className="panel oima-form-section">
+      <section>
         <div className="panel-heading">
           <div>
             <span className="eyebrow">Transcript Source</span>
@@ -186,7 +186,7 @@ export function MeetingIntakeForm({ coreApiUrl, organizationId, workspaceId }: M
         </div>
       </section>
 
-      <section className="panel oima-form-section">
+      <section>
         <div className="panel-heading">
           <div>
             <span className="eyebrow">Optional Audio Source</span>
@@ -218,12 +218,12 @@ export function MeetingIntakeForm({ coreApiUrl, organizationId, workspaceId }: M
         </div>
       </section>
 
-      <div className="oima-form-actions">
-        <button className="button oima-primary-button" disabled={submitState.status === "submitting"} type="submit">
+      <div className="oima-action-row">
+        <button className="button" disabled={submitState.status === "submitting"} type="submit">
           Register meeting
         </button>
         <p className={`oima-submit-state ${submitState.status}`}>{submitState.message}</p>
-        {submitState.status === "success" ? <a href={`/oima/meetings/${submitState.meetingId}`}>Open meeting detail</a> : null}
+        {submitState.status === "success" ? <a className="oima-secondary-link" href={`/meetings/${submitState.meetingId}`}>Open meeting detail</a> : null}
       </div>
     </form>
   );

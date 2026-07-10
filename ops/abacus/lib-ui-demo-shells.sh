@@ -19,7 +19,7 @@ ui_demo_print_safety() {
 }
 
 ui_demo_require_repo() {
-  if [ ! -f "$REPO_DIR/package.json" ] || [ ! -d "$REPO_DIR/apps/ois-console" ] || [ ! -d "$REPO_DIR/apps/pits-shell" ]; then
+  if [ ! -f "$REPO_DIR/package.json" ] || [ ! -d "$REPO_DIR/apps/ois-console" ] || [ ! -d "$REPO_DIR/apps/pits-shell" ] || [ ! -d "$REPO_DIR/apps/oima-shell" ]; then
     printf 'STOP: REPO_DIR does not look like OIS NextGen repo: %s\n' "$REPO_DIR" >&2
     return 1
   fi

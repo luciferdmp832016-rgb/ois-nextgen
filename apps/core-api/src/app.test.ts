@@ -1982,8 +1982,20 @@ describe("Stage 2H OIMA product boundary endpoints", () => {
       expect(body.product.currentRuntimeCapabilities).toEqual(oimaCurrentRuntimeCapabilities);
       expect(body.product.plannedRuntimeCapabilities).toEqual(oimaPlannedRuntimeCapabilities);
       expect(body.product.productBoundaryMetadata).toEqual(oimaProductBoundaryMetadata);
+      expect(body.product.productBoundaryMetadata).toMatchObject({
+        standaloneAppShell: "READY",
+        standaloneAppPath: "apps/oima-shell",
+        standaloneServiceName: "ois-nextgen-oima-staging",
+        standalonePort: 3002,
+        customDomainFoundation: "https://oima.dmp247.com"
+      });
       expect(body.product.productShell).toMatchObject({
         status: "TRANSCRIPT_PROCESSING_FOUNDATION_READY",
+        standaloneAppShellImplemented: true,
+        standaloneAppPath: "apps/oima-shell",
+        standaloneAppServiceName: "ois-nextgen-oima-staging",
+        standaloneAppPort: 3002,
+        customDomainFoundation: "https://oima.dmp247.com",
         meetingRuntimeDataIncluded: true,
         meetingIntakeImplemented: true,
         sourceFileMetadataRegistrationImplemented: true,
@@ -2951,12 +2963,13 @@ describe("Stage 2G Canonical Knowledge Fabric and KEIHB endpoints", () => {
 
       expect(response.statusCode).toBe(200);
       expect(body.mindmap).toMatchObject({
-        stage: "Stage 2H",
+        stage: "Stage 2L",
         title: architectureMindmapManifest.title
       });
       expect(body.mindmap.apiContracts).toContain("/platform/agent/knowledge-context");
       expect(body.mindmap.ecosystemProducts).toContain("OIMA");
       expect(body.mindmap.apiContracts).toContain("/platform/oima/overview");
+      expect(body.mindmap.flows.map((flow: { key: string }) => flow.key)).toContain("stage_2l_oima_app_shell_flow");
       expect(body.source.file).toBe("architecture/mindmap/ois-ecosystem-map.v1.json");
       expect(mock.writeCalls).toEqual([]);
     } finally {

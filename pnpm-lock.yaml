@@ -63,15 +63,21 @@ importers:
 
   apps/core-api:
     dependencies:
-      '@ois/architecture-contracts':
-        specifier: workspace:*
-        version: link:../../packages/architecture-contracts
       '@ois/agent-runtime':
         specifier: workspace:*
         version: link:../../packages/agent-runtime
+      '@ois/architecture-contracts':
+        specifier: workspace:*
+        version: link:../../packages/architecture-contracts
       '@ois/knowledge-fabric':
         specifier: workspace:*
         version: link:../../packages/knowledge-fabric
+
+  apps/oima-shell:
+    dependencies:
+      '@ois/shared-ui':
+        specifier: workspace:*
+        version: link:../../packages/shared-ui
 
   apps/ois-console:
     dependencies:

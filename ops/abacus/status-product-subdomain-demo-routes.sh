@@ -3,6 +3,7 @@ set -euo pipefail
 
 OIS_HOST="${OIS_HOST:-ois-ng.dmp247.com}"
 PITS_HOST="${PITS_HOST:-pits-ng.dmp247.com}"
+OIMA_HOST="${OIMA_HOST:-oima.dmp247.com}"
 CURL_TIMEOUT="${CURL_TIMEOUT:-20}"
 CHECK_PUBLIC=false
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,13 +18,17 @@ Usage: bash ops/abacus/status-product-subdomain-demo-routes.sh [--include-public
 Default mode checks local nginx host-header routing before DNS:
   Host: ois-ng.dmp247.com  -> http://127.0.0.1/
   Host: pits-ng.dmp247.com -> http://127.0.0.1/
+  Host: oima.dmp247.com    -> http://127.0.0.1/
 
 Use --include-public only after owner-configured DNS is in place. Public checks
 probe:
   https://ois-ng.dmp247.com
   https://pits-ng.dmp247.com
+  https://oima.dmp247.com
   https://ois-ng.dmp247.com/dashboard
   https://pits-ng.dmp247.com/projects
+  https://oima.dmp247.com/meetings
+  https://oima.dmp247.com/meetings/new
 
 This script does not modify nginx, DNS, Core API, UI shell processes, DB, seed
 data, .env files or legacy resources.
@@ -225,13 +230,17 @@ printf '%s\n' "DNS note: CNAME maps hostnames only. Path/product routing belongs
 printf '\n== Local host-header routing before DNS ==\n'
 check_local_host_header "OIS_CONSOLE_LOCAL_HOST_HEADER" "$OIS_HOST" "OIS_CONSOLE" "OIS Console"
 check_local_host_header "PITS_SHELL_LOCAL_HOST_HEADER" "$PITS_HOST" "PITS_SHELL" "PITS Shell"
+check_local_host_header "OIMA_SHELL_LOCAL_HOST_HEADER" "$OIMA_HOST" "OIMA_APP_SHELL" "OIMA"
 
 if [ "$CHECK_PUBLIC" = true ]; then
   printf '\n== Public custom subdomain checks after DNS ==\n'
   check_public_product_root "OIS_CONSOLE_PUBLIC" "$OIS_HOST" "OIS_CONSOLE" "OIS Console"
   check_public_product_root "PITS_SHELL_PUBLIC" "$PITS_HOST" "PITS_SHELL" "PITS Shell"
+  check_public_product_root "OIMA_SHELL_PUBLIC" "$OIMA_HOST" "OIMA_APP_SHELL" "OIMA"
   check_public_path "OIS_CONSOLE_PUBLIC_DASHBOARD" "https://$OIS_HOST/dashboard"
   check_public_path "PITS_SHELL_PUBLIC_PROJECTS" "https://$PITS_HOST/projects"
+  check_public_path "OIMA_SHELL_PUBLIC_MEETINGS" "https://$OIMA_HOST/meetings"
+  check_public_path "OIMA_SHELL_PUBLIC_MEETINGS_NEW" "https://$OIMA_HOST/meetings/new"
 else
   printf '\nPRODUCT_SUBDOMAIN_PUBLIC_SKIPPED reason=run_with_--include-public_after_owner_dns_is_configured\n'
 fi
@@ -242,7 +251,7 @@ if [ "$failures" -gt 0 ]; then
 fi
 
 if [ "$CHECK_PUBLIC" = true ]; then
-  printf '\nSUPERCOMPUTER_PRODUCT_SUBDOMAIN_PUBLIC_DEMO_VERIFIED OIS and PITS public custom subdomains are serving expected product shells.\n'
+  printf '\nSUPERCOMPUTER_PRODUCT_SUBDOMAIN_PUBLIC_DEMO_VERIFIED OIS, PITS and OIMA public custom subdomains are serving expected product shells.\n'
 else
-  printf '\nSUPERCOMPUTER_PRODUCT_SUBDOMAIN_LOCAL_ROUTING_READY OIS and PITS local host-header routing is ready for DNS/CNAME setup.\n'
+  printf '\nSUPERCOMPUTER_PRODUCT_SUBDOMAIN_LOCAL_ROUTING_READY OIS, PITS and OIMA local host-header routing is ready for DNS/CNAME setup.\n'
 fi

@@ -116,8 +116,8 @@ export function TranscriptProcessingPanel({ coreApiUrl, meetingId, transcriptSou
             rows={10}
           />
         </label>
-        <div className="oima-form-actions">
-          <button className="button oima-primary-button" disabled={submitState.status === "submitting" || transcriptSourceFiles.length === 0} type="submit">
+        <div className="oima-action-row">
+          <button className="button" disabled={submitState.status === "submitting" || transcriptSourceFiles.length === 0} type="submit">
             {hasParseRun ? "Reprocess Transcript" : "Process Transcript"}
           </button>
           <p className={`oima-submit-state ${submitState.status}`}>{submitState.message}</p>

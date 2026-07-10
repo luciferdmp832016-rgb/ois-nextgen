@@ -26,9 +26,13 @@ if ! ui_demo_stop_shell "pits-shell" "PITS_SHELL"; then
   record_failure "PITS Shell demo did not stop cleanly"
 fi
 
+if ! ui_demo_stop_shell "oima-shell" "OIMA_SHELL"; then
+  record_failure "OIMA Shell demo did not stop cleanly"
+fi
+
 if [ "$failures" -gt 0 ]; then
   printf '\nUI_DEMO_STOP_FAILED failures=%s\n' "$failures" >&2
   exit 1
 fi
 
-printf '\nUI_DEMO_STOP_PASSED OIS Console and PITS Shell temporary demos are stopped or were not running.\n'
+printf '\nUI_DEMO_STOP_PASSED OIS Console, PITS Shell and OIMA Shell temporary demos are stopped or were not running.\n'
